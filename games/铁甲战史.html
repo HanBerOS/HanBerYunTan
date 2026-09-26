@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>铁甲战史 2D · 四战役战争游戏</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* ============ 基础与令牌 ============ */
+:root{
+  --bg:#101418; --panel:#1A2026; --panel2:#14181D; --line:#2A323A;
+  --text:#E8E2D4; --dim:#9AA3AB; --accent:#3E7CBF;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text);
+  font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; user-select:none; -webkit-user-select:none;}
+body[data-era="nap"]{--accent:#3E7CBF;}
+body[data-era="ww1"]{--accent:#8A7A3E;}
+body[data-era="oct"]{--accent:#B0452E;}
+body[data-era="ww2"]{--accent:#4A7A4A;}
+
+#game{position:fixed; inset:0; display:block; touch-action:none;}
+
+/* ============ 界面层 ============ */
+#ui{position:fixed; inset:0; pointer-events:none; z-index:10;}
+.screen{position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; pointer-events:auto; padding:20px;}
+.screen.active{display:flex;}
+
+.panel{background:rgba(16,20,24,0.92); border:1px solid var(--line); border-left:4px solid var(--accent);
+  padding:26px 30px; max-width:760px; width:100%; max-height:92vh; overflow:auto;
+  box-shadow:0 12px 40px rgba(0,0,0,0.6);}
+.panel h1{font-family:'Noto Serif SC',serif; font-weight:900; font-size:34px; letter-spacing:6px; color:var(--text);}
+.panel h1 .ac{color:var(--accent);}
+.panel .sub{color:var(--dim); font-size:13px; letter-spacing:2px; margin-top:6px;}
+.panel h2{font-family:'Noto Serif SC',serif; font-weight:700; font-size:20px; letter-spacing:3px; margin-bottom:12px; color:var(--text);}
+.panel h3{font-size:14px; font-weight:700; letter-spacing:2px; margin-bottom:8px; color:var(--text);}
+.panel p.desc{font-size:13px; color:var(--dim); line-height:1.8; margin-bottom:14px;}
+
+.btn{display:block; width:100%; padding:14px 16px; margin-top:12px; background:var(--panel2); color:var(--text);
+  border:1px solid var(--line); border-left:4px solid var(--accent); font-size:15px; font-weight:700; letter-spacing:3px;
+  cursor:pointer; font-family:inherit; text-align:left; transition:background .12s, border-color .12s;}
+.btn:hover{background:var(--accent); border-left-color:var(--text);}
+.btn.small{width:auto; display:inline-block; padding:9px 18px; margin-top:0; font-size:13px; letter-spacing:2px;}
+.btnrow{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px;}
+.btnrow .btn{margin-top:0; flex:1 1 150px; text-align:center;}
+.btn.danger{border-left-color:#C0504D;} .btn.danger:hover{background:#C0504D;}
+.btn.ghost{opacity:.85;} .btn.ghost:hover{opacity:1; background:#2A323A;}
+
+/* 战役卡片 */
+.cards{display:flex; flex-wrap:wrap; gap:14px; margin-top:6px;}
+.card{flex:1 1 44%; min-width:240px; padding:18px; background:var(--panel2); border:1px solid var(--line);
+  border-top:4px solid var(--accent); cursor:pointer; transition:background .12s;}
+.card:hover{background:var(--panel);}
+.card .cn{font-family:'Noto Serif SC',serif; font-weight:700; font-size:19px; letter-spacing:2px;}
+.card .cy{font-size:12px; color:var(--dim); margin-top:4px; letter-spacing:1px;}
+.card .prog{margin-top:12px; font-size:12px; color:var(--dim);}
+.card .bar{height:6px; background:#0C0F12; margin-top:6px; border:1px solid var(--line);}
+.card .bar i{display:block; height:100%; background:var(--accent);}
+
+/* 任务列表 */
+.mlist{display:flex; flex-direction:column; gap:12px;}
+.mitem{padding:14px 16px; background:var(--panel2); border:1px solid var(--line); cursor:pointer; transition:background .12s;}
+.mitem:hover{background:var(--panel);}
+.mitem .mn{font-size:15px; font-weight:700; letter-spacing:1px;}
+.mitem .mb{font-size:12px; color:var(--dim); margin-top:4px; line-height:1.6;}
+.mitem.locked{opacity:.45; cursor:not-allowed;}
+.mitem .tag{display:inline-block; font-size:11px; padding:2px 8px; margin-right:6px; border:1px solid var(--line); color:var(--dim);}
+
+/* 载具选择（自由模式） */
+.vlist{display:flex; flex-wrap:wrap; gap:12px;}
+.vcard{flex:1 1 30%; min-width:180px; padding:14px; background:var(--panel2); border:1px solid var(--line); cursor:pointer; transition:background .12s;}
+.vcard:hover{background:var(--panel);}
+.vcard.sel{border-color:var(--accent); border-left-width:4px;}
+.vcard .vn{font-size:14px; font-weight:700; letter-spacing:1px;}
+.vcard .vs{font-size:12px; color:var(--dim); margin-top:4px; line-height:1.7;}
+.tabs{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;}
+.tab{padding:8px 16px; border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px; letter-spacing:2px; color:var(--dim);}
+.tab.sel{background:var(--accent); color:#fff; border-color:var(--accent);}
+.opt{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+.opt .obox{flex:1 1 130px; padding:10px 12px; background:var(--panel2); border:1px solid var(--line); cursor:pointer; font-size:13px; text-align:center; color:var(--dim);}
+.opt .obox.sel{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+/* 战斗 HUD */
+#hud{position:absolute; inset:0; display:none; pointer-events:none;}
+#hud.active{display:block;}
+#hud .hpwrap{position:absolute; left:18px; top:14px; width:280px; max-width:40vw;}
+#hud .hpname{font-size:12px; letter-spacing:2px; color:var(--dim); margin-bottom:4px;}
+#hud .hpbar{height:14px; background:#0C0F12; border:1px solid var(--line);}
+#hud .hpbar i{display:block; height:100%; background:var(--accent); transition:width .1s;}
+#hud .reload{margin-top:6px; height:6px; background:#0C0F12; border:1px solid var(--line);}
+#hud .reload i{display:block; height:100%; background:#E8E2D4; width:0%;}
+#hud .obj{position:absolute; top:14px; left:50%; transform:translateX(-50%); text-align:center;}
+#hud .obj .ot{font-size:13px; letter-spacing:2px; color:var(--text); background:rgba(16,20,24,.75); padding:6px 14px; border:1px solid var(--line); display:inline-block;}
+#hud .obj .os{font-size:11px; color:var(--dim); margin-top:4px; letter-spacing:1px;}
+#hud .info{position:absolute; right:18px; top:14px; text-align:right; font-size:12px; color:var(--dim); letter-spacing:1px; line-height:1.8;}
+#hud .hint{position:absolute; bottom:16px; left:50%; transform:translateX(-50%); font-size:12px; color:var(--dim); letter-spacing:1px;
+  background:rgba(16,20,24,.7); padding:6px 14px; border:1px solid var(--line); white-space:nowrap;}
+
+/* 暂停 / 结算 */
+#pauseOverlay{position:absolute; inset:0; background:rgba(10,13,15,.8); display:none; align-items:center; justify-content:center; pointer-events:auto;}
+#pauseOverlay.active{display:flex;}
+.statgrid{display:flex; flex-wrap:wrap; gap:10px; margin:10px 0 4px;}
+.stat{flex:1 1 30%; min-width:130px; background:var(--panel2); border:1px solid var(--line); padding:12px; text-align:center;}
+.stat .sv{font-family:'Noto Serif SC',serif; font-weight:700; font-size:22px; color:var(--accent);}
+.stat .sk{font-size:11px; color:var(--dim); margin-top:4px; letter-spacing:1px;}
+.banner{font-family:'Noto Serif SC',serif; font-size:30px; font-weight:900; letter-spacing:8px; text-align:center; margin-bottom:6px;}
+.banner.win{color:#7FA86F;} .banner.lose{color:#C0504D;}
+
+/* 调试面板 */
+#debug{position:fixed; left:10px; bottom:10px; z-index:50; max-width:46vw; max-height:110px; overflow:auto;
+  font:11px/1.5 monospace; color:#9AA3AB; background:rgba(10,13,15,.8); border:1px solid #2A323A; padding:6px 8px; pointer-events:none;}
+#debug div.err{color:#E87B6E;}
+#fps{position:fixed; right:10px; bottom:10px; z-index:50; font:11px monospace; color:#6E7780; background:rgba(10,13,15,.7); padding:4px 8px; border:1px solid #2A323A;}
+</style>
+</head>
+<body data-era="nap">
+<canvas id="game"></canvas>
+<div id="ui"></div>
+<div id="debug"></div>
+<div id="fps">--</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   铁甲战史 2D —— 单文件自包含战争游戏
+   玩法：俯视 2D 载具战斗（类战雷简版）
+   内容：拿破仑战争（风帆海战）/ 一战 / 十月革命 / 二战 + 自由模式
+   技术：原生 Canvas 2D + DOM UI，无外部依赖，可直接部署 Netlify
+   ===================================================================== */
+
+/* ---------------- 小工具 ---------------- */
+const TAU = Math.PI * 2;
+function clamp(v, a, b){ return v < a ? a : v > b ? b : v; }
+function lerp(a, b, t){ return a + (b - a) * t; }
+function rand(a, b){ return a + Math.random() * (b - a); }
+function pick(arr){ return arr[(Math.random() * arr.length) | 0]; }
+function normAng(a){ while(a > Math.PI) a -= TAU; while(a < -Math.PI) a += TAU; return a; }
+function angDiff(a, b){ return normAng(a - b); }
+function dist(ax, ay, bx, by){ const dx = bx - ax, dy = by - ay; return Math.hypot(dx, dy); }
+function rectHit(r, x, y){ return x >= r.x - r.w/2 && x <= r.x + r.w/2 && y >= r.y - r.h/2 && y <= r.y + r.h/2; }
+/* 线段与矩形相交（用于弹道与视线） */
+function segRectHit(ax, ay, bx, by, r){
+  const x1 = r.x - r.w/2, y1 = r.y - r.h/2, x2 = r.x + r.w/2, y2 = r.y + r.h/2;
+  const dx = bx - ax, dy = by - ay;
+  let t0 = 0, t1 = 1;
+  const p = [-dx, dx, -dy, dy];
+  const q = [ax - x1, x2 - ax, ay - y1, y2 - ay];
+  for(let i = 0; i < 4; i++){
+    if(Math.abs(p[i]) < 1e-9){ if(q[i] < 0) return false; continue; }
+    let t = q[i] / p[i];
+    if(p[i] < 0){ if(t > t1) return false; if(t > t0) t0 = t; }
+    else { if(t < t0) return false; if(t < t1) t1 = t; }
+  }
+  return true;
+}
+function losClear(obstacles, ax, ay, bx, by){
+  for(let i = 0; i < obstacles.length; i++){ if(segRectHit(ax, ay, bx, by, obstacles[i])) return false; }
+  return true;
+}
+
+/* ---------------- 数据：载具 ---------------- */
+const VEH = {
+  // 拿破仑战争（风帆战舰）
+  nap_sol: {name:'风帆战列舰', era:'nap', kind:'ship', hp:1200, armor:[55,38,28], spd:15, turn:0.7, gun:{dmg:26, pen:40, rel:7, rng:460, shells:9, spread:6}, r:30, col:'#3E5C7A', col2:'#2B4156', desc:'三层甲板巨舰，舷炮齐射毁天灭地'},
+  nap_frig:{name:'护卫舰', era:'nap', kind:'ship', hp:700, armor:[38,26,18], spd:19, turn:0.9, gun:{dmg:20, pen:30, rel:5, rng:380, shells:5, spread:8}, r:24, col:'#4A6B8C', col2:'#33506B', desc:'机动侦察主力，航速与火力均衡'},
+  nap_brig:{name:'双桅帆船', era:'nap', kind:'ship', hp:360, armor:[24,16,10], spd:23, turn:1.1, gun:{dmg:13, pen:20, rel:3.2, rng:300, shells:3, spread:10}, r:16, col:'#5E7D9E', col2:'#42576E', desc:'轻快的小型风帆船，骚扰型目标'},
+  // 第一次世界大战（初代坦克）
+  ww1_mark1:{name:'马克I型坦克', era:'ww1', kind:'tank', hp:500, armor:[55,45,32], spd:9, turn:0.5, gun:{dmg:30, pen:38, rel:5, rng:300}, r:16, col:'#6B5F3E', col2:'#4C4428', desc:'菱形车体，一战坦克鼻祖'},
+  ww1_ft:{name:'雷诺FT-17', era:'ww1', kind:'tank', hp:260, armor:[24,17,10], spd:15, turn:1.0, gun:{dmg:17, pen:24, rel:3, rng:250}, r:11, col:'#7A6F4E', col2:'#57503A', desc:'世界首款旋转炮塔坦克'},
+  ww1_a7v:{name:'A7V突击坦克', era:'ww1', kind:'tank', hp:430, armor:[42,32,22], spd:11, turn:0.7, gun:{dmg:26, pen:33, rel:4.2, rng:280}, r:14, col:'#5F5740', col2:'#45402E', desc:'德国巨型坦克，装甲厚重'},
+  ww1_whip:{name:'惠比特坦克', era:'ww1', kind:'tank', hp:300, armor:[22,15,9], spd:24, turn:1.2, gun:{dmg:8, pen:12, rel:0.7, rng:220}, r:12, col:'#7E7352', col2:'#5A5240', desc:'高速骑兵坦克，机枪扫射'},
+  // 十月革命（装甲车 / 早期坦克 / 装甲列车）
+  oct_austin:{name:'奥斯汀装甲车', era:'oct', kind:'tank', hp:210, armor:[18,12,8], spd:28, turn:1.3, gun:{dmg:9, pen:13, rel:0.6, rng:230}, r:11, col:'#7A4A3A', col2:'#53321F', desc:'沙俄制轮式装甲车，火力密集'},
+  oct_ft:{name:'雷诺FT-17', era:'oct', kind:'tank', hp:260, armor:[24,17,10], spd:15, turn:1.0, gun:{dmg:17, pen:24, rel:3, rng:250}, r:11, col:'#8A5438', col2:'#5C3A24', desc:'红白双方都在使用的早期坦克'},
+  oct_mark5:{name:'马克V型坦克', era:'oct', kind:'tank', hp:520, armor:[60,48,32], spd:10, turn:0.55, gun:{dmg:32, pen:40, rel:5, rng:300}, r:15, col:'#6E4A3A', col2:'#4B3225', desc:'英国出口的钢铁巨兽，装甲最厚'},
+  oct_train:{name:'装甲列车「红十月」', era:'oct', kind:'train', hp:2600, armor:[95,70,50], spd:16, turn:0, gun:{dmg:30, pen:55, rel:2.2, rng:520}, r:24, col:'#8A3B2A', col2:'#5C2418', desc:'内战的钢铁堡垒，沿铁路突击'},
+  // 第二次世界大战（钢铁对决）
+  ww2_pz4:{name:'四号坦克', era:'ww2', kind:'tank', hp:430, armor:[48,30,18], spd:24, turn:0.9, gun:{dmg:34, pen:52, rel:4, rng:330}, r:13, col:'#4F5A3E', col2:'#39402C', desc:'德军装甲师主力，性能均衡'},
+  ww2_tiger:{name:'虎式坦克', era:'ww2', kind:'tank', hp:720, armor:[92,65,42], spd:22, turn:0.75, gun:{dmg:52, pen:88, rel:5.5, rng:400}, r:15, col:'#5A5A45', col2:'#3E3E2E', desc:'88炮 + 100mm装甲，重甲杀手'},
+  ww2_t34:{name:'T-34坦克', era:'ww2', kind:'tank', hp:460, armor:[58,42,28], spd:27, turn:1.1, gun:{dmg:36, pen:58, rel:4.2, rng:330}, r:13, col:'#4C6B4C', col2:'#334A33', desc:'倾斜装甲，苏联钢铁洪流'},
+  ww2_sherman:{name:'M4谢尔曼', era:'ww2', kind:'tank', hp:440, armor:[54,34,24], spd:26, turn:1.0, gun:{dmg:35, pen:54, rel:4.4, rng:340}, r:13, col:'#5A6B4A', col2:'#3E4C33', desc:'盟军产量之王，可靠耐造'},
+  ww2_kv2:{name:'KV-2突击坦克', era:'ww2', kind:'tank', hp:820, armor:[86,70,45], spd:15, turn:0.65, gun:{dmg:75, pen:72, rel:8, rng:360}, r:15, col:'#4A5A48', col2:'#334034', desc:'152mm巨炮，一发入魂'},
+  ww2_lt:{name:'T-26轻坦克', era:'ww2', kind:'tank', hp:300, armor:[30,20,12], spd:26, turn:1.15, gun:{dmg:20, pen:32, rel:2.8, rng:280}, r:11, col:'#5C6B52', col2:'#404A38', desc:'30年代经典轻坦，数量庞大'}
+};
+
+/* ---------------- 数据：地图 ---------------- */
+const MAPS = {
+  plain:{ w:1600, h:1200, bg:'#79805B', grid:'rgba(255,255,255,0.05)',
+    obs:[
+      {x:280,y:260,w:60,h:60,type:'tree'},{x:520,y:180,w:50,h:50,type:'tree'},{x:760,y:240,w:55,h:55,type:'tree'},
+      {x:1080,y:300,w:50,h:50,type:'tree'},{x:1320,y:220,w:60,h:60,type:'tree'},
+      {x:300,y:900,w:50,h:50,type:'tree'},{x:640,y:980,w:60,h:60,type:'tree'},{x:920,y:880,w:50,h:50,type:'tree'},
+      {x:1180,y:960,w:55,h:55,type:'tree'},{x:1420,y:900,w:50,h:50,type:'tree'},
+      {x:900,y:520,w:80,h:60,type:'rock'},{x:400,y:620,w:60,h:70,type:'rock'},{x:1250,y:560,w:70,h:60,type:'rock'}
+    ],
+    blue:[[150,600]], red:[[1450,300],[1450,600],[1450,900],[1200,150],[1200,1050]]
+  },
+  city:{ w:1600, h:1200, bg:'#55554C', grid:'rgba(255,255,255,0.04)',
+    obs:[
+      {x:200,y:200,w:120,h:100,type:'build'},{x:400,y:150,w:90,h:130,type:'build'},{x:620,y:210,w:130,h:100,type:'build'},
+      {x:180,y:460,w:100,h:120,type:'build'},{x:420,y:430,w:140,h:90,type:'build'},{x:640,y:480,w:90,h:130,type:'build'},
+      {x:850,y:200,w:110,h:120,type:'build'},{x:1060,y:150,w:120,h:90,type:'build'},{x:1280,y:210,w:90,h:130,type:'build'},
+      {x:850,y:460,w:120,h:110,type:'build'},{x:1060,y:430,w:100,h:130,type:'build'},{x:1280,y:480,w:130,h:90,type:'build'},
+      {x:240,y:760,w:130,h:100,type:'build'},{x:460,y:730,w:90,h:120,type:'build'},{x:680,y:800,w:120,h:90,type:'build'},
+      {x:880,y:760,w:100,h:120,type:'build'},{x:1080,y:730,w:120,h:100,type:'build'},{x:1320,y:800,w:90,h:120,type:'build'},
+      {x:240,y:1000,w:100,h:110,type:'build'},{x:460,y:980,w:130,h:90,type:'build'},{x:680,y:1030,w:90,h:110,type:'build'},
+      {x:880,y:1000,w:120,h:90,type:'build'},{x:1080,y:1030,w:90,h:110,type:'build'},{x:1320,y:980,w:120,h:100,type:'build'}
+    ],
+    blue:[[120,1120]], red:[[1480,80],[1480,600],[120,80]]
+  },
+  sea:{ w:1800, h:1300, bg:'#2E5F8A', grid:'rgba(255,255,255,0.06)',
+    obs:[
+      {x:500,y:350,w:150,h:90,type:'island'},{x:1150,y:250,w:120,h:140,type:'island'},
+      {x:350,y:800,w:130,h:110,type:'island'},{x:1300,y:800,w:160,h:100,type:'island'},
+      {x:850,y:620,w:110,h:120,type:'island'},{x:150,y:1150,w:140,h:100,type:'island'},
+      {x:1600,y:1150,w:120,h:120,type:'island'},{x:1600,y:200,w:140,h:100,type:'island'},
+      {x:250,y:200,w:120,h:100,type:'island'}
+    ],
+    blue:[[140,650]], red:[[1660,650],[1660,250],[1660,1050],[900,120],[900,1180]]
+  },
+  rail:{ w:2600, h:1000, bg:'#6E6A52', grid:'rgba(255,255,255,0.04)',
+    rail:{x:1300,y1:110,y2:890},
+    obs:[
+      {x:600,y:200,w:90,h:120,type:'build'},{x:1900,y:200,w:90,h:120,type:'build'},
+      {x:600,y:700,w:90,h:120,type:'build'},{x:1900,y:700,w:90,h:120,type:'build'},
+      {x:900,y:150,w:70,h:90,type:'build'},{x:1700,y:150,w:70,h:90,type:'build'},
+      {x:900,y:780,w:70,h:90,type:'build'},{x:1700,y:780,w:70,h:90,type:'build'},
+      {x:1050,y:420,w:60,h:80,type:'tree'},{x:1550,y:420,w:60,h:80,type:'tree'},
+      {x:1050,y:560,w:60,h:80,type:'tree'},{x:1550,y:560,w:60,h:80,type:'tree'}
+    ],
+    blue:[[1300,500]], red:[[1300,120],[1300,880],[980,220],[1620,220],[980,780],[1620,780]]
+  }
+};
+
+/* ---------------- 数据：战役与任务 ---------------- */
+const ERAS = [
+  {id:'nap', name:'拿破仑战争', en:'Napoleonic Wars · 1803-1815', kind:'ship', color:'#3E7CBF', desc:'风帆战列舰与舷炮齐射的海战时代'},
+  {id:'ww1', name:'第一次世界大战', en:'World War I · 1914-1918', kind:'tank', color:'#8A7A3E', desc:'初代坦克爬出堑壕的钢铁萌芽'},
+  {id:'oct', name:'十月革命', en:'October Revolution · 1917', kind:'tank', color:'#B0452E', desc:'红军白军的内战，装甲列车横贯铁路'},
+  {id:'ww2', name:'第二次世界大战', en:'World War II · 1939-1945', kind:'tank', color:'#4A7A4A', desc:'虎式、T-34、谢尔曼的钢铁对决'}
+];
+
+/* ---------------- 数据：可选国家（side=阵营，1/2 对立） ---------------- */
+const COUNTRIES = {
+  nap:[
+    {id:'fr', name:'法国', color:'#3E6FD8', side:1, vehs:['nap_sol','nap_frig','nap_brig']},
+    {id:'uk', name:'英国', color:'#C0392B', side:2, vehs:['nap_sol','nap_frig','nap_brig']},
+    {id:'ru', name:'俄国', color:'#2E8B57', side:2, vehs:['nap_sol','nap_frig']},
+    {id:'pr', name:'普鲁士', color:'#2C3E50', side:2, vehs:['nap_frig','nap_brig']},
+    {id:'at', name:'奥地利', color:'#8E44AD', side:2, vehs:['nap_frig','nap_brig']}
+  ],
+  ww1:[
+    {id:'de', name:'德国', color:'#6E6E6E', side:1, vehs:['ww1_a7v','ww1_whip']},
+    {id:'ah', name:'奥匈帝国', color:'#B03A2E', side:1, vehs:['ww1_a7v','ww1_ft']},
+    {id:'ot', name:'奥斯曼帝国', color:'#C0392B', side:1, vehs:['ww1_whip','ww1_ft']},
+    {id:'uk', name:'英国', color:'#2C3E50', side:2, vehs:['ww1_mark1','ww1_whip']},
+    {id:'fr', name:'法国', color:'#3E6FD8', side:2, vehs:['ww1_ft','ww1_mark1']},
+    {id:'ru', name:'俄国', color:'#2E8B57', side:2, vehs:['ww1_ft','ww1_mark1']},
+    {id:'us', name:'美国（后期）', color:'#5D6D7E', side:2, vehs:['ww1_ft','ww1_whip']}
+  ],
+  oct:[
+    {id:'bol', name:'布尔什维克党', color:'#C0392B', side:1, vehs:['oct_austin','oct_ft','oct_train']},
+    {id:'wkr', name:'工农群众', color:'#B03A2E', side:1, vehs:['oct_ft','oct_austin']},
+    {id:'prov', name:'俄国资产阶级临时政府', color:'#8A7A3E', side:2, vehs:['oct_mark5','oct_austin','oct_ft']}
+  ],
+  ww2:[
+    {id:'de', name:'德国', color:'#6E6E6E', side:1, vehs:['ww2_pz4','ww2_tiger','ww2_lt']},
+    {id:'it', name:'意大利', color:'#2E8B57', side:1, vehs:['ww2_pz4','ww2_lt']},
+    {id:'jp', name:'日本', color:'#E67E22', side:1, vehs:['ww2_pz4','ww2_lt','ww2_t34']},
+    {id:'cn', name:'中国', color:'#F1C40F', side:2, vehs:['ww2_t34','ww2_lt','ww2_sherman']},
+    {id:'us', name:'美国', color:'#3E6FD8', side:2, vehs:['ww2_sherman','ww2_lt','ww2_t34']},
+    {id:'su', name:'苏联', color:'#C0392B', side:2, vehs:['ww2_t34','ww2_kv2','ww2_lt']},
+    {id:'uk', name:'英国', color:'#5D6D7E', side:2, vehs:['ww2_sherman','ww2_t34','ww2_pz4']}
+  ]
+};
+function findCountry(eraId, cid){
+  const list = COUNTRIES[eraId] || [];
+  for(let i = 0; i < list.length; i++){ if(list[i].id === cid) return list[i]; }
+  return list[0] || null;
+}
+function pickFoeCountry(eraId, myId){
+  const list = COUNTRIES[eraId] || [];
+  const me = findCountry(eraId, myId);
+  // 优先抽对立阵营（历史敌对关系），避免盟友互打
+  let others = [];
+  if(me) others = list.filter(c => c.id !== myId && c.side !== me.side);
+  if(!others.length) others = list.filter(c => c.id !== myId);
+  return pick(others.length ? others : list);
+}
+
+const MISSIONS = [
+  // 拿破仑战争
+  {id:'nap1', camp:'nap', idx:1, name:'多佛海峡巡逻', map:'sea', player:'nap_frig', country:'uk', foeCountry:'fr',
+   foes:[['nap_brig',2]], obj:{type:'destroy'},
+   brief:'1803 年，英法再度开战。法国私掠船正利用夜色进出多佛海峡，你的护卫舰奉命清剿闯入巡逻区的双桅帆船，守住海峡咽喉。'},
+  {id:'nap2', camp:'nap', idx:2, name:'特拉法加之战', map:'sea', player:'nap_sol', country:'uk', foeCountry:'fr',
+   foes:[['nap_frig',2],['nap_brig',2]], obj:{type:'destroy'},
+   brief:'1805 年 10 月 21 日，特拉法加角外海。纳尔逊的旗舰正迎着法西联合舰队突破敌阵——战列线已经形成，舷炮齐射的时刻到了。'},
+  {id:'nap3', camp:'nap', idx:3, name:'封锁布雷斯特', map:'sea', player:'nap_sol', country:'uk', foeCountry:'fr',
+   foes:[['nap_frig',2],['nap_sol',1]], obj:{type:'survive', time:100},
+   brief:'皇家海军对法国军港布雷斯特的封锁已持续数年。法国舰队拼死突围，战列舰冲在最前——撑住封锁线 100 秒，等援军抵达。'},
+  // 第一次世界大战
+  {id:'ww1_1', camp:'ww1', idx:1, name:'索姆河首秀', map:'plain', player:'ww1_mark1', country:'uk', foeCountry:'de',
+   foes:[['ww1_a7v',2],['ww1_whip',1]], obj:{type:'destroy'},
+   brief:'1916 年 9 月 15 日，索姆河。人类历史上第一支坦克部队投入战场。你驾驶马克I型碾过弹坑累累的荒原，击穿德军防线。'},
+  {id:'ww1_2', camp:'ww1', idx:2, name:'康布雷突击', map:'city', player:'ww1_whip', country:'uk', foeCountry:'de',
+   foes:[['ww1_a7v',3]], obj:{type:'destroy'},
+   brief:'1917 年 11 月，康布雷。英军以坦克集群突袭兴登堡防线。惠比特坦克机动力远胜 A7V，穿插、绕后、扫射，撕开突破口。'},
+  {id:'ww1_3', camp:'ww1', idx:3, name:'堑壕终结', map:'plain', player:'ww1_mark1', country:'uk', foeCountry:'de',
+   foes:[['ww1_ft',3],['ww1_a7v',1]], obj:{type:'destroy'},
+   brief:'战争进入最后一年，德军集中全部新型坦克反扑。马克I型独当一面，在旷野中终结堑壕时代的最后一战。'},
+  // 十月革命
+  {id:'oct_1', camp:'oct', idx:1, name:'彼得格勒街垒', map:'city', player:'oct_austin', country:'bol', foeCountry:'prov',
+   foes:[['oct_ft',3]], obj:{type:'destroy'},
+   brief:'1917 年 11 月，彼得格勒。武装起义爆发，白军依托街垒顽抗。奥斯汀装甲车开上涅瓦大街，机枪扫平每一个路障。'},
+  {id:'oct_2', camp:'oct', idx:2, name:'装甲列车突围', map:'rail', player:'oct_train', country:'bol', foeCountry:'prov',
+   foes:[['oct_austin',2],['oct_ft',2],['oct_mark5',1]], obj:{type:'destroy'},
+   brief:'内战的铁路线是生死线。装甲列车「红十月」号沿铁轨突击，白军从两侧蜂拥而上——转动炮塔车厢，把整条铁路打成火海。'},
+  {id:'oct_3', camp:'oct', idx:3, name:'察里津保卫战', map:'plain', player:'oct_ft', country:'bol', foeCountry:'prov',
+   foes:[['oct_austin',3],['oct_mark5',1]], obj:{type:'destroy'},
+   brief:'1918 年，察里津。这座伏尔加河畔的堡垒正被白军重兵包围。你驾驶雷诺FT-17 冲入敌阵，用灵活的炮塔撕开包围圈。'},
+  // 第二次世界大战
+  {id:'ww2_1', camp:'ww2', idx:1, name:'波兰闪击战', map:'plain', player:'ww2_pz4', country:'de', foeCountry:'su',
+   foes:[['ww2_lt',3]], obj:{type:'destroy'},
+   brief:'1939 年 9 月，波兰平原。闪电战拉开序幕，四号坦克伴随装甲师碾过国境线，波军 T-26 正试图拦截。'},
+  {id:'ww2_2', camp:'ww2', idx:2, name:'库尔斯克对决', map:'plain', player:'ww2_tiger', country:'de', foeCountry:'su',
+   foes:[['ww2_t34',4]], obj:{type:'destroy'},
+   brief:'1943 年 7 月，库尔斯克突出部。人类史上最大坦克战。虎式的 88 炮与 T-34 的倾斜装甲在草原上碰撞出钢铁火花。'},
+  {id:'ww2_3', camp:'ww2', idx:3, name:'柏林巷战', map:'city', player:'ww2_t34', country:'su', foeCountry:'de',
+   foes:[['ww2_tiger',2],['ww2_pz4',2]], obj:{type:'destroy'},
+   brief:'1945 年 4 月，柏林。帝国大厦前的最后一条街。T-34 穿过废墟，迎战德军的虎式重坦克——胜利就在前方。'}
+];
+
+/* ---------------- 存档（Supabase 接口预留） ---------------- */
+const Save = {
+  KEY: 'steel_battle_2d_save_v1',
+  data: {camp:{}, free:{wins:0, bestKills:0, diff:1, countryEra:'nap', countryId:'uk'}, diff:1},
+  load(){
+    try{
+      const raw = localStorage.getItem(this.KEY);
+      if(raw){ const d = JSON.parse(raw); if(d && typeof d === 'object') this.data = Object.assign(this.data, d); }
+    }catch(e){ this.data = {camp:{}, free:{wins:0, bestKills:0, diff:1, countryEra:'nap', countryId:'uk'}, diff:1}; }
+  },
+  save(){ try{ localStorage.setItem(this.KEY, JSON.stringify(this.data)); }catch(e){ /* 隐私模式忽略 */ } },
+  done(camp, idx){ const a = this.data.camp[camp] || []; if(a.indexOf(idx) < 0){ a.push(idx); this.data.camp[camp] = a; } this.save(); },
+  unlocked(camp, idx){ if(idx <= 1) return true; const a = this.data.camp[camp] || []; return a.indexOf(idx - 1) >= 0; }
+};
+/* Supabase 后期接入点：把 Save.save() 替换为同步云端即可 */
+
+/* ---------------- 引擎 ---------------- */
+const Engine = function(cfg){
+  this.map = MAPS[cfg.mapId];
+  this.veh = VEH[cfg.player];
+  this.ents = [];       // 全部载具（含玩家与敌机）
+  this.shells = [];
+  this.parts = [];
+  this.texts = [];
+  this.cam = {x:0, y:0, shx:0, shy:0, shake:0};
+  this.time = 0;
+  this.endT = -1;       // 结算延迟计时
+  this.state = 'run';   // run | over
+  this.result = null;
+  this.stats = {kills:0, shots:0, hits:0, dmg:0};
+  this.cfg = cfg;
+  this.demo = !!cfg.demo;
+  this.stress = !!cfg.stress;
+  this.stressFrames = this.stress ? 600 : 0;   // 压测 10 秒自动结算
+  this.diff = cfg.diff || 1;
+  this.hudFn = null;
+  this.onEnd = null;
+  this.aimErr = 0.015 + 0.02 * this.diff;   // AI 瞄准误差
+  this.surviveT = (cfg.obj && cfg.obj.type === 'survive') ? cfg.obj.time : 0;
+  this.obs = this.map.obs || [];
+
+  // 生成玩家
+  const sp = this.map.blue[0];
+  this.player = this.spawn(this.veh, sp[0], sp[1], 'blue', false, cfg.country);
+  this.ents.push(this.player);
+  // 生成敌机
+  (cfg.foes || []).forEach(f => {
+    const v = VEH[f[0]];
+    for(let i = 0; i < f[1]; i++){ const p = this.pickRedSpawn(); this.ents.push(this.spawn(v, p[0], p[1], 'red', true, cfg.foeCountry)); }
+  });
+};
+
+Engine.prototype.spawn = function(v, x, y, faction, ai, country){
+  return {
+    id: Math.random().toString(36).slice(2),
+    v:v, kind:v.kind, name:v.name, faction:faction, ai:ai, country:country || null,
+    x:x, y:y, heading:(faction === 'red' ? Math.PI : 0), turret:0,
+    hp:v.hp, maxHp:v.hp, speedCur:0, reload:0, sideReload:0,
+    radius:v.r, alive:true, wreck:false, burnT:0,
+    strafeDir: Math.random() < 0.5 ? 1 : -1, strafeT: rand(2,4),
+    aimOff: 0, moveDelay: 0
+  };
+};
+
+Engine.prototype.pickRedSpawn = function(){
+  const list = this.map.red.slice();
+  for(let i = list.length - 1; i > 0; i--){ const j = (Math.random() * (i + 1)) | 0; const t = list[i]; list[i] = list[j]; list[j] = t; }
+  for(let i = 0; i < list.length; i++){
+    const p = list[i];
+    if(dist(p[0], p[1], this.player.x, this.player.y) < 400) continue;
+    if(!this.clearSpot(p[0], p[1], 30)) continue;
+    return [p[0] + rand(-40, 40), p[1] + rand(-40, 40)];
+  }
+  return [list[0][0], list[0][1]];
+};
+Engine.prototype.clearSpot = function(x, y, r){
+  for(let i = 0; i < this.obs.length; i++){
+    const o = this.obs[i];
+    if(rectHit(o, x, y)) return false;
+    if(dist(x, y, o.x, o.y) < (o.w + o.h) / 2 + r) return false;
+  }
+  return true;
+};
+
+/* ---------- 移动 ---------- */
+Engine.prototype.moveEnt = function(e, dt, fwd, back, turn){
+  const v = e.v;
+  if(e.kind === 'train'){
+    const r = this.map.rail;
+    let ny = e.y + fwd * v.spd * dt - back * v.spd * 0.6 * dt;
+    e.y = clamp(ny, r.y1 + 40, r.y2 - 40);
+    e.heading = Math.PI / 2;
+    e.x = r.x;
+    e.speedCur = fwd ? v.spd : back ? -v.spd * 0.6 : 0;
+    return;
+  }
+  const target = (fwd ? 1 : 0) - (back ? 0.6 : 0);
+  e.speedCur += (target * v.spd - e.speedCur) * Math.min(1, 2.5 * dt);
+  e.heading += turn * v.turn * dt * (1 - Math.abs(e.speedCur) / v.spd * 0.35);
+  e.x += Math.cos(e.heading) * e.speedCur * dt;
+  e.y += Math.sin(e.heading) * e.speedCur * dt;
+  e.x = clamp(e.x, 40, this.map.w - 40);
+  e.y = clamp(e.y, 40, this.map.h - 40);
+  // 撞障碍物：简单回推
+  for(let i = 0; i < this.obs.length; i++){
+    const o = this.obs[i];
+    if(o.type === 'tree' || o.type === 'rock'){ if(dist(e.x, e.y, o.x, o.y) < (o.w + o.h) / 2 + e.radius){ const d = dist(e.x,e.y,o.x,o.y) || 1; e.x = o.x + (e.x - o.x) / d * ((o.w + o.h) / 2 + e.radius); e.y = o.y + (e.y - o.y) / d * ((o.w + o.h) / 2 + e.radius); } }
+    else if(rectHit(o, e.x, e.y)){ const nx = clamp(e.x, o.x - o.w/2 - e.radius, o.x + o.w/2 + e.radius); const ny = clamp(e.y, o.y - o.h/2 - e.radius, o.y + o.h/2 + e.radius); if(Math.abs(nx - e.x) < Math.abs(ny - e.y)) e.x = nx; else e.y = ny; }
+  }
+};
+
+/* ---------- 开火 ---------- */
+Engine.prototype.fireTurret = function(e, aim, manual){
+  const g = e.v.gun;
+  if(e.reload > 0) return;
+  if(Math.abs(angDiff(e.turret, aim)) > (manual ? 0.14 : 0.12 + e.aimErr * 2)) return;
+  const tipX = e.x + Math.cos(e.turret) * (e.radius + 10);
+  const tipY = e.y + Math.sin(e.turret) * (e.radius + 10);
+  this.shells.push({x:tipX, y:tipY, vx:Math.cos(e.turret) * 950, vy:Math.sin(e.turret) * 950,
+    dmg:g.dmg, pen:g.pen, owner:e, life:g.rng / 950 + 0.3, px:tipX, py:tipY, col: e.faction === 'blue' ? '#FFE3B3' : '#FFB199'});
+  e.reload = g.rel;
+  this.flash(tipX, tipY, e.turret);
+  if(e === this.player) this.stats.shots++;
+};
+Engine.prototype.fireBroadside = function(e){
+  const g = e.v.gun;
+  if(e.sideReload > 0) return;
+  // 找侧舷弧内的目标
+  let best = null, bestSide = 0, bestArc = 0;
+  for(let i = 0; i < this.ents.length; i++){
+    const t = this.ents[i];
+    if(t === e || !t.alive || t.faction === e.faction) continue;
+    const d = dist(e.x, e.y, t.x, t.y);
+    if(d > g.rng) continue;
+    const rel = angDiff(Math.atan2(t.y - e.y, t.x - e.x), e.heading);
+    let side = 0, arc = 0;
+    if(rel > 0.4 && rel < 2.75){ side = 1; arc = Math.abs(rel - Math.PI/2); }
+    else if(rel < -0.4 && rel > -2.75){ side = -1; arc = Math.abs(rel + Math.PI/2); }
+    if(side !== 0 && (best === null || arc < bestArc)){ best = t; bestSide = side; bestArc = arc; }
+  }
+  if(!best) return;
+  const perp = bestSide;
+  const baseA = e.heading + perp * Math.PI / 2;
+  for(let i = 0; i < g.shells; i++){
+    const a = baseA + rand(-1, 1) * g.spread * 0.017;
+    const ox = e.x + Math.cos(e.heading) * Math.cos(perp) * 0; // 侧舷位置
+    const sx = e.x + Math.cos(baseA) * e.radius * 0.75;
+    const sy = e.y + Math.sin(baseA) * e.radius * 0.75;
+    this.shells.push({x:sx, y:sy, vx:Math.cos(a) * 900, vy:Math.sin(a) * 900,
+      dmg:g.dmg, pen:g.pen, owner:e, life:g.rng / 900 + 0.3, px:sx, py:sy, col: e.faction === 'blue' ? '#FFE3B3' : '#FFB199'});
+  }
+  e.sideReload = g.rel;
+  if(e === this.player) this.stats.shots += g.shells;
+  this.flash(e.x + Math.cos(baseA) * e.radius, e.y + Math.sin(baseA) * e.radius, baseA);
+};
+
+/* ---------- 弹道命中与装甲 ---------- */
+Engine.prototype.hitVehicle = function(s, e){
+  const dir = Math.atan2(s.vy, s.vx);
+  const rel = Math.abs(angDiff(dir, e.heading));
+  const face = rel < Math.PI/4 ? 0 : rel < 3*Math.PI/4 ? 1 : 2;   // 0前 1侧 2后
+  const inc = Math.min(Math.abs(angDiff(dir, e.heading)), Math.PI/2);
+  const eff = e.v.armor[face] * (1 + 0.006 * (inc * 180 / Math.PI));
+  const penRoll = s.pen * rand(0.9, 1.1);
+  let dmg = 0, type = 'pen';
+  if(inc > 1.13 && penRoll < eff * 1.25){ type = 'bounce'; }        // 65度以上跳弹
+  else if(penRoll >= eff){ dmg = s.dmg * rand(0.9, 1.1); type = 'pen'; }
+  else { dmg = s.dmg * 0.12; type = 'spall'; }
+  const atX = s.x, atY = s.y;
+  if(type === 'bounce'){
+    // 沿被击车辆正面法线反射，让跳弹真的弹开
+    const nx = Math.cos(e.heading), ny = Math.sin(e.heading);
+    const vd = s.vx * nx + s.vy * ny;
+    s.vx -= 2 * vd * nx; s.vy -= 2 * vd * ny;
+    s.life = Math.min(s.life, 0.18);
+    this.burst(atX, atY, 4, '#C8C8C8');
+    this.text(atX, atY, '跳弹', '#C8C8C8');
+    return false;                 // 未被消耗，弹体继续飞行
+  }
+  if(type === 'spall'){
+    this.burst(atX, atY, 3, '#8A8A8A');
+    this.text(atX, atY, '未击穿', '#9AA3AB');
+  } else {
+    e.hp -= dmg;
+    if(s.owner === this.player){ this.stats.hits++; this.stats.dmg += dmg; }
+    this.burst(atX, atY, 8, '#FFD166');
+    this.text(atX, atY, '-' + Math.round(dmg), '#FFE3B3');
+    if(e === this.player) this.cam.shake = Math.min(1, this.cam.shake + 0.5);
+    if(e.hp <= 0) this.destroy(e);
+  }
+  return true;                    // 已消耗（击穿/未击穿）
+};
+
+/* ---------- 销毁与粒子 ---------- */
+Engine.prototype.destroy = function(e){
+  e.alive = false; e.wreck = true;
+  this.explode(e.x, e.y);
+  if(e.faction === 'red' && e !== this.player) this.stats.kills++;
+};
+Engine.prototype.explode = function(x, y){
+  this.burst(x, y, 22, '#FF7A3C');
+  this.burst(x, y, 10, '#FFD166');
+  for(let i = 0; i < 10; i++){ this.parts.push({x:x, y:y, vx:rand(-25,25), vy:rand(-40,-5), life:rand(0.8,1.6), max:1.6, size:rand(8,16), type:'smoke', col:'#3A3A3A'}); }
+  this.parts.push({x:x, y:y, vx:0, vy:0, life:0.16, max:0.16, size:60, type:'flash', col:'#FFE3B3'});
+  this.cam.shake = Math.min(1, this.cam.shake + 0.7);
+};
+Engine.prototype.burst = function(x, y, n, col){
+  for(let i = 0; i < n; i++){
+    const a = rand(0, TAU), sp = rand(40, 220);
+    this.parts.push({x:x, y:y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:rand(0.2,0.5), max:0.5, size:rand(2,4), type:'spark', col:col});
+  }
+};
+Engine.prototype.flash = function(x, y, a){
+  this.parts.push({x:x + Math.cos(a)*6, y:y + Math.sin(a)*6, vx:Math.cos(a)*40, vy:Math.sin(a)*40, life:0.08, max:0.08, size:14, type:'flash', col:'#FFE3B3'});
+};
+Engine.prototype.text = function(x, y, t, col){
+  this.texts.push({x:x, y:y, t:t, col:col, life:0.9});
+};
+
+/* ---------- AI ---------- */
+Engine.prototype.aiUpdate = function(e, dt){
+  const t = this.player && this.player.alive ? this.player : null;
+  if(e.kind === 'ship'){ this.shipAI(e, dt, t); return; }
+  // 坦克 / 装甲车 / 列车
+  if(!t){ e.speedCur = 0; return; }
+  const d = dist(e.x, e.y, t.x, t.y);
+  const g = e.v.gun;
+  e.moveDelay -= dt;
+  if(e.moveDelay <= 0){ e.moveDelay = rand(0.3, 1.2); if(Math.random() < 0.3) e.strafeDir *= -1; }
+  // 移动决策
+  let fwd = 0, back = 0, turn = 0;
+  if(e.kind === 'train'){
+    // 列车只沿铁路上下移动，贴近目标
+    const targetY = t.y;
+    if(Math.abs(e.y - targetY) > 150){ fwd = targetY > e.y ? 1 : 0; back = targetY < e.y ? 1 : 0; }
+    else { back = 1; }
+    turn = 0;
+  } else {
+    if(d > g.rng * 0.8){ fwd = 1; const a = Math.atan2(t.y - e.y, t.x - e.x); const turnNeed = angDiff(a, e.heading); turn = clamp(turnNeed, -1, 1) * 2; }
+    else if(d < g.rng * 0.45){ back = 1; const a = Math.atan2(t.y - e.y, t.x - e.x); const turnNeed = angDiff(a + Math.PI, e.heading); turn = clamp(turnNeed, -1, 1) * 2; }
+    else { const a = Math.atan2(t.y - e.y, t.x - e.x) + Math.PI/2 * e.strafeDir; const turnNeed = angDiff(a, e.heading); turn = clamp(turnNeed, -1, 1) * 1.4; }
+  }
+  this.moveEnt(e, dt, fwd, back, turn);
+  // 瞄准
+  const lead = d / 950;
+  const ax = t.x + Math.cos(t.heading) * t.speedCur * lead;
+  const ay = t.y + Math.sin(t.heading) * t.speedCur * lead;
+  const aim = Math.atan2(ay - e.y, ax - e.x) + rand(-1, 1) * e.aimErr;
+  e.turret += angDiff(aim, e.turret) * Math.min(1, 3 * dt);
+  // 开火
+  if(losClear(this.obs, e.x, e.y, t.x, t.y)) this.fireTurret(e, e.turret, false);
+};
+Engine.prototype.shipAI = function(e, dt, t){
+  if(!t){ e.speedCur = 0; return; }
+  const base = Math.atan2(t.y - e.y, t.x - e.x);
+  const side = e.faction === 'red' ? -1 : 1;
+  const want = base + side * Math.PI / 2;
+  const turnNeed = angDiff(want, e.heading);
+  const turn = clamp(turnNeed, -1, 1) * 1.6;
+  const fwd = Math.abs(turnNeed) < 1.2 ? 1 : 0;
+  this.moveEnt(e, dt, fwd, 0, turn);
+  this.fireBroadside(e);
+};
+
+/* ---------- 主更新 ---------- */
+Engine.prototype.update = function(dt, input){
+  this.time += dt;
+  if(this.stress && this.stressFrames > 0){
+    this.stressFrames--;
+    if(this.stressFrames <= 0){ this.state = 'over'; this.result = 'win'; this.endT = 0.2; }
+  }
+  const p = this.player;
+  // 玩家控制
+  if(p && p.alive){
+    if(this.demo || this.stress || input.ai){ this.aiUpdate(p, dt); }
+    else {
+      const fwd = input.up ? 1 : 0, back = input.down ? 1 : 0;
+      const turn = (input.left ? -1 : 0) + (input.right ? 1 : 0);
+      this.moveEnt(p, dt, fwd, back, turn);
+      const wx = this.cam.x + (input.mx - this.cvw / 2), wy = this.cam.y + (input.my - this.cvh / 2);
+      const aim = Math.atan2(wy - p.y, wx - p.x);
+      p.turret += angDiff(aim, p.turret) * Math.min(1, 6 * dt);
+      const wantFire = input.fire;
+      if(wantFire){
+        if(p.kind === 'ship'){ this.fireBroadside(p); }
+        else { this.fireTurret(p, p.turret, true); }
+      }
+    }
+  }
+  // 敌机
+  for(let i = 0; i < this.ents.length; i++){
+    const e = this.ents[i];
+    if(e === p || !e.alive) continue;
+    this.aiUpdate(e, dt);
+  }
+  // 冷却
+  for(let i = 0; i < this.ents.length; i++){
+    const e = this.ents[i];
+    if(!e.alive) continue;
+    e.reload = Math.max(0, e.reload - dt);
+    e.sideReload = Math.max(0, e.sideReload - dt);
+    if(e.kind !== 'ship' && e !== p && !this.demo && !this.stress && e.ai){ /* 已由 aiUpdate 开火 */ }
+    // 燃烧特效
+    if(e.hp < e.maxHp * 0.35){
+      e.burnT -= dt;
+      if(e.burnT <= 0){ e.burnT = 0.12;
+        this.parts.push({x:e.x + rand(-e.radius*0.5,e.radius*0.5), y:e.y + rand(-e.radius*0.5,e.radius*0.5), vx:rand(-8,8), vy:rand(-30,-10), life:rand(0.6,1.2), max:1.2, size:rand(6,12), type:'smoke', col:'#3A3A3A'});
+        if(e.hp < e.maxHp * 0.18) this.parts.push({x:e.x, y:e.y, vx:rand(-10,10), vy:rand(-35,-15), life:rand(0.3,0.6), max:0.6, size:rand(4,8), type:'spark', col:'#FF7A3C'});
+      }
+    }
+  }
+  // 弹道
+  for(let i = this.shells.length - 1; i >= 0; i--){
+    const s = this.shells[i];
+    s.px = s.x; s.py = s.y;
+    s.x += s.vx * dt; s.y += s.vy * dt;
+    s.life -= dt;
+    if(s.life <= 0){ this.shells.splice(i, 1); continue; }
+    // 障碍物
+    let hitObs = false;
+    for(let j = 0; j < this.obs.length; j++){ if(rectHit(this.obs[j], s.x, s.y)){ hitObs = true; break; } }
+    if(hitObs){ this.burst(s.x, s.y, 5, '#C8C8C8'); this.shells.splice(i, 1); continue; }
+    // 载具
+    let hit = false;
+    for(let j = 0; j < this.ents.length; j++){
+      const e = this.ents[j];
+      if(!e.alive || e === s.owner) continue;
+      if(dist(s.x, s.y, e.x, e.y) < e.radius + 3){
+        const consumed = this.hitVehicle(s, e);
+        hit = true;
+        if(consumed) this.shells.splice(i, 1);
+        break;
+      }
+    }
+    if(hit) continue;
+  }
+  // 粒子
+  for(let i = this.parts.length - 1; i >= 0; i--){
+    const pa = this.parts[i];
+    pa.life -= dt;
+    if(pa.life <= 0){ this.parts.splice(i, 1); continue; }
+    pa.x += pa.vx * dt; pa.y += pa.vy * dt;
+    if(pa.type === 'smoke'){ pa.vx *= 0.98; pa.vy *= 0.98; pa.size += dt * 18; }
+    else { pa.vx *= 0.94; pa.vy *= 0.94; }
+  }
+  for(let i = this.texts.length - 1; i >= 0; i--){
+    const t = this.texts[i];
+    t.life -= dt; t.y -= 24 * dt;
+    if(t.life <= 0) this.texts.splice(i, 1);
+  }
+  // 相机
+  if(p && p.alive){
+    const tx = p.x - this.cvw / 2, ty = p.y - this.cvh / 2;
+    this.cam.x = lerp(this.cam.x, tx, Math.min(1, 5 * dt));
+    this.cam.y = lerp(this.cam.y, ty, Math.min(1, 5 * dt));
+    this.cam.x = clamp(this.cam.x, 0, this.map.w - this.cvw);
+    this.cam.y = clamp(this.cam.y, 0, this.map.h - this.cvh);
+  }
+  this.cam.shake = Math.max(0, this.cam.shake - dt * 2);
+  this.cam.shx = rand(-1, 1) * this.cam.shake * 6;
+  this.cam.shy = rand(-1, 1) * this.cam.shake * 6;
+  // 目标判定
+  if(this.state === 'run'){
+    if(p && !p.alive){ this.state = 'over'; this.result = 'lose'; this.endT = 1.5; }
+    else if(this.cfg.obj.type === 'destroy'){
+      let left = 0;
+      for(let i = 0; i < this.ents.length; i++){ const e = this.ents[i]; if(e !== p && e.alive && e.faction === 'red') left++; }
+      if(left === 0){ this.state = 'over'; this.result = 'win'; this.endT = 1.0; }
+    } else if(this.cfg.obj.type === 'survive'){
+      this.surviveT -= dt;
+      if(this.surviveT <= 0){ this.state = 'over'; this.result = 'win'; this.endT = 1.0; }
+    }
+  } else if(this.state === 'over' && this.endT > 0){
+    this.endT -= dt;
+    if(this.endT <= 0 && this.onEnd) this.onEnd(this.result);
+  }
+  // HUD
+  if(this.hudFn){
+    let left = 0;
+    for(let i = 0; i < this.ents.length; i++){ const e = this.ents[i]; if(e !== p && e.alive && e.faction === 'red') left++; }
+    this.hudFn({
+      hp: p ? Math.max(0, Math.round(p.hp)) : 0, maxHp: p ? p.maxHp : 1,
+      name: p ? p.name : '', country: p && p.country ? p.country.name : '', countryCol: p && p.country ? p.country.color : '', reload: p ? (p.kind === 'ship' ? clamp(1 - p.sideReload / p.v.gun.rel, 0, 1) : clamp(1 - p.reload / p.v.gun.rel, 0, 1)) : 0,
+      kills: this.stats.kills, shots: this.stats.shots, dmg: Math.round(this.stats.dmg),
+      obj: this.cfg.obj.type === 'survive' ? '坚守 ' + Math.ceil(Math.max(0, this.surviveT)) + ' 秒' : '摧毁全部敌军',
+      left: left, time: Math.floor(this.time)
+    });
+  }
+};
+
+/* ---------- 渲染 ---------- */
+Engine.prototype.render = function(ctx){
+  const c = this.cam;
+  ctx.fillStyle = '#101418';
+  ctx.fillRect(0, 0, this.cvw, this.cvh);
+  ctx.save();
+  ctx.translate(-c.x + c.shx, -c.y + c.shy);
+  // 地形
+  ctx.fillStyle = this.map.bg;
+  ctx.fillRect(0, 0, this.map.w, this.map.h);
+  // 网格
+  ctx.strokeStyle = this.map.grid;
+  ctx.lineWidth = 1;
+  const gs = 80;
+  for(let x = 0; x <= this.map.w; x += gs){ ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.map.h); ctx.stroke(); }
+  for(let y = 0; y <= this.map.h; y += gs){ ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.map.w, y); ctx.stroke(); }
+  // 铁路
+  if(this.map.rail){
+    const r = this.map.rail;
+    ctx.fillStyle = '#3A3628';
+    ctx.fillRect(r.x - 9, r.y1, 18, r.y2 - r.y1);
+    ctx.strokeStyle = '#8A8678'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(r.x - 6, r.y1); ctx.lineTo(r.x - 6, r.y2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(r.x + 6, r.y1); ctx.lineTo(r.x + 6, r.y2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 3;
+    for(let y = r.y1; y <= r.y2; y += 24){ ctx.beginPath(); ctx.moveTo(r.x - 9, y); ctx.lineTo(r.x + 9, y); ctx.stroke(); }
+  }
+  // 障碍物
+  for(let i = 0; i < this.obs.length; i++){
+    const o = this.obs[i];
+    if(o.type === 'tree'){
+      ctx.fillStyle = '#3E4A2E'; ctx.beginPath(); ctx.arc(o.x, o.y, o.w / 2, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.arc(o.x, o.y, o.w / 2, 0, TAU); ctx.fill();
+    } else if(o.type === 'rock'){
+      ctx.fillStyle = '#8A8274'; ctx.beginPath(); ctx.arc(o.x, o.y, (o.w + o.h) / 4, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.arc(o.x - 3, o.y + 3, (o.w + o.h) / 4, 0, TAU); ctx.fill();
+    } else if(o.type === 'island'){
+      ctx.fillStyle = '#C2B280'; ctx.beginPath(); ctx.ellipse(o.x, o.y, o.w / 2, o.h / 2, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#7A8A5C'; ctx.beginPath(); ctx.ellipse(o.x, o.y, o.w / 2 * 0.7, o.h / 2 * 0.6, 0, 0, TAU); ctx.fill();
+    } else if(o.type === 'build'){
+      ctx.fillStyle = '#6E6A60'; ctx.fillRect(o.x - o.w/2, o.y - o.h/2, o.w, o.h);
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 2; ctx.strokeRect(o.x - o.w/2, o.y - o.h/2, o.w, o.h);
+      ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(o.x - o.w/2 + 6, o.y - o.h/2 + 6, o.w - 12, o.h - 12);
+    }
+  }
+  // 载具
+  for(let i = 0; i < this.ents.length; i++){
+    const e = this.ents[i];
+    if(e.wreck){ this.drawWreck(ctx, e); }
+    else { this.drawEnt(ctx, e); }
+  }
+  // 弹道
+  for(let i = 0; i < this.shells.length; i++){
+    const s = this.shells[i];
+    ctx.strokeStyle = s.col; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(s.px, s.py); ctx.lineTo(s.x, s.y); ctx.stroke();
+    ctx.fillStyle = s.col; ctx.beginPath(); ctx.arc(s.x, s.y, 2.5, 0, TAU); ctx.fill();
+  }
+  // 粒子
+  for(let i = 0; i < this.parts.length; i++){
+    const pa = this.parts[i];
+    const a = pa.life / pa.max;
+    if(pa.type === 'smoke'){ ctx.globalAlpha = a * 0.5; ctx.fillStyle = pa.col; ctx.beginPath(); ctx.arc(pa.x, pa.y, pa.size, 0, TAU); ctx.fill(); }
+    else if(pa.type === 'flash'){ ctx.globalAlpha = a; ctx.fillStyle = pa.col; ctx.beginPath(); ctx.arc(pa.x, pa.y, pa.size * a, 0, TAU); ctx.fill(); }
+    else { ctx.globalAlpha = a; ctx.fillStyle = pa.col; ctx.beginPath(); ctx.arc(pa.x, pa.y, pa.size, 0, TAU); ctx.fill(); }
+  }
+  ctx.globalAlpha = 1;
+  // 漂浮文字
+  ctx.font = '12px "Noto Sans SC", sans-serif';
+  ctx.textAlign = 'center';
+  for(let i = 0; i < this.texts.length; i++){
+    const t = this.texts[i];
+    ctx.globalAlpha = clamp(t.life / 0.5, 0, 1);
+    ctx.fillStyle = t.col;
+    ctx.fillText(t.t, t.x, t.y);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  // 小地图
+  this.drawMinimap(ctx);
+};
+
+Engine.prototype.drawEnt = function(ctx, e){
+  const col = e.v.col, col2 = e.v.col2;
+  ctx.save();
+  ctx.translate(e.x, e.y);
+  // 阵营环
+  ctx.fillStyle = e.faction === 'blue' ? 'rgba(62,124,191,0.55)' : 'rgba(192,80,77,0.55)';
+  ctx.beginPath(); ctx.arc(0, 0, e.radius + 4, 0, TAU); ctx.fill();
+  // 国家环（细描边，标识所属阵营国家）
+  if(e.country){ ctx.strokeStyle = e.country.color; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, e.radius + 4, 0, TAU); ctx.stroke(); }
+  if(e.kind === 'ship'){
+    ctx.rotate(e.heading);
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(e.radius + 10, 0); ctx.lineTo(-e.radius * 0.9, -e.radius * 0.8); ctx.lineTo(-e.radius * 0.9, e.radius * 0.8);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = col2;
+    ctx.fillRect(-e.radius * 0.9, -e.radius * 0.75, e.radius * 1.7, e.radius * 1.5);
+    // 桅杆与帆
+    ctx.strokeStyle = '#3A2E22'; ctx.lineWidth = 2;
+    for(let i = 0; i < 3; i++){ const mx = e.radius * 0.4 - i * e.radius * 0.5; ctx.beginPath(); ctx.moveTo(mx, -e.radius * 0.4); ctx.lineTo(mx, -e.radius * 1.6); ctx.stroke();
+      ctx.fillStyle = 'rgba(232,226,212,0.75)'; ctx.fillRect(mx - 8, -e.radius * 1.5, 16, 12);
+    }
+    // 旗帜
+    ctx.fillStyle = e.faction === 'blue' ? '#3E7CBF' : '#C0504D';
+    ctx.beginPath(); ctx.moveTo(e.radius + 10, 0); ctx.lineTo(e.radius + 26, -6); ctx.lineTo(e.radius + 10, 0); ctx.fill();
+    ctx.restore();
+    return;
+  }
+  if(e.kind === 'train'){
+    ctx.rotate(e.heading - Math.PI / 2);
+    // 车体（长）
+    ctx.fillStyle = col2; ctx.fillRect(-e.radius - 8, -e.radius * 3.2, e.radius * 2 + 16, e.radius * 6.4);
+    ctx.fillStyle = col; ctx.fillRect(-e.radius, -e.radius * 3, e.radius * 2, e.radius * 6);
+    // 车轮
+    ctx.fillStyle = '#222';
+    for(let i = -2.6; i <= 2.6; i += 0.65){ ctx.beginPath(); ctx.arc(i * e.radius, e.radius + 5, 5, 0, TAU); ctx.fill(); }
+    // 烟囱与炮塔
+    ctx.fillStyle = '#222'; ctx.fillRect(e.radius * 0.3, -e.radius * 3, 10, 16);
+    ctx.save(); ctx.rotate(-(e.turret - Math.PI/2));
+    ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(0, 0, e.radius * 0.8, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.radius * 1.6, 0); ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+    return;
+  }
+  // 坦克
+  ctx.rotate(e.heading);
+  ctx.fillStyle = col2; ctx.fillRect(-e.radius * 0.7, -e.radius - 3, e.radius * 1.4, e.radius * 2 + 6);   // 履带
+  ctx.fillStyle = col; ctx.fillRect(-e.radius * 0.9, -e.radius * 0.75, e.radius * 1.8, e.radius * 1.5); // 车体
+  ctx.save();
+  ctx.rotate(e.turret - e.heading);
+  ctx.fillStyle = col2; ctx.beginPath(); ctx.arc(0, 0, e.radius * 0.62, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#222'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(e.radius * 1.5, 0); ctx.stroke();   // 炮管
+  ctx.restore();
+  ctx.restore();
+  // 血条
+  if(e.hp < e.maxHp && e !== this.player){
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(e.x - e.radius, e.y - e.radius - 12, e.radius * 2, 5);
+    ctx.fillStyle = '#C0504D'; ctx.fillRect(e.x - e.radius, e.y - e.radius - 12, e.radius * 2 * clamp(e.hp / e.maxHp, 0, 1), 5);
+  }
+  // 玩家箭头
+  if(e === this.player){
+    ctx.strokeStyle = '#FFF'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + 8, 0, TAU); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.x, e.y - e.radius - 14); ctx.lineTo(e.x - 5, e.y - e.radius - 22); ctx.lineTo(e.x + 5, e.y - e.radius - 22);
+    ctx.closePath(); ctx.fillStyle = '#FFF'; ctx.fill();
+  }
+};
+Engine.prototype.drawWreck = function(ctx, e){
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.translate(e.x, e.y);
+  ctx.rotate(e.heading);
+  ctx.fillStyle = '#2A2A2A';
+  if(e.kind === 'ship'){
+    ctx.beginPath(); ctx.moveTo(e.radius + 6, 0); ctx.lineTo(-e.radius * 0.9, -e.radius * 0.8); ctx.lineTo(-e.radius * 0.9, e.radius * 0.8); ctx.closePath(); ctx.fill();
+  } else {
+    ctx.fillRect(-e.radius * 0.9, -e.radius * 0.75, e.radius * 1.8, e.radius * 1.5);
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+};
+
+Engine.prototype.drawMinimap = function(ctx){
+  const mw = 170, mh = mw * this.map.h / this.map.w;
+  const x0 = this.cvw - mw - 14, y0 = 14;
+  ctx.fillStyle = 'rgba(12,15,18,0.85)';
+  ctx.fillRect(x0 - 2, y0 - 2, mw + 4, mh + 4);
+  ctx.fillStyle = this.map.bg;
+  ctx.fillRect(x0, y0, mw, mh);
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1;
+  ctx.strokeRect(x0 - 2, y0 - 2, mw + 4, mh + 4);
+  const sx = mw / this.map.w, sy = mh / this.map.h;
+  for(let i = 0; i < this.obs.length; i++){
+    const o = this.obs[i];
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(x0 + (o.x - o.w/2) * sx, y0 + (o.y - o.h/2) * sy, o.w * sx, o.h * sy);
+  }
+  for(let i = 0; i < this.ents.length; i++){
+    const e = this.ents[i];
+    if(!e.alive) continue;
+    ctx.fillStyle = e.faction === 'blue' ? '#4FA3FF' : '#FF6B5E';
+    ctx.beginPath(); ctx.arc(x0 + e.x * sx, y0 + e.y * sy, 2.4, 0, TAU); ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.strokeRect(x0 + this.cam.x * sx, y0 + this.cam.y * sy, this.cvw * sx, this.cvh * sy);
+};
+
+/* ---------------- 主控（UI / 状态机） ---------------- */
+const Game = {
+  eng: null, state: 'menu', era: 'nap', camV: {x:0, y:0}, raf: 0, lastT: 0,
+  input: {up:false, down:false, left:false, right:false, fire:false, mx:0, my:0, ai:false},
+  joy: null, // 触屏摇杆
+  fpsT: 0, fpsN: 0,
+  init(){ this.canvas = document.getElementById('game'); this.ctx = this.canvas.getContext('2d');
+    this.ui = document.getElementById('ui'); this.dbg = document.getElementById('debug'); this.fpsEl = document.getElementById('fps');
+    Save.load(); this.resize();
+    window.addEventListener('resize', () => this.resize());
+    document.addEventListener('keydown', e => this.key(e, true));
+    document.addEventListener('keyup', e => this.key(e, false));
+    this.canvas.addEventListener('pointerdown', e => this.pDown(e));
+    this.canvas.addEventListener('pointermove', e => this.pMove(e));
+    this.canvas.addEventListener('pointerup', e => this.pUp(e));
+    this.canvas.addEventListener('pointercancel', e => this.pUp(e));
+    document.addEventListener('visibilitychange', () => { if(document.hidden) this.pause(); });
+    window.addEventListener('error', ev => this.log('错误: ' + (ev.message || '未知'), true));
+    window.addEventListener('unhandledrejection', ev => this.log('异步错误: ' + (ev.reason && ev.reason.message || '未知'), true));
+    this.menu(); this.loop(performance.now());
+  },
+  resize(){ this.cvw = this.canvas.width = window.innerWidth; this.cvh = this.canvas.height = window.innerHeight; },
+  /* ---- 输入 ---- */
+  key(e, down){
+    const c = (e.code === 'KeyF8') ? 'F8' : (e.code === 'KeyF9') ? 'F9' : e.code;
+    if(c === 'KeyW' || c === 'ArrowUp') this.input.up = down;
+    else if(c === 'KeyS' || c === 'ArrowDown') this.input.down = down;
+    else if(c === 'KeyA' || c === 'ArrowLeft') this.input.left = down;
+    else if(c === 'KeyD' || c === 'ArrowRight') this.input.right = down;
+    else if(c === 'Space'){ this.input.fire = down; e.preventDefault(); }
+    else if(c === 'Escape' && down){ if(this.state === 'battle') this.togglePause(); else if(this.state === 'help' || this.state === 'free' || this.state === 'missions' || this.state === 'campaign') this.menu(); }
+    else if(c === 'Digit1' && down && this.state === 'menu'){ this.campaign(); }
+    else if(c === 'Digit2' && down && this.state === 'menu'){ this.freeSetup(); }
+    else if(c === 'Digit3' && down && this.state === 'menu'){ this.help(); }
+    else if(c >= 'Digit1' && c <= 'Digit4' && down && this.state === 'campaign'){ const n = +c.slice(5); this.era = ERAS[n - 1].id; this.missions(); }
+    else if(c >= 'Digit1' && c <= 'Digit9' && down && this.state === 'missions'){
+      const n = +c.slice(5);
+      const m = MISSIONS.find(x => x.camp === this.era && x.idx === n);
+      if(m && Save.unlocked(m.camp, m.idx)) this.battle(m);
+    }
+    else if(c === 'Enter' && down && this.state === 'result'){ const b = document.getElementById('rAct'); if(b) b.click(); }
+    else if(c === 'Enter' && down && this.state === 'free'){ this.freeBattle(); }
+    else if(c === 'KeyE' && down && this.state === 'result'){ const b = document.getElementById('rAlt'); if(b) b.click(); }
+    else if(c === 'KeyQ' && down && this.state === 'result'){ const b = document.getElementById('rBack'); if(b) b.click(); }
+    else if(c === 'F8' && down){ if(this.eng && this.state === 'battle'){ this.eng.state = 'over'; this.eng.result = 'win'; this.eng.endT = 0.2; } }
+    else if(c === 'F9' && down){ if(this.state === 'battle' || this.state === 'menu') this.stress(); }
+    if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(c) >= 0) e.preventDefault();
+  },
+  pDown(e){
+    if(this.state !== 'battle') return;
+    this.canvas.setPointerCapture && this.canvas.setPointerCapture(e.pointerId);
+    if(e.clientX < this.cvw * 0.4){ this.joy = {id:e.pointerId, ax:e.clientX, ay:e.clientY, x:0, y:0}; }
+    else { this.input.mx = e.clientX; this.input.my = e.clientY; this.input.fire = true; }
+  },
+  pMove(e){
+    this.input.mx = e.clientX; this.input.my = e.clientY;
+    if(this.joy && this.joy.id === e.pointerId){
+      let dx = e.clientX - this.joy.ax, dy = e.clientY - this.joy.ay;
+      const d = Math.hypot(dx, dy); const max = 70;
+      if(d > max){ dx = dx / d * max; dy = dy / d * max; }
+      this.joy.x = dx; this.joy.y = dy;
+    }
+  },
+  pUp(e){
+    if(this.joy && this.joy.id === e.pointerId) this.joy = null;
+    this.input.fire = false;
+  },
+  /* ---- 调试 ---- */
+  log(msg, err){
+    const d = document.createElement('div');
+    d.textContent = (err ? '[!] ' : '') + msg;
+    if(err) d.className = 'err';
+    this.dbg.appendChild(d);
+    while(this.dbg.children.length > 20) this.dbg.removeChild(this.dbg.firstChild);
+  },
+  /* ---- 主循环 ---- */
+  loop(t){
+    this.raf = requestAnimationFrame(tt => this.loop(tt));
+    const dt = Math.min(0.05, (t - this.lastT) / 1000 || 0.016);
+    this.lastT = t;
+    this.fpsT += dt; this.fpsN++;
+    if(this.fpsT >= 0.5){ this.fpsEl.textContent = Math.round(this.fpsN / this.fpsT) + ' FPS'; this.fpsT = 0; this.fpsN = 0; }
+    if(this.eng && this.state === 'battle' && !this.paused){ this.eng.cvw = this.cvw; this.eng.cvh = this.cvh; this.eng.update(dt, this.input); this.eng.render(this.ctx); this.drawJoy(); }
+    else if(this.eng && (this.state === 'menu' || this.state === 'campaign' || this.state === 'missions' || this.state === 'free')){ this.eng.cvw = this.cvw; this.eng.cvh = this.cvh; this.eng.update(dt, Object.assign({}, this.input, {ai:true})); this.eng.render(this.ctx); }
+    else if(this.eng && this.state === 'battle' && this.paused){ this.eng.render(this.ctx); }
+  },
+  drawJoy(){
+    if(!this.joy) return;
+    const c = this.ctx;
+    c.strokeStyle = 'rgba(232,226,212,0.35)'; c.lineWidth = 2;
+    c.beginPath(); c.arc(this.joy.ax, this.joy.ay, 44, 0, TAU); c.stroke();
+    c.fillStyle = 'rgba(232,226,212,0.4)';
+    c.beginPath(); c.arc(this.joy.ax + this.joy.x, this.joy.ay + this.joy.y, 20, 0, TAU); c.fill();
+  },
+  /* ---- 暂停 ---- */
+  paused: false,
+  pause(){ if(this.state === 'battle' && !this.paused){ this.paused = true; cancelAnimationFrame(this.raf); document.getElementById('pauseOverlay').classList.add('active'); } },
+  resume(){ if(this.paused){ this.paused = false; document.getElementById('pauseOverlay').classList.remove('active'); this.lastT = performance.now(); this.raf = requestAnimationFrame(tt => this.loop(tt)); } },
+  togglePause(){ if(this.paused) this.resume(); else this.pause(); },
+  /* ---- 屏幕 ---- */
+  scr(name){ this.state = name; document.title = '铁甲战史 2D · ' + name; const all = this.ui.querySelectorAll('.screen'); for(let i = 0; i < all.length; i++) all[i].classList.remove('active'); const el = document.getElementById('scr-' + name); if(el) el.classList.add('active'); },
+  /* 主菜单 */
+  menu(){
+    this.scr('menu');
+    document.body.dataset.era = 'nap';
+    this.ui.innerHTML = '';
+    const s = document.createElement('div'); s.className = 'screen active'; s.id = 'scr-menu';
+    s.innerHTML =
+      '<div class="panel" style="text-align:center">' +
+        '<div style="font-size:12px;letter-spacing:4px;color:#9AA3AB">STEEL HISTORY · 2D</div>' +
+        '<h1 style="margin-top:8px">铁甲战史 <span class="ac">2D</span></h1>' +
+        '<div class="sub">拿破仑战争 · 一战 · 十月革命 · 二战 —— 俯视载具战斗</div>' +
+        '<div class="btnrow" style="justify-content:center">' +
+          '<button class="btn" data-goto="campaign">战役模式（四场战役）</button>' +
+          '<button class="btn" data-goto="free">自由模式</button>' +
+        '</div>' +
+        '<div class="btnrow" style="justify-content:center">' +
+          '<button class="btn ghost small" data-goto="help">操作说明</button>' +
+        '</div>' +
+        '<div style="font-size:11px;color:#6E7780;margin-top:18px;letter-spacing:1px">WASD/方向键移动 · 鼠标瞄准 · 左键/空格开火 · Esc 暂停 · F9 压测</div>' +
+      '</div>';
+    this.ui.appendChild(s);
+    this.bind(s, 'data-goto', v => { if(v === 'campaign') this.campaign(); else if(v === 'free') this.freeSetup(); else if(v === 'help') this.help(); });
+    // 菜单背景演示战（打完后自动重开，保持背景运动）
+    const startDemo = () => {
+      const e = new Engine({mapId:'plain', player:'ww2_t34', foes:[['ww2_pz4',1],['ww2_lt',1]], obj:{type:'destroy'}, diff:1, demo:true});
+      e.cvw = this.cvw; e.cvh = this.cvh;
+      e.onEnd = () => { if(this.state === 'menu') startDemo(); };
+      this.eng = e;
+    };
+    this.eng = new Engine({mapId:'plain', player:'ww2_t34', foes:[['ww2_pz4',1],['ww2_lt',1]], obj:{type:'destroy'}, diff:1, demo:true});
+    this.eng.cvw = this.cvw; this.eng.cvh = this.cvh;
+    this.eng.onEnd = () => { if(this.state === 'menu') startDemo(); };
+  },
+  /* 战役选择 */
+  campaign(){
+    this.scr('campaign');
+    this.ui.innerHTML = '';
+    const s = document.createElement('div'); s.className = 'screen active'; s.id = 'scr-campaign';
+    let html = '<div class="panel"><h2>选择战役</h2><div class="cards">';
+    ERAS.forEach(era => {
+      const done = (Save.data.camp[era.id] || []).length;
+      const cs = (COUNTRIES[era.id] || []).map(c => c.name).join(' / ');
+      html += '<div class="card" data-era="' + era.id + '" style="border-top-color:' + era.color + '">' +
+        '<div class="cn" style="color:' + era.color + '">' + era.name + '</div>' +
+        '<div class="cy">' + era.en + '</div>' +
+        '<div class="desc" style="font-size:12px;color:#9AA3AB;margin-top:8px;line-height:1.6">' + era.desc + '</div>' +
+        '<div style="font-size:11px;color:#6E7780;margin-top:6px;letter-spacing:1px">可选阵营：' + cs + '</div>' +
+        '<div class="prog">已通过 ' + done + ' / 3 关</div>' +
+        '<div class="bar"><i style="width:' + (done / 3 * 100) + '%"></i></div>' +
+      '</div>';
+    });
+    html += '</div><div class="btnrow"><button class="btn ghost small" data-goto="menu">返回主菜单</button></div></div>';
+    s.innerHTML = html;
+    this.ui.appendChild(s);
+    this.bind(s, 'data-era', era => { this.era = era; this.missions(); });
+    this.bind(s, 'data-goto', v => this.menu());
+  },
+  /* 任务选择 */
+  missions(){
+    this.scr('missions');
+    document.body.dataset.era = this.era;
+    this.ui.innerHTML = '';
+    const s = document.createElement('div'); s.className = 'screen active'; s.id = 'scr-missions';
+    const era = ERAS.find(e => e.id === this.era);
+    let html = '<div class="panel"><h2 style="color:' + era.color + '">' + era.name + '</h2><div class="mlist">';
+    MISSIONS.filter(m => m.camp === this.era).forEach(m => {
+      const locked = !Save.unlocked(m.camp, m.idx);
+      html += '<div class="mitem' + (locked ? ' locked' : '') + '" data-mid="' + m.id + '">' +
+        '<div class="mn">' + (locked ? '锁 · ' : '') + m.name + '</div>' +
+        '<div class="mb">' + m.brief + '</div>' +
+        '<div style="margin-top:8px"><span class="tag">出战 ' + findCountry(m.camp, m.country).name + ' · ' + VEH[m.player].name + '</span>' +
+        '<span class="tag">敌军 ' + findCountry(m.camp, m.foeCountry).name + '</span>' +
+        '<span class="tag">' + (m.obj.type === 'survive' ? '坚守 ' + m.obj.time + ' 秒' : '全歼敌军') + '</span></div>' +
+      '</div>';
+    });
+    html += '</div><div class="btnrow"><button class="btn ghost small" data-goto="campaign">返回战役</button></div></div>';
+    s.innerHTML = html;
+    this.ui.appendChild(s);
+    this.bind(s, 'data-mid', mid => { const m = MISSIONS.find(x => x.id === mid); if(m && Save.unlocked(m.camp, m.idx)) this.battle(m); });
+    this.bind(s, 'data-goto', v => this.campaign());
+  },
+  /* 自由模式设置 */
+  freeSetup(){
+    this.scr('free');
+    this.ui.innerHTML = '';
+    const cf = Save.data.free || {};
+    const era = COUNTRIES[cf.countryEra] ? cf.countryEra : 'nap';
+    const me = findCountry(era, cf.countryId) || COUNTRIES[era][0];
+    const veh = me.vehs.filter(k => VEH[k] && VEH[k].kind !== 'train')[0] || 'nap_frig';
+    this.free = {era:era, country:me.id, veh:veh, map: era === 'nap' ? 'sea' : 'plain', diff: (cf.diff >= 1 && cf.diff <= 3) ? cf.diff : 1, foe:pickFoeCountry(era, me.id)};
+    const s = document.createElement('div'); s.className = 'screen active'; s.id = 'scr-free';
+    s.innerHTML = '<div class="panel" id="freePanel"><h2>自由模式 · 自定义战斗</h2><div id="freeBody"></div></div>';
+    this.ui.appendChild(s);
+    this.renderFree();
+  },
+  renderFree(){
+    const f = this.free;
+    document.body.dataset.era = f.era;
+    const era = ERAS.find(e => e.id === f.era);
+    const me = findCountry(f.era, f.country);
+    const vehs = me ? me.vehs.filter(k => VEH[k] && VEH[k].kind !== 'train') : [];
+    const maps = f.era === 'nap' ? ['sea'] : (f.era === 'oct' ? ['plain','city'] : ['plain','city']);
+    const el = document.getElementById('freeBody');
+    let html = '<h3>1 · 选择时代</h3><div class="tabs">';
+    ERAS.forEach(e => { html += '<div class="tab' + (e.id === f.era ? ' sel' : '') + '" data-set="era" data-v="' + e.id + '" style="border-color:' + e.color + '">' + e.name + '</div>'; });
+    html += '</div><h3>2 · 选择国家</h3><div class="opt">';
+    COUNTRIES[f.era].forEach(c => { html += '<div class="obox' + (f.country === c.id ? ' sel' : '') + '" data-set="country" data-v="' + c.id + '" style="border-left:3px solid ' + c.color + '">' + c.name + '</div>'; });
+    html += '</div><h3>3 · 选择载具</h3><div class="vlist">';
+    vehs.forEach(k => {
+      const v = VEH[k];
+      html += '<div class="vcard' + (f.veh === k ? ' sel' : '') + '" data-set="veh" data-v="' + k + '">' +
+        '<div class="vn">' + v.name + '</div>' +
+        '<div class="vs">HP ' + v.hp + ' · 装甲 ' + v.armor[0] + '/' + v.armor[1] + '/' + v.armor[2] + ' · 主炮 ' + v.gun.dmg + '<br>' + v.desc + '</div>' +
+      '</div>';
+    });
+    html += '</div><h3>4 · 战场</h3><div class="opt">';
+    maps.forEach(m => { html += '<div class="obox' + (f.map === m ? ' sel' : '') + '" data-set="map" data-v="' + m + '">' + ({plain:'平原', city:'废墟城市', sea:'海峡'})[m] + '</div>'; });
+    html += '</div><h3>5 · 难度</h3><div class="opt">';
+    for(let i = 1; i <= 3; i++){ html += '<div class="obox' + (f.diff === i ? ' sel' : '') + '" data-set="diff" data-v="' + i + '">难度 ' + i + '</div>'; }
+    html += '</div><div style="font-size:12px;color:#9AA3AB;margin-top:14px">敌方阵营：' + f.foe.name + '（对立阵营随机）</div>';
+    html += '</div><div class="btnrow"><button class="btn" data-start>开战</button><button class="btn ghost small" data-goto="menu">返回</button></div>';
+    el.innerHTML = html;
+    el.querySelectorAll('[data-set]').forEach(btn => btn.addEventListener('click', () => {
+      const set = btn.dataset.set, v = btn.dataset.v;
+      if(set === 'era'){
+        f.era = v;
+        const c0 = COUNTRIES[v][0];
+        f.country = c0.id;
+        f.veh = c0.vehs.filter(k => VEH[k] && VEH[k].kind !== 'train')[0] || 'nap_frig';
+        f.map = v === 'nap' ? 'sea' : 'plain';
+      }
+      else if(set === 'country'){
+        f.country = v;
+        const c2 = findCountry(f.era, v);
+        f.veh = c2.vehs.filter(k => VEH[k] && VEH[k].kind !== 'train')[0] || 'nap_frig';
+      }
+      else if(set === 'veh'){ f.veh = v; }
+      else if(set === 'map'){ f.map = v; }
+      else if(set === 'diff'){ f.diff = +v; }
+      f.foe = pickFoeCountry(f.era, f.country);
+      Save.data.free.countryEra = f.era; Save.data.free.countryId = f.country; Save.data.free.diff = f.diff; Save.save();
+      this.renderFree();
+    }));
+    el.querySelector('[data-start]').addEventListener('click', () => this.freeBattle());
+    el.querySelector('[data-goto]').addEventListener('click', () => this.menu());
+  },
+  /* 帮助 */
+  help(){
+    this.scr('help');
+    this.ui.innerHTML = '';
+    const s = document.createElement('div'); s.className = 'screen active'; s.id = 'scr-help';
+    s.innerHTML = '<div class="panel"><h2>操作说明</h2>' +
+      '<p class="desc">W / A / S / D 或方向键：移动载具<br>鼠标：瞄准炮塔（坦克 / 装甲列车）<br>左键按住或空格：开火<br>风帆战舰：舷炮自动齐射，转向让侧舷对准敌人<br>装甲列车：只能沿铁路上下移动<br>Esc：暂停　F9：AI 压测对战<br>F8：测试用——立即获胜</p>' +
+      '<div class="btnrow"><button class="btn ghost small" data-goto="menu">返回</button></div></div>';
+    this.ui.appendChild(s);
+    this.bind(s, 'data-goto', v => this.menu());
+  },
+  /* 绑定 */
+  bind(root, attr, fn){
+    root.querySelectorAll('[' + attr + ']').forEach(el => el.addEventListener('click', () => fn(el.getAttribute(attr))));
+  },
+  /* 战斗 */
+  battle(m){
+    document.body.dataset.era = m.camp;
+    this.scr('battle');
+    this.log('开战: ' + m.name);
+    this.buildHud();
+    this.eng = new Engine({mapId:m.map, player:m.player, foes:m.foes, obj:m.obj, diff:Save.data.diff || 1,
+      country:findCountry(m.camp, m.country), foeCountry:findCountry(m.camp, m.foeCountry)});
+    this.eng.cvw = this.cvw; this.eng.cvh = this.cvh;
+    this.mission = m;
+    this.eng.hudFn = h => this.hud(h);
+    this.eng.onEnd = res => this.battleEnd(res, m);
+    this.paused = false;
+    this.hudShow(true);
+  },
+  freeBattle(){
+    const f = this.free;
+    document.body.dataset.era = f.era;
+    this.scr('battle');
+    const me = findCountry(f.era, f.country);
+    const foeC = f.foe || pickFoeCountry(f.era, f.country);
+    this.log('自由模式开战: ' + me.name + ' · ' + VEH[f.veh].name + ' vs ' + foeC.name + ' 难度' + f.diff);
+    const foesPool = foeC.vehs.filter(k => VEH[k] && VEH[k].kind !== 'train' && k !== f.veh);
+    const fallback = Object.keys(VEH).filter(k => VEH[k].era === f.era && VEH[k].kind !== 'train' && k !== f.veh);
+    const foes = [];
+    const n = 2 + f.diff * 2;
+    for(let i = 0; i < n; i++){ const k = pick(foesPool.length ? foesPool : fallback); foes.push([k, 1]); }
+    this.buildHud();
+    this.eng = new Engine({mapId:f.map, player:f.veh, foes:foes, obj:{type:'destroy'}, diff:f.diff, country:me, foeCountry:foeC});
+    this.eng.cvw = this.cvw; this.eng.cvh = this.cvh;
+    this.eng.hudFn = h => this.hud(h);
+    this.eng.onEnd = res => this.freeEnd(res);
+    this.paused = false;
+    this.hudShow(true);
+  },
+  stress(){
+    if(this.eng){ this.eng.shells = []; this.eng.parts = []; }
+    document.body.dataset.era = 'ww2';
+    this.scr('battle');
+    this.log('压测开始: AI 对 AI（8 敌）');
+    this.buildHud();
+    this.eng = new Engine({mapId:'plain', player:'ww2_t34', foes:[['ww2_pz4',2],['ww2_lt',2],['ww2_t34',2],['ww2_sherman',2]], obj:{type:'destroy'}, diff:2, stress:true, country:findCountry('ww2','su'), foeCountry:findCountry('ww2','de')});
+    this.eng.cvw = this.cvw; this.eng.cvh = this.cvh;
+    this.eng.hudFn = h => this.hud(h);
+    this.stressCfg = true;
+    this.eng.onEnd = res => this.stressEnd(res);
+    this.paused = false;
+    this.hudShow(true);
+  },
+  buildHud(){
+    let hud = document.getElementById('hud');
+    if(!hud){
+      hud = document.createElement('div'); hud.id = 'hud';
+      hud.innerHTML =
+        '<div class="hpwrap"><div class="hpname" id="hudName">-</div><div class="hpbar"><i id="hudHp" style="width:100%"></i></div>' +
+        '<div class="reload"><i id="hudRel"></i></div></div>' +
+        '<div class="obj"><div class="ot" id="hudObj">-</div><div class="os" id="hudSub">-</div></div>' +
+        '<div class="info" id="hudInfo">-</div>' +
+        '<div class="hint" id="hudHint">WASD 移动 · 鼠标瞄准 · 左键 / 空格开火</div>' +
+        '<div id="pauseOverlay"><div class="panel" style="max-width:420px">' +
+          '<h2 style="text-align:center">已暂停</h2><div class="btnrow" style="justify-content:center">' +
+          '<button class="btn" id="btnResume">继续战斗</button>' +
+          '<button class="btn danger" id="btnRestart">重新开始</button>' +
+          '<button class="btn ghost" id="btnQuit">退出到菜单</button></div></div></div>';
+      document.body.appendChild(hud);
+    }
+    document.getElementById('btnResume').onclick = () => this.resume();
+    document.getElementById('btnRestart').onclick = () => { this.resume(); const m = this.mission; if(m) this.battle(m); else this.freeBattle(); };
+    document.getElementById('btnQuit').onclick = () => { this.resume(); this.hudShow(false); this.menu(); };
+  },
+  hudShow(on){ document.getElementById('hud').classList.toggle('active', on); },
+  hud(h){
+    document.getElementById('hudName').innerHTML = h.country ? '<span style="color:' + h.countryCol + '">' + h.country + '</span> · ' + h.name : h.name;
+    document.getElementById('hudHp').style.width = (h.hp / h.maxHp * 100) + '%';
+    document.getElementById('hudRel').style.width = (h.reload * 100) + '%';
+    document.getElementById('hudObj').textContent = h.obj;
+    document.getElementById('hudSub').textContent = '剩余敌军 ' + h.left + ' · 击杀 ' + h.kills + ' · 用时 ' + h.time + 's';
+    document.getElementById('hudInfo').innerHTML = '伤害 ' + h.dmg + '<br>开火 ' + h.shots + '<br>击杀 ' + h.kills;
+  },
+  /* 结算 */
+  battleEnd(res, m){
+    this.hudShow(false);
+    this.log(res === 'win' ? '胜利: ' + m.name : '战败: ' + m.name);
+    const cN = findCountry(m.camp, m.country);
+    const title = (cN ? cN.name + ' · ' : '') + m.name;
+    if(res === 'win'){
+      Save.done(m.camp, m.idx);
+      const next = MISSIONS.find(x => x.camp === m.camp && x.idx === m.idx + 1);
+      this.result(res, title, next ? '下一关' : '返回战役', () => {
+        if(next) this.battle(next);
+        else this.missions();
+      });
+    } else {
+      this.result(res, title, '重试', () => this.battle(m));
+    }
+  },
+  freeEnd(res){
+    this.hudShow(false);
+    if(res === 'win'){ Save.data.free.wins++; Save.data.free.bestKills = Math.max(Save.data.free.bestKills, this.eng.stats.kills); Save.save(); }
+    const me = findCountry(this.free.era, this.free.country);
+    this.result(res, (me ? me.name + ' · ' : '') + '自由模式', '再来一局', () => this.freeBattle(), '更换配置');
+  },
+  stressEnd(res){
+    this.hudShow(false);
+    this.log('压测结束: ' + (res === 'win' ? '通过' : '结束'));
+    this.result(res, 'AI 压测', '再压测', () => this.stress(), '退出', () => { this.eng = null; this.menu(); });
+  },
+  result(res, title, actLabel, actFn, altLabel, altFn){
+    this.scr('result');
+    this.ui.innerHTML = '';
+    const s = document.createElement('div'); s.className = 'screen active'; s.id = 'scr-result';
+    const st = this.eng ? this.eng.stats : {kills:0, shots:0, dmg:0, hits:0};
+    const acc = st.shots > 0 ? Math.round(st.hits / st.shots * 100) : 0;
+    s.innerHTML = '<div class="panel" style="text-align:center">' +
+      '<div class="banner ' + (res === 'win' ? 'win' : 'lose') + '">' + (res === 'win' ? '胜 利' : '战 败') + '</div>' +
+      '<div class="sub" style="margin-bottom:6px">' + title + '</div>' +
+      '<div class="statgrid">' +
+        '<div class="stat"><div class="sv">' + st.kills + '</div><div class="sk">击杀</div></div>' +
+        '<div class="stat"><div class="sv">' + st.dmg + '</div><div class="sk">造成伤害</div></div>' +
+        '<div class="stat"><div class="sv">' + acc + '%</div><div class="sk">命中率</div></div>' +
+        '<div class="stat"><div class="sv">' + st.shots + '</div><div class="sk">开火</div></div>' +
+      '</div>' +
+      '<div class="btnrow" style="justify-content:center">' +
+        '<button class="btn" id="rAct">' + (actLabel || '再来一次') + '</button>' +
+        (altLabel ? '<button class="btn ghost" id="rAlt">' + altLabel + '</button>' : '') +
+        '<button class="btn ghost" id="rBack">返回菜单</button>' +
+      '</div></div>';
+    this.ui.appendChild(s);
+    document.getElementById('rAct').onclick = actFn;
+    const back = document.getElementById('rBack');
+    back.onclick = () => { this.eng = null; this.menu(); };
+    if(altLabel){ const alt = document.getElementById('rAlt'); alt.onclick = () => { this.eng = null; (altFn || (() => this.freeSetup()))(); }; }
+  }
+};
+
+/* ---------------- 启动 ---------------- */
+Game.init();
+</script>
+<script>
+/* HanBer云坛 · 云坛一键登录（强制登录 + 存档按账号隔离） */
+(function(){
+  try{
+    var qs = new URLSearchParams(location.search);
+    var u = qs.get('yt_user');
+    var logged = u && u !== 'guest';
+    if(!logged){
+      var ov = document.createElement('div');
+      ov.id = 'yt-login-mask';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:linear-gradient(160deg,#101828,#1a2a4a);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;gap:14px;text-align:center;padding:20px';
+      var t1 = document.createElement('div'); t1.style.cssText = 'font-size:40px'; t1.textContent = '🔒'; ov.appendChild(t1);
+      var t2 = document.createElement('div'); t2.style.cssText = 'font-size:18px;font-weight:600'; t2.textContent = '此游戏需云坛一键登录'; ov.appendChild(t2);
+      var t3 = document.createElement('div'); t3.style.cssText = 'font-size:13px;color:#9fb3d0;max-width:320px'; t3.textContent = '返回云坛登录后，进入「小程序」再点本游戏即可自动带账号游玩。'; ov.appendChild(t3);
+      var btn = document.createElement('button');
+      btn.textContent = '去登录';
+      btn.style.cssText = 'margin-top:6px;padding:9px 22px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;cursor:pointer';
+      btn.onclick = function(){ try{ if(window.parent && window.parent.location){ window.parent.location.hash = '#/login'; } }catch(e){} };
+      ov.appendChild(btn);
+      document.body.appendChild(ov);
+      return;
+    }
+    var el = document.createElement('div');
+    el.id = 'yt-login-bar';
+    el.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;display:flex;align-items:center;gap:6px;background:rgba(10,14,26,.74);color:#fff;padding:5px 8px 5px 12px;border-radius:20px;font:12px/1 "PingFang SC","Microsoft YaHei",sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.35);backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.16);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    var b1 = document.createElement('b'); b1.style.color = '#7cc4ff'; b1.textContent = String(u).replace(/[<>&]/g, '');
+    var b2 = document.createElement('span'); b2.textContent = '✕'; b2.style.cssText = 'cursor:pointer;opacity:.65;margin-left:6px;font-size:11px';
+    b2.title = '关闭';
+    b2.onclick = function(){ var bar = document.getElementById('yt-login-bar'); if(bar) bar.remove(); };
+    el.appendChild(document.createTextNode('👤 云坛登录：')); el.appendChild(b1); el.appendChild(b2);
+    document.body.appendChild(el);
+    window.YT_USER = u;
+    window.YT_LOGGED = true;
+    /* 存档按账号隔离：所有 localStorage 自动带账号前缀，旧档自动迁移 */
+    var pre = '_yt_' + u + '_';
+    var g = Storage.prototype.getItem, sw = Storage.prototype.setItem, r = Storage.prototype.removeItem;
+    Storage.prototype.getItem = function(k){
+      if(typeof k !== 'string' || k.indexOf(pre) === 0) return g.call(this, k);
+      var scoped = g.call(this, pre + k);
+      if(scoped !== null) return scoped;
+      var legacy = g.call(this, k);
+      if(legacy !== null){ try{ sw.call(this, pre + k, legacy); r.call(this, k); }catch(e){} }
+      return legacy;
+    };
+    Storage.prototype.setItem = function(k, v){
+      if(typeof k === 'string' && k.indexOf(pre) !== 0){ try{ sw.call(this, pre + k, v); }catch(e){} }
+      else{ try{ sw.call(this, k, v); }catch(e){} }
+    };
+    Storage.prototype.removeItem = function(k){
+      if(typeof k === 'string'){ r.call(this, pre + k); r.call(this, k); }
+      else r.call(this, k);
+    };
+  }catch(e){}
+})();
+</script>
+</body>
+</html>

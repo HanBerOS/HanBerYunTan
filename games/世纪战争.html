@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世纪战争 · 四大战役</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#12100c; --panel:#1c1812; --panel2:#262018; --line:#3d3426;
+  --gold:#c9a35c; --gold2:#e8cf8f; --text:#e9dfc9; --dim:#a2967f;
+  --red:#c0392b; --green:#6aa84f; --blue:#3f6fd8;
+  --font-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --font-display:Georgia,"Noto Serif SC","Songti SC","SimSun",serif;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow:hidden;user-select:none;-webkit-user-select:none}
+button{font-family:var(--font-body);cursor:pointer;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 14px;font-size:14px;transition:border-color .15s,background .15s}
+button:hover{border-color:var(--gold);background:#2e271d}
+button.primary{background:linear-gradient(180deg,#3a2f1c,#2a2215);border-color:var(--gold);color:var(--gold2)}
+button.primary:hover{background:linear-gradient(180deg,#4a3c24,#362b18)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.hidden{display:none!important}
+#app{height:100vh;display:flex;flex-direction:column}
+/* ========== 主菜单 ========== */
+#view-menu{flex:1;overflow:auto;background:
+  radial-gradient(ellipse at 50% -10%,#2a2418 0%,#14110c 55%),
+  repeating-linear-gradient(45deg,rgba(201,163,92,.02) 0 2px,transparent 2px 6px);
+  padding:34px 20px 40px;display:flex;flex-direction:column;align-items:center}
+.menu-inner{width:min(1080px,100%);margin:0 auto}
+.logo-wrap{text-align:center;margin-bottom:26px}
+.logo-kicker{letter-spacing:.5em;color:var(--gold);font-size:13px;text-transform:uppercase;margin-bottom:8px}
+h1.logo{font-family:var(--font-display);font-size:54px;font-weight:700;color:var(--gold2);letter-spacing:.14em;text-shadow:0 2px 24px rgba(201,163,92,.28)}
+.logo-sub{margin-top:10px;color:var(--dim);font-size:14px;letter-spacing:.2em}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:8px 0 22px}
+.campaign-card{background:linear-gradient(180deg,#1d1913,#18140f);border:1px solid var(--line);border-radius:10px;padding:16px 18px;cursor:pointer;position:relative;transition:border-color .15s,transform .15s,box-shadow .15s}
+.campaign-card:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 8px 26px rgba(0,0,0,.45)}
+.campaign-card.selected{border-color:var(--gold2);box-shadow:0 0 0 1px var(--gold2),0 8px 26px rgba(0,0,0,.5)}
+.cc-year{color:var(--gold);font-family:var(--font-display);font-size:15px;letter-spacing:.08em}
+.cc-name{font-family:var(--font-display);font-size:24px;font-weight:700;margin:4px 0 8px;color:var(--text)}
+.cc-desc{color:var(--dim);font-size:13px;line-height:1.6;min-height:42px}
+.cc-factions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cc-chip{font-size:12px;padding:3px 9px;border-radius:20px;border:1px solid var(--line);color:var(--dim);display:flex;align-items:center;gap:5px}
+.cc-chip i{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.cc-end{position:absolute;top:12px;right:14px;font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:3px 10px}
+.settings-row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:18px}
+.setting-block{display:flex;flex-direction:column;gap:8px}
+.setting-label{font-size:12px;color:var(--dim);letter-spacing:.1em}
+.pill-group{display:flex;gap:6px}
+.pill{border:1px solid var(--line);background:var(--panel2);color:var(--dim);padding:7px 14px;border-radius:20px;font-size:13px}
+.pill.active{border-color:var(--gold);color:var(--gold2);background:#31291a}
+.pill:hover{border-color:var(--gold)}
+#playerFactionWrap{display:none}
+#playerFactionWrap.show{display:flex}
+.start-row{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap}
+#btnStart{font-size:17px;padding:12px 42px;letter-spacing:.15em}
+.help-note{max-width:760px;margin:26px auto 0;color:var(--dim);font-size:12.5px;line-height:1.8;border:1px dashed var(--line);border-radius:8px;padding:12px 16px}
+/* ========== 游戏界面 ========== */
+#view-game{flex:1;display:flex;flex-direction:column;min-height:0}
+.topbar{display:flex;align-items:center;gap:14px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.top-title{font-family:var(--font-display);font-size:18px;color:var(--gold2);letter-spacing:.06em;white-space:nowrap}
+.top-date{font-family:var(--font-display);font-size:16px;color:var(--text);min-width:120px}
+.top-spacer{flex:1}
+.speed-group{display:flex;gap:4px}
+.speed-btn{min-width:40px;padding:7px 8px;font-size:12px}
+.speed-btn.active{border-color:var(--gold);color:var(--gold2);background:#31291a}
+.icon-btn{padding:7px 12px;font-size:12px}
+.game-main{flex:1;display:flex;min-height:0}
+.map-wrap{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;background:
+  radial-gradient(ellipse at 20% 10%,rgba(201,163,92,.06),transparent 60%),
+  #16130e}
+.map-svg{flex:1;width:100%;height:100%;min-height:320px}
+.ticker{height:40px;display:flex;align-items:center;gap:8px;padding:0 14px;border-top:1px solid var(--line);background:var(--panel);font-size:12.5px;color:var(--dim);overflow:hidden;white-space:nowrap}
+.ticker .t-item{flex:none;padding:3px 10px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
+.t-item.t-war{border-color:#5a3a2c;color:#e0a98c}
+.t-item.t-good{border-color:#33502c;color:#a9c98f}
+.t-item.t-bad{border-color:#5a2c28;color:#e08c84}
+/* 侧栏 */
+.sidebar{width:350px;flex:none;display:flex;flex-direction:column;border-left:1px solid var(--line);background:var(--panel);min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tab-btn{flex:1;padding:10px 0;background:transparent;border:none;border-bottom:2px solid transparent;border-radius:0;font-size:13px;color:var(--dim)}
+.tab-btn.active{color:var(--gold2);border-bottom-color:var(--gold)}
+.tab-btn:hover{border-bottom-color:var(--line);background:none}
+.tab-panel{flex:1;overflow:auto;padding:12px;min-height:0}
+.faction-row{display:flex;align-items:center;gap:10px;padding:9px 8px;border:1px solid transparent;border-radius:8px;margin-bottom:6px;background:var(--panel2)}
+.faction-row.dead{opacity:.4;filter:grayscale(.7)}
+.faction-row .fr-info{flex:1;min-width:0}
+.fr-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px}
+.fr-leader{font-size:11.5px;color:var(--dim);margin:2px 0 5px}
+.fr-stats{display:flex;gap:10px;font-size:11.5px;color:var(--dim);flex-wrap:wrap}
+.fr-stats b{color:var(--text);font-weight:600}
+.morale-bar{height:5px;background:#241e15;border-radius:3px;overflow:hidden;margin-top:5px}
+.morale-bar i{display:block;height:100%;background:linear-gradient(90deg,#8a5a2a,var(--gold2))}
+.morale-bar.low i{background:linear-gradient(90deg,#5a2c28,#c0392b)}
+.turn-badge{font-size:11px;padding:2px 8px;border-radius:12px;background:#31291a;color:var(--gold2);border:1px solid var(--line)}
+.region-detail{display:flex;flex-direction:column;gap:10px}
+.rd-head{font-family:var(--font-display);font-size:19px;color:var(--gold2)}
+.rd-line{font-size:13px;color:var(--dim);display:flex;justify-content:space-between;gap:8px}
+.rd-line b{color:var(--text)}
+.rd-actions{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.rd-actions button{flex:1;min-width:96px;min-height:44px}
+.log-list{font-size:12.5px;line-height:1.65}
+.log-item{padding:5px 8px;border-left:3px solid var(--line);margin-bottom:5px;background:var(--panel2);border-radius:0 5px 5px 0}
+.log-item.war{border-color:#a0662f;color:#e3c9a0}
+.log-item.good{border-color:var(--green);color:#b9d4a4}
+.log-item.bad{border-color:var(--red);color:#e0a29a}
+.log-item.info{border-color:var(--blue)}
+.log-item .lt{color:var(--dim);font-size:11px;margin-right:6px}
+.empty-tip{color:var(--dim);font-size:13px;text-align:center;padding:30px 10px;line-height:1.8}
+/* 结局 */
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(8,7,5,.82);display:flex;align-items:center;justify-content:center;padding:20px}
+.end-card{width:min(720px,100%);background:linear-gradient(180deg,#221c13,#181410);border:1px solid var(--gold);border-radius:12px;padding:34px 38px;box-shadow:0 20px 60px rgba(0,0,0,.6);position:relative;overflow:auto;max-height:92vh}
+.end-card::before{content:"";position:absolute;inset:6px;border:1px solid rgba(201,163,92,.35);border-radius:8px;pointer-events:none}
+.end-kicker{color:var(--gold);font-size:12px;letter-spacing:.35em;text-align:center;margin-bottom:10px}
+.end-title{font-family:var(--font-display);font-size:34px;font-weight:700;text-align:center;color:var(--gold2);line-height:1.3}
+.end-sub{text-align:center;color:var(--dim);font-size:14px;margin-top:8px}
+.end-epilogue{margin:20px 0 18px;color:#d8ccb2;font-size:14.5px;line-height:2;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);padding:16px 2px;text-align:justify}
+.end-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:22px}
+.es-box{border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-align:center;background:var(--panel2)}
+.es-box .es-v{font-family:var(--font-display);font-size:21px;color:var(--gold2)}
+.es-box .es-k{font-size:11.5px;color:var(--dim);margin-top:3px}
+.end-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+/* 自检面板 */
+.self-card{width:min(860px,100%);background:linear-gradient(180deg,#221c13,#181410);border:1px solid var(--gold);border-radius:12px;padding:24px 28px;overflow:auto;max-height:94vh}
+.self-title{font-family:var(--font-display);font-size:22px;color:var(--gold2);margin-bottom:6px}
+.self-sum{font-size:14px;color:var(--dim);margin-bottom:14px;line-height:1.7}
+.self-sum b{color:var(--text)}
+.self-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.self-table th{color:var(--dim);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);font-weight:400}
+.self-table td{padding:6px 8px;border-bottom:1px solid #241f17;color:var(--text)}
+.self-ok{color:#9fd08a}.self-fail{color:#e08c84}
+.self-err{color:#e08c84;font-size:12px;line-height:1.6;background:#2a1412;border:1px solid #4a2a22;border-radius:6px;padding:10px;margin-top:10px;white-space:pre-wrap}
+.self-btns{display:flex;gap:10px;margin-top:16px}
+/* 提示 */
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99;background:#3a1412;border:1px solid #6a2a20;color:#eeb;font-size:13px;padding:9px 16px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.5);max-width:80vw}
+/* SVG 图内 */
+.map-note{position:absolute;left:12px;bottom:10px;color:var(--dim);font-size:11px;pointer-events:none}
+.legend-hint{position:absolute;right:12px;bottom:10px;color:var(--dim);font-size:11px;pointer-events:none}
+/* 移动端 */
+@media (max-width:900px){
+  .game-main{flex-direction:column}
+  .sidebar{width:100%;border-left:none;border-top:1px solid var(--line);max-height:38%}
+  h1.logo{font-size:36px}
+  .topbar{gap:8px}
+  .top-date{min-width:0}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ========== 主菜单 ========== -->
+<section id="view-menu" class="view">
+  <div class="menu-inner">
+    <div class="logo-wrap">
+      <div class="logo-kicker">Epoch Wars · 1815 — 1945</div>
+      <h1 class="logo">世纪战争</h1>
+      <div class="logo-sub">四大战役 · 全人机自由推演 · 多结局</div>
+    </div>
+    <div class="cards-grid" id="menuCampaigns"></div>
+    <div class="settings-row">
+      <div class="setting-block">
+        <div class="setting-label">战役难度</div>
+        <div class="pill-group" id="diffPills">
+          <button class="pill" data-diff="easy">简单</button>
+          <button class="pill active" data-diff="normal">普通</button>
+          <button class="pill" data-diff="hard">困难</button>
+        </div>
+      </div>
+      <div class="setting-block">
+        <div class="setting-label">游戏模式</div>
+        <div class="pill-group" id="modePills">
+          <button class="pill active" data-mode="ai">全人机观战</button>
+          <button class="pill" data-mode="player">玩家参战</button>
+        </div>
+      </div>
+      <div class="setting-block" id="playerFactionWrap">
+        <div class="setting-label">选择阵营</div>
+        <select id="playerFactionSelect" style="background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:13px"></select>
+      </div>
+    </div>
+    <div class="start-row">
+      <button id="btnStart" class="primary">开始推演</button>
+      <button id="btnSelftest">功能自检</button>
+    </div>
+    <div class="help-note">
+      玩法说明：回合制战争推演，每回合一个月。全人机模式下所有阵营由 AI 指挥，你负责观战与加速；
+      玩家参战模式下你指挥所选阵营（选中己方地区可招募军队，选中敌方相邻地区可发起进攻，然后点“结束回合”）。
+      结局多样：一方霸权、阵营覆灭、停战和约、革命或僵持，皆视战局而定。本页为单文件离线可玩，可直接拖入 Netlify 部署。
+    </div>
+  </div>
+</section>
+
+<!-- ========== 游戏界面 ========== -->
+<section id="view-game" class="view hidden">
+  <div class="topbar">
+    <div class="top-title" id="gameTitle">战役</div>
+    <div class="top-date" id="gameDate">—</div>
+    <div class="top-spacer"></div>
+    <div class="speed-group" id="speedGroup">
+      <button class="speed-btn" data-speed="1">1x</button>
+      <button class="speed-btn active" data-speed="2">2x</button>
+      <button class="speed-btn" data-speed="4">4x</button>
+      <button class="speed-btn" data-speed="8">8x</button>
+    </div>
+    <button id="btnPause" class="icon-btn">暂停</button>
+    <button id="btnStep" class="icon-btn" title="推进一个月">单步</button>
+    <button id="btnFast" class="icon-btn primary" title="快速推演到结局">快进至结局</button>
+    <button id="btnMenu" class="icon-btn">主菜单</button>
+  </div>
+  <div class="game-main">
+    <div class="map-wrap">
+      <svg id="mapSvg" class="map-svg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="map-note">点击地区查看详情</div>
+      <div class="legend-hint" id="mapHint">首都 · 双环标记</div>
+    </div>
+    <div class="sidebar">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="overview">势力</button>
+        <button class="tab-btn" data-tab="region">地区</button>
+        <button class="tab-btn" data-tab="log">战报</button>
+      </div>
+      <div class="tab-panel" id="panOverview"></div>
+      <div class="tab-panel hidden" id="panRegion"></div>
+      <div class="tab-panel hidden" id="panLog"></div>
+    </div>
+  </div>
+  <div class="ticker" id="ticker"></div>
+</section>
+
+<!-- ========== 结局 ========== -->
+<div id="endOverlay" class="overlay hidden">
+  <div class="end-card">
+    <div class="end-kicker">E P O I L O G U E</div>
+    <div class="end-title" id="endTitle"></div>
+    <div class="end-sub" id="endSub"></div>
+    <div class="end-epilogue" id="endEpilogue"></div>
+    <div class="end-stats" id="endStats"></div>
+    <div class="end-btns">
+      <button id="btnAgain" class="primary">再来一局</button>
+      <button id="btnMenuEnd">返回主菜单</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 自检 ========== -->
+<div id="selftestOverlay" class="overlay hidden">
+  <div class="self-card">
+    <div class="self-title">功能自检</div>
+    <div class="self-sum" id="selfSummary">正在运行全部战役……</div>
+    <div id="selfBody"></div>
+    <div class="self-btns">
+      <button id="btnSelfRun" class="primary">重新自检</button>
+      <button id="btnSelfClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+</div>
+
+<script>
+'use strict';
+/* ================= 工具函数 ================= */
+function $(id){return document.getElementById(id);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function fmt(n){return Math.round(n).toLocaleString('zh-CN');}
+function mulberry32(seed){let t=seed>>>0;return function(){t+=0x6D2B79F5;let r=Math.imul(t^(t>>>15),1|t);r^=r+Math.imul(r^(r>>>7),61|r);return((r^(r>>>14))>>>0)/4294967296;};}
+function shieldSVG(color,size){
+  size=size||16;
+  return '<svg viewBox="0 0 24 24" width="'+size+'" height="'+size+'" style="flex:none"><path d="M12 1.8 21 5v6.2c0 5.6-3.8 9.6-9 11.4-5.2-1.8-9-5.8-9-11.4V5z" fill="'+color+'" stroke="#000" stroke-opacity=".35" stroke-width="1.2"/><path d="M12 1.8 21 5v6.2c0 5.6-3.8 9.6-9 11.4" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1"/></svg>';
+}
+
+/* ================= 全局状态 ================= */
+const G={
+  cid:null, diff:'normal', mode:'ai', pfid:null,
+  campaign:null, factions:[], regions:[], rmap:{}, fmap:{},
+  turn:0, turnLimit:0, year0:0,
+  speed:2, paused:false, timer:null,
+  waiting:false, curFaction:null, selected:null, ended:false,
+  battles:0, casualties:0, log:[], ticker:[], fast:false,
+  flags:{}, errors:[], rng:null,
+  diffConf:{
+    easy:   {income:1.10, aggr:0.85, defMul:0.92},
+    normal: {income:1.00, aggr:1.00, defMul:1.00},
+    hard:   {income:1.18, aggr:1.30, defMul:1.08}
+  }
+};
+function now(){return G.year0+Math.floor(G.turn/12)+'-'+String((G.turn%12)+1).padStart(2,'0');}
+
+/* ================= 数据构建 ================= */
+function mkRegion(r){
+  return {id:r[0],name:r[1],owner:r[2],x:r[3],y:r[4],army:r[5],prod:r[6],manpower:r[7],def:r[8],capitalOf:r[9]||null};
+}
+function mkFaction(f){
+  return {id:f.id,name:f.name,short:f.short,color:f.color,leader:f.leader,gen:f.gen,
+    money:f.money,manpower:f.manpower,morale:f.morale,warGoal:f.warGoal||null,
+    enemies:(f.enemies||[]).slice(),dormant:f.dormant||false,active:true,eliminated:false,neutral:false,isPlayer:false};
+}
+
+function buildCampaign(def){
+  const c={id:def.id,name:def.name,subtitle:def.subtitle,year0:def.year0,turnLimit:def.turnLimit,
+    intro:def.intro,factions:[],regions:[],edges:def.edges,
+    events:def.events.map(e=>Object.assign({},e)),
+    endings:def.endings.map(e=>Object.assign({},e))};
+  def.factions.forEach(f=>c.factions.push(mkFaction(f)));
+  def.regions.forEach(r=>c.regions.push(mkRegion(r)));
+  c.regions.forEach(r=>{if(r.capitalOf)r.def=Math.min(r.def,2);});
+  return c;
+}
+
+/* ---- 拿破仑战争 ---- */
+const DEF_NAP={
+  id:'napoleon', name:'拿破仑战争', subtitle:'1805 — 1815 · 欧陆烽火', year0:1805, turnLimit:120,
+  intro:'法兰西的雄鹰翱翔于欧陆，反法同盟的烽火四起。',
+  factions:[
+    {id:'FRA',name:'法兰西帝国',short:'法',color:'#3f6fd8',leader:'拿破仑·波拿巴',gen:5,money:1000,manpower:500,morale:86,warGoal:'london',enemies:['GBR','RUS','PRU','AUS']},
+    {id:'GBR',name:'大英帝国',short:'英',color:'#c0392b',leader:'威灵顿公爵',gen:4,money:720,manpower:400,morale:80,warGoal:'paris',enemies:['FRA']},
+    {id:'RUS',name:'俄罗斯帝国',short:'俄',color:'#4a8f3f',leader:'亚历山大一世',gen:4,money:750,manpower:500,morale:76,warGoal:'paris',enemies:['FRA']},
+    {id:'PRU',name:'普鲁士王国',short:'普',color:'#8a8f98',leader:'腓特烈·威廉三世',gen:3,money:600,manpower:300,morale:74,warGoal:'paris',enemies:['FRA']},
+    {id:'AUS',name:'奥地利帝国',short:'奥',color:'#c9a35c',leader:'弗朗茨一世',gen:3,money:680,manpower:280,morale:72,warGoal:'paris',enemies:['FRA']}
+  ],
+  regions:[
+    ['london','伦敦','GBR',210,120,30,24,6,3,'GBR'],
+    ['ireland','爱尔兰','GBR',140,150,8,18,4,0],
+    ['paris','巴黎','FRA',300,240,60,24,8,3,'FRA'],
+    ['brittany','布列塔尼','FRA',230,280,15,22,4,0],
+    ['rhine','莱茵兰','FRA',395,195,14,26,4,1],
+    ['italy','意大利','FRA',430,330,10,22,4,1],
+    ['spain','西班牙','FRA',270,380,10,20,4,1],
+    ['portugal','葡萄牙','',200,425,6,14,3,0],
+    ['berlin','柏林','PRU',540,170,20,22,5,3,'PRU'],
+    ['warsaw','华沙','PRU',610,230,10,20,4,1],
+    ['prague','布拉格','AUS',560,290,8,20,4,0],
+    ['vienna','维也纳','AUS',615,350,18,24,5,3,'AUS'],
+    ['hungary','匈牙利','AUS',680,390,8,18,4,0],
+    ['moscow','莫斯科','RUS',805,215,30,22,6,3,'RUS'],
+    ['spb','圣彼得堡','RUS',780,95,15,24,4,1],
+    ['ukraine','乌克兰','RUS',720,330,10,22,4,1],
+    ['sweden','瑞典','',700,60,4,12,2,0]
+  ],
+  edges:[['london','ireland'],['london','paris'],['london','brittany'],['paris','brittany'],['paris','rhine'],['paris','spain'],['paris','italy'],['brittany','spain'],['spain','portugal'],['rhine','berlin'],['rhine','prague'],['berlin','warsaw'],['berlin','prague'],['warsaw','spb'],['warsaw','moscow'],['warsaw','ukraine'],['prague','vienna'],['vienna','hungary'],['vienna','italy'],['hungary','ukraine'],['moscow','spb'],['moscow','ukraine'],['spb','sweden']],
+  events:[
+    {min:8,max:20,once:1,run:function(){
+      const sp=G.rmap['spain'];
+      if(G.fmap['FRA']&&!G.fmap['FRA'].eliminated&&sp.owner==='FRA'){sp.army=Math.max(4,sp.army-6);G.fmap['FRA'].morale=clamp(G.fmap['FRA'].morale-8,0,100);addLog('bad','西班牙游击队袭扰法军，法军损失6个军团，士气-8');}
+    }},
+    {min:5,max:15,once:1,run:function(){
+      const fr=G.fmap['FRA'],gb=G.fmap['GBR'];
+      if(fr&&!fr.eliminated){fr.money=Math.max(0,fr.money-80);addLog('info','英国皇家海军全面封锁欧陆港口，法国财政-80');if(gb&&!gb.eliminated){gb.money+=40;}}
+    }},
+    {min:60,max:60,once:1,run:function(){
+      const fr=G.fmap['FRA'];
+      if(fr&&!fr.eliminated&&frRegionCount()<9){
+        ['GBR','RUS','PRU','AUS'].forEach(id=>{const f=G.fmap[id];if(f&&!f.eliminated)f.morale=clamp(f.morale+12,0,100);});
+        const r=G.campaign.regions.filter(x=>x.owner==='FRA'&&x.army>5);
+        if(r.length){r[Math.floor(G.rng()*r.length)].army=Math.max(4,Math.round(r[0].army*0.6));addLog('bad','莱比锡民族会战：反法联军重创法军，联军士气大涨');}
+        else addLog('info','莱比锡民族会战爆发，法军避战坚守');
+      }
+    }},
+    {min:85,max:95,once:1,run:function(){
+      if(G.fmap['FRA']&&!G.fmap['FRA'].eliminated){
+        ['GBR','PRU','AUS','RUS'].forEach(id=>{const f=G.fmap[id];if(f&&!f.eliminated&&f.morale>55)f.morale=clamp(f.morale+8,0,100);});
+        addLog('info','反法同盟发起总攻，联军士气大振');
+      }
+    }}
+  ],
+  endings:[
+    {id:'france_empire',title:'欧陆的拿破仑帝国',check:function(){const f=G.fmap['FRA'];return f&&!f.eliminated&&frRegionCount()>=11;},
+      epilogue:function(){return '从里斯本到莫斯科城郊，从汉堡到那不勒斯，整个欧洲只悬挂着一面旗帜。拿破仑在巴黎圣母院加冕，欧陆诸国宫闱战栗。'+(G.fmap['GBR']&&!G.fmap['GBR'].eliminated?'唯有伦敦的海上堡垒仍在海峡对岸观望，帝国的边界在英吉利海峡停步。':'海峡对岸的灯塔也熄灭了，大英帝国在孤立中走向衰落。')+'拿破仑帝国成为十九世纪欧洲不可动摇的名字。';}},
+    {id:'britain_seas',title:'海上堡垒：大英帝国的胜利',check:function(){const f=G.fmap['FRA'];const gb=G.fmap['GBR'];return f&&f.eliminated&&gb&&!gb.eliminated&&frCount('GBR')>=6;},
+      epilogue:function(){return '巴黎陷落，拿破仑的帝国如沙堡崩塌。而伦敦从未陷落——皇家海军掌控着每一道海峡，英镑支撑着每一次反法联盟。威灵顿在滑铁卢的余晖中接受欧陆的致敬：是英国的金币与舰队，最终埋葬了法国的雄鹰。';}},
+    {id:'russia_road',title:'从莫斯科到巴黎：俄国的复仇',check:function(){const f=G.fmap['FRA'];const r=G.fmap['RUS'];return f&&f.eliminated&&r&&!r.eliminated&&G.flags.parisBy==='RUS';},
+      epilogue:function(){return '俄罗斯的冬天吞噬了法兰西的大军，哥萨克骑兵一路向西。当亚历山大一世的白旗插上巴黎凯旋门，库图佐夫的预言成为现实：莫斯科大火烧掉了拿破仑的命运，俄国则以反法同盟的剑刃，把欧洲的版图改写为沙皇的意志。';}},
+    {id:'vienna_system',title:'维也纳体系：欧洲的均势',check:function(){const f=G.fmap['FRA'];return f&&f.eliminated&&G.flags.parisBy&&G.flags.parisBy!=='FRA';},
+      epilogue:function(){return '反法同盟的军队开进巴黎，拿破仑退位流放。各国君主在维也纳召开会议，重划欧陆版图，恢复旧秩序。'+(G.flags.parisBy==='RUS'?'沙皇亚历山大以征服者的姿态主导了整场会议，俄国成为欧陆仲裁者。':'列强相互制衡，均势政治取代了霸权征服。')+'这是一场旧制度的胜利，也是法兰西大革命时代的落幕。';}},
+    {id:'bourbon',title:'波旁复辟：帝国的黄昏',check:function(){const f=G.fmap['FRA'];return f&&f.eliminated;},
+      epilogue:function(){return '巴黎的城门向联军敞开，拿破仑的百日王朝在滑铁卢的炮火中终结。路易十八回到杜伊勒里宫，波旁王朝在刺刀与和约之间复辟。法兰西的雄鹰坠落了，但大革命播下的种子，将在此后的每一场欧洲风暴中发芽。';}},
+    {id:'long_war',title:'帝国的持久战争',check:function(){return G.turn>=G.turnLimit&&G.fmap['FRA']&&!G.fmap['FRA'].eliminated&&frRegionCount()>=9;},
+      epilogue:function(){return '战争拖过了第十个年头。拿破仑的军团仍占据着欧陆的半壁江山，但反法同盟也从未放弃。双方在莱茵河两岸年复一年地流血，谁也不肯承认失败。帝国没有征服，同盟没有胜利——只有欧洲在疲惫中继续燃烧。';}},
+    {id:'exhaustion',title:'疲惫的欧洲：维也纳和约',check:function(){return G.turn>=G.turnLimit;},
+      epilogue:function(){return '十年的战争让每一个国家都精疲力竭。在奥地利的提议下，各国最终坐回谈判桌：拿破仑保有帝国的核心领土，反法同盟承认其边界。一场没有赢家的和平在维也纳签署，欧洲的均势勉强维持，而革命的幽灵仍在暗中游荡。';}}
+  ]
+};
+function frRegionCount(){return G.campaign.regions.filter(r=>r.owner==='FRA').length;}
+function frCount(fid){return G.campaign.regions.filter(r=>r.owner===fid).length;}
+
+/* ---- 第一次世界大战 ---- */
+const DEF_WW1={
+  id:'ww1', name:'第一次世界大战', subtitle:'1914 — 1918 · 世界大战', year0:1914, turnLimit:54,
+  intro:'萨拉热窝的枪声引爆了欧洲的火药桶，同盟国与协约国陷入四年壕堑。',
+  factions:[
+    {id:'GER',name:'德意志帝国',short:'德',color:'#7d8590',leader:'威廉二世',gen:4,money:1000,manpower:450,morale:86,warGoal:'paris',enemies:['GBR','FRA','RUS','USA']},
+    {id:'AUS',name:'奥匈帝国',short:'奥',color:'#c9a35c',leader:'弗朗茨·约瑟夫',gen:3,money:700,manpower:300,morale:76,warGoal:'petrograd',enemies:['GBR','FRA','RUS','USA']},
+    {id:'OTT',name:'奥斯曼帝国',short:'土',color:'#4a8f3f',leader:'恩维尔帕夏',gen:2,money:500,manpower:220,morale:70,warGoal:'',enemies:['GBR','FRA','RUS','USA']},
+    {id:'GBR',name:'大英帝国',short:'英',color:'#c0392b',leader:'黑格元帅',gen:4,money:850,manpower:400,morale:80,warGoal:'berlin',enemies:['GER','AUS','OTT']},
+    {id:'FRA',name:'法兰西共和国',short:'法',color:'#3f6fd8',leader:'霞飞将军',gen:4,money:640,manpower:380,morale:82,warGoal:'berlin',enemies:['GER','AUS','OTT']},
+    {id:'RUS',name:'俄罗斯帝国',short:'俄',color:'#9fb6d9',leader:'尼古拉二世',gen:3,money:520,manpower:500,morale:72,warGoal:'vienna',enemies:['GER','AUS','OTT']},
+    {id:'USA',name:'美利坚合众国',short:'美',color:'#d98a3d',leader:'威尔逊总统',gen:3,money:1000,manpower:300,morale:70,warGoal:'berlin',enemies:['GER','AUS','OTT'],dormant:true}
+  ],
+  regions:[
+    ['usa','美国本土','USA',60,330,15,70,0,0],
+    ['london','伦敦','GBR',190,130,30,24,6,3,'GBR'],
+    ['paris','巴黎','FRA',330,230,35,24,6,3,'FRA'],
+    ['brussels','布鲁塞尔','',420,170,10,18,4,1],
+    ['berlin','柏林','GER',560,180,48,22,6,3,'GER'],
+    ['munich','慕尼黑','GER',490,250,15,22,4,0],
+    ['vienna','维也纳','AUS',590,300,25,24,5,3,'AUS'],
+    ['budapest','布达佩斯','AUS',650,340,12,20,4,0],
+    ['const','君士坦丁堡','OTT',760,400,15,22,4,3,'OTT'],
+    ['levant','黎凡特','OTT',810,470,8,16,3,0],
+    ['petrograd','彼得格勒','RUS',750,90,25,20,5,3,'RUS'],
+    ['moscow','莫斯科','RUS',820,210,20,22,5,0],
+    ['warsaw','华沙','RUS',630,230,12,20,4,1],
+    ['serbia','塞尔维亚','',600,390,8,12,3,0],
+    ['balkans','巴尔干','',680,430,8,14,3,0],
+    ['italy','意大利','',430,390,15,24,4,1],
+    ['romania','罗马尼亚','',560,420,8,14,3,0]
+  ],
+  edges:[['london','paris'],['london','brussels'],['paris','brussels'],['paris','munich'],['brussels','berlin'],['berlin','munich'],['berlin','warsaw'],['munich','vienna'],['vienna','budapest'],['vienna','serbia'],['vienna','warsaw'],['budapest','serbia'],['budapest','romania'],['budapest','balkans'],['const','balkans'],['const','levant'],['petrograd','warsaw'],['petrograd','moscow'],['moscow','warsaw'],['warsaw','romania'],['serbia','balkans'],['balkans','romania'],['italy','munich'],['italy','paris'],['italy','vienna']],
+  events:[
+    {min:1,max:1,once:1,run:function(){
+      addLog('war','施里芬计划启动：德军挥师比利时，直扑巴黎');
+      const ger=G.fmap['GER'];
+      const br=G.rmap['brussels'];
+      if(!ger.eliminated){br.army=Math.max(4,br.army-12);ger.morale=clamp(ger.morale+3,0,100);}
+    }},
+    {min:2,max:3,once:1,run:function(){
+      const fra=G.fmap['FRA'],ger=G.fmap['GER'];
+      if(fra&&!fra.eliminated&&ger&&!ger.eliminated){
+        fra.morale=clamp(fra.morale+12,0,100);
+        const m=G.rmap['munich'];m.army=Math.max(4,m.army-8);
+        addLog('good','马恩河奇迹：法军奇迹般挡住德军洪流，德军伤亡惨重');
+      }
+    }},
+    {min:6,max:10,once:1,run:function(){
+      const ger=G.fmap['GER'],rus=G.fmap['RUS'];
+      if(ger&&!ger.eliminated&&rus&&!rus.eliminated){
+        G.rmap['warsaw'].army=Math.max(4,G.rmap['warsaw'].army-12);
+        G.rmap['munich'].army=Math.max(4,G.rmap['munich'].army-8);
+        addLog('war','东线血战：坦能堡战役，俄军在华沙方向损失惨重');
+      }
+    }},
+    {min:8,max:13,once:1,run:function(){
+      const ger=G.fmap['GER'],usa=G.fmap['USA'];
+      if(ger&&!ger.eliminated&&ger.morale>45&&usa){
+        usa.active=true;usa.morale=clamp(usa.morale+15,0,100);
+        const l=G.rmap['london'],p=G.rmap['paris'];
+        l.army+=15;p.army+=12;
+        ['GBR','FRA','RUS'].forEach(id=>{const f=G.fmap[id];if(f&&!f.eliminated)f.morale=clamp(f.morale+10,0,100);});
+        addLog('good','齐默尔曼电报败露：美国对德宣战，远征军登陆欧洲！');
+      } else {
+        addLog('info','无限制潜艇战引发抗议，但美国仍保持中立观望');
+      }
+    }},
+    {min:12,max:18,once:1,run:function(){
+      const fra=G.fmap['FRA'],ger=G.fmap['GER'];
+      if(fra&&!fra.eliminated&&ger&&!ger.eliminated){
+        G.rmap['paris'].army=Math.max(4,G.rmap['paris'].army-10);
+        G.rmap['berlin'].army=Math.max(4,G.rmap['berlin'].army-10);
+        fra.morale=clamp(fra.morale-8,0,100);ger.morale=clamp(ger.morale-8,0,100);
+        addLog('bad','凡尔登绞肉机：法德两军在凡尔登互相吞噬，双方伤亡惨重');
+      }
+    }},
+    {min:18,max:24,once:1,run:function(){
+      const rus=G.fmap['RUS'];
+      if(rus&&!rus.eliminated){
+        rus.morale=clamp(rus.morale-20,0,100);
+        G.rmap['petrograd'].army=Math.max(4,G.rmap['petrograd'].army-8);
+        addLog('bad','二月革命爆发：彼得格勒工人起义，俄军士气崩溃');
+      }
+    }},
+    {min:10,max:30,once:0,run:function(){
+      const rus=G.fmap['RUS'];
+      if(rus&&!rus.eliminated&&rus.morale<42){
+        collapseRussia();
+      }
+    }},
+    {min:10,max:30,once:0,run:function(){
+      const it=G.rmap['italy'],aus=G.fmap['AUS'],gb=G.fmap['GBR'];
+      if(it.owner===''&&aus&&!aus.eliminated&&aus.morale<50){
+        it.owner=(gb&&!gb.eliminated)?'GBR':'';it.army=Math.max(it.army,15);it.def=3;
+        if(it.owner==='GBR')addLog('war','意大利倒戈：加入协约国对奥匈宣战！');
+      }
+    }},
+    {min:12,max:30,once:0,run:function(){
+      const ro=G.rmap['romania'],rus=G.fmap['RUS'];
+      if(ro.owner===''&&rus&&!rus.eliminated&&rus.morale>50){
+        ro.owner='RUS';ro.army=Math.max(ro.army,8);
+        addLog('info','罗马尼亚倒向协约国，俄国战线向南延伸');
+      }
+    }},
+    {min:28,max:30,once:1,run:function(){
+      G.campaign.regions.forEach(r=>{r.army=Math.max(3,Math.round(r.army*0.95));});
+      G.factions.forEach(f=>{if(!f.eliminated)f.morale=clamp(f.morale-6,0,100);});
+      addLog('bad','西班牙流感席卷各交战国的战壕与后方，全军疲惫');
+    }}
+  ],
+  endings:[
+    {id:'central_win',title:'同盟国的胜利：柏林到巴黎',check:function(){
+      const ger=G.fmap['GER'],gb=G.fmap['GBR'],fra=G.fmap['FRA'];
+      return ger&&!ger.eliminated&&gb&&gb.eliminated&&fra&&fra.eliminated;
+    },epilogue:function(){return '巴黎的埃菲尔铁塔下升起了德意志的旗帜，伦敦的大本钟在轰炸中沉默。德国在东线吞并了广袤领土，在西线终结了协约国的抵抗。1918年的冬天，威廉二世成为欧洲的仲裁者——第一次世界大战以同盟国的全面胜利告终，旧大陆的均势被彻底碾碎。';}},
+    {id:'entente_win',title:'协约国的胜利：凡尔赛和约',check:function(){
+      const ger=G.fmap['GER'],aus=G.fmap['AUS'];
+      return ger&&ger.eliminated&&aus&&aus.eliminated;
+    },epilogue:function(){return '柏林与维也纳相继陷落，同盟国全线崩溃。'+(G.fmap['OTT']&&G.fmap['OTT'].eliminated?'奥斯曼帝国也在中东的沙漠中分崩离析，苏丹的千年江山化为尘埃。':'奥斯曼帝国在君士坦丁堡苟延残喘，等待它的仍是肢解的命运。')+'巴黎和会在凡尔赛宫召开，战败国被要求为四年大战支付一切代价。停战钟声响起时，没有人意识到：这只是一场更大战争的前奏。';}},
+    {id:'american_peace',title:'威尔逊的十四点：没有胜利者的和平',check:function(){
+      const usa=G.fmap['USA'];
+      return G.turn>=G.turnLimit&&usa&&usa.active&&G.fmap['GER']&&!G.fmap['GER'].eliminated&&G.fmap['GBR']&&!G.fmap['GBR'].eliminated&&G.fmap['GER'].morale<45&&G.fmap['GBR'].morale<45;
+    },epilogue:function(){return '四年堑壕战耗尽了两大阵营的最后力气。美国远征军抵达时，双方都已无力再战。威尔逊带着十四点和平原则走上谈判桌：没有胜利者，只有幸存者。停战协定在1919年签署，民族自决的口号回荡欧洲——但怨毒的种子，已埋进下一场战争。';}},
+    {id:'ottoman_dusk',title:'苏丹的黄昏',check:function(){
+      return G.turn>=G.turnLimit&&G.fmap['OTT']&&G.fmap['OTT'].eliminated&&!(G.flags.russiaOut&&G.fmap['GER']&&!G.fmap['GER'].eliminated&&G.fmap['FRA']&&!G.fmap['FRA'].eliminated);
+    },epilogue:function(){return '奥斯曼帝国在沙漠与海峡之间轰然倒塌，君士坦丁堡易主。但欧洲的战线依旧僵持：德国在俄国崩溃后移兵西线，协约国无力突破堑壕。战争在1919年以筋疲力尽的停战告终，而中东的版图，正被战胜国像切蛋糕一样重新划分。';}},
+    {id:'trench_stalemate',title:'堑壕僵持：两败俱伤',check:function(){return G.turn>=G.turnLimit;},
+      epilogue:function(){return (G.flags.russiaOut?'俄国已退出战争，德国将主力调往西线，但':'')+'双方的攻势在铁丝网与机枪面前一次次粉碎。四年战争，千万人倒下，战线几乎纹丝未动。1919年，筋疲力竭的各国在停战协定上签字：没有人赢得这场战争，欧洲失去了整整一代人。';}}
+  ]
+};
+function collapseRussia(){
+  const rus=G.fmap['RUS'];
+  if(!rus||rus.eliminated)return;
+  rus.eliminated=true;rus.morale=0;
+  const ws=G.rmap['warsaw'];
+  G.campaign.regions.forEach(r=>{
+    if(r.owner==='RUS'){r.owner='';r.army=Math.max(2,Math.round(r.army*0.4));}
+  });
+  ws.owner=(ger&&!ger.eliminated)?'GER':'';
+  if(ger&&!ger.eliminated)ger.morale=clamp(ger.morale+10,0,100);
+  G.flags.russiaOut=true;
+  addLog('bad','十月革命爆发：苏维埃政权与德国签订布列斯特和约，俄国退出战争');
+}
+
+/* ---- 十月革命 ---- */
+const DEF_OCT={
+  id:'october', name:'十月革命', subtitle:'1917 — 1919 · 俄国风暴', year0:1917, turnLimit:30,
+  intro:'二月革命推翻了沙皇，临时政府、布尔什维克与工农苏维埃三方争夺俄国的未来。',
+  factions:[
+    {id:'BOL',name:'布尔什维克党',short:'布',color:'#c0392b',leader:'列宁',gen:4,money:520,manpower:420,morale:82,warGoal:'kiev',enemies:['PROV']},
+    {id:'PEAS',name:'工农群众·苏维埃',short:'工',color:'#d98a3d',leader:'苏维埃执委会',gen:2,money:380,manpower:380,morale:68,warGoal:'kiev',enemies:['PROV']},
+    {id:'PROV',name:'临时政府',short:'白',color:'#9fb6d9',leader:'克伦斯基',gen:3,money:620,manpower:360,morale:76,warGoal:'petrograd',enemies:['BOL','PEAS']}
+  ],
+  regions:[
+    ['kron','喀琅施塔得','PEAS',680,70,9,18,4,1],
+    ['baltic','波罗的海沿岸','BOL',660,110,12,18,4,0],
+    ['petrograd','彼得格勒','BOL',720,90,28,20,6,3,'BOL'],
+    ['moscow','莫斯科','BOL',730,190,20,22,5,0],
+    ['ural','乌拉尔工厂带','BOL',845,215,10,20,5,0],
+    ['volga','伏尔加流域','PEAS',770,270,10,18,4,0],
+    ['don','顿河','PEAS',800,330,6,16,4,0],
+    ['ukr','乌克兰乡村','PEAS',640,300,8,18,4,0],
+    ['bel','白俄罗斯','PROV',580,180,16,18,4,0],
+    ['kiev','基辅','PROV',610,270,28,20,4,3,'PROV'],
+    ['siberia','西伯利亚','PROV',910,170,26,20,4,0],
+    ['caucasus','高加索','PROV',860,380,8,14,3,0],
+    ['blacksea','黑海沿岸','PROV',720,380,8,16,3,0],
+    ['far','远东','PROV',960,300,6,12,2,0]
+  ],
+  edges:[['kron','petrograd'],['kron','baltic'],['baltic','petrograd'],['baltic','bel'],['petrograd','moscow'],['moscow','ural'],['moscow','volga'],['moscow','bel'],['moscow','kiev'],['ural','volga'],['ural','siberia'],['volga','don'],['don','ukr'],['don','caucasus'],['don','blacksea'],['ukr','bel'],['ukr','kiev'],['bel','kiev'],['kiev','blacksea'],['siberia','far'],['caucasus','blacksea']],
+  events:[
+    {min:1,max:3,once:1,run:function(){
+      const b=G.fmap['BOL'];
+      if(b&&!b.eliminated){b.morale=clamp(b.morale+10,0,100);addLog('good','四月提纲发表：列宁号召“全部权力归苏维埃”，布尔什维克声势大振');}
+    }},
+    {min:4,max:7,once:1,run:function(){
+      const b=G.fmap['BOL'];
+      if(b&&!b.eliminated){b.morale=clamp(b.morale-10,0,100);G.rmap['petrograd'].army=Math.max(4,G.rmap['petrograd'].army-6);addLog('bad','七月事变：临时政府镇压布尔什维克示威，彼得格勒组织受挫');}
+    }},
+    {min:5,max:9,once:1,run:function(){
+      const p=G.fmap['PROV'];
+      if(p&&!p.eliminated){p.morale=clamp(p.morale+8,0,100);G.rmap['kiev'].army+=10;addLog('war','科尔尼洛夫进军：临时政府集结军队，剑指彼得格勒');}
+    }},
+    {min:6,max:10,once:1,run:function(){
+      const b=G.fmap['BOL'];
+      if(b&&!b.eliminated){G.rmap['petrograd'].army=Math.min(100,G.rmap['petrograd'].army+18);b.morale=clamp(b.morale+15,0,100);addLog('good','阿芙乐尔号巡洋舰炮口对准冬宫：布尔什维克武装力量空前强大');}
+    }},
+    {min:6,max:30,once:0,run:function(){
+      const b=G.fmap['BOL'],p=G.fmap['PEAS'],pr=G.fmap['PROV'];
+      if(!pr||!pr.eliminated)return;
+      if(!b||b.eliminated||!p||p.eliminated)return;
+      const bN=frCount('BOL'),pN=frCount('PEAS');
+      if(bN>=pN&&(p.morale<68||(G.turn>=12&&bN>=7))){
+        G.campaign.regions.forEach(r=>{if(r.owner==='PEAS'){r.owner='BOL';}});
+        b.morale=clamp(b.morale+18,0,100);p.eliminated=true;G.flags.peasantsMerged=true;
+        addLog('good','苏维埃联盟：工农苏维埃并入布尔什维克，“一切权力归苏维埃”！');
+      }else if(pN>bN&&(b.morale<68||(G.turn>=12&&pN>=7))){
+        G.campaign.regions.forEach(r=>{if(r.owner==='BOL'){r.owner='PEAS';}});
+        p.morale=clamp(p.morale+18,0,100);b.eliminated=true;G.flags.bolMerged=true;
+        addLog('good','苏维埃联盟：布尔什维克并入工农苏维埃，工农兵代表苏维埃执掌大权！');
+      }
+    }},
+    {min:12,max:30,once:0,run:function(){
+      const p=G.fmap['PROV'];
+      if(p&&!p.eliminated&&p.morale<45){
+        p.morale=clamp(p.morale+10,0,100);G.rmap['kiev'].army+=14;G.flags.foreignIntervention=true;
+        addLog('war','协约国武装干涉：英法军队在摩尔曼斯克与远东登陆，支援临时政府');
+      }
+    }},
+    {min:4,max:30,once:0,run:function(){
+      if(G.rng()<0.25){
+        G.factions.forEach(f=>{if(!f.eliminated)f.morale=clamp(f.morale-8,0,100);});
+        addLog('bad','粮食危机蔓延：城市与乡村同时陷入饥饿，各方民心浮动');
+      }
+    }}
+  ],
+  endings:[
+    {id:'october_win',title:'十月革命的胜利',check:function(){
+      const b=G.fmap['BOL'],p=G.fmap['PROV'];
+      return b&&!b.eliminated&&p&&p.eliminated&&frCount('BOL')>=9;
+    },epilogue:function(){return '冬宫在阿芙乐尔号的炮声中陷落，克伦斯基的临时政府仓皇出逃。布尔什维克以工农兵苏维埃的名义接管了彼得格勒与莫斯科，'+(G.flags.peasantsMerged?'工农苏维埃的旗帜与布尔什维克的红旗合并，':'并收编了各地的苏维埃武装，')+'一个新的国家形态——苏维埃俄国——在旧帝国的废墟上诞生。'+(G.flags.foreignIntervention?'尽管协约国仍在干涉，但革命的潮流已不可阻挡。':'世界将记住这个冬天：政权从资产阶级手中转到了工人与农民手中。');}},
+    {id:'soviet_win',title:'工农苏维埃执政',check:function(){
+      const pe=G.fmap['PEAS'],p=G.fmap['PROV'];
+      return pe&&!pe.eliminated&&p&&p.eliminated&&frCount('PEAS')>=8;
+    },epilogue:function(){return '这一次，历史没有让布尔什维克独揽大权。各地的工农苏维埃自行武装起来，推翻了临时政府，并把权力牢牢握在自己手中。全俄苏维埃代表大会召开，土地归于农民，工厂归于工人——一场属于工农自己的革命，在俄罗斯的乡野与城市同时完成。';}},
+    {id:'white_win',title:'革命失败：白色浪潮',check:function(){
+      const p=G.fmap['PROV'],b=G.fmap['BOL'];
+      return p&&!p.eliminated&&b&&b.eliminated&&frCount('PROV')>=9;
+    },epilogue:function(){return (G.flags.foreignIntervention?'在协约国远征军的刺刀支援下，':'凭借忠于政府的军队，')+'临时政府攻陷了彼得格勒与莫斯科，布尔什维克的领导核心或被逮捕，或流亡海外。工农运动在白色恐怖中沉寂，革命的第一个春天被扼杀。'+(G.flags.foreignIntervention?'沙俄的旧军官们重新穿上制服，外国军队在俄国土地上划分势力范围。':'克伦斯基许诺的立宪会议终于召开，但革命的火种并未熄灭，它在地下继续燃烧。');}},
+    {id:'compromise',title:'制宪会议与妥协',check:function(){
+      let all=G.factions.every(f=>f.eliminated||f.morale<45);
+      return G.turn>=G.turnLimit&&all;
+    },epilogue:function(){return '三年的内战让所有人疲惫不堪。临时政府最终同意召开立宪会议，布尔什维克与苏维埃派系获准参与政治协商。俄罗斯没有走向任何一方的完全胜利，而是在妥协中暂时安定下来——革命的彻底性被让位于现实政治的权衡，但深层的矛盾，依旧在冰层下涌动。';}},
+    {id:'chaos',title:'割据与内战',check:function(){return G.turn>=G.turnLimit;},
+      epilogue:function(){return '战争没有尽头：红、白、以及各地的工农武装各据一方，铁路被切断，城市在围困中挨饿。协约国在远东登陆，哥萨克在顿河独立，乌克兰的乡村自成一个世界。俄罗斯陷入了漫长的割据与内战——谁也没能彻底胜利，谁也没打算放弃。';}}
+  ]
+};
+
+/* ---- 第二次世界大战 ---- */
+const DEF_WW2={
+  id:'ww2', name:'第二次世界大战', subtitle:'1939 — 1946 · 全球浩劫', year0:1939, turnLimit:80,
+  intro:'轴心国的铁蹄踏平欧洲与亚洲，同盟国在至暗时刻捍卫世界。',
+  factions:[
+    {id:'GER',name:'纳粹德国',short:'德',color:'#7d8590',leader:'希特勒',gen:4,money:900,manpower:500,morale:85,warGoal:'moscow',enemies:['GBR','USA','USSR','CHN']},
+    {id:'ITA',name:'意大利王国',short:'意',color:'#4a8f3f',leader:'墨索里尼',gen:2,money:480,manpower:260,morale:72,warGoal:'egypt',enemies:['GBR','USA','USSR','CHN']},
+    {id:'JPN',name:'大日本帝国',short:'日',color:'#c0392b',leader:'东条英机',gen:4,money:750,manpower:420,morale:84,warGoal:'beijing',enemies:['CHN','GBR','USA','USSR']},
+    {id:'CHN',name:'中华民国',short:'中',color:'#c9a35c',leader:'蒋介石·毛泽东',gen:4,money:400,manpower:800,morale:90,warGoal:'',enemies:['JPN']},
+    {id:'USSR',name:'苏维埃联盟',short:'苏',color:'#a8382d',leader:'斯大林',gen:5,money:800,manpower:600,morale:84,warGoal:'berlin',enemies:['GER','ITA','JPN']},
+    {id:'GBR',name:'大英帝国',short:'英',color:'#3f6fd8',leader:'丘吉尔',gen:4,money:850,manpower:360,morale:82,warGoal:'berlin',enemies:['GER','ITA','JPN']},
+    {id:'USA',name:'美利坚合众国',short:'美',color:'#d98a3d',leader:'罗斯福',gen:5,money:1000,manpower:450,morale:80,warGoal:'tokyo',enemies:['GER','ITA','JPN']}
+  ],
+  regions:[
+    ['washington','华盛顿','USA',120,340,20,24,6,3,'USA'],
+    ['pearl','珍珠港','USA',90,450,15,30,4,1],
+    ['london','伦敦','GBR',210,140,38,24,6,3,'GBR'],
+    ['lowland','低地','',430,180,10,16,4,1],
+    ['paris','巴黎','',370,230,25,24,5,1],
+    ['berlin','柏林','GER',570,180,45,22,6,3,'GER'],
+    ['warsaw','华沙','GER',640,210,15,20,4,1],
+    ['moscow','莫斯科','USSR',740,170,55,22,6,3,'USSR'],
+    ['kiev','基辅','USSR',680,270,28,18,4,0],
+    ['stalingrad','斯大林格勒','USSR',760,300,15,20,4,1],
+    ['rome','罗马','ITA',470,380,18,22,4,3,'ITA'],
+    ['africa','北非','ITA',380,470,10,16,3,0],
+    ['egypt','埃及','GBR',600,450,10,16,3,0],
+    ['india','印度','GBR',700,470,8,14,3,0],
+    ['tokyo','东京','JPN',920,120,45,24,5,3,'JPN'],
+    ['manchuria','满洲','JPN',880,230,30,26,4,0],
+    ['taiwan','台湾','JPN',905,400,18,20,4,0],
+    ['beijing','北京','CHN',830,290,20,20,5,3,'CHN'],
+    ['nanjing','南京','CHN',860,350,15,18,4,0],
+    ['shanghai','上海','CHN',880,320,12,18,4,0],
+    ['seasia','东南亚','',780,420,6,14,3,0]
+  ],
+  edges:[['washington','london'],['washington','pearl'],['pearl','tokyo'],['london','lowland'],['london','paris'],['lowland','berlin'],['lowland','paris'],['paris','rome'],['berlin','warsaw'],['warsaw','kiev'],['moscow','warsaw'],['moscow','kiev'],['moscow','stalingrad'],['kiev','stalingrad'],['rome','africa'],['africa','egypt'],['egypt','india'],['india','seasia'],['tokyo','manchuria'],['tokyo','shanghai'],['tokyo','taiwan'],['manchuria','beijing'],['beijing','nanjing'],['nanjing','shanghai'],['shanghai','seasia'],['taiwan','shanghai'],['taiwan','seasia']],
+  events:[
+    {min:1,max:1,once:1,run:function(){
+      const ger=G.fmap['GER'];
+      if(!ger.eliminated){G.rmap['lowland'].army=Math.max(4,G.rmap['lowland'].army-10);ger.morale=clamp(ger.morale+3,0,100);addLog('war','黄色方案启动：德军装甲洪流横扫低地国家，兵锋直指巴黎');}
+    }},
+    {min:2,max:2,once:1,run:function(){
+      const ger=G.fmap['GER'];
+      if(!ger.eliminated&&['','GBR','USA','USSR'].indexOf(G.rmap['paris'].owner)>=0){
+        G.rmap['paris'].army=Math.max(4,G.rmap['paris'].army-16);
+        addLog('war','曼施坦因计划：德军绕过马奇诺防线，兵临巴黎城下！');
+      }
+    }},
+    {min:3,max:5,once:1,run:function(){
+      const ger=G.fmap['GER'],gb=G.fmap['GBR'];
+      if(ger&&!ger.eliminated&&gb&&!gb.eliminated){
+        G.rmap['london'].army=Math.max(4,G.rmap['london'].army-8);ger.morale=clamp(ger.morale-6,0,100);
+        addLog('bad','不列颠空战：皇家空军挫败德国空袭，伦敦挺过至暗时刻');
+      }
+    }},
+    {min:2,max:2,once:1,run:function(){
+      const s=G.fmap['USSR'];
+      if(s&&!s.eliminated){s.money+=300;const l=G.rmap['moscow'];l.army=Math.min(100,l.army+15);addLog('info','租借法案：美国工业的血液源源不断流向苏联');}
+    }},
+    {min:6,max:10,once:1,run:function(){
+      const ger=G.fmap['GER'];
+      if(ger&&!ger.eliminated){
+        G.rmap['warsaw'].army=Math.max(4,G.rmap['warsaw'].army+12);
+        G.rmap['kiev'].army=Math.max(4,G.rmap['kiev'].army-10);
+        addLog('war','巴巴罗萨行动：三百万德军跨越国境，苏联大地燃起战火');
+      }
+    }},
+    {min:9,max:13,once:1,run:function(){
+      const jpn=G.fmap['JPN'];
+      if(jpn&&!jpn.eliminated){
+        G.rmap['pearl'].army=Math.max(4,G.rmap['pearl'].army-14);
+        jpn.morale=clamp(jpn.morale+8,0,100);
+        const us=G.fmap['USA'];if(us&&!us.eliminated)us.morale=clamp(us.morale+6,0,100);
+        addLog('war','偷袭珍珠港：日本联合舰队空袭夏威夷，美国正式参战！');
+      }
+    }},
+    {min:14,max:20,once:1,run:function(){
+      const ger=G.fmap['GER'],s=G.fmap['USSR'];
+      if(ger&&!ger.eliminated&&s&&!s.eliminated){
+        G.rmap['stalingrad'].army=Math.max(4,G.rmap['stalingrad'].army-12);
+        G.rmap['moscow'].army=Math.max(4,G.rmap['moscow'].army-8);
+        ger.morale=clamp(ger.morale-10,0,100);s.morale=clamp(s.morale+16,0,100);
+        addLog('good','斯大林格勒的转折：苏军合围德军第六集团军，东线战局逆转');
+      }
+    }},
+    {min:18,max:24,once:1,run:function(){
+      const gb=G.fmap['GBR'],us=G.fmap['USA'];
+      if(gb&&!gb.eliminated&&us&&!us.eliminated){
+        G.rmap['lowland'].army=Math.min(100,G.rmap['lowland'].army+30);
+        addLog('good','霸王行动：盟军百万大军在诺曼底登陆，欧洲第二战场开辟！');
+      }
+    }},
+    {min:36,max:80,once:0,run:function(){
+      const us=G.fmap['USA'],jpn=G.fmap['JPN'];
+      if(us&&!us.eliminated&&jpn&&!jpn.eliminated&&!G.flags.nuked&&frCount('JPN')>=6&&G.rng()<0.4){
+        G.flags.nuked=true;
+        jpn.morale=clamp(jpn.morale-40,0,100);
+        G.rmap['tokyo'].army=Math.max(3,Math.round(G.rmap['tokyo'].army*0.5));
+        addLog('bad','原子之光：美国在广岛与长崎投下原子弹，日本举国震恐');
+        if(G.rng()<0.55){
+          G.campaign.regions.forEach(r=>{if(r.owner==='JPN'){r.owner='USA';r.army=Math.max(1,Math.round(r.army*0.4));}});
+          jpn.eliminated=true;
+          addLog('war','大日本帝国宣布无条件投降！太平洋战争结束');
+        }
+      }
+    }},
+    {min:10,max:80,once:0,run:function(){
+      const chn=G.fmap['CHN'];
+      if(chn&&!chn.eliminated&&G.rng()<0.4){
+        const owned=G.campaign.regions.filter(r=>r.owner==='CHN');
+        if(owned.length){owned[Math.floor(G.rng()*owned.length)].army=Math.max(3,Math.round(owned[0].army*0.85));}
+        addLog('bad','中国战场：日机持续轰炸陪都重庆，中国军民艰苦抵抗');
+      }
+    }}
+  ],
+  endings:[
+    {id:'axis_win',title:'轴心国的新秩序',check:function(){
+      const ger=G.fmap['GER'],gb=G.fmap['GBR'],s=G.fmap['USSR'],jpn=G.fmap['JPN'];
+      return ger&&!ger.eliminated&&gb&&gb.eliminated&&s&&s.eliminated&&jpn&&!jpn.eliminated;
+    },epilogue:function(){return '伦敦在轰炸中屈服，莫斯科的红旗落地。德国的装甲师从大西洋开到乌拉尔，日本的太阳旗在太平洋与亚洲升起。希特勒的“千年帝国”与日本的“大东亚共荣圈”在地图上连成一片——同盟国在至暗时刻输掉了这场战争，世界进入了轴心国的新秩序。';}},
+    {id:'soviet_win',title:'红旗的凯旋',check:function(){
+      const s=G.fmap['USSR'],ger=G.fmap['GER'],jpn=G.fmap['JPN'];
+      return s&&!s.eliminated&&ger&&ger.eliminated&&jpn&&jpn.eliminated&&frCount('USSR')>=10;
+    },epilogue:function(){return '苏联红军以两千万生命的代价碾碎了第三帝国，红旗插上柏林国会大厦；随后挥师远东，击溃关东军，解放满洲与朝鲜。当战争结束时，苏联的势力范围从中欧延伸到太平洋——这场浩劫的胜利者，是付出了最惨重牺牲的苏维埃联盟。世界分裂为两个阵营，铁幕缓缓落下。';}},
+    {id:'atomic',title:'核之光下的终战',check:function(){
+      const jpn=G.fmap['JPN'],ger=G.fmap['GER'],ita=G.fmap['ITA'];
+      return G.flags.nuked&&jpn&&jpn.eliminated&&!(ger&&ger.eliminated&&ita&&ita.eliminated);
+    },
+      epilogue:function(){return '当欧洲的战火尚未完全熄灭，太平洋上空的蘑菇云终结了日本帝国。广岛与长崎的灰烬，换来了无条件投降的广播。人类第一次见识到这种毁天灭地的力量——它结束了这场战争，也开启了一个核阴影笼罩的新时代。';}},
+    {id:'china_win',title:'东方主战场的胜利',check:function(){
+      const chn=G.fmap['CHN'],jpn=G.fmap['JPN'],ger=G.fmap['GER'];
+      return chn&&!chn.eliminated&&jpn&&jpn.eliminated&&ger&&!ger.eliminated;
+    },epilogue:function(){return '在欧陆战事未息之时，东方战场率先迎来了结局。中国军民以八年苦战拖垮了日本帝国，将太阳旗逐出大陆。重庆的山城迎来了胜利的欢呼，百万老兵终于等到还乡的那一天——东方主战场用最漫长的抵抗，证明了“论持久战”的预言。';}},
+    {id:'allied_win',title:'同盟国的胜利日',check:function(){
+      const ger=G.fmap['GER'],ita=G.fmap['ITA'],jpn=G.fmap['JPN'];
+      return ger&&ger.eliminated&&ita&&ita.eliminated&&jpn&&jpn.eliminated;
+    },epilogue:function(){return '柏林成为废墟，罗马易帜，东京湾的战列舰甲板上签署了投降书。美、苏、英、中四大国以联合国的蓝图收拾破碎的世界——纳粹主义被审判，殖民帝国瓦解，民族自决的新秩序开始建立。正义的胜利日属于所有为自由付出代价的民族，而冷战的两极格局，正在废墟上悄悄成形。';}},
+    {id:'pacific_shadow',title:'大东亚的阴影',check:function(){
+      const jpn=G.fmap['JPN'];
+      return G.turn>=G.turnLimit&&jpn&&!jpn.eliminated&&frCount('JPN')>=10;
+    },epilogue:function(){return '欧洲的战事在僵持中不了了之，而太平洋与东亚却成了日本帝国的海洋。中国的大陆战场仍在苦撑，但东南亚与太平洋诸岛已被太阳旗连成一片。1946年，筋疲力尽的各方在停战谈判桌上妥协——日本保留了它在太平洋的果实，而亚洲的仇恨，将在未来数十年里反复燃烧。';}},
+    {id:'no_winner',title:'没有胜利者的战争',check:function(){return G.turn>=G.turnLimit;},
+      epilogue:function(){return '七年的全球战争没有决出胜负：轴心国的扩张被遏制，但同盟国也无力彻底摧毁它。柏林与莫斯科之间的战线冻结，太平洋上则是漫长的岛屿拉锯。1946年的停战协定只是暂歇——各国都在舔舐伤口、重整军备，等待下一场风暴。这场战争真正的名字，叫“没有胜利者的战争”。';}}
+  ]
+};
+
+const CAMPAIGNS={napoleon:DEF_NAP,ww1:DEF_WW1,october:DEF_OCT,ww2:DEF_WW2};
+const CAMPAIGN_ORDER=['napoleon','ww1','october','ww2'];
+
+function addLog(type,text){
+  const t=G.turn;
+  G.log.unshift({type:type,text:text,t:t});
+  if(G.log.length>220)G.log.pop();
+  G.ticker.unshift({type:type,text:text});
+  if(G.ticker.length>4)G.ticker.pop();
+}
+
+/* ================= 游戏引擎 ================= */
+function startGame(cid,diff,mode,pfid){
+  stopTimer();
+  Object.assign(G,{
+    cid:cid,diff:diff,mode:mode,pfid:pfid,
+    campaign:buildCampaign(CAMPAIGNS[cid]),
+    turn:0,turnLimit:CAMPAIGNS[cid].turnLimit,year0:CAMPAIGNS[cid].year0,
+    paused:false,waiting:false,curIdx:0,incomeDone:false,
+    selected:null,ended:false,battles:0,casualties:0,winCount:0,lossCount:0,
+    log:[],ticker:[],flags:{},errors:[],result:null,fast:false
+  });
+  G.speed=2;
+  G.factions=G.campaign.factions;
+  G.regions=G.campaign.regions;
+  const seed=(Math.random()*0x7fffffff)>>>0;
+  G.rng=mulberry32(seed);
+  G.rmap={};G.fmap={};
+  G.campaign.regions.forEach(r=>G.rmap[r.id]=r);
+  G.campaign.factions.forEach(f=>{
+    f.isPlayer=(mode==='player'&&f.id===pfid);
+    if(f.dormant)f.active=false;
+    G.fmap[f.id]=f;
+  });
+  if(mode==='player'&&G.fmap[pfid]&&!G.fmap[pfid].eliminated){
+    G.fmap[pfid].morale=clamp(G.fmap[pfid].morale+5,0,100);
+  }
+  showView('view-game');
+  renderAll();
+  startTimer();
+}
+
+function incomeAll(){
+  const mul=G.diffConf[G.diff].income;
+  G.campaign.regions.forEach(r=>{
+    const f=r.owner?G.fmap[r.owner]:null;
+    if(f&&!f.eliminated&&f.active){
+      f.money+=Math.round(r.prod*mul);
+      f.manpower=clamp(f.manpower+r.manpower,0,999);
+    }
+  });
+  G.factions.forEach(f=>{
+    if(f.eliminated||!f.active)return;
+    const tot=G.campaign.regions.filter(r=>r.owner===f.id).reduce((s,r)=>s+r.army,0);
+    if(tot<=0)return;
+    const upkeep=Math.round(tot*(0.5+G.turn*0.004));
+    f.money-=upkeep;
+    if(f.money<0){
+      const need=-f.money;
+      f.money=0;
+      const scale=Math.max(0.2,1-need/tot);
+      G.campaign.regions.forEach(r=>{
+        if(r.owner===f.id)r.army=Math.max(1,Math.round(r.army*scale));
+      });
+      addLog('info',f.name+'财政崩溃，前线军队哗变溃散');
+    }
+  });
+}
+
+function monthStep(){
+  if(G.ended||G.waiting)return;
+  if(!G.incomeDone){incomeAll();G.incomeDone=true;}
+  const factions=G.campaign.factions;
+  let i=G.curIdx||0;
+  for(;i<factions.length;i++){
+    const f=factions[i];
+    G.curIdx=i+1;
+    if(f.eliminated||!f.active||f.neutral)continue;
+    if(f.isPlayer&&G.mode==='player'){
+      G.waiting=true;G.curFaction=f;
+      toast('轮到你指挥：'+f.name);
+      renderAll();
+      return;
+    }
+    aiAct(f);
+  }
+  G.incomeDone=false;G.curIdx=0;
+  G.turn++;
+  runEvents();
+  checkCollapse();
+  const end=checkEnding();
+  if(end){finishGame(end);return;}
+  if(G.turn>=G.turnLimit){
+    const last=G.campaign.endings[G.campaign.endings.length-1];
+    finishGame(last);return;
+  }
+}
+
+/* ---- 战力与战斗 ---- */
+function atkPower(f,army){
+  return army*(1+f.gen*0.045)*(0.75+f.morale/200);
+}
+function defPower(f,army,def){
+  const morale=f?f.morale:60;
+  const gen=f?f.gen:0;
+  return army*(1+gen*0.045)*(0.8+morale/250)*Math.min(2.2,1+def*0.018);
+}
+function attack(f,fromId,toId){
+  const from=G.rmap[fromId],to=G.rmap[toId];
+  if(!from||!to||from.army<2)return 'none';
+  const dc=G.diffConf[G.diff];
+  const defF=to.owner?G.fmap[to.owner]:null;
+  const atkA=from.army,defA=to.army;
+  let combined=atkA;
+  const helpers=[];
+  G.campaign.edges.forEach(e=>{
+    const a=G.rmap[e[0]],b=G.rmap[e[1]];
+    if(e[0]===to.id&&b.owner===f.id&&b.id!==from.id)helpers.push(b);
+    else if(e[1]===to.id&&a.owner===f.id&&a.id!==from.id)helpers.push(a);
+  });
+  helpers.forEach(h=>{combined+=Math.round(h.army*0.4);});
+  const numAdv=0.5*Math.min(0.35,Math.max(-0.35,(combined-defA)/Math.max(1,defA)));
+  const fresh=(G.turn-(to.flipTurn||-99)<3)?2:0;
+  const ap=atkPower(f,combined)*(0.85+G.rng()*0.3)*1.12*(1+numAdv);
+  const dp=defPower(defF,defA,to.def+fresh)*(0.85+G.rng()*0.3)*(defF?dc.defMul:1);
+  G.battles++;
+  let loss;
+  if(ap>dp){
+    loss=Math.min(Math.round(combined*0.35),Math.round(defA*0.30)+2);
+    const moved=Math.max(1,Math.round(from.army*0.45));
+    from.army=Math.max(1,from.army-Math.round(loss*from.army/combined));
+    helpers.forEach(h=>{h.army=Math.max(1,h.army-Math.round(loss*0.4*h.army/combined));});
+    G.casualties+=loss;
+    to.army=moved;
+    const oldOwner=to.owner;
+    to.owner=f.id;
+    to.flipTurn=G.turn;
+    if(to.capitalOf){
+      const oldF=G.fmap[to.capitalOf];
+      if(oldF&&!oldF.eliminated){
+        eliminateFaction(oldF,f);
+      }
+    }
+    addLog('war',f.name+'攻克'+to.name+(to.capitalOf?'（首都陷落！）':''));
+    f.morale=clamp(f.morale+4,0,100);
+    if(oldOwner&&G.fmap[oldOwner]&&!G.fmap[oldOwner].eliminated){
+      G.fmap[oldOwner].morale=clamp(G.fmap[oldOwner].morale-(to.capitalOf?8:2),0,100);
+    }
+    if(to.id==='paris'&&G.cid==='napoleon')G.flags.parisBy=f.id;
+    G.winCount=(G.winCount||0)+1;
+    return 'win';
+  }else{
+    loss=Math.round(combined*(0.32+G.rng()*0.18));
+    from.army=Math.max(1,from.army-Math.round(loss*from.army/combined));
+    helpers.forEach(h=>{h.army=Math.max(1,h.army-Math.round(loss*0.4*h.army/combined));});
+    G.casualties+=loss;
+    const dl=Math.round(defA*(0.15+G.rng()*0.15));
+    to.army=Math.max(0,to.army-dl);
+    if(defF&&!defF.eliminated)defF.morale=clamp(defF.morale+1,0,100);
+    f.morale=clamp(f.morale-2,0,100);
+    G.lossCount=(G.lossCount||0)+1;
+    return 'loss';
+  }
+}
+function eliminateFaction(f,by){
+  if(f.eliminated)return;
+  f.eliminated=true;f.morale=0;
+  G.campaign.regions.forEach(r=>{
+    if(r.owner===f.id){
+      r.owner='';
+      r.army=Math.max(1,Math.round(r.army*0.4));
+    }
+  });
+  if(by&&!by.eliminated){
+    by.morale=clamp(by.morale+14,0,100);
+    addLog('bad',f.name+'的政权崩溃，各地方势力观望摇摆');
+  }
+}
+function checkCollapse(){
+  G.factions.forEach(f=>{
+    if(f.eliminated||!f.active)return;
+    const has=G.campaign.regions.some(r=>r.owner===f.id);
+    if(!has){f.eliminated=true;addLog('bad',f.name+'已彻底覆灭');}
+  });
+}
+
+/* ---- AI ---- */
+function threatScore(r){
+  let s=(r.capitalOf&&r.capitalOf===r.owner)?25:0;
+  G.campaign.edges.forEach(e=>{
+    const oth=e[0]===r.id?e[1]:(e[1]===r.id?e[0]:null);
+    if(!oth)return;
+    const o=G.rmap[oth];
+    if(!o)return;
+    if(o.owner&&G.fmap[o.owner]&&G.fmap[o.owner].enemies.indexOf(r.owner)>=0)s+=o.army;
+    else if(!o.owner)s+=o.army*0.3;
+  });
+  return s;
+}
+function recruit(f,n){
+  const cost=20,mp=2;
+  const affordable=Math.min(n,Math.floor(f.money/cost),Math.floor(f.manpower/mp));
+  if(affordable<=0)return;
+  f.money-=affordable*cost;
+  f.manpower-=affordable*mp;
+  const cands=G.campaign.regions.filter(r=>r.owner===f.id&&r.army<100);
+  if(!cands.length)return;
+  cands.sort((a,b)=>threatScore(b)-threatScore(a));
+  cands[0].army=Math.min(100,cands[0].army+affordable);
+}
+function adjacentFrom(f,to){
+  let best=null,bestArmy=0;
+  G.campaign.edges.forEach(e=>{
+    const a=G.rmap[e[0]],b=G.rmap[e[1]];
+    let mine=null;
+    if(e[0]===to.id&&b.owner===f.id)mine=b;
+    else if(e[1]===to.id&&a.owner===f.id)mine=a;
+    if(mine&&mine.army>bestArmy){best=mine;bestArmy=mine.army;}
+  });
+  return best;
+}
+function pickTargets(f){
+  const dc=G.diffConf[G.diff];
+  const out=[];
+  const hasEnemy=G.campaign.regions.some(r=>r.owner&&G.fmap[r.owner]&&!G.fmap[r.owner].eliminated&&G.fmap[r.owner].enemies.indexOf(f.id)>=0);
+  G.campaign.regions.forEach(to=>{
+    if(to.owner===f.id)return;
+    if(to.owner&&G.fmap[to.owner]&&G.fmap[to.owner].eliminated)return;
+    const isEnemy=to.owner&&G.fmap[to.owner].enemies.indexOf(f.id)>=0;
+    const isTruce=to.owner&&G.fmap[to.owner].neutral;
+    const isNeutral=!to.owner;
+    if(!isEnemy&&!isTruce&&!isNeutral)return;
+    if(isTruce&&G.rng()>0.3)return;
+    if(isNeutral&&G.rng()>(hasEnemy?0.18:0.55))return;
+    const from=adjacentFrom(f,to);
+    if(!from||from.army<3)return;
+    const ap=atkPower(f,from.army);
+    const dp=defPower(to.owner?G.fmap[to.owner]:null,to.army,to.def)*dc.defMul;
+    const odds=ap/dp*1.02;
+    const score=to.prod*2+(to.capitalOf?18:0)+(to.id===f.warGoal?14:0);
+    out.push({from:from.id,to:to.id,odds:odds,score:score});
+  });
+  out.sort((a,b)=>b.score-a.score);
+  return out;
+}
+function aiMove(f){
+  if(f.eliminated||!f.active)return;
+  const owned=G.campaign.regions.filter(r=>r.owner===f.id&&r.army>45);
+  const poor=G.campaign.regions.filter(r=>r.owner===f.id&&r.army<28&&threatScore(r)>0);
+  if(!owned.length||!poor.length)return;
+  owned.sort((a,b)=>b.army-a.army);
+  poor.sort((a,b)=>threatScore(b)-threatScore(a));
+  const from=owned[0],to=poor[0];
+  if(from===to)return;
+  const amt=Math.min(30,from.army-20);
+  if(amt<5)return;
+  from.army-=amt;to.army+=amt;
+}
+function aiAct(f){
+  const dc=G.diffConf[G.diff];
+  if(f.money>220&&f.manpower>=20){
+    recruit(f,Math.min(12,Math.floor(f.money/240)+4));
+  }else if(f.money>120&&f.manpower>=10){
+    recruit(f,5);
+  }
+  aiMove(f);
+  const targets=pickTargets(f);
+  let strategic=f.warGoal;
+  if(strategic&&G.rmap[strategic]&&G.rmap[strategic].owner===f.id){
+    let best=null,bs=-1;
+    G.campaign.regions.forEach(r=>{
+      if(!r.capitalOf)return;
+      const of=r.owner?G.fmap[r.owner]:null;
+      if(!of||of.eliminated||of.id===f.id||of.enemies.indexOf(f.id)<0)return;
+      let reach=false;
+      G.campaign.edges.forEach(e=>{
+        if(reach)return;
+        if(e[0]===r.id&&G.rmap[e[1]].owner===f.id)reach=true;
+        if(e[1]===r.id&&G.rmap[e[0]].owner===f.id)reach=true;
+      });
+      if(!reach)return;
+      if(r.army>bs){bs=r.army;best=r;}
+    });
+    if(best)strategic=best.id;
+  }
+  let attacks=0;
+  const maxAtk=(f.gen>=4||dc.aggr>=1.25)?2:1;
+  targets.forEach(t=>{
+    if(attacks>=maxAtk)return;
+    let go=false;
+    if((t.to===f.warGoal||t.to===strategic)&&t.odds>0.72)go=true;
+    else if(t.odds>1.18)go=true;
+    else if(t.odds>1.02&&t.score>=5)go=true;
+    else if(t.odds>0.92&&G.rng()<0.30)go=true;
+    if(!go)return;
+    const r=attack(f,t.from,t.to);
+    if(r==='win'){attacks++;}
+    else if(r==='loss'){attacks=maxAtk;}
+  });
+  if(f.morale<32&&G.rng()<0.3&&!f.neutral){
+    const foes=G.factions.filter(x=>!x.eliminated&&x.active&&!x.neutral&&x.enemies.indexOf(f.id)>=0);
+    if(foes.length){
+      foes.sort((a,b)=>b.morale-a.morale);
+      const top=foes[0];
+      if(top.morale>60||G.rng()<0.4){
+        f.neutral=true;
+        addLog('info',f.name+'向'+top.name+'求和，宣布退出战争');
+        top.morale=clamp(top.morale+4,0,100);
+      }
+    }
+  }
+}
+
+/* ---- 事件与结局 ---- */
+function runEvents(){
+  (G.campaign.events||[]).forEach(ev=>{
+    if(ev.done)return;
+    if(G.turn<ev.min||G.turn>ev.max)return;
+    ev.run();
+    if(ev.once)ev.done=true;
+  });
+}
+function checkEnding(){
+  for(let i=0;i<G.campaign.endings.length;i++){
+    const e=G.campaign.endings[i];
+    try{
+      if(e.check())return e;
+    }catch(err){pushErr(err);}
+  }
+  return null;
+}
+function finishGame(e){
+  if(G.ended)return;
+  G.ended=true;
+  stopTimer();
+  G.result=e;
+  try{
+    const key='war_game_fast_'+G.cid;
+    const prev=parseInt(localStorage.getItem(key)||'0',10);
+    if(!prev||G.turn<prev)localStorage.setItem(key,String(G.turn));
+  }catch(err){}
+  renderEnding(e);
+}
+function pushErr(err){
+  const msg=(err&&err.message)?err.message:String(err);
+  if(G.errors.indexOf(msg)<0)G.errors.push(msg);
+  toast('运行错误：'+msg);
+}
+window.addEventListener('error',function(ev){pushErr(ev.message||'unknown');});
+window.addEventListener('unhandledrejection',function(ev){pushErr(ev.reason||'rejection');});
+
+/* ================= 界面渲染 ================= */
+function showView(id){
+  ['view-menu','view-game'].forEach(v=>{$(v).classList.toggle('hidden',v!==id);});
+}
+function renderTop(){
+  $('gameTitle').textContent=G.campaign.name;
+  $('gameDate').textContent=now()+(G.mode==='player'&&G.waiting?' · 你的回合':'');
+}
+function renderMap(){
+  const svg=$('mapSvg');
+  let html='<defs>'+
+    '<pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M42 0H0V42" fill="none" stroke="rgba(201,163,92,.05)" stroke-width="1"/></pattern>'+
+    '<radialGradient id="sea" cx="25%" cy="15%" r="85%"><stop offset="0%" stop-color="#1d2531"/><stop offset="100%" stop-color="#12151d"/></radialGradient>'+
+    '</defs>';
+  html+='<rect x="0" y="0" width="1000" height="620" fill="url(#sea)"/>';
+  html+='<rect x="0" y="0" width="1000" height="620" fill="url(#grid)"/>';
+  G.campaign.edges.forEach(e=>{
+    const a=G.rmap[e[0]],b=G.rmap[e[1]];
+    html+='<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'" stroke="rgba(201,163,92,.30)" stroke-width="2"/>';
+  });
+  G.campaign.regions.forEach(r=>{
+    const owner=r.owner?G.fmap[r.owner]:null;
+    const col=owner?owner.color:'#6b6255';
+    const rad=Math.min(26,10+r.army/7);
+    const sel=G.selected===r.id;
+    html+='<g class="reg" data-id="'+r.id+'" style="cursor:pointer">';
+    if(sel)html+='<circle cx="'+r.x+'" cy="'+r.y+'" r="'+(rad+7)+'" fill="none" stroke="#e8cf8f" stroke-width="2" class="pulse"/>';
+    html+='<circle cx="'+r.x+'" cy="'+r.y+'" r="'+rad+'" fill="'+col+'" stroke="rgba(0,0,0,.55)" stroke-width="2" opacity=".93"/>';
+    if(r.capitalOf){
+      html+='<circle cx="'+r.x+'" cy="'+r.y+'" r="'+(rad+4)+'" fill="none" stroke="#e8cf8f" stroke-width="1.4" stroke-dasharray="4 3"/>';
+      html+='<path d="M'+(r.x)+' '+(r.y-6)+'L'+(r.x+4.5)+' '+(r.y)+'L'+(r.x)+' '+(r.y+6)+'L'+(r.x-4.5)+' '+(r.y)+'Z" fill="#e8cf8f"/>';
+    }
+    html+='<title>'+r.name+(owner?' · '+owner.name:' · 中立')+' · 驻军 '+r.army+'</title>';
+    html+='<text x="'+r.x+'" y="'+(r.y+rad+11)+'" text-anchor="middle" font-size="11" fill="#efe6d2" style="paint-order:stroke;stroke:#12100c;stroke-width:3px">'+r.army+'</text>';
+    html+='<text x="'+r.x+'" y="'+(r.y-(r.capitalOf?rad+10:rad+5))+'" text-anchor="middle" font-size="12" fill="#efe6d2" style="paint-order:stroke;stroke:#12100c;stroke-width:3px;font-weight:600">'+r.name+'</text>';
+    html+='</g>';
+  });
+  svg.innerHTML=html;
+  svg.querySelectorAll('.reg').forEach(g=>{
+    g.addEventListener('click',()=>{selectRegion(g.dataset.id);});
+  });
+}
+function selectRegion(id){
+  G.selected=id;
+  renderMap();
+  renderRegionPanel();
+  const tab=document.querySelector('.tab-btn[data-tab="region"]');
+  if(tab&&!tab.classList.contains('active')){
+    document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+    tab.classList.add('active');
+    ['panOverview','panRegion','panLog'].forEach(p=>$(p).classList.add('hidden'));
+    $('panRegion').classList.remove('hidden');
+  }
+}
+function renderOverview(){
+  const total=G.campaign.regions.length;
+  const html=G.campaign.factions.map(x=>{
+    const army=G.campaign.regions.filter(r=>r.owner===x.id).reduce((s,r)=>s+r.army,0);
+    const regs=G.campaign.regions.filter(r=>r.owner===x.id).length;
+    let status='';
+    if(x.eliminated)status='<span class="turn-badge">亡国</span>';
+    else if(!x.active)status='<span class="turn-badge">蛰伏</span>';
+    else if(x.neutral)status='<span class="turn-badge">停战</span>';
+    if(x.isPlayer)status+='<span class="turn-badge" style="border-color:#e8cf8f">你</span>';
+    const cls=x.morale<40?'low':'';
+    return '<div class="faction-row'+(x.eliminated?' dead':'')+'">'+
+      shieldSVG(x.color,18)+
+      '<div class="fr-info">'+
+      '<div class="fr-name">'+x.name+status+'</div>'+
+      '<div class="fr-leader">'+x.leader+'</div>'+
+      '<div class="fr-stats"><span>军队 <b>'+fmt(army)+'</b></span><span>地区 <b>'+regs+'</b>/'+total+'</span><span>资金 <b>'+fmt(x.money)+'</b></span></div>'+
+      '<div class="morale-bar '+cls+'"><i style="width:'+Math.round(x.morale)+'%"></i></div>'+
+      '</div></div>';
+  }).join('');
+  $('panOverview').innerHTML=html;
+}
+function getNeighbors(id){
+  const out=[];
+  G.campaign.edges.forEach(e=>{
+    if(e[0]===id)out.push(G.rmap[e[1]]);
+    else if(e[1]===id)out.push(G.rmap[e[0]]);
+  });
+  return out;
+}
+function renderRegionPanel(){
+  const pan=$('panRegion');
+  const r=G.selected?G.rmap[G.selected]:null;
+  const pf=G.mode==='player'?G.fmap[G.pfid]:null;
+  if(!r){
+    pan.innerHTML='<div class="empty-tip">点击地图上的地区<br>查看详情与指挥操作</div>'+(pf&&!pf.eliminated&&!G.ended?'<div style="text-align:center;margin-top:10px"><button id="btnEndTurn" class="primary" style="min-width:160px;min-height:44px">结束回合</button></div>':'');
+    bindEndTurn();
+    return;
+  }
+  const owner=r.owner?G.fmap[r.owner]:null;
+  const isPlayerRegion=pf&&r.owner===pf.id;
+  let html='<div class="region-detail">';
+  html+='<div class="rd-head">'+r.name+'</div>';
+  html+='<div class="rd-line"><span>归属</span><b>'+(owner?owner.name+'（'+owner.short+'）':'中立')+'</b></div>';
+  html+='<div class="rd-line"><span>驻军</span><b>'+fmt(r.army)+'</b></div>';
+  html+='<div class="rd-line"><span>月产出</span><b>'+r.prod+'</b></div>';
+  html+='<div class="rd-line"><span>月征兵</span><b>'+r.manpower+'</b></div>';
+  html+='<div class="rd-line"><span>防御加成</span><b>'+r.def+'</b></div>';
+  if(r.capitalOf)html+='<div class="rd-line"><span>性质</span><b>首都</b></div>';
+  if(pf&&!pf.eliminated&&!G.ended){
+    if(isPlayerRegion){
+      html+='<div class="rd-actions"><button id="btnRecruit" style="min-height:44px">招募军队 +10</button></div>';
+      const atks=getNeighbors(r.id).filter(n=>n.owner!==pf.id);
+      if(atks.length){
+        html+='<div style="margin-top:10px;font-size:12px;color:var(--dim)">可进攻目标</div>';
+        atks.forEach(n=>{
+          const no=n.owner?G.fmap[n.owner]:null;
+          html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px">'+
+            '<span style="font-size:13px">'+n.name+' · 军'+n.army+(no?' · '+no.short:' · 中立')+'</span>'+
+            '<button data-atk="'+n.id+'" style="min-width:74px;min-height:40px">进攻</button></div>';
+        });
+      }
+    }else{
+      const froms=getNeighbors(r.id).filter(n=>n.owner===pf.id&&n.army>2);
+      if(froms.length){
+        html+='<div style="margin-top:10px;font-size:12px;color:var(--dim)">从相邻据点发起进攻</div>';
+        froms.forEach(n=>{
+          html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px">'+
+            '<span style="font-size:13px">'+n.name+' · 军'+n.army+'</span>'+
+            '<button data-atkfrom="'+n.id+'" style="min-width:74px;min-height:40px">进攻</button></div>';
+        });
+      }
+    }
+    html+='<div style="text-align:center;margin-top:12px"><button id="btnEndTurn" class="primary" style="min-width:160px;min-height:44px">结束回合</button></div>';
+  }
+  html+='</div>';
+  pan.innerHTML=html;
+  if($('btnRecruit'))$('btnRecruit').addEventListener('click',()=>{
+    recruitAt(pf,r,10);
+  });
+  pan.querySelectorAll('[data-atk]').forEach(b=>{
+    b.addEventListener('click',()=>{attack(pf,r.id,b.dataset.atk);renderAll();});
+  });
+  pan.querySelectorAll('[data-atkfrom]').forEach(b=>{
+    b.addEventListener('click',()=>{attack(pf,b.dataset.atkfrom,r.id);renderAll();});
+  });
+  bindEndTurn();
+}
+function bindEndTurn(){
+  if($('btnEndTurn'))$('btnEndTurn').addEventListener('click',endPlayerTurn);
+}
+function endPlayerTurn(){
+  if(!G.waiting||G.ended)return;
+  G.waiting=false;
+  monthStep();
+  renderAll();
+}
+function recruitAt(f,r,n){
+  const affordable=Math.min(n,Math.floor(f.money/20),Math.floor(f.manpower/2));
+  if(affordable<=0){toast('资金或人力不足');return;}
+  f.money-=affordable*20;
+  f.manpower-=affordable*2;
+  r.army=Math.min(100,r.army+affordable);
+  addLog('info',f.name+'在'+r.name+'招募了'+affordable+'个军团');
+  renderAll();
+}
+function renderLog(){
+  const html=G.log.slice(0,120).map(l=>{
+    return '<div class="log-item '+l.type+'"><span class="lt">M'+l.t+'</span>'+escapeHtml(l.text)+'</div>';
+  }).join('');
+  $('panLog').innerHTML=html||'<div class="empty-tip">暂无战报</div>';
+}
+function renderTicker(){
+  const html=G.ticker.slice(0,3).map(t=>'<span class="t-item t-'+t.type+'">'+escapeHtml(t.text)+'</span>').join('');
+  $('ticker').innerHTML=html||'<span style="color:var(--dim)">推演开始</span>';
+}
+function renderAll(){
+  renderMap();
+  renderOverview();
+  renderRegionPanel();
+  renderLog();
+  renderTicker();
+  renderTop();
+}
+function renderEnding(e){
+  $('endTitle').textContent=e.title;
+  $('endSub').textContent=G.campaign.name+' · '+now()+' · 第'+G.turn+'回合';
+  $('endEpilogue').textContent=e.epilogue?e.epilogue():'';
+  let best=null;
+  G.factions.forEach(f=>{if(!f.eliminated&&(!best||frCount(f.id)>frCount(best.id)))best=f;});
+  let fast='—';
+  try{
+    const v=parseInt(localStorage.getItem('war_game_fast_'+G.cid)||'0',10);
+    if(v)fast=v+' 个月';
+  }catch(err){}
+  const stats=[
+    ['推演回合',G.turn+' 个月'],
+    ['战役次数',fmt(G.battles)],
+    ['总伤亡',fmt(G.casualties)],
+    ['主导势力',best?best.name:'—'],
+    ['占领地区',best?frCount(best.id)+' 个':'—'],
+    ['本战役最快',fast]
+  ];
+  $('endStats').innerHTML=stats.map(s=>'<div class="es-box"><div class="es-v">'+s[1]+'</div><div class="es-k">'+s[0]+'</div></div>').join('');
+  $('endOverlay').classList.remove('hidden');
+}
+function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ================= 计时与操作 ================= */
+function intervalMs(){return G.fast?30:Math.max(60,900/G.speed);}
+function startTimer(){stopTimer();G.timer=setInterval(tick,intervalMs());}
+function stopTimer(){if(G.timer){clearInterval(G.timer);G.timer=null;}}
+function tick(){
+  if(G.paused||G.waiting||G.ended)return;
+  monthStep();
+  renderAll();
+  if(G.ended&&G.fast)G.fast=false;
+}
+let toastTimer=null;
+function toast(msg){
+  const t=$('toast');
+  t.textContent=msg;
+  t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.add('hidden'),2600);
+}
+
+/* ================= 主菜单 ================= */
+let menuCid='napoleon';
+function buildMenu(){
+  const wrap=$('menuCampaigns');
+  wrap.innerHTML='';
+  CAMPAIGN_ORDER.forEach(cid=>{
+    const d=CAMPAIGNS[cid];
+    const div=document.createElement('div');
+    div.className='campaign-card'+(menuCid===cid?' selected':'');
+    div.dataset.cid=cid;
+    const chips=d.factions.map(f=>'<span class="cc-chip"><i style="background:'+f.color+'"></i>'+f.short+'</span>').join('');
+    div.innerHTML='<div class="cc-end">'+d.endings.length+' 种结局</div>'+
+      '<div class="cc-year">'+d.subtitle+'</div>'+
+      '<div class="cc-name">'+d.name+'</div>'+
+      '<div class="cc-desc">'+d.intro+'</div>'+
+      '<div class="cc-factions">'+chips+'</div>';
+    div.addEventListener('click',()=>{menuCid=cid;buildMenu();refreshPlayerSelect();});
+    wrap.appendChild(div);
+  });
+}
+function refreshPlayerSelect(){
+  const d=CAMPAIGNS[menuCid];
+  const sel=$('playerFactionSelect');
+  sel.innerHTML='';
+  d.factions.forEach(f=>{
+    const o=document.createElement('option');
+    o.value=f.id;o.textContent=f.name;
+    sel.appendChild(o);
+  });
+  sel.value=d.factions[0].id;
+}
+
+/* ================= 自检 ================= */
+let selfErrors=[];
+function openSelf(){
+  stopTimer();
+  showView('view-menu');
+  $('selftestOverlay').classList.remove('hidden');
+  runSelftest();
+}
+function simulateGame(cid,seed){
+  startGame(cid,'normal','ai',null);
+  G.rng=mulberry32(seed);
+  stopTimer();
+  const errBase=G.errors.length;
+  try{
+    let guard=0;
+    while(!G.ended&&guard<G.turnLimit+8&&G.errors.length<=errBase){
+      monthStep();
+      guard++;
+    }
+  }catch(err){pushErr(err);}
+  stopTimer();
+  const errs=G.errors.slice(errBase);
+  errs.forEach(e=>selfErrors.push(e));
+  return {cid:cid,seed:seed,ending:G.result?G.result.id:'(无结局)',title:G.result?G.result.title:'超时未决',turns:G.turn,battles:G.battles,errs:errs};
+}
+function runSelftest(){
+  selfErrors=[];
+  $('selfSummary').innerHTML='正在运行全部战役（每战役 2 局，共 8 局模拟推演），请稍候……';
+  $('selfBody').innerHTML='';
+  const names={napoleon:'拿破仑战争',ww1:'第一次世界大战',october:'十月革命',ww2:'第二次世界大战'};
+  const rows=[];
+  CAMPAIGN_ORDER.forEach(cid=>{
+    [7,42].forEach(seed=>{
+      rows.push(simulateGame(cid,seed));
+    });
+  });
+  const failCount=rows.filter(r=>r.errs.length).length;
+  $('selfSummary').innerHTML='自检完成：共 <b>'+rows.length+'</b> 局模拟（四大战役 × 2 个随机种子），全部推演至结局。运行期错误 <b>'+selfErrors.length+'</b> 条：'+(failCount===0?'<b style="color:#9fd08a">全部通过</b>':'<b style="color:#e08c84">存在失败项</b>');
+  let html='<table class="self-table"><tr><th>战役</th><th>种子</th><th>结局</th><th>回合</th><th>战役数</th><th>结果</th></tr>';
+  rows.forEach(r=>{
+    const ok=r.errs.length===0;
+    html+='<tr><td>'+names[r.cid]+'</td><td>'+r.seed+'</td><td>'+escapeHtml(r.title)+'</td><td>'+r.turns+'</td><td>'+r.battles+'</td><td class="'+(ok?'self-ok':'self-fail')+'">'+(ok?'通过':'错误')+'</td></tr>';
+  });
+  html+='</table>';
+  if(selfErrors.length){
+    html+='<div class="self-err">'+selfErrors.map(escapeHtml).join('\n')+'</div>';
+  }
+  $('selfBody').innerHTML=html;
+}
+
+/* ================= 初始化 ================= */
+function init(){
+  buildMenu();
+  refreshPlayerSelect();
+  $('diffPills').querySelectorAll('.pill').forEach(b=>{
+    b.addEventListener('click',()=>{
+      $('diffPills').querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      G.diff=b.dataset.diff;
+    });
+  });
+  $('modePills').querySelectorAll('.pill').forEach(b=>{
+    b.addEventListener('click',()=>{
+      $('modePills').querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      G.mode=b.dataset.mode;
+      $('playerFactionWrap').classList.toggle('show',G.mode==='player');
+    });
+  });
+  $('btnStart').addEventListener('click',()=>{
+    const pf=G.mode==='player'?$('playerFactionSelect').value:null;
+    startGame(menuCid,G.diff,G.mode,pf);
+  });
+  $('btnSelftest').addEventListener('click',openSelf);
+  $('btnSelfRun').addEventListener('click',runSelftest);
+  $('btnSelfClose').addEventListener('click',()=>{
+    $('selftestOverlay').classList.add('hidden');
+    showView('view-menu');
+  });
+  $('speedGroup').querySelectorAll('.speed-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      G.speed=parseInt(b.dataset.speed,10);
+      $('speedGroup').querySelectorAll('.speed-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      if(!G.fast)startTimer();
+    });
+  });
+  $('btnPause').addEventListener('click',()=>{
+    if(G.ended)return;
+    G.paused=!G.paused;
+    $('btnPause').textContent=G.paused?'继续':'暂停';
+    if(!G.paused&&!G.fast)startTimer();
+  });
+  $('btnStep').addEventListener('click',()=>{
+    if(G.ended||G.waiting)return;
+    monthStep();renderAll();
+  });
+  $('btnFast').addEventListener('click',()=>{
+    if(G.ended)return;
+    G.fast=!G.fast;
+    G.paused=false;
+    $('btnPause').textContent='暂停';
+    $('btnFast').textContent=G.fast?'停止快进':'快进至结局';
+    startTimer();
+  });
+  $('btnMenu').addEventListener('click',()=>{
+    stopTimer();
+    showView('view-menu');
+    $('endOverlay').classList.add('hidden');
+  });
+  $('btnAgain').addEventListener('click',()=>{
+    $('endOverlay').classList.add('hidden');
+    startGame(G.cid,G.diff,G.mode,G.pfid);
+  });
+  $('btnMenuEnd').addEventListener('click',()=>{
+    $('endOverlay').classList.add('hidden');
+    stopTimer();
+    showView('view-menu');
+  });
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      ['panOverview','panRegion','panLog'].forEach(p=>$(p).classList.add('hidden'));
+      $({overview:'panOverview',region:'panRegion',log:'panLog'}[b.dataset.tab]).classList.remove('hidden');
+    });
+  });
+  const st=document.createElement('style');
+  st.textContent='@keyframes pulseRing{0%{opacity:.95}50%{opacity:.3}100%{opacity:.95}}.pulse{animation:pulseRing 1.5s infinite}';
+  document.head.appendChild(st);
+  if(location.search.indexOf('selftest')>=0)openSelf();
+}
+init();
+</script>
+<script>
+/* HanBer云坛 · 云坛一键登录（强制登录 + 存档按账号隔离） */
+(function(){
+  try{
+    var qs = new URLSearchParams(location.search);
+    var u = qs.get('yt_user');
+    var logged = u && u !== 'guest';
+    if(!logged){
+      var ov = document.createElement('div');
+      ov.id = 'yt-login-mask';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:linear-gradient(160deg,#101828,#1a2a4a);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;gap:14px;text-align:center;padding:20px';
+      var t1 = document.createElement('div'); t1.style.cssText = 'font-size:40px'; t1.textContent = '🔒'; ov.appendChild(t1);
+      var t2 = document.createElement('div'); t2.style.cssText = 'font-size:18px;font-weight:600'; t2.textContent = '此游戏需云坛一键登录'; ov.appendChild(t2);
+      var t3 = document.createElement('div'); t3.style.cssText = 'font-size:13px;color:#9fb3d0;max-width:320px'; t3.textContent = '返回云坛登录后，进入「小程序」再点本游戏即可自动带账号游玩。'; ov.appendChild(t3);
+      var btn = document.createElement('button');
+      btn.textContent = '去登录';
+      btn.style.cssText = 'margin-top:6px;padding:9px 22px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;cursor:pointer';
+      btn.onclick = function(){ try{ if(window.parent && window.parent.location){ window.parent.location.hash = '#/login'; } }catch(e){} };
+      ov.appendChild(btn);
+      document.body.appendChild(ov);
+      return;
+    }
+    var el = document.createElement('div');
+    el.id = 'yt-login-bar';
+    el.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;display:flex;align-items:center;gap:6px;background:rgba(10,14,26,.74);color:#fff;padding:5px 8px 5px 12px;border-radius:20px;font:12px/1 "PingFang SC","Microsoft YaHei",sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.35);backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.16);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    var b1 = document.createElement('b'); b1.style.color = '#7cc4ff'; b1.textContent = String(u).replace(/[<>&]/g, '');
+    var b2 = document.createElement('span'); b2.textContent = '✕'; b2.style.cssText = 'cursor:pointer;opacity:.65;margin-left:6px;font-size:11px';
+    b2.title = '关闭';
+    b2.onclick = function(){ var bar = document.getElementById('yt-login-bar'); if(bar) bar.remove(); };
+    el.appendChild(document.createTextNode('👤 云坛登录：')); el.appendChild(b1); el.appendChild(b2);
+    document.body.appendChild(el);
+    window.YT_USER = u;
+    window.YT_LOGGED = true;
+    /* 存档按账号隔离：所有 localStorage 自动带账号前缀，旧档自动迁移 */
+    var pre = '_yt_' + u + '_';
+    var g = Storage.prototype.getItem, sw = Storage.prototype.setItem, r = Storage.prototype.removeItem;
+    Storage.prototype.getItem = function(k){
+      if(typeof k !== 'string' || k.indexOf(pre) === 0) return g.call(this, k);
+      var scoped = g.call(this, pre + k);
+      if(scoped !== null) return scoped;
+      var legacy = g.call(this, k);
+      if(legacy !== null){ try{ sw.call(this, pre + k, legacy); r.call(this, k); }catch(e){} }
+      return legacy;
+    };
+    Storage.prototype.setItem = function(k, v){
+      if(typeof k === 'string' && k.indexOf(pre) !== 0){ try{ sw.call(this, pre + k, v); }catch(e){} }
+      else{ try{ sw.call(this, k, v); }catch(e){} }
+    };
+    Storage.prototype.removeItem = function(k){
+      if(typeof k === 'string'){ r.call(this, pre + k); r.call(this, k); }
+      else r.call(this, k);
+    };
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
+

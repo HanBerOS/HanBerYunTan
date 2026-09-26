@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>面包杀 · 群雄争霸</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* 备用CDN兜底：jsdelivr 加载失败时用 unpkg */
+if(!window.supabase){
+  document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/script>');
+}
+</script>
+<style>
+body { font-family: 'Microsoft YaHei', sans-serif; margin: 0; padding: 0; background: #1a1a1a; color: white; height: 100vh; width: 100vw; overflow: hidden; user-select: none; position: relative; }
+#auth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 99999; }
+.auth-box { background: linear-gradient(135deg, #2c3e50, #34495e); padding: 40px; border-radius: 16px; width: 340px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 2px solid #f1c40f; }
+.auth-box h2 { margin-bottom: 24px; color: #f1c40f; font-size: 28px; }
+.auth-box input { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #7f8c8d; border-radius: 8px; font-size: 14px; background: #1a1a1a; color: #fff; outline: none; box-sizing: border-box; }
+.auth-box input:focus { border-color: #f1c40f; }
+.auth-box button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 10px; font-weight: bold; transition: 0.2s; color: white; }
+.btn-login { background: linear-gradient(to bottom, #27ae60, #2ecc71); }
+.btn-register { background: linear-gradient(to bottom, #2980b9, #3498db); }
+.auth-msg { font-size: 13px; margin-top: 12px; min-height: 20px; }
+.auth-msg.error { color: #e74c3c; } .auth-msg.success { color: #2ecc71; }
+.auth-footer { position: fixed; left: 16px; bottom: 14px; font-size: 12px; color: #636e72; letter-spacing: 1px; }
+.btn-logout { background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 4px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+.btn-logout:hover { background: #e74c3c; color: white; }
+.rank-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 6px; background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.rank-change { font-size: 12px; margin-left: 8px; animation: fadeIn 1s ease; }
+.rank-up { color: #2ecc71; } .rank-down { color: #e74c3c; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+#rename-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 99998; }
+.rename-box { background: linear-gradient(135deg, #2c3e50, #34495e); padding: 30px; border-radius: 16px; width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 2px solid #f1c40f; }
+.rename-box h3 { margin: 0 0 16px; color: #f1c40f; font-size: 20px; }
+.rename-box input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #7f8c8d; border-radius: 8px; font-size: 16px; background: #1a1a1a; color: #fff; outline: none; text-align: center; box-sizing: border-box; }
+.rename-box input:focus { border-color: #f1c40f; }
+.rename-box .rename-hint { font-size: 11px; color: #95a5a6; margin-bottom: 14px; }
+.rename-box .rename-btns { display: flex; gap: 10px; }
+.rename-box .rename-btns button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; }
+.btn-rename-confirm { background: linear-gradient(to bottom, #27ae60, #2ecc71); }
+.btn-rename-cancel { background: linear-gradient(to bottom, #7f8c8d, #95a5a6); }
+.rename-msg { font-size: 12px; margin-top: 10px; min-height: 18px; }
+.hero-card.locked { opacity: 0.45; cursor: not-allowed; }
+.hero-card.locked:hover { transform: none; border-color: #555; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+.hero-card.locked .hero-select-btn { background: #555 !important; color: #999 !important; cursor: not-allowed; }
+.lock-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 48px; text-shadow: 0 2px 8px rgba(0,0,0,0.8); z-index: 2; pointer-events: none; }
+.lock-requirement { text-align: center; padding: 8px 15px; font-size: 12px; color: #e74c3c; font-weight: bold; background: rgba(231,76,60,0.1); border-top: 1px solid rgba(231,76,60,0.3); }
+#card-tooltip { display: none; position: fixed; z-index: 99998; background: rgba(20,20,30,0.96); border: 2px solid #f1c40f; border-radius: 10px; padding: 14px 18px; max-width: 260px; min-width: 180px; box-shadow: 0 8px 30px rgba(0,0,0,0.8); pointer-events: none; font-size: 13px; line-height: 1.6; color: #ecf0f1; }
+#card-tooltip .tt-name { font-size: 16px; font-weight: bold; color: #f1c40f; margin-bottom: 6px; }
+#card-tooltip .tt-type { font-size: 11px; color: #95a5a6; margin-bottom: 8px; }
+#card-tooltip .tt-desc { color: #bdc3c7; }
+#card-tooltip .tt-wangsheng { color: #e74c3c; font-size: 11px; margin-top: 8px; font-style: italic; border-top: 1px solid #444; padding-top: 6px; }
+.page { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; box-sizing: border-box; flex-direction: column; }
+.page.active { display: flex; }
+#lobby-page { background: linear-gradient(180deg, #2c3e50 0%, #000000 100%); justify-content: space-between; }
+.top-bar { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); border-bottom: 1px solid #444; flex-shrink: 0; }
+.user-info { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 50px; height: 50px; background: #95a5a6; border-radius: 50%; border: 2px solid #f1c40f; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: all 0.2s; }
+.avatar:hover { border-color: #fff; transform: scale(1.05); box-shadow: 0 0 12px rgba(241,196,15,0.5); }
+.main-content { flex: 1; display: flex; justify-content: center; align-items: center; gap: 20px; }
+.big-btn { width: 100px; height: 100px; border-radius: 10px; border: none; color: white; font-weight: bold; font-size: 20px; cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,0.5); transition: all 0.1s; }
+.big-btn:active { transform: translateY(5px); box-shadow: none; }
+.btn-rank { background: linear-gradient(to bottom, #e74c3c, #c0392b); transform: scale(1.1); z-index: 10; border: 2px solid #ff7675; }
+.btn-match { background: linear-gradient(to bottom, #3498db, #2980b9); }
+.bottom-nav { height: 60px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #444; flex-shrink: 0; }
+.nav-item { color: #7f8c8d; cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 12px; transition: color 0.2s; }
+.nav-item:hover { color: #f1c40f; }
+.nav-item i { font-size: 20px; margin-bottom: 4px; font-style: normal; }
+#heroes-page { background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+.heroes-header { padding: 15px 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.5); border-bottom: 1px solid #444; flex-shrink: 0; }
+.heroes-header h2 { margin: 0; font-size: 20px; color: #f1c40f; }
+.btn-back { background: transparent; border: 1px solid #7f8c8d; color: #bdc3c7; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.btn-back:hover { border-color: #f1c40f; color: #f1c40f; }
+.heroes-grid { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-content: flex-start; }
+.hero-card { width: 280px; background: linear-gradient(135deg, #2c3e50, #34495e); border-radius: 12px; border: 2px solid #555; overflow: hidden; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.4); position: relative; }
+.hero-card:hover { transform: translateY(-5px); border-color: #f1c40f; box-shadow: 0 8px 25px rgba(241,196,15,0.3); }
+.hero-card.selected { border-color: #f1c40f; box-shadow: 0 0 20px rgba(241,196,15,0.5); }
+.hero-portrait { width: 100%; height: 200px; background: linear-gradient(180deg, #34495e, #2c3e50); display: flex; align-items: center; justify-content: center; font-size: 80px; position: relative; overflow: hidden; }
+.hero-portrait .hero-name-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 12px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); font-size: 18px; font-weight: bold; color: #f1c40f; }
+.hero-info { padding: 12px 15px; }
+.hero-info .hero-title { font-size: 16px; font-weight: bold; color: #f1c40f; margin-bottom: 6px; }
+.hero-info .hero-hp { font-size: 13px; color: #e74c3c; margin-bottom: 8px; }
+.hero-skills { padding: 0 15px 15px; }
+.skill-item { margin-bottom: 8px; font-size: 12px; line-height: 1.5; }
+.skill-name { color: #f39c12; font-weight: bold; }
+.skill-type-lock { background: #e74c3c; color: white; padding: 1px 5px; border-radius: 3px; font-size: 10px; margin-left: 4px; }
+.skill-type-active { background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 10px; margin-left: 4px; }
+.skill-desc { color: #bdc3c7; }
+.hero-select-btn { width: calc(100% - 30px); margin: 0 15px 15px; padding: 10px; border: none; border-radius: 6px; background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #2c3e50; font-weight: bold; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+.hero-select-btn:hover { background: linear-gradient(to bottom, #f39c12, #e67e22); }
+.hero-select-btn.equipped { background: linear-gradient(to bottom, #27ae60, #2ecc71); color: white; }
+.heroes-footer { padding: 15px; background: rgba(0,0,0,0.8); border-top: 1px solid #444; display: flex; justify-content: center; flex-shrink: 0; }
+.btn-confirm-game { padding: 12px 40px; font-size: 18px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.5); }
+.btn-confirm-game:active { transform: translateY(4px); box-shadow: none; }
+.btn-confirm-match { background: linear-gradient(to bottom, #3498db, #2980b9); }
+.btn-confirm-rank { background: linear-gradient(to bottom, #e74c3c, #c0392b); }
+#battle-page { background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%); padding: 6px; }
+.enemy-zone-wrap { display: flex; gap: 10px; padding: 8px; background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid #444; align-items: flex-start; flex-shrink: 0; margin-bottom: 6px; }
+.enemy-portrait-small { width: 50px; height: 60px; background: linear-gradient(135deg, #c0392b, #e74c3c); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; border: 2px solid #e74c3c; }
+.enemy-details { flex: 1; }
+.enemy-details .player-name { font-size: 13px; font-weight: bold; margin-bottom: 2px; }
+.enemy-details .hp { color: #e74c3c; font-weight: bold; font-size: 13px; }
+.enemy-details .hand-count { font-size: 11px; color: #aaa; margin-top: 1px; }
+.battle-mid { display: flex; flex-direction: column; gap: 4px; padding: 4px 6px; flex: 1; min-height: 0; overflow: hidden; }
+.deck-info { font-size: 11px; color: #f1c40f; text-align: center; flex-shrink: 0; }
+#phase-indicator { text-align: center; font-size: 12px; color: #f1c40f; font-weight: bold; flex-shrink: 0; }
+#log { flex: 1; min-height: 50px; overflow-y: auto; background: rgba(0,0,0,0.6); padding: 5px 7px; font-size: 11px; border-radius: 6px; border: 1px solid #333; line-height: 1.5; }
+#discard-tip { display: none; width: 100%; text-align: center; padding: 5px; background: #e74c3c; color: white; font-weight: bold; font-size: 13px; border-radius: 5px; animation: flash 1.5s infinite; flex-shrink: 0; }
+.player-zone-wrap { background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid #444; flex-shrink: 0; overflow: hidden; margin-top: 4px; }
+.player-top-row { display: flex; gap: 8px; padding: 8px 10px; align-items: flex-start; }
+.player-portrait { width: 55px; height: 65px; border-radius: 6px; flex-shrink: 0; border: 2px solid #f1c40f; overflow: hidden; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #2c3e50, #34495e); font-size: 30px; }
+.player-details { flex: 1; }
+.player-details .player-name { font-size: 13px; font-weight: bold; color: #f1c40f; margin-bottom: 2px; }
+.player-details .hp { color: #e74c3c; font-weight: bold; font-size: 13px; }
+.player-details .armor-info { color: #3498db; font-weight: bold; font-size: 12px; margin-left: 6px; }
+.player-details .hand-limit-info { font-size: 10px; color: #aaa; margin-top: 1px; }
+.player-passive-skills { font-size: 10px; color: #9b59b6; margin-top: 2px; }
+.zones-row { display: flex; gap: 6px; padding: 0 10px 5px; flex-wrap: wrap; }
+.equipment-zone { display: flex; gap: 4px; min-height: 22px; align-items: center; padding: 2px 6px; background: rgba(243,156,18,0.1); border-radius: 4px; border: 1px dashed #f39c12; font-size: 10px; color: #f39c12; flex: 1; }
+.equipment-zone:empty::before { content: '武器区(空)'; color: #555; font-style: italic; font-size: 10px; }
+.equipment-zone.armor-zone { background: rgba(52,152,219,0.1); border: 1px dashed #3498db; color: #3498db; }
+.equipment-zone.armor-zone:empty::before { content: '防具区(空)'; }
+.equipment-tag { background: #f39c12; color: #2c3e50; padding: 1px 5px; border-radius: 3px; font-weight: bold; font-size: 10px; }
+.equipment-tag.armor-tag { background: #3498db; color: white; }
+.judgment-zone { display: flex; gap: 4px; min-height: 22px; align-items: center; padding: 2px 6px; background: rgba(255,255,255,0.03); border-radius: 4px; border: 1px dashed #555; flex: 1; }
+.judgment-zone:empty::before { content: '判定区(空)'; color: #555; font-size: 10px; font-style: italic; }
+.judgment-card { padding: 1px 6px; background: #2d3436; color: #dfe6e9; border-radius: 3px; font-size: 10px; font-weight: bold; border: 1px solid #636e72; }
+.judgment-card.lightning { background: #f39c12; color: #2c3e50; border-color: #e67e22; }
+.judgment-card.indulgence { background: #8e44ad; color: white; border-color: #9b59b6; }
+.judgment-card.supply { background: #27ae60; color: white; border-color: #2ecc71; }
+.skills-bar { display: flex; gap: 5px; padding: 2px 10px 4px; flex-wrap: wrap; align-items: center; }
+.skill-btn { padding: 4px 8px; font-size: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: all 0.2s; }
+.skill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+#main-action-bar { display: flex; justify-content: center; gap: 10px; padding: 2px 10px; min-height: 32px; align-items: center; }
+button.action-btn { padding: 6px 14px; font-size: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: all 0.2s; }
+#btn-play { background: #f1c40f; color: #2c3e50; }
+#btn-end { background: #95a5a6; }
+#btn-discard-confirm { background: #e74c3c; display: none; animation: pulse 1s infinite; }
+#hand-area { display: flex; gap: 5px; overflow-x: auto; padding: 6px 10px; background: rgba(0,0,0,0.5); min-height: 100px; max-height: 120px; align-items: center; border-top: 1px solid #444; }
+.card { width: 72px; height: 100px; background: #fdfdfd; color: #333; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; border: 2px solid #ccc; font-weight: bold; transition: transform 0.2s; flex-shrink: 0; position: relative; padding: 3px; box-sizing: border-box; }
+.card.selected { border-color: #f1c40f; transform: translateY(-10px); box-shadow: 0 0 10px #f1c40f; z-index: 10; }
+.discard-mode .card.selected { border-color: #e74c3c; box-shadow: 0 0 10px #e74c3c; transform: translateY(-10px); background: #fff0f0; }
+.card-top { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; font-size: 12px; }
+.card-center { font-size: 11px; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 2px; word-break: break-all; }
+.card-bottom { font-size: 10px; text-align: right; opacity: 0.8; }
+.suit-red { color: #d63031; } .suit-black { color: #2d3436; }
+.card.kill { border-bottom: 3px solid #e74c3c; } .card.fire_kill { border-bottom: 3px solid #e17055; background: #fff5f5; }
+.card.thunder_kill { border-bottom: 3px solid #6c5ce7; background: #f5f0ff; } .card.dodge { border-bottom: 3px solid #0984e3; }
+.card.peach { border-bottom: 3px solid #00b894; } .card.wine { border-bottom: 3px solid #6c5ce7; }
+.card.dismantle { border-bottom: 3px solid #00cec9; } .card.snatch { border-bottom: 3px solid #e17055; }
+.card.duel { border-bottom: 3px solid #2d3436; } .card.lightning { border-bottom: 3px solid #f39c12; }
+.card.indulgence { border-bottom: 3px solid #8e44ad; } .card.supply { border-bottom: 3px solid #27ae60; }
+.card.nanman { border-bottom: 3px solid #d35400; } .card.wanjian { border-bottom: 3px solid #c0392b; }
+.card.taoyuan { border-bottom: 3px solid #ff9ff3; } .card.harvest { border-bottom: 3px solid #f1c40f; }
+.card.zhugeliannu,.card.qinggang,.card.hanbing,.card.guding,.card.zhangba,.card.guanshi,.card.qinglong,.card.zhuque { border-bottom: 3px solid #f39c12; }
+.card.renwangdun { border-bottom: 3px solid #2c3e50; } .card.baguazhen { border-bottom: 3px solid #636e72; } .card.tengjia { border-bottom: 3px solid #27ae60; }
+#bottom-bar { display: flex; justify-content: flex-end; padding: 2px 8px; flex-shrink: 0; }
+#btn-back-lobby { background: transparent; border: 1px solid #7f8c8d; color: #bdc3c7; padding: 4px 8px; font-size: 10px; border-radius: 4px; cursor: pointer; }
+#response-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 100; }
+.modal-content { background: #34495e; padding: 20px; border-radius: 10px; text-align: center; border: 2px solid #e74c3c; min-width: 280px; max-width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 20px rgba(231,76,60,0.5); }
+.modal-btn { margin: 6px; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; min-width: 90px; font-size: 13px; }
+.card-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 12px 0; }
+.card-back { width: 60px; height: 84px; background: linear-gradient(135deg, #2c3e50, #34495e); border: 2px solid #7f8c8d; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 22px; color: #95a5a6; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+.card-back:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 8px 15px rgba(241,196,15,0.6); border-color: #f1c40f; }
+#mulligan-panel {
+    display: none;
+    position: fixed;
+    bottom: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 20, 30, 0.95);
+    border: 2px solid #f1c40f;
+    border-radius: 12px;
+    padding: 12px 20px;
+    z-index: 99997;
+    text-align: center;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    min-width: 280px;
+    animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+#mulligan-panel .mulligan-title { font-size: 16px; font-weight: bold; color: #f1c40f; margin-bottom: 6px; }
+#mulligan-panel .mulligan-desc { font-size: 12px; color: #bdc3c7; margin-bottom: 10px; line-height: 1.4; }
+#mulligan-panel .mulligan-btns { display: flex; gap: 12px; justify-content: center; }
+#mulligan-panel .mulligan-btns button { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: all 0.2s; min-width: 100px; }
+#mulligan-panel .mulligan-btns button:active { transform: scale(0.95); }
+.btn-mulligan-keep { background: linear-gradient(to bottom, #27ae60, #2ecc71); }
+.btn-mulligan-redraw { background: linear-gradient(to bottom, #e67e22, #f39c12); }
+@keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)} }
+@keyframes flash { 0%,100%{opacity:1} 50%{opacity:0.7} }
+</style>
+<style>
+#yt-disclaimer{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#1a0f0a 0%,#3a1d10 45%,#7a3b1a 100%);font-family:"PingFang SC","Microsoft YaHei",sans-serif;padding:20px}
+#yt-disclaimer.hidden{display:none}
+#yt-disclaimer .box{max-width:520px;width:100%;background:linear-gradient(180deg,#2b1608,#3f2010);border:2px solid #d9a05b;border-radius:18px;padding:28px 26px;color:#f5e6c8;box-shadow:0 18px 60px rgba(0,0,0,.6);position:relative;overflow:hidden}
+#yt-disclaimer .box::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#d9a05b,#f0c75e,#d9a05b)}
+#yt-disclaimer h1{margin:0 0 4px;font-size:26px;text-align:center;color:#f7d794;letter-spacing:2px}
+#yt-disclaimer .team{text-align:center;color:#e0b877;font-size:13px;margin-bottom:16px;letter-spacing:1px}
+#yt-disclaimer .divider{height:1px;background:linear-gradient(90deg,transparent,#d9a05b,transparent);margin:14px 0}
+#yt-disclaimer h2{font-size:15px;color:#f0c75e;margin:12px 0 8px}
+#yt-disclaimer ul{margin:0;padding-left:20px;font-size:13.5px;line-height:1.9;color:#ecd9b4}
+#yt-disclaimer .notice{background:rgba(217,160,91,.12);border:1px solid rgba(217,160,91,.4);border-radius:10px;padding:10px 12px;font-size:13px;color:#f0c75e;margin:10px 0}
+#yt-disclaimer .contact{font-size:13.5px;line-height:2;color:#ecd9b4}
+#yt-disclaimer .contact b{color:#f7d794}
+#yt-disclaimer .btn-enter{display:block;width:100%;margin-top:18px;padding:13px 0;font-size:16px;font-weight:700;letter-spacing:4px;background:linear-gradient(180deg,#d9a05b,#b57a35);color:#231203;border:none;border-radius:10px;cursor:pointer;transition:.2s}
+#yt-disclaimer .btn-enter:hover{background:linear-gradient(180deg,#f0c75e,#c98f43);transform:translateY(-1px)}
+#yt-disclaimer .foot{text-align:center;font-size:11.5px;color:#9c7a4e;margin-top:12px}
+</style></head>
+<body><div id="yt-disclaimer">
+  <div class="box">
+    <h1>🍞 面包杀 · 群雄争霸</h1>
+    <div class="team">Han Ber &amp; Bread Guard Team · 联合出品</div>
+    <div class="divider"></div>
+    <h2>📜 进入前请阅读</h2>
+    <ul>
+      <li>本游戏为 <b>Han Ber &amp; Bread Guard Team</b> 联合制作的免费同人娱乐作品，仅供学习交流，请勿用于商业用途。</li>
+      <li>游戏可能存在 Bug、卡顿、数据异常等情况，属正常现象。<b>如遇问题请理性反馈，制作者不对由此产生的任何损失负责。</b></li>
+      <li>请勿对游戏进行恶意篡改、倒卖或冒用出品方名义。</li>
+    </ul>
+    <div class="notice">⚠️ 合作方联系方式（Bread Guard Team）：手机号 <b>13917196940</b>；如需加微信私聊，请备注<b>“因面包杀问题”</b>，否则不加。</div>
+    <div class="contact">出品：Han Ber &amp; Bread Guard Team<br>版本：群雄争霸 · 全手牌</div>
+    <button class="btn-enter" onclick="document.getElementById('yt-disclaimer').classList.add('hidden')">我已知晓，进入游戏</button>
+    <div class="foot">点击进入即表示你已阅读并同意以上声明</div>
+  </div>
+</div>
+<div id="auth-modal">
+    <div class="auth-box">
+        <h2>🍞 面包杀</h2>
+        <input type="email" id="email" placeholder="邮箱" autocomplete="email">
+        <input type="password" id="password" placeholder="密码（至少6位）" autocomplete="current-password">
+        <button class="btn-login" onclick="handleLogin()">登 录</button>
+        <button class="btn-register" onclick="handleRegister()">注 册</button>
+        <div class="auth-msg" id="auth-msg"></div>
+    </div>
+    <div class="auth-footer">🍞 面包护卫队出品</div>
+</div>
+<div id="rename-modal">
+    <div class="rename-box">
+        <h3>✏️ 修改游戏昵称</h3>
+        <input type="text" id="rename-input" placeholder="输入新昵称" maxlength="12">
+        <div class="rename-hint">1~12个字符，支持中文/英文/数字</div>
+        <div class="rename-btns">
+            <button class="btn-rename-cancel" onclick="closeRenameModal()">取消</button>
+            <button class="btn-rename-confirm" onclick="confirmRename()">确认修改</button>
+        </div>
+        <div class="rename-msg" id="rename-msg"></div>
+    </div>
+</div>
+<div id="card-tooltip"><div class="tt-name"></div><div class="tt-type"></div><div class="tt-desc"></div><div class="tt-wangsheng"></div></div>
+<div id="mulligan-panel">
+    <div class="mulligan-title">🃏 起手调度</div>
+    <div class="mulligan-desc">查看下方手牌，选择保留或全部重摸<br>(之后还会再摸2张进入回合)</div>
+    <div class="mulligan-btns">
+        <button class="btn-mulligan-keep" onclick="mulliganKeep()">✅ 保留</button>
+        <button class="btn-mulligan-redraw" onclick="mulliganRedraw()">🔄 换一批</button>
+    </div>
+</div>
+<div id="game-wrapper" style="display:none; width:100%; height:100%;">
+    <div id="lobby-page" class="page active">
+        <div class="top-bar">
+            <div class="user-info">
+                <div class="avatar" id="lobby-avatar" onclick="openRenameModal()" title="点击修改昵称">👤</div>
+                <div>
+                    <h3 style="margin:0;" id="lobby-player-name">玩家</h3>
+                    <span style="font-size:12px;color:#aaa;">LV.<span id="lobby-level">1</span> <span id="lobby-rank-badge" class="rank-badge">无段位</span><span id="lobby-rank-change" class="rank-change"></span></span>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="handleLogout()">退出登录</button>
+        </div>
+        <div class="main-content"><button class="big-btn btn-match" onclick="enterHeroSelect('match')">匹配</button><button class="big-btn btn-rank" onclick="enterHeroSelect('rank')">排位</button></div>
+        <div class="bottom-nav"><div class="nav-item" onclick="showHeroesPage()"><i>⚔️</i>武将</div><div class="nav-item"><i>🎒</i>背包</div></div>
+    </div>
+    <div id="heroes-page" class="page">
+        <div class="heroes-header"><button class="btn-back" onclick="hideHeroesPage()">← 返回</button><h2 id="heroes-page-title">武将图鉴</h2></div>
+        <div class="heroes-grid" id="heroes-grid"></div>
+        <div class="heroes-footer" id="heroes-footer" style="display:none;"><button id="btn-confirm-game" class="btn-confirm-game btn-confirm-match" onclick="confirmStartGame()">开始匹配</button></div>
+    </div>
+    <div id="battle-page" class="page">
+        <div class="enemy-zone-wrap"><div class="enemy-portrait-small" id="enemy-portrait">👹</div><div class="enemy-details"><div class="player-name" id="enemy-hero-name">敌人</div><div><span class="hp" id="enemy-hp">❤️ 4/4</span></div><div class="hand-count">手牌数: <span id="enemy-hand-count">0</span></div><div class="zones-row" style="padding:3px 0 0;"><div class="equipment-zone" id="enemy-weapon"></div><div class="equipment-zone armor-zone" id="enemy-armor"></div><div class="judgment-zone" id="enemy-judgments"></div></div></div></div>
+        <div class="battle-mid"><div class="deck-info">📚 摸牌堆: <span id="draw-pile-count">0</span> | 🗑️ 弃牌堆: <span id="discard-pile-count">0</span></div><div id="phase-indicator"></div><div id="log">--- 欢迎来到战场 ---</div><div id="discard-tip"></div></div>
+        <div class="player-zone-wrap"><div class="player-top-row"><div class="player-portrait" id="my-portrait">🧑</div><div class="player-details"><div class="player-name" id="my-hero-name">我</div><div><span class="hp" id="my-hp">❤️ 4/4</span><span class="armor-info" id="my-armor"></span></div><div class="hand-limit-info">手牌上限: <span id="hand-limit">4</span></div><div class="player-passive-skills" id="passive-skills-display"></div></div></div><div class="zones-row"><div class="equipment-zone" id="my-weapon"></div><div class="equipment-zone armor-zone" id="my-armor-eq"></div><div class="judgment-zone" id="my-judgments"></div></div><div class="skills-bar" id="skills-bar"></div><div id="main-action-bar"><button id="btn-play" class="action-btn" onclick="playCard()">出牌</button><button id="btn-end" class="action-btn" onclick="endTurn()">结束回合</button><button id="btn-discard-confirm" class="action-btn" onclick="confirmDiscard()">确认弃牌</button></div><div id="hand-area"></div></div>
+        <div id="bottom-bar"><button id="btn-back-lobby" onclick="backToLobby()">退出对局</button></div>
+    </div>
+</div>
+<div id="response-modal"><div class="modal-content"><h2 id="modal-title" style="color:#e74c3c;margin-top:0;">提示</h2><p id="modal-desc">描述信息</p><div id="modal-buttons"></div><div id="modal-card-grid" class="card-grid"></div></div></div>
+<script>
+var SUPABASE_URL='https://xhehybtjnvyksjaznlla.supabase.co';
+var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZWh5YnRqbnZ5a3NqYXpubGxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMTEzMzMsImV4cCI6MjEwNTg4NzMzM30.-muF-1xOuKaAjHY0BYPgQpm2GFi62rPb0Fx33yYPbRM';
+var sb=null;
+try{ if(window.supabase){ sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY); } }catch(err){ console.error('supabase init failed', err); }
+if(!sb){
+  /* 账号服务不可用：提示但允许浏览（点登录/注册时再提示） */
+  var _sbUnavailable=function(){ if(document.getElementById('auth-msg')){ document.getElementById('auth-msg').innerText='账号服务加载失败，请刷新页面重试'; } };
+  sb={auth:{signInWithPassword:_sbUnavailable,signUp:_sbUnavailable,onAuthStateChange:function(){return{data:{subscription:{unsubscribe:function(){}}},error:null}},getSession:function(){return Promise.resolve({data:{session:null},error:null});},signOut:function(){return Promise.resolve({error:null});}},from:function(){return{select:function(){return this},eq:function(){return this},single:function(){return Promise.resolve({data:null,error:{message:'unavailable'}});},insert:function(){return this},update:function(){return this},then:function(){return Promise.resolve({data:null,error:{message:'unavailable'}});}};}};
+}
+var currentUserId=null,authModal=document.getElementById('auth-modal'),gameWrapper=document.getElementById('game-wrapper'),authMsgEl=document.getElementById('auth-msg');
+var userProfile={level:1,wins:0,losses:0,nickname:''};
+var isSavingProfile=false;
+
+function getDisplayNickname(){if(userProfile.nickname&&userProfile.nickname.trim())return userProfile.nickname.trim();var el=document.getElementById('lobby-player-name');var fallback=el?el.getAttribute('data-email-prefix')||'玩家':'玩家';return fallback;}
+function updateAllNicknameDisplays(){var name=getDisplayNickname();document.getElementById('lobby-player-name').innerText=name;var heroName=currentHero?currentHero.name:'';document.getElementById('my-hero-name').innerText=name+(heroName?' ('+heroName+')':'');}
+function openRenameModal(){var modal=document.getElementById('rename-modal');var input=document.getElementById('rename-input');var msg=document.getElementById('rename-msg');input.value=userProfile.nickname||'';input.defaultValue=userProfile.nickname||'';msg.innerText='';msg.style.color='';modal.style.display='flex';setTimeout(function(){input.focus();},100);}
+function closeRenameModal(){document.getElementById('rename-modal').style.display='none';}
+async function saveProfileToCloud(){if(!currentUserId)return false;isSavingProfile=true;try{var res=await sb.from('user_saves').upsert({user_id:currentUserId,save_data:userProfile,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(res.error){console.error('保存档案失败:',res.error);return false;}return true;}catch(e){console.error('保存档案异常:',e);return false;}finally{isSavingProfile=false;}}
+async function confirmRename(){var input=document.getElementById('rename-input');var msg=document.getElementById('rename-msg');var newName=input.value.trim();if(!newName){msg.innerText='❌ 昵称不能为空';msg.style.color='#e74c3c';return;}if(newName.length>12){msg.innerText='❌ 昵称最多12个字符';msg.style.color='#e74c3c';return;}if(newName===userProfile.nickname){closeRenameModal();return;}msg.innerText='⏳ 保存中...';msg.style.color='#f1c40f';var oldNickname=userProfile.nickname;userProfile.nickname=newName;var ok=await saveProfileToCloud();if(!ok){userProfile.nickname=oldNickname;msg.innerText='❌ 保存失败，请检查网络后重试';msg.style.color='#e74c3c';return;}msg.innerText='✅ 修改成功！';msg.style.color='#2ecc71';updateAllNicknameDisplays();setTimeout(closeRenameModal,600);}
+document.getElementById('rename-input').addEventListener('keydown',function(e){if(e.key==='Enter')confirmRename();});
+document.getElementById('rename-modal').addEventListener('click',function(e){if(e.target===this)closeRenameModal();});
+
+var HERO_UNLOCK_LEVELS={'default':1,'wangsheng':2,'manhongyi':3,'liyucheng':4,'xuzongwei':5};
+function isHeroUnlocked(id){var r=HERO_UNLOCK_LEVELS[id];return r===undefined?true:userProfile.level>=r;}
+function applyHeroOverrides(heroes){
+    var ov={
+        'default':{name:'初始英雄',title:'梦的开始',hp:5,maxHp:5,skills:[
+            {name:'新手保护',type:'lock',desc:'每回合准备阶段，你可令一人弃置所有手牌或失去2点体力；你受到伤害时重复此效果。段位达到2级青铜勇者(LV.2)后移除此技能。'},
+            {name:'英姿',type:'lock',desc:'锁定技，你受到伤害时摸两张牌。'},
+            {name:'飒爽',type:'lock',desc:'锁定技，你没有手牌数量限制。'}
+        ]},
+        'wangsheng':{title:'奇怪的鸭子',skills:[
+            {name:'无谋',type:'lock',desc:'当你使用1张锦囊牌时，你可以弃一张杀或失去一点体力以进行该锦囊牌的效果，或者把这张锦囊牌当杀使用。'},
+            {name:'武魂',type:'lock',desc:'锁定技，你失去【杀】时摸两张牌。'},
+            {name:'狂骨',type:'lock',desc:'锁定技，造成伤害后：未满血回1血摸1牌，满血摸3牌。'},
+            {name:'连斩',type:'lock',desc:'锁定技，每回合可出4张【杀】，但不能使用诸葛连弩。'},
+            {name:'反客为主',type:'active',desc:'成为【杀】目标时，可弃一张【杀】令攻击者失去1点体力。'}
+        ]},
+        'manhongyi':{title:'糖王大人'},
+        'xuzongwei':{title:'帝国之主'}
+    };
+    heroes.forEach(function(h){if(ov[h.id]){if(ov[h.id].name)h.name=ov[h.id].name;if(ov[h.id].title)h.title=ov[h.id].title;if(ov[h.id].hp!==undefined){h.hp=ov[h.id].hp;h.maxHp=ov[h.id].maxHp;}if(ov[h.id].skills)h.skills=ov[h.id].skills;}});
+    return heroes;
+}
+var CARD_DESC={'damage':'对目标造成1点普通伤害。每回合限出1张(有武器除外)。','fire_damage':'对目标造成1点火焰伤害。对【藤甲】伤害+1。','thunder_damage':'对目标造成1点雷电伤害。','dodge':'被动使用。抵消一张【杀】的伤害。','heal':'回复1点体力。濒死时也可自救。','wine':'出牌阶段使用，下次【杀】伤害+1。濒死可自救回1血。每回合限1张。','dismantle':'弃置目标一张手牌、装备或判定区延时锦囊。','snatch':'获得目标一张手牌、装备或收回自己判定区延时锦囊。','duel':'与目标决斗，轮流打出【杀】，未打出者受1点伤害。','nanman':'全场除你外需打出【杀】，否则受1伤。【藤甲】免疫。','wanjian':'全场除你外需打出【闪】，否则受1伤。【藤甲】免疫。','taoyuan':'全场所有角色各回复1点体力。','harvest':'亮出两张牌，按顺序每人挑选一张。','lightning':'延时锦囊。置于判定区，下回合判定：♠2~9受3点雷电伤害，否则传给下家。','indulgence':'延时锦囊。目标下回合判定：非♥跳过出牌阶段。','supply':'延时锦囊。目标下回合判定：非♣跳过摸牌阶段。','weapon_zhuge':'武器·射程1。出【杀】无次数限制。','weapon_qinggang':'武器·射程2。【杀】无视目标防具。','weapon_hanbing':'武器·射程2。【杀】命中可改为弃目标两张牌。','weapon_guding':'武器·射程2。对无手牌角色出【杀】伤害+1。','weapon_zhangba':'武器·射程3。可将两张手牌当【杀】使用。','weapon_guanshi':'武器·射程3。【杀】被闪避时可弃两牌强制命中。','weapon_qinglong':'武器·射程3。【杀】被闪避时可追加一张【杀】。','weapon_zhuque':'武器·射程4。可将普通【杀】当【火杀】使用。','armor_renwang':'防具。黑色【杀】对你无效。','armor_bagua':'防具。需出【闪】时可判定：红色视为出【闪】。','armor_tengjia':'防具。普通【杀】和【南蛮】【万箭】对你无效；受火焰伤害+1。'};
+function getRankTitle(lv){if(lv<=1)return'无段位';if(lv<=12)return'青铜勇士';if(lv<=23)return'白银斗士';if(lv<=34)return'黄金统领';if(lv<=45)return'钻石战神';if(lv<=56)return'翡翠上将';if(lv<=67)return'三国王者';return'永恒传说';}
+function updateLobbyRankUI(ct){document.getElementById('lobby-level').innerText=userProfile.level;var b=document.getElementById('lobby-rank-badge');b.innerText=getRankTitle(userProfile.level);var cs={'无段位':'#7f8c8d','青铜勇士':'#cd7f32','白银斗士':'#bdc3c7','黄金统领':'#f1c40f','钻石战神':'#3498db','翡翠上将':'#2ecc71','三国王者':'#9b59b6','永恒传说':'#e74c3c'};var t=getRankTitle(userProfile.level);b.style.background='linear-gradient(135deg,'+(cs[t]||'#7f8c8d')+','+(cs[t]||'#7f8c8d')+'cc)';var ce=document.getElementById('lobby-rank-change');if(ct){ce.innerText=ct;ce.className='rank-change '+(ct.includes('+')?'rank-up':'rank-down');setTimeout(function(){ce.innerText='';},3000);}else{ce.innerText='';}}
+function showAuthMsg(t,tp){authMsgEl.textContent=t;authMsgEl.className='auth-msg '+tp;}
+async function handleLogin(){var e=document.getElementById('email').value.trim(),p=document.getElementById('password').value;if(!e||!p)return showAuthMsg('请填写邮箱和密码','error');showAuthMsg('登录中...','');var r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error)return showAuthMsg(r.error.message,'error');}
+async function handleRegister(){var e=document.getElementById('email').value.trim(),p=document.getElementById('password').value;if(!e||!p)return showAuthMsg('请填写邮箱和密码','error');if(p.length<6)return showAuthMsg('密码至少6位','error');showAuthMsg('注册中...','');var r=await sb.auth.signUp({email:e,password:p});if(r.error)return showAuthMsg(r.error.message,'error');showAuthMsg('注册成功！请登录','success');}
+async function handleLogout(){var logoutBtn=document.querySelector('.btn-logout');if(logoutBtn){logoutBtn.disabled=true;logoutBtn.innerText='保存中...';}try{var saved=await saveProfileToCloud();if(!saved){console.warn('⚠️ 首次保存失败，正在重试...');saved=await saveProfileToCloud();}if(!saved){alert('⚠️ 段位数据保存失败，请检查网络后重试！');if(logoutBtn){logoutBtn.disabled=false;logoutBtn.innerText='退出登录';}return;}console.log('✅ 段位数据已安全保存，开始登出...');}catch(e){console.error('❌ 退出保存异常:',e);alert('⚠️ 保存异常，请重试！');if(logoutBtn){logoutBtn.disabled=false;logoutBtn.innerText='退出登录';}return;}await sb.auth.signOut();}
+sb.auth.onAuthStateChange(function(ev,ses){if(ev==='SIGNED_IN'&&ses){currentUserId=ses.user.id;authModal.style.display='none';gameWrapper.style.display='block';var emailPrefix=ses.user.email.split('@')[0];document.getElementById('lobby-player-name').setAttribute('data-email-prefix',emailPrefix);document.getElementById('lobby-player-name').innerText=emailPrefix;loadSaveFromCloud();}else if(ev==='SIGNED_OUT'){setTimeout(function(){currentUserId=null;userProfile={level:1,wins:0,losses:0,nickname:''};updateLobbyRankUI();authModal.style.display='flex';gameWrapper.style.display='none';var logoutBtn=document.querySelector('.btn-logout');if(logoutBtn){logoutBtn.disabled=false;logoutBtn.innerText='退出登录';}},300);}});
+async function loadSaveFromCloud(){var r=await sb.from('user_saves').select('save_data').eq('user_id',currentUserId).maybeSingle();if(r.data&&r.data.save_data){var d=r.data.save_data;userProfile.level=typeof d.level==='number'?d.level:1;userProfile.wins=typeof d.wins==='number'?d.wins:0;userProfile.losses=typeof d.losses==='number'?d.losses:0;userProfile.nickname=typeof d.nickname==='string'?d.nickname:'';}else{userProfile={level:1,wins:0,losses:0,nickname:''};}updateLobbyRankUI();updateAllNicknameDisplays();if(document.getElementById('heroes-page').classList.contains('active'))renderHeroesGrid();}
+async function saveRankToCloud(w){if(!currentUserId)return;var ol=userProfile.level;if(w){userProfile.wins++;if(userProfile.level<100)userProfile.level++;}else{userProfile.losses++;if(userProfile.level>1)userProfile.level--;}var ct=w?'+'+(userProfile.level-ol)+' 级':'-'+(ol-userProfile.level)+' 级';if(userProfile.level===100&&w)ct='已达满级!';if(userProfile.level===1&&!w)ct='已是最低级';updateLobbyRankUI(ct);await saveProfileToCloud();}
+
+var HEROES=[],cardEffects={},selectedHeroId='default',currentHero=null,gameState={},drawPile=[],discardPile=[],currentGameMode='match',gameOver=false;
+async function loadGameData(){var le=document.getElementById('log');if(le)le.innerHTML='⏳ 正在连接服务器...';try{var r=await fetch(SUPABASE_URL+'/rest/v1/game_config?id=eq.1&select=*',{headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY}});if(!r.ok)throw new Error('HTTP '+r.status);var d=await r.json();if(!d.length)throw new Error('未找到配置');HEROES=d[0].heroes_data||[];cardEffects=d[0].cards_data||{};applyHeroOverrides(HEROES);initGameUI();}catch(e){console.error(e);if(le)le.innerHTML='数据加载失败：'+e.message;HEROES=[{id:'default',name:'初始英雄',title:'梦的开始',hp:5,maxHp:5,portrait:'🧑',skills:[{name:'新手保护',type:'lock',desc:'每回合准备阶段，你可令一人弃置所有手牌或失去2点体力；你受到伤害时重复此效果。段位达到2级青铜勇者(LV.2)后移除此技能。'},{name:'英姿',type:'lock',desc:'锁定技，你受到伤害时摸两张牌。'},{name:'飒爽',type:'lock',desc:'锁定技，你没有手牌数量限制。'}]}];cardEffects={kill:{name:'杀',class:'kill',effect:'damage'},fire_kill:{name:'火杀',class:'fire_kill',effect:'fire_damage'},thunder_kill:{name:'雷杀',class:'thunder_kill',effect:'thunder_damage'},dodge:{name:'闪',class:'dodge',effect:'dodge'},peach:{name:'桃',class:'peach',effect:'heal'},wine:{name:'酒',class:'wine',effect:'wine'},dismantle:{name:'过河拆桥',class:'dismantle',effect:'dismantle'},snatch:{name:'顺手牵羊',class:'snatch',effect:'snatch'},duel:{name:'决斗',class:'duel',effect:'duel'},lightning:{name:'闪电',class:'lightning',effect:'lightning'},indulgence:{name:'乐不思蜀',class:'indulgence',effect:'indulgence'},supply:{name:'兵粮寸断',class:'supply',effect:'supply'},nanman:{name:'南蛮入侵',class:'nanman',effect:'nanman'},wanjian:{name:'万箭齐发',class:'wanjian',effect:'wanjian'},taoyuan:{name:'桃园结义',class:'taoyuan',effect:'taoyuan'},harvest:{name:'五谷丰登',class:'harvest',effect:'harvest'},zhugeliannu:{name:'诸葛连弩',class:'zhugeliannu',effect:'weapon_zhuge',range:1},qinggang:{name:'青釭剑',class:'qinggang',effect:'weapon_qinggang',range:2},hanbing:{name:'寒冰剑',class:'hanbing',effect:'weapon_hanbing',range:2},guding:{name:'古锭刀',class:'guding',effect:'weapon_guding',range:2},zhangba:{name:'丈八蛇矛',class:'zhangba',effect:'weapon_zhangba',range:3},guanshi:{name:'贯石斧',class:'guanshi',effect:'weapon_guanshi',range:3},qinglong:{name:'青龙偃月刀',class:'qinglong',effect:'weapon_qinglong',range:3},zhuque:{name:'朱雀羽扇',class:'zhuque',effect:'weapon_zhuque',range:4},renwangdun:{name:'仁王盾',class:'renwangdun',effect:'armor_renwang'},baguazhen:{name:'八卦阵',class:'baguazhen',effect:'armor_bagua'},tengjia:{name:'藤甲',class:'tengjia',effect:'armor_tengjia'}};initGameUI();}}
+function initGameUI(){if(HEROES.length>0){selectedHeroId=HEROES[0].id;currentHero=HEROES[0];}renderHeroesGrid();var le=document.getElementById('log');if(le)le.innerHTML='--- 欢迎来到战场 ---';}
+window.addEventListener('DOMContentLoaded',loadGameData);
+function enterHeroSelect(m){currentGameMode=m;document.getElementById('lobby-page').classList.remove('active');document.getElementById('heroes-page').classList.add('active');document.getElementById('heroes-page-title').innerText=m==='rank'?'排位赛 · 选择武将':'匹配赛 · 选择武将';document.getElementById('heroes-footer').style.display='flex';var cb=document.getElementById('btn-confirm-game');cb.innerText=m==='rank'?'开始排位':'开始匹配';cb.className='btn-confirm-game '+(m==='rank'?'btn-confirm-rank':'btn-confirm-match');renderHeroesGrid();}
+function showHeroesPage(){currentGameMode=null;document.getElementById('lobby-page').classList.remove('active');document.getElementById('heroes-page').classList.add('active');document.getElementById('heroes-page-title').innerText='武将图鉴';document.getElementById('heroes-footer').style.display='none';renderHeroesGrid();}
+function hideHeroesPage(){document.getElementById('heroes-page').classList.remove('active');document.getElementById('lobby-page').classList.add('active');}
+function confirmStartGame(){if(!currentHero){alert('请先选择一个武将！');return;}if(!isHeroUnlocked(currentHero.id)){alert('该武将尚未解锁！需要达到 LV.'+HERO_UNLOCK_LEVELS[currentHero.id]);return;}document.getElementById('heroes-page').classList.remove('active');document.getElementById('battle-page').classList.add('active');initBattle();}
+function backToLobby(){if(gameOver||confirm('确定要退出当前对局吗？')){gameOver=false;closeModal();document.getElementById('battle-page').classList.remove('active');document.getElementById('lobby-page').classList.add('active');updateLobbyRankUI();}}
+function selectHero(id){if(!isHeroUnlocked(id)){var r=HERO_UNLOCK_LEVELS[id]||1;var h=HEROES.find(function(x){return x.id===id;});alert('🔒 '+(h?h.name:id)+' 尚未解锁！\n需要 LV.'+r+'（当前 LV.'+userProfile.level+'）');return;}selectedHeroId=id;currentHero=HEROES.find(function(h){return h.id===id;});renderHeroesGrid();}
+function renderHeroesGrid(){var g=document.getElementById('heroes-grid');g.innerHTML='';HEROES.forEach(function(hero){var u=isHeroUnlocked(hero.id);var s=hero.id===selectedHeroId&&u;var c=document.createElement('div');c.className='hero-card'+(s?' selected':'')+(!u?' locked':'');var sh='';hero.skills.forEach(function(sk){var tl=sk.type==='lock'?'<span class="skill-type-lock">锁定</span>':'<span class="skill-type-active">主动</span>';sh+='<div class="skill-item"><span class="skill-name">['+sk.name+']</span>'+tl+'<br><span class="skill-desc">'+sk.desc+'</span></div>';});var lh='',lr='';if(!u){var rl=HERO_UNLOCK_LEVELS[hero.id]||1;lh='<div class="lock-overlay">🔒</div>';lr='<div class="lock-requirement">🔒 LV.'+rl+' 解锁（当前 LV.'+userProfile.level+'）</div>';}c.innerHTML='<div class="hero-portrait"><span style="font-size:80px;">'+hero.portrait+'</span>'+lh+'<div class="hero-name-overlay">'+hero.name+'</div></div><div class="hero-info"><div class="hero-title">'+hero.title+'</div><div class="hero-hp">❤️ 体力: '+hero.hp+'/'+hero.maxHp+'</div></div><div class="hero-skills">'+sh+'</div>'+lr+'<button class="hero-select-btn '+(s?'equipped':'')+'" onclick="selectHero(\''+hero.id+'\')">'+(s?'✅ 已出战':(!u?'🔒 未解锁':'选择出战'))+'</button>';g.appendChild(c);});}
+
+var SUITS=['♠','♥','♣','♦'],RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+function getSuitColor(s){return(s==='♥'||s==='♦')?'suit-red':'suit-black';}
+function getRankValue(r){if(r==='A')return 1;if(r==='J')return 11;if(r==='Q')return 12;if(r==='K')return 13;return parseInt(r);}
+function cardDesc(c){return'【'+c.name+'】('+c.suit+c.rank+')';}
+function isKill(c){return c&&['damage','fire_damage','thunder_damage'].indexOf(c.effect)!==-1;}
+function isWeapon(c){return c&&c.effect&&c.effect.indexOf('weapon')===0;}
+function isArmor(c){return c&&c.effect&&c.effect.indexOf('armor')===0;}
+function isTrickCard(c){return['dismantle','snatch','duel','lightning','indulgence','supply','nanman','wanjian','taoyuan','harvest'].indexOf(c.effect)!==-1;}
+function countCards(hand,effFn){var n=0;hand.forEach(function(c){if(effFn(c))n++;});return n;}
+
+function selectCard(index){
+    if(gameOver || !gameState.myHand) return;
+    if(index < 0 || index >= gameState.myHand.length) return;
+    var multiPhase = (gameState.phase === 'discard' || gameState.phase === 'haoqing_select' || gameState.phase === 'tangyi_select' || gameState.phase === 'zhangba_select');
+    if(multiPhase){
+        var pos = gameState.selectedIndices.indexOf(index);
+        if(pos === -1) gameState.selectedIndices.push(index);
+        else gameState.selectedIndices.splice(pos, 1);
+    } else {
+        if(gameState.selectedIndices.indexOf(index) !== -1) gameState.selectedIndices = [];
+        else gameState.selectedIndices = [index];
+    }
+    hideTooltip();
+    renderBattle();
+}
+
+function initDeck(){drawPile=[];discardPile=[];var dc=[{type:'kill',count:17},{type:'fire_kill',count:17},{type:'thunder_kill',count:16},{type:'dodge',count:30},{type:'peach',count:15},{type:'wine',count:15},{type:'dismantle',count:10},{type:'snatch',count:10},{type:'duel',count:10},{type:'lightning',count:5},{type:'indulgence',count:10},{type:'supply',count:10},{type:'nanman',count:10},{type:'wanjian',count:10},{type:'taoyuan',count:10},{type:'harvest',count:10},{type:'zhugeliannu',count:2},{type:'qinggang',count:5},{type:'hanbing',count:5},{type:'guding',count:5},{type:'zhangba',count:5},{type:'guanshi',count:5},{type:'qinglong',count:5},{type:'zhuque',count:5},{type:'renwangdun',count:5},{type:'baguazhen',count:5},{type:'tengjia',count:5}];var id=1;dc.forEach(function(cfg){for(var i=0;i<cfg.count;i++){var s=SUITS[Math.floor(Math.random()*4)],r=RANKS[Math.floor(Math.random()*13)],nc={},src=cardEffects[cfg.type];for(var k in src)nc[k]=src[k];nc.id=id++;nc.suit=s;nc.rank=r;drawPile.push(nc);}});shuffleArray(drawPile);}
+function shuffleArray(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}}
+function drawCard(who,count){count=count||1;for(var ci=0;ci<count;ci++){if(drawPile.length===0){if(discardPile.length===0){log('⚠️ 牌堆已空！');return;}log('🔄 摸牌堆已空，洗入弃牌堆...');drawPile=discardPile.slice();discardPile=[];shuffleArray(drawPile);}var card=drawPile.pop();var hid=who==='me'?gameState.heroId:gameState.enemyHeroId;if(hid==='xuzongwei'&&card.effect==='weapon_zhuge'){discardCard(card);log('🌟 【盛哉】触发！'+(who==='me'?'你':'敌人')+'摸到了'+cardDesc(card)+'，自动弃置并追加摸2张！');drawCard(who,2);}else{if(who==='me')gameState.myHand.push(card);else gameState.enemyHand.push(card);}}}
+function discardCard(c){if(c)discardPile.push(c);}
+function log(m){var d=document.getElementById('log');d.innerHTML+='<br>'+m;d.scrollTop=d.scrollHeight;}
+function getHandLimit(){if(gameState.heroId==='default')return 999;if(gameState.heroId==='liyucheng')return gameState.myMaxHp+2;if(gameState.heroId==='manhongyi')return Math.max(1,gameState.myHp)+2;return Math.max(1,gameState.myHp);}
+function getEnemyHandLimit(){var e=gameState.enemyHeroId;if(e==='default')return 999;if(e==='liyucheng')return gameState.enemyMaxHp+2;if(e==='xuzongwei')return 999;if(e==='manhongyi')return Math.max(1,gameState.enemyHp)+2;return Math.max(1,gameState.enemyHp);}
+
+// ===== 【核心修复】补全 dealDamageToEnemy 函数 =====
+function dealDamageToEnemy(dmg){
+    if(gameOver) return;
+    // 护甲吸收
+    if(gameState.enemyArmor > 0){
+        var absorbed = Math.min(gameState.enemyArmor, dmg);
+        gameState.enemyArmor -= absorbed;
+        dmg -= absorbed;
+        if(absorbed > 0) log('🛡️ 敌人护甲抵御'+absorbed+'点伤害！(剩余:'+gameState.enemyArmor+')');
+    }
+    if(dmg <= 0){
+        renderBattle();
+        checkWin();
+        return;
+    }
+    
+    gameState.enemyHp -= dmg;
+    log('💔 敌人受到'+dmg+'点伤害！('+gameState.enemyHp+'/'+gameState.enemyMaxHp+')');
+    renderBattle();
+    
+    if(checkWin()) return;
+    
+    // 狂骨：造成伤害后回血摸牌
+    if(gameState.heroId === 'wangsheng'){
+        if(gameState.myHp < gameState.myMaxHp){
+            gameState.myHp = Math.min(gameState.myMaxHp, gameState.myHp + 1);
+            drawCard('me', 1);
+            log('🦴 【狂骨】未满血，回1血摸1牌！('+gameState.myHp+'/'+gameState.myMaxHp+')');
+        } else {
+            drawCard('me', 3);
+            log('🦴 【狂骨】已满血，摸3牌！');
+        }
+        renderBattle();
+    }
+}
+
+function showMulliganPanel(){
+    gameState.isProcessing = true;
+    renderBattle();
+    document.getElementById('mulligan-panel').style.display = 'block';
+}
+function hideMulliganPanel(){
+    document.getElementById('mulligan-panel').style.display = 'none';
+}
+function mulliganKeep(){
+    hideMulliganPanel();
+    log('🃏 你选择了保留初始手牌。');
+    startFirstTurnAfterMulligan();
+}
+function mulliganRedraw(){
+    gameState.myHand.forEach(function(c){ discardCard(c); });
+    gameState.myHand = [];
+    log('🃏 你将初始手牌洗回了牌堆...');
+    drawCard('me', 4);
+    log('🃏 重新摸了4张牌！');
+    hideMulliganPanel();
+    renderBattle();
+    setTimeout(function(){ startFirstTurnAfterMulligan(); }, 800);
+}
+function startFirstTurnAfterMulligan(){
+    if(gameState.heroId==='liyucheng'){ drawCard('me',4); log('🌟 【彦祖】首回合摸4张牌。'); }
+    else if(gameState.heroId==='manhongyi'){ drawCard('me',5); log('🍯 【糖浆】首回合摸5张牌。'); }
+    else { drawCard('me',2); log('📚 摸了两张牌。'); }
+    gameState.isProcessing = false;
+    renderBattle();
+    setTimeout(function(){
+        if(hasXinshouBaohu()){ gameState.isProcessing = true; triggerXinshouBaohu('准备阶段'); }
+        else { processJudgments('me', function(){ if(checkWin()) return; gameState.isProcessing = false; renderBattle(); setTimeout(function(){ if(gameState.skipPlay){ log('😴 乐不思蜀生效，跳过出牌！'); endTurn(); } }, 500); }); }
+    }, 800);
+}
+
+function initBattle(){
+    gameOver=false;
+    var hero=currentHero;
+    var avail=HEROES.filter(function(h){return h.id!==selectedHeroId;});
+    var eh=avail[Math.floor(Math.random()*avail.length)];
+    gameState={
+        myHp:hero.hp, myMaxHp:hero.maxHp, myArmor:0,
+        enemyHp:eh.hp, enemyMaxHp:eh.maxHp, enemyHeroId:eh.id,
+        myHand:[], enemyHand:[], selectedIndices:[],
+        myJudgments:[], enemyJudgments:[],
+        myEquipment:{weapon:null,armor:null}, enemyEquipment:{weapon:null,armor:null},
+        isMyTurn:true, isProcessing:false,
+        extraTurn:false, enemyExtraTurn:false, enemySkipNextDraw:false,
+        hasUsedSkill:false, hasUsedKill:false, hasUsedWine:false,
+        hasUsedCangdao:false, hasUsedHaoshi:false,
+        hasUsedTangyiA:false, hasUsedTangyiB:false,
+        hasUsedFanke:false, hasUsedBeici:false, killCountThisTurn:0,
+        enemyHasUsedSkill:false, enemyHasUsedKill:false, enemyHasUsedWine:false,
+        enemyHasUsedCangdao:false, enemyHasUsedHaoshi:false,
+        enemyHasUsedTangyiA:false, enemyHasUsedTangyiB:false,
+        enemyHasUsedBeici:false, enemyKillCountThisTurn:0, enemyArmor:0,
+        skipDraw:false, skipPlay:false, phase:'play',
+        duel:{active:false}, heroId:hero.id
+    };
+    initDeck();
+    drawCard('me',4);
+    drawCard('enemy',4);
+    renderBattle();
+    var mt=currentGameMode==='rank'?'排位赛':'匹配赛';
+    var pn=getDisplayNickname();
+    document.getElementById('log').innerHTML='--- ⚔️ '+mt+'开始 | '+pn+'【'+hero.name+'】('+hero.title+') VS 敌人【'+eh.name+'】('+eh.title+') ---<br>';
+    log('🃏 请查看手牌，选择保留或换一批...');
+    showMulliganPanel();
+}
+
+function playerLoseCard(card,reason){if(gameState.heroId==='wangsheng'&&isKill(card)&&(reason==='play'||reason==='discard')){drawCard('me',2);log('👻 【武魂】触发！你因'+(reason==='play'?'打出':'弃置')+'失去了'+cardDesc(card)+'，摸两张牌！');}}
+function hasXinshouBaohu(){if(gameState.heroId!=='default')return false;if(userProfile.level>=2)return false;return true;}
+function triggerXinshouBaohu(source){if(!hasXinshouBaohu()||gameOver)return;log('🛡️ 【新手保护】触发！(来源: '+source+')');showModal('🛡️ 新手保护','对敌人执行惩罚：',[{text:'弃置所有手牌 ('+gameState.enemyHand.length+'张)',color:'#e67e22',action:function(){var count=gameState.enemyHand.length;gameState.enemyHand.forEach(function(c){discardCard(c);});gameState.enemyHand=[];log('🛡️ 【新手保护】敌人弃置了全部 '+count+' 张手牌！');closeModal();renderBattle();if(!checkWin()&&source==='准备阶段'){continueAfterXinshou();}}},{text:'失去2点体力',color:'#e74c3c',action:function(){gameState.enemyHp-=2;log('🛡️ 【新手保护】敌人失去2点体力！('+gameState.enemyHp+'/'+gameState.enemyMaxHp+')');closeModal();renderBattle();if(!checkWin()&&source==='准备阶段'){continueAfterXinshou();}}}]);}
+function continueAfterXinshou(){processJudgments('me',function(){if(checkWin())return;setTimeout(function(){if(gameState.skipDraw){log('🌾 兵粮寸断生效，跳过摸牌！');}else{if(gameState.heroId==='liyucheng'){drawCard('me',4);log('🌟 【彦祖】摸4张牌。');}else if(gameState.heroId==='manhongyi'){drawCard('me',5);log('🍯 【糖浆】摸5张牌。');}else{drawCard('me',2);log('📚 摸了两张牌。');}}gameState.isProcessing=false;renderBattle();setTimeout(function(){if(gameState.skipPlay){log('😴 乐不思蜀生效，跳过出牌！');endTurn();}},800);},800);});}
+
+function executeTrickEffect(tc) {
+    if(tc.effect==='dismantle'){log('🌉 你对敌人使用了'+cardDesc(tc)+'！');showDismantleModal();return;}
+    if(tc.effect==='snatch'){log('🐑 你对敌人使用了'+cardDesc(tc)+'！');showSnatchModal();return;}
+    if(tc.effect==='duel'){log('⚔️ 你对敌人使用了'+cardDesc(tc)+'！');startDuel('me','enemy');return;}
+    if(tc.effect==='nanman'){log('🐘 使用了'+cardDesc(tc)+'！');enemyRespondNanman();return;}
+    if(tc.effect==='wanjian'){log('🏹 使用了'+cardDesc(tc)+'！');enemyRespondWanjian();return;}
+    if(tc.effect==='taoyuan'){log('🌸 使用了'+cardDesc(tc)+'！全场回复1点体力。');if(gameState.myHp<gameState.myMaxHp){gameState.myHp++;log('  → 你回复了1点体力。');}if(gameState.enemyHp<gameState.enemyMaxHp){gameState.enemyHp++;log('  → 敌人回复了1点体力。');}gameState.isProcessing=false;renderBattle();checkWin();return;}
+    if(tc.effect==='harvest'){log('🌾 使用了'+cardDesc(tc)+'！');showHarvestModal();return;}
+    if(tc.effect==='lightning'){if(gameState.myJudgments.some(function(j){return j.type==='lightning';})||gameState.enemyJudgments.some(function(j){return j.type==='lightning';})){alert('场上已有闪电！');gameState.myHand.push(tc);gameState.isProcessing=false;renderBattle();return;}gameState.myJudgments.push({type:'lightning',card:tc});log('⚡ 将'+cardDesc(tc)+'放于判定区！');gameState.isProcessing=false;renderBattle();checkWin();return;}
+    if(tc.effect==='indulgence'){if(gameState.enemyJudgments.some(function(j){return j.type==='indulgence';})){alert('敌人已有乐不思蜀！');gameState.myHand.push(tc);gameState.isProcessing=false;renderBattle();return;}gameState.enemyJudgments.push({type:'indulgence',card:tc});log('😴 对敌人使用了'+cardDesc(tc)+'！');gameState.isProcessing=false;renderBattle();checkWin();return;}
+    if(tc.effect==='supply'){if(gameState.enemyJudgments.some(function(j){return j.type==='supply';})){alert('敌人已有兵粮寸断！');gameState.myHand.push(tc);gameState.isProcessing=false;renderBattle();return;}gameState.enemyJudgments.push({type:'supply',card:tc});log('🌾 对敌人使用了'+cardDesc(tc)+'！');gameState.isProcessing=false;renderBattle();checkWin();return;}
+    gameState.isProcessing=false;renderBattle();checkWin();
+}
+
+function playCard(){
+    if(gameState.phase!=='play'||gameState.isProcessing)return;
+    if(gameState.selectedIndices.length!==1){alert('请先选择一张牌');return;}
+    var idx=gameState.selectedIndices[0];var card=gameState.myHand[idx];
+    if(gameState.heroId==='wangsheng'&&isTrickCard(card)){
+        var hasW=!!gameState.myEquipment.weapon;
+        if(gameState.killCountThisTurn>=4&&!hasW){alert('【连斩】限制：每回合最多4张【杀】！');return;}
+        var playedCard=gameState.myHand.splice(idx,1)[0];
+        gameState.selectedIndices=[];renderBattle();
+        var hasKill=gameState.myHand.some(function(c){return isKill(c);});
+        var btns=[];
+        if(hasKill){btns.push({text:'弃一张杀 → 发动锦囊效果',color:'#e74c3c',action:function(){var ki=gameState.myHand.findIndex(function(c){return isKill(c);});var kc=gameState.myHand.splice(ki,1)[0];discardCard(kc);playerLoseCard(kc,'discard');log('🧠 【无谋】弃置'+cardDesc(kc)+'，发动'+cardDesc(playedCard)+'效果！');closeModal();discardCard(playedCard);executeTrickEffect(playedCard);}});}
+        btns.push({text:'失去1点体力 → 发动锦囊效果',color:'#e67e22',action:function(){gameState.myHp-=1;log('🧠 【无谋】失去1点体力('+gameState.myHp+'/'+gameState.myMaxHp+')，发动'+cardDesc(playedCard)+'效果！');closeModal();renderBattle();if(gameState.myHp<=0){gameState.isProcessing=false;promptForDying();}else{discardCard(playedCard);executeTrickEffect(playedCard);}}});
+        btns.push({text:'将此锦囊当【杀】使用',color:'#3498db',action:function(){var dmg=gameState.hasUsedWine?2:1;log('🧠 【无谋】将'+cardDesc(playedCard)+'当作【杀】打出！');gameState.killCountThisTurn++;closeModal();discardCard(playedCard);var fk={};var src=cardEffects.kill;for(var k in src)fk[k]=src[k];fk.id=Date.now();fk.suit=playedCard.suit;fk.rank=playedCard.rank;if(gameState.myEquipment.weapon&&gameState.myEquipment.weapon.effect==='weapon_zhuque'){fk.name='火杀';fk['class']='fire_kill';fk.effect='fire_damage';log('🔥 【朱雀羽扇】发动！当作【火杀】使用！');}if(gameState.myEquipment.weapon&&gameState.myEquipment.weapon.effect==='weapon_guding'&&gameState.enemyHand.length===0){dmg+=1;log('🔪 【古锭刀】发动！敌人无手牌，伤害+1！');}enemyDefend(dmg,fk,false);}});
+        showModal('🧠 无谋 - 选择使用方式','你使用了锦囊'+cardDesc(playedCard)+'，请选择：',btns);return;
+    }
+    if(isKill(card)){
+        var isWS=gameState.heroId==='wangsheng';var isXZ=gameState.heroId==='xuzongwei';
+        var bcEx=(gameState.heroId==='manhongyi'&&gameState.hasUsedBeici)?1:0;
+        var kl=isWS?4:(isXZ?999:(1+bcEx));var hasW=!!gameState.myEquipment.weapon;
+        if(gameState.killCountThisTurn>=kl&&!hasW){alert('每回合只能使用'+kl+'张【杀】！');return;}
+        var ac=card;
+        if(gameState.myEquipment.weapon&&gameState.myEquipment.weapon.effect==='weapon_zhuque'&&card.effect==='damage'){ac={};for(var k in card)ac[k]=card[k];ac.name='火杀';ac['class']='fire_kill';ac.effect='fire_damage';log('🔥 【朱雀羽扇】发动！将'+cardDesc(card)+'当【火杀】使用！');}
+        var dmg=gameState.hasUsedWine?2:1;
+        if(gameState.hasUsedWine)log('💥 酒力发作！伤害提升至'+dmg+'点！');
+        log('⚔️ 你对敌人打出了'+cardDesc(ac)+'！');
+        gameState.killCountThisTurn++;
+        var pc=gameState.myHand.splice(idx,1)[0];discardCard(pc);playerLoseCard(pc,'play');
+        gameState.selectedIndices=[];renderBattle();
+        if(gameState.heroId==='manhongyi'&&gameState.myArmor>0&&!gameState.hasUsedBeici){
+            gameState.isProcessing=true;
+            showModal('🗡️ 背刺 - 触发！','失去1层护甲发动【背刺】？<br>获得敌人1张手牌+无法出闪+本回合可额外出1张杀。',[
+                {text:'发动背刺(-1甲)',color:'#e67e22',action:function(){gameState.myArmor-=1;gameState.hasUsedBeici=true;log('🗡️ 【背刺】发动！失去1层护甲('+gameState.myArmor+')！');if(gameState.enemyHand.length>0){var ri=Math.floor(Math.random()*gameState.enemyHand.length);var sc=gameState.enemyHand.splice(ri,1)[0];gameState.myHand.push(sc);log('🤏 夺取了'+cardDesc(sc)+'！');}else{log('⚠️ 敌人没有手牌。');}log('🚫 敌人无法出闪！可额外出1张杀。');closeModal();renderBattle();setTimeout(function(){enemyDefend(dmg,ac,true);},500);}},
+                {text:'不背刺',color:'#7f8c8d',action:function(){closeModal();renderBattle();enemyDefend(dmg,ac,false);}}
+            ]);
+        }else{enemyDefend(dmg,ac,false);}
+        return;
+    }
+    else if(card.effect==='heal'){if(gameState.heroId==='manhongyi'&&gameState.myHp>0){alert('非濒死无法使用【桃】！');return;}if(gameState.myHp>=gameState.myMaxHp){alert('体力已满');return;}log('💚 使用'+cardDesc(card)+'，体力+1');gameState.myHp=Math.min(gameState.myMaxHp,gameState.myHp+1);var c=gameState.myHand.splice(idx,1)[0];discardCard(c);}
+    else if(card.effect==='dodge'){alert('【闪】只能在被攻击时使用！');return;}
+    else if(card.effect==='wine'){if(gameState.hasUsedWine){alert('每回合限1张【酒】！');return;}log('🍷 饮下'+cardDesc(card)+'，下次【杀】伤害+1');gameState.hasUsedWine=true;var c=gameState.myHand.splice(idx,1)[0];discardCard(c);}
+    else if(isWeapon(card)||isArmor(card)){var sl=isWeapon(card)?'weapon':'armor';if(isWeapon(card)&&card.effect==='weapon_zhuge'&&gameState.heroId==='wangsheng'){alert('【连斩】限制：无法使用诸葛连弩！');return;}if(gameState.myEquipment[sl]){log('🔧 替换了'+cardDesc(gameState.myEquipment[sl]));discardCard(gameState.myEquipment[sl]);}gameState.myEquipment[sl]=gameState.myHand.splice(idx,1)[0];log('🛡️ 装备了'+cardDesc(gameState.myEquipment[sl])+'！');}
+    else{var tc=gameState.myHand.splice(idx,1)[0];gameState.selectedIndices=[];renderBattle();discardCard(tc);executeTrickEffect(tc);return;}
+    gameState.selectedIndices=[];renderBattle();checkWin();
+}
+
+function useSkill_Zhangba(){if(!gameState.isMyTurn||gameState.phase!=='play'||gameState.isProcessing||gameState.skipPlay)return;if(gameState.myHand.length<2){alert('需要至少2张手牌！');return;}var kl=gameState.heroId==='wangsheng'?4:999;if(gameState.killCountThisTurn>=kl){alert('出杀次数已达上限！');return;}gameState.phase='zhangba_select';gameState.selectedIndices=[];log('🐍 丈八蛇矛：请选择2张手牌当【杀】');renderBattle();}
+function confirmZhangbaCards(){if(gameState.selectedIndices.length!==2){alert('请恰好选择2张牌！');return;}var s=gameState.selectedIndices.slice().sort(function(a,b){return b-a;});var cards=[];s.forEach(function(i){var c=gameState.myHand.splice(i,1)[0];discardCard(c);playerLoseCard(c,'play');cards.push(c);});gameState.selectedIndices=[];gameState.phase='play';gameState.killCountThisTurn++;log('🐍 【丈八蛇矛】两张牌当【杀】打出！');var fk={};var src=cardEffects.kill;for(var k in src)fk[k]=src[k];fk.id=Date.now();fk.suit=cards[0].suit;fk.rank=cards[0].rank;renderBattle();enemyDefend(1,fk,false);}
+function useSkill_Tangyi(){if(!gameState.isMyTurn||gameState.phase!=='play'||gameState.isProcessing||gameState.skipPlay)return;var cA=!gameState.hasUsedTangyiA&&gameState.myHand.length>=1;var cB=!gameState.hasUsedTangyiB;if(!cA&&!cB){alert('【糖衣】已用尽或手牌不足！');return;}showModal('🍬 糖衣',['弃1牌得1甲'+(cA?'':' (不可用)'),'失去1血得2甲'+(cB?'':' (已使用)'),'取消'],[{text:'弃1牌得1甲'+(cA?'':' (不可用)'),color:'#f39c12',action:function(){if(!cA)return;closeModal();gameState.phase='tangyi_select';gameState.selectedIndices=[];log('🍬 【糖衣】(弃牌)：请选择1张手牌');renderBattle();}},{text:'失去1血得2甲'+(cB?'':' (已使用)'),color:'#e74c3c',action:function(){if(!cB)return;gameState.hasUsedTangyiB=true;gameState.myHp-=1;gameState.myArmor+=2;log('🍬 【糖衣】(掉血)！失去1血('+gameState.myHp+'/'+gameState.myMaxHp+')，获得2层护甲('+gameState.myArmor+')。');closeModal();renderBattle();if(gameState.myHp<=0){gameState.isProcessing=false;promptForDying();}else checkWin();}},{text:'取消',color:'#7f8c8d',action:function(){closeModal();}}]);}
+function confirmTangyiCards(){if(gameState.selectedIndices.length!==1){alert('请恰好选择1张牌！');return;}var i=gameState.selectedIndices[0];var c=gameState.myHand.splice(i,1)[0];discardCard(c);playerLoseCard(c,'discard');gameState.selectedIndices=[];gameState.hasUsedTangyiA=true;gameState.myArmor+=1;gameState.phase='play';log('🍬 【糖衣】！弃'+cardDesc(c)+'，获得1层护甲('+gameState.myArmor+')。');renderBattle();}
+function useSkill_Haoqing(){if(!gameState.isMyTurn||gameState.phase!=='play'||gameState.isProcessing||gameState.skipPlay)return;if(gameState.myHand.length<2){alert('需要至少2张手牌！');return;}gameState.phase='haoqing_select';gameState.selectedIndices=[];log('🔥 【豪情】：请选择2张手牌弃置');renderBattle();}
+function confirmHaoqingCards(){if(gameState.selectedIndices.length!==2){alert('请恰好选择2张牌！');return;}var s=gameState.selectedIndices.slice().sort(function(a,b){return b-a;});s.forEach(function(i){var c=gameState.myHand.splice(i,1)[0];discardCard(c);playerLoseCard(c,'discard');});gameState.selectedIndices=[];gameState.phase='play';gameState.myHp=Math.min(gameState.myMaxHp,gameState.myHp+1);log('🔥 【豪情】！弃2牌回1血('+gameState.myHp+'/'+gameState.myMaxHp+')。');renderBattle();checkWin();}
+function useSkill_Haoshi(){if(!gameState.isMyTurn||gameState.phase!=='play'||gameState.isProcessing||gameState.skipPlay)return;if(gameState.hasUsedHaoshi){alert('【好施】每回合限一次！');return;}showModal('🎁 好施','令一名角色摸3牌，你回1血。',[{text:'让敌人摸3张(你+1血)',color:'#e67e22',action:function(){gameState.hasUsedHaoshi=true;drawCard('enemy',3);if(gameState.myHp<gameState.myMaxHp){gameState.myHp=Math.min(gameState.myMaxHp,gameState.myHp+1);log('🎁 【好施】！敌人摸3牌，你回1血('+gameState.myHp+'/'+gameState.myMaxHp+')。');}else{log('🎁 【好施】！敌人摸3牌，你体力已满。');}closeModal();renderBattle();checkWin();}},{text:'让自己摸3张(不回血)',color:'#3498db',action:function(){gameState.hasUsedHaoshi=true;drawCard('me',3);log('🎁 【好施】！你摸3牌(不回血)。');closeModal();renderBattle();checkWin();}},{text:'取消',color:'#7f8c8d',action:function(){closeModal();}}]);}
+function useSkill_Cangdao(){if(!gameState.isMyTurn||gameState.phase!=='play'||gameState.isProcessing||gameState.skipPlay)return;if(gameState.hasUsedCangdao){alert('【藏刀】每回合限一次！');return;}showModal('🗡️ 藏刀','令敌人失去1点体力。',[{text:'对敌人使用',color:'#8e44ad',action:function(){gameState.hasUsedCangdao=true;gameState.enemyHp-=1;log('🗡️ 【藏刀】！敌人失去1点体力！('+gameState.enemyHp+'/'+gameState.enemyMaxHp+')');closeModal();renderBattle();checkWin();}},{text:'取消',color:'#7f8c8d',action:function(){closeModal();}}]);}
+function useSkill_Default(){if(!gameState.isMyTurn||gameState.phase!=='play'||gameState.isProcessing||gameState.skipPlay)return;if(gameState.hasUsedSkill){alert('技能每回合限一次');return;}log('⚡ 【英姿】发动，摸两张牌！');drawCard('me',2);gameState.hasUsedSkill=true;renderBattle();}
+function enemyRespondNanman(){gameState.isProcessing=true;renderBattle();setTimeout(function(){if(gameState.enemyEquipment.armor&&gameState.enemyEquipment.armor.effect==='armor_tengjia'){log('🌿 敌人【藤甲】免疫南蛮！');gameState.isProcessing=false;renderBattle();return;}var k=gameState.enemyHand.findIndex(function(c){return isKill(c);});if(k!==-1){var c=gameState.enemyHand.splice(k,1)[0];discardCard(c);log('🛡️ 敌人出'+cardDesc(c)+'抵御南蛮！');gameState.isProcessing=false;renderBattle();}else{log('❌ 敌人无【杀】，受1伤！');dealDamageToEnemy(1);gameState.isProcessing=false;}},800);}
+function enemyRespondWanjian(){gameState.isProcessing=true;renderBattle();setTimeout(function(){if(gameState.enemyEquipment.armor&&gameState.enemyEquipment.armor.effect==='armor_tengjia'){log('🌿 敌人【藤甲】免疫万箭！');gameState.isProcessing=false;renderBattle();return;}var d=gameState.enemyHand.findIndex(function(c){return c.effect==='dodge';});if(d!==-1){var c=gameState.enemyHand.splice(d,1)[0];discardCard(c);log('🛡️ 敌人出'+cardDesc(c)+'躲避万箭！');gameState.isProcessing=false;renderBattle();}else{log('❌ 敌人无【闪】，受1伤！');dealDamageToEnemy(1);gameState.isProcessing=false;}},800);}
+function showHarvestModal(){gameState.isProcessing=true;var tc=[];if(drawPile.length===0&&discardPile.length>0){drawPile=discardPile.slice();discardPile=[];shuffleArray(drawPile);}if(drawPile.length>0)tc.push(drawPile.pop());if(drawPile.length===0&&discardPile.length>0){drawPile=discardPile.slice();discardPile=[];shuffleArray(drawPile);}if(drawPile.length>0)tc.push(drawPile.pop());if(tc.length===0){log('牌堆空了！');gameState.isProcessing=false;renderBattle();return;}var m=document.getElementById('response-modal');document.getElementById('modal-title').innerText='🌾 五谷丰登';document.getElementById('modal-desc').innerText='你优先选一张，剩下的归敌人。';document.getElementById('modal-buttons').innerHTML='';var g=document.getElementById('modal-card-grid');g.innerHTML='';tc.forEach(function(c,i){var e=document.createElement('div');e.className='card-back';e.style.background='#fdfdfd';e.style.color='#333';e.style.fontSize='14px';var cc=getSuitColor(c.suit);e.innerHTML='<div style="text-align:center;"><div class="'+cc+'" style="font-size:18px;">'+c.rank+c.suit+'</div><div>'+c.name+'</div></div>';e.onclick=function(){gameState.myHand.push(c);var o=null;for(var x=0;x<tc.length;x++){if(x!==i){o=tc[x];break;}}if(o){gameState.enemyHand.push(o);log('🌾 你拿了'+cardDesc(c)+'，敌人拿了'+cardDesc(o)+'。');}else{log('🌾 你拿了'+cardDesc(c)+'。');}closeModal();gameState.isProcessing=false;renderBattle();};g.appendChild(e);});m.style.display='flex';}
+function showDismantleModal(){gameState.isProcessing=true;var m=document.getElementById('response-modal');document.getElementById('modal-title').innerText='🌉 过河拆桥';document.getElementById('modal-desc').innerText='拆除敌人手牌/装备/自己判定区锦囊。';document.getElementById('modal-buttons').innerHTML='';var g=document.getElementById('modal-card-grid');g.innerHTML='';if(gameState.enemyHand.length>0){gameState.enemyHand.forEach(function(c,i){var b=document.createElement('div');b.className='card-back';b.innerText='?';b.onclick=function(){var d=gameState.enemyHand.splice(i,1)[0];discardCard(d);log('🌉 拆掉敌人'+cardDesc(d)+'！');closeModal();gameState.isProcessing=false;renderBattle();};g.appendChild(b);});}if(gameState.enemyEquipment.weapon){var b=document.createElement('div');b.className='card-back';b.innerText=gameState.enemyEquipment.weapon.name;b.style.fontSize='12px';b.onclick=function(){var w=gameState.enemyEquipment.weapon;gameState.enemyEquipment.weapon=null;discardCard(w);log('🌉 拆掉敌人'+cardDesc(w)+'！');closeModal();gameState.isProcessing=false;renderBattle();};g.appendChild(b);}if(gameState.enemyEquipment.armor){var b2=document.createElement('div');b2.className='card-back';b2.innerText=gameState.enemyEquipment.armor.name;b2.style.fontSize='12px';b2.onclick=function(){var a=gameState.enemyEquipment.armor;gameState.enemyEquipment.armor=null;discardCard(a);log('🌉 拆掉敌人'+cardDesc(a)+'！');closeModal();gameState.isProcessing=false;renderBattle();};g.appendChild(b2);}gameState.myJudgments.forEach(function(j,i){var b3=document.createElement('div');b3.className='card-back '+j.type;b3.innerText=j.card.name;b3.style.fontSize='12px';b3.onclick=function(){gameState.myJudgments.splice(i,1);discardCard(j.card);log('🌉 拆掉自己头上的'+cardDesc(j.card)+'！');closeModal();gameState.isProcessing=false;renderBattle();};g.appendChild(b3);});if(gameState.enemyHand.length===0&&!gameState.enemyEquipment.weapon&&!gameState.enemyEquipment.armor&&gameState.myJudgments.length===0){alert('没有可拆目标！');var l=discardPile.pop();if(l)gameState.myHand.push(l);gameState.isProcessing=false;renderBattle();return;}var cb=document.createElement('button');cb.className='modal-btn';cb.style.background='#7f8c8d';cb.innerText='取消';cb.onclick=function(){var l=discardPile.pop();if(l)gameState.myHand.push(l);closeModal();gameState.isProcessing=false;renderBattle();};document.getElementById('modal-buttons').appendChild(cb);m.style.display='flex';}
+function showSnatchModal(){gameState.isProcessing=true;var m=document.getElementById('response-modal');document.getElementById('modal-title').innerText='🐑 顺手牵羊';document.getElementById('modal-desc').innerText='牵走敌人手牌/装备/收回判定区锦囊。';document.getElementById('modal-buttons').innerHTML='';var g=document.getElementById('modal-card-grid');g.innerHTML='';if(gameState.enemyHand.length>0){gameState.enemyHand.forEach(function(c,i){var b=document.createElement('div');b.className='card-back';b.innerText='?';b.onclick=function(){var s=gameState.enemyHand.splice(i,1)[0];gameState.myHand.push(s);log('🐑 牵走敌人'+cardDesc(s)+'！');closeModal();gameState.isProcessing=false;renderBattle();};g.appendChild(b);});}if(gameState.enemyEquipment.weapon){var b=document.createElement('div');b.className='card-back';b.innerText=gameState.enemyEquipment.weapon.name;b.style.fontSize='12px';b.onclick=function(){var w=gameState.enemyEquipment.weapon;gameState.enemyEquipment.weapon=null;gameState.myHand.push(w);log('🐑 牵走敌人'+cardDesc(w)+'！');closeModal();gameState.isProcessing=false;renderBattle();};g.appendChild(b);}if(gameState.enemyEquipment.armor){var b2=document.createElement('div');b2.className='card-back';b2.innerText=gameState.enemyEquipment.armor.name;b2.style.fontSize='12px';b2.onclick=function(){var a=gameState.enemyEquipment.armor;gameState.enemyEquipment.armor=null;gameState.myHand.push(a);log('🐑 牵走敌人'+cardDesc(a)+'！');closeModal();gameState.isProcessing=false;renderBattle();};g.appendChild(b2);}gameState.myJudgments.forEach(function(j,i){var b3=document.createElement('div');b3.className='card-back '+j.type;b3.innerText=j.card.name;b3.style.fontSize='12px';b3.onclick=function(){gameState.myJudgments.splice(i,1);gameState.myHand.push(j.card);log('🐑 收回'+cardDesc(j.card)+'！');closeModal();gameState.isProcessing=false;renderBattle();};g.appendChild(b3);});if(gameState.enemyHand.length===0&&!gameState.enemyEquipment.weapon&&!gameState.enemyEquipment.armor&&gameState.myJudgments.length===0){alert('没有可牵目标！');var l=discardPile.pop();if(l)gameState.myHand.push(l);gameState.isProcessing=false;renderBattle();return;}var cb=document.createElement('button');cb.className='modal-btn';cb.style.background='#7f8c8d';cb.innerText='取消';cb.onclick=function(){var l=discardPile.pop();if(l)gameState.myHand.push(l);closeModal();gameState.isProcessing=false;renderBattle();};document.getElementById('modal-buttons').appendChild(cb);m.style.display='flex';}
+function startDuel(a,d){gameState.isProcessing=true;gameState.duel={active:true,attacker:a,defender:d,currentTurn:d};log('⚔️ '+(a==='me'?'你':'敌人')+'对'+(d==='me'?'你':'敌人')+'发起决斗！');renderBattle();setTimeout(function(){processDuelTurn();},800);}
+function processDuelTurn(){if(!gameState.duel.active)return;var c=gameState.duel.currentTurn;if(c==='enemy'){var k=gameState.enemyHand.findIndex(function(x){return isKill(x);});if(k!==-1){var card=gameState.enemyHand.splice(k,1)[0];discardCard(card);log('🛡️ 敌人出'+cardDesc(card)+'反击！');gameState.duel.currentTurn='me';renderBattle();setTimeout(function(){processDuelTurn();},800);}else{log('❌ 敌人没【杀】了！');endDuel('me');}}else{showModal('⚔️ 决斗中！','请打出【杀】，否则受1伤。',[{text:'打出【杀】',color:'#e74c3c',action:function(){var k=gameState.myHand.findIndex(function(x){return isKill(x);});var card=gameState.myHand.splice(k,1)[0];discardCard(card);playerLoseCard(card,'play');log('🗡️ 你打出'+cardDesc(card)+'！');closeModal();gameState.duel.currentTurn='enemy';renderBattle();setTimeout(function(){processDuelTurn();},800);},needCard:'damage'},{text:'放弃(受1伤)',color:'#7f8c8d',action:function(){log('❌ 你放弃抵抗！');closeModal();endDuel('enemy');}}]);}}
+function endDuel(w){gameState.duel.active=false;var l=gameState.duel.currentTurn;log('🏆 决斗结束！'+(w==='me'?'你':'敌人')+'获胜，'+(l==='me'?'你':'敌人')+'受1伤！');if(l==='enemy'){dealDamageToEnemy(1);gameState.isProcessing=false;if(gameState.enemyHp>0&&!gameOver)finishEnemyTurnWithExtraCheck();}else{takeDamage(1);}}
+
+// ===== 【核心修复】enemyDefend 状态流转修复 =====
+function enemyDefend(dmg,ac,ignoreBySkill){
+    gameState.isProcessing=true;
+    renderBattle();
+    setTimeout(function(){
+        var ia=ignoreBySkill;
+        if(gameState.myEquipment.weapon&&gameState.myEquipment.weapon.effect==='weapon_qinggang'){ia=true;log('⚔️ 【青釭剑】无视敌人防具！');}
+        if(!ia&&gameState.enemyEquipment.armor&&gameState.enemyEquipment.armor.effect==='armor_tengjia'){
+            if(ac.effect==='damage'){log('🌿 敌人【藤甲】免疫普通杀！');gameState.isProcessing=false;handleKillDodged(dmg,ac);return;}
+        }
+        if(!ia&&gameState.enemyEquipment.armor&&gameState.enemyEquipment.armor.effect==='armor_renwang'){
+            if(getSuitColor(ac.suit)==='suit-black'){log('🛡️ 敌人【仁王盾】免疫黑色杀！');gameState.isProcessing=false;handleKillDodged(dmg,ac);return;}
+        }
+        if(!ia&&gameState.enemyEquipment.armor&&gameState.enemyEquipment.armor.effect==='armor_bagua'){
+            var jc=null;if(drawPile.length===0&&discardPile.length>0){drawPile=discardPile.slice();discardPile=[];shuffleArray(drawPile);}
+            if(drawPile.length>0)jc=drawPile.pop();
+            if(jc){log('☯️ 敌人八卦判定：'+jc.suit+jc.rank);discardCard(jc);if(getSuitColor(jc.suit)==='suit-red'){log('☯️ 红色！八卦生效！');gameState.isProcessing=false;handleKillDodged(dmg,ac);return;}else{log('☯️ 黑色，八卦未生效。');}}
+        }
+        var d=gameState.enemyHand.findIndex(function(c){return c.effect==='dodge';});
+        if(d!==-1){
+            var c=gameState.enemyHand.splice(d,1)[0];discardCard(c);
+            log('🛡️ 敌人出'+cardDesc(c)+'闪避！');
+            gameState.isProcessing=false;
+            handleKillDodged(dmg,ac);
+        }else{
+            log('❌ 敌人没【闪】！');
+            // 【修复】这里不再设置 isProcessing=false，由 handleKillHit 内部处理
+            handleKillHit(dmg,ac);
+        }
+    },800);
+}
+
+function handleKillDodged(dmg,ac){
+    if(gameState.myEquipment.weapon&&gameState.myEquipment.weapon.effect==='weapon_guanshi'&&gameState.myHand.length>=2){
+        gameState.isProcessing=true;
+        showModal('🪓 贯石斧','【杀】被闪避，弃2牌强制命中？',[
+            {text:'弃2牌强制命中',color:'#e67e22',action:function(){var dn=0;while(dn<2&&gameState.myHand.length>0){var ri=Math.floor(Math.random()*gameState.myHand.length);gameState.myHand.splice(ri,1);dn++;}log('🪓 【贯石斧】强制命中！');closeModal();renderBattle();setTimeout(function(){handleKillHit(dmg,ac);},500);}},
+            {text:'不发动',color:'#7f8c8d',action:function(){closeModal();gameState.isProcessing=false;renderBattle();}}
+        ]);return;
+    }
+    if(gameState.myEquipment.weapon&&gameState.myEquipment.weapon.effect==='weapon_qinglong'&&gameState.myHand.some(function(c){return isKill(c);})){
+        gameState.isProcessing=true;
+        showModal('🐉 青龙偃月刀','追加出杀？',[
+            {text:'追加出杀',color:'#27ae60',action:function(){var ki=gameState.myHand.findIndex(function(c){return isKill(c);});var kc=gameState.myHand.splice(ki,1)[0];discardCard(kc);playerLoseCard(kc,'play');log('🐉 【青龙偃月刀】追加'+cardDesc(kc)+'！');closeModal();renderBattle();setTimeout(function(){enemyDefend(dmg,kc,false);},800);}},
+            {text:'不追加',color:'#7f8c8d',action:function(){closeModal();gameState.isProcessing=false;renderBattle();}}
+        ]);return;
+    }
+    gameState.isProcessing=false;renderBattle();
+}
+
+// ===== 【核心修复】handleKillHit 补全状态流转 =====
+function handleKillHit(dmg,ac){
+    if(gameState.myEquipment.weapon&&gameState.myEquipment.weapon.effect==='weapon_guding'&&gameState.enemyHand.length===0){dmg+=1;log('🔪 【古锭刀】敌人无手牌，伤害+1！');}
+    if(gameState.enemyEquipment.armor&&gameState.enemyEquipment.armor.effect==='armor_tengjia'&&ac.effect==='fire_damage'){dmg+=1;log('🔥 敌人【藤甲】受火焰伤害+1！');}
+    
+    if(gameState.myEquipment.weapon&&gameState.myEquipment.weapon.effect==='weapon_hanbing'){
+        log('❄️ 【寒冰剑】弃敌人两张牌代替伤害！');
+        var dn=0,nm=[];
+        while(dn<2&&gameState.enemyHand.length>0){var ri=Math.floor(Math.random()*gameState.enemyHand.length);var dc=gameState.enemyHand.splice(ri,1)[0];discardCard(dc);nm.push(dc.name);dn++;}
+        if(dn>0)log('🗑️ 敌人弃置：'+nm.join('、')+'。');
+        gameState.isProcessing=false;
+        renderBattle();
+        return;
+    }
+    
+    // 【修复】正常伤害路径：调用 dealDamageToEnemy 并重置状态
+    dealDamageToEnemy(dmg);
+    gameState.isProcessing=false;
+}
+
+function endTurn(){if(!gameState.isMyTurn||gameState.phase!=='play'||gameState.isProcessing)return;if(gameState.heroId==='xuzongwei'){log('👑 【皇威】跳过弃牌阶段。');finishMyTurn();return;}var hl=getHandLimit();var ex=gameState.myHand.length-hl;if(ex>0){gameState.phase='discard';gameState.selectedIndices=[];log('--- 弃牌阶段 --- 需弃'+ex+'张');renderBattle();}else{finishMyTurn();}}
+function confirmDiscard(){var hl=getHandLimit();var ex=gameState.myHand.length-hl;if(gameState.selectedIndices.length!==ex){alert('请恰好选择'+ex+'张！');return;}var s=gameState.selectedIndices.slice().sort(function(a,b){return b-a;});var nm=[];s.forEach(function(i){var c=gameState.myHand.splice(i,1)[0];discardCard(c);playerLoseCard(c,'discard');nm.push(c.name);});gameState.selectedIndices=[];gameState.phase='play';log('🗑️ 弃置：'+nm.join('、'));finishMyTurn();}
+function finishMyTurn(){gameState.isMyTurn=false;gameState.hasUsedKill=false;gameState.hasUsedSkill=false;gameState.hasUsedWine=false;gameState.hasUsedCangdao=false;gameState.hasUsedHaoshi=false;gameState.hasUsedTangyiA=false;gameState.hasUsedTangyiB=false;gameState.hasUsedFanke=false;gameState.hasUsedBeici=false;gameState.killCountThisTurn=0;gameState.phase='play';if(gameState.heroId==='xuzongwei'&&!gameState.extraTurn){gameState.extraTurn=true;log('⏳ 【当先】跳过敌方回合，你立即开始第二回合！');renderBattle();setTimeout(function(){startMyTurn();},1000);}else{gameState.extraTurn=false;log('--- 你的回合结束 ---');renderBattle();setTimeout(function(){startEnemyTurn();},1000);}}
+function startMyTurn(){if(gameOver)return;gameState.isMyTurn=true;gameState.isProcessing=true;gameState.killCountThisTurn=0;var hn=currentHero?currentHero.name:'你';log('>>> 你的回合（'+hn+'）开始 <<<');if(gameState.heroId==='xuzongwei'){var ss=['♠','♥','♣','♦'],rs=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];var nk={};var src=cardEffects.kill;for(var k in src)nk[k]=src[k];nk.id=Date.now();nk.suit=ss[Math.floor(Math.random()*4)];nk.rank=rs[Math.floor(Math.random()*13)];gameState.myHand.push(nk);log('⚔️ 【当先】获得1张'+cardDesc(nk)+'。');}if(hasXinshouBaohu()){gameState.isProcessing=true;triggerXinshouBaohu('准备阶段');return;}processJudgments('me',function(){if(checkWin())return;setTimeout(function(){if(gameState.skipDraw){log('🌾 兵粮寸断生效，跳过摸牌！');}else{if(gameState.heroId==='liyucheng'){drawCard('me',4);log('🌟 【彦祖】摸4张牌。');}else if(gameState.heroId==='manhongyi'){drawCard('me',5);log('🍯 【糖浆】摸5张牌。');}else{drawCard('me',2);log('📚 摸了两张牌。');}}gameState.isProcessing=false;renderBattle();setTimeout(function(){if(gameState.skipPlay){log('😴 乐不思蜀生效，跳过出牌！');endTurn();}},800);},800);});}
+function getCardValue(card){var v=50;switch(card.effect){case'heal':v=100;break;case'wine':v=90;break;case'dodge':v=85;break;case'indulgence':v=85;break;case'snatch':v=80;break;case'supply':v=75;break;case'dismantle':v=70;break;case'damage':v=65;break;case'fire_damage':v=68;break;case'thunder_damage':v=68;break;case'duel':v=60;break;case'nanman':v=60;break;case'wanjian':v=60;break;case'taoyuan':v=55;break;case'harvest':v=50;break;case'lightning':v=30;break;case'weapon_zhuge':v=20;break;case'weapon_qinggang':v=80;break;case'weapon_hanbing':v=75;break;case'weapon_guding':v=70;break;case'weapon_zhangba':v=65;break;case'weapon_guanshi':v=75;break;case'weapon_qinglong':v=75;break;case'weapon_zhuque':v=70;break;case'armor_renwang':v=95;break;case'armor_bagua':v=90;break;case'armor_tengjia':v=92;break;}if(isWeapon(card)&&gameState.enemyEquipment.weapon)v=5;if(isArmor(card)&&gameState.enemyEquipment.armor)v=5;return v;}
+function enemyDiscardPhase(){if(gameOver)return;if(gameState.enemyHeroId==='xuzongwei'){log('👑 敌人【皇威】跳过弃牌。');finishEnemyTurn();return;}var ehl=getEnemyHandLimit();var ex=gameState.enemyHand.length-ehl;if(ex<=0){finishEnemyTurn();return;}log('🗑️ 敌人弃牌阶段，需弃'+ex+'张。');var hv=gameState.enemyHand.map(function(c,i){return{c:c,i:i,v:getCardValue(c)};});hv.sort(function(a,b){return a.v-b.v;});var dn=[];for(var i=0;i<ex;i++){var t=hv[i];var ri=gameState.enemyHand.indexOf(t.c);if(ri!==-1){var rc=gameState.enemyHand.splice(ri,1)[0];discardCard(rc);dn.push(rc.name);}}log('🗑️ 敌人弃置：'+dn.join('、'));renderBattle();setTimeout(function(){finishEnemyTurn();},1000);}
+function startEnemyTurn(){if(gameOver)return;var eh=HEROES.find(function(h){return h.id===gameState.enemyHeroId;});log('=== 敌人【'+eh.name+'】回合开始 ===');gameState.enemyHasUsedSkill=false;gameState.enemyHasUsedKill=false;gameState.enemyHasUsedWine=false;gameState.enemyHasUsedCangdao=false;gameState.enemyHasUsedHaoshi=false;gameState.enemyHasUsedTangyiA=false;gameState.enemyHasUsedTangyiB=false;gameState.enemyHasUsedBeici=false;gameState.enemyKillCountThisTurn=0;gameState.skipDraw=false;gameState.skipPlay=false;gameState.isProcessing=true;renderBattle();setTimeout(function(){processJudgments('enemy',function(){if(checkWin())return;setTimeout(function(){if(gameState.enemySkipNextDraw){gameState.enemySkipNextDraw=false;log('🚫 【放逐】生效！敌人跳过摸牌！');}else if(gameState.skipDraw){log('🌾 兵粮寸断生效，敌人跳过摸牌！');}else{if(gameState.enemyHeroId==='liyucheng'){drawCard('enemy',4);log('🌟 敌人【彦祖】摸4张。');}else if(gameState.enemyHeroId==='manhongyi'){drawCard('enemy',5);log('🍯 敌人【糖浆】摸5张。');}else{drawCard('enemy',2);log('📚 敌人摸了两张牌。');}}renderBattle();setTimeout(function(){if(gameState.skipPlay){log('😴 乐不思蜀生效，敌人跳过出牌！');enemyDiscardPhase();}else{if(gameState.enemyHeroId==='xuzongwei'){var ss=['♠','♥','♣','♦'],rs=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];var nk={};var src=cardEffects.kill;for(var k in src)nk[k]=src[k];nk.id=Date.now();nk.suit=ss[Math.floor(Math.random()*4)];nk.rank=rs[Math.floor(Math.random()*13)];gameState.enemyHand.push(nk);log('⚔️ 敌人【当先】获得1张'+cardDesc(nk)+'。');}enemyAI_Skill(function(){setTimeout(function(){enemyAI_UseTricks();},500);});}},800);},800);});},500);}
+function enemyAI_Skill(cb){if(cb)cb();}
+function enemyAI_UseTricks(){if(gameOver)return;var h=gameState.enemyHand;var ty=h.findIndex(function(c){return c.effect==='taoyuan';});if(ty!==-1&&gameState.enemyHp<gameState.enemyMaxHp){var c=h.splice(ty,1)[0];discardCard(c);log('🌸 敌人使用'+cardDesc(c)+'！');if(gameState.myHp<gameState.myMaxHp){gameState.myHp++;log('  → 你回复1点体力。');}gameState.enemyHp=Math.min(gameState.enemyMaxHp,gameState.enemyHp+1);log('  → 敌人回复1点体力('+gameState.enemyHp+'/'+gameState.enemyMaxHp+')。');renderBattle();setTimeout(function(){enemyAI_UseTricks();},800);return;}var hv=h.findIndex(function(c){return c.effect==='harvest';});if(hv!==-1&&h.length<3){var c=h.splice(hv,1)[0];discardCard(c);log('🌾 敌人使用'+cardDesc(c)+'！');showEnemyHarvest();return;}var l=h.findIndex(function(c){return c.effect==='lightning';});if(l!==-1&&!gameState.enemyJudgments.some(function(j){return j.type==='lightning';})&&!gameState.myJudgments.some(function(j){return j.type==='lightning';})){var c=h.splice(l,1)[0];gameState.enemyJudgments.push({type:'lightning',card:c});log('⚡ 敌人将'+cardDesc(c)+'放于判定区！');renderBattle();setTimeout(function(){enemyAI_UseTricks();},800);return;}var il=h.findIndex(function(c){return c.effect==='indulgence';});if(il!==-1&&!gameState.myJudgments.some(function(j){return j.type==='indulgence';})){var c=h.splice(il,1)[0];gameState.myJudgments.push({type:'indulgence',card:c});log('😴 敌人对你使用'+cardDesc(c)+'！');renderBattle();setTimeout(function(){enemyAI_UseTricks();},800);return;}var sp=h.findIndex(function(c){return c.effect==='supply';});if(sp!==-1&&!gameState.myJudgments.some(function(j){return j.type==='supply';})){var c=h.splice(sp,1)[0];gameState.myJudgments.push({type:'supply',card:c});log('🌾 敌人对你使用'+cardDesc(c)+'！');renderBattle();setTimeout(function(){enemyAI_UseTricks();},800);return;}var du=h.findIndex(function(c){return c.effect==='duel';});var myKills=countCards(h,function(c){return isKill(c);});if(du!==-1&&myKills>=2){var c=h.splice(du,1)[0];discardCard(c);log('⚔️ 敌人对你使用'+cardDesc(c)+'！');triggerProtagonistSkill('【决斗】');if(!gameOver){startDuel('enemy','me');return;}return;}var sn=h.findIndex(function(c){return c.effect==='snatch';});if(sn!==-1&&(gameState.myHand.length>0||gameState.myEquipment.weapon||gameState.myEquipment.armor)){var c=h.splice(sn,1)[0];discardCard(c);log('🐑 敌人对你使用'+cardDesc(c)+'！');triggerProtagonistSkill('【顺手牵羊】');if(!gameOver){if(gameState.myEquipment.weapon){var w=gameState.myEquipment.weapon;gameState.myEquipment.weapon=null;gameState.enemyHand.push(w);log('🐑 牵走你的'+cardDesc(w)+'！');}else if(gameState.myEquipment.armor){var a=gameState.myEquipment.armor;gameState.myEquipment.armor=null;gameState.enemyHand.push(a);log('🐑 牵走你的'+cardDesc(a)+'！');}else if(gameState.myHand.length>0){var ri=Math.floor(Math.random()*gameState.myHand.length);var st=gameState.myHand.splice(ri,1)[0];gameState.enemyHand.push(st);log('🐑 牵走你一张手牌。');}}renderBattle();setTimeout(function(){enemyAI_UseTricks();},800);return;}var dm=h.findIndex(function(c){return c.effect==='dismantle';});if(dm!==-1&&(gameState.myHand.length>0||gameState.myEquipment.weapon||gameState.myEquipment.armor)){var c=h.splice(dm,1)[0];discardCard(c);log('🌉 敌人对你使用'+cardDesc(c)+'！');triggerProtagonistSkill('【过河拆桥】');if(!gameOver){if(gameState.myEquipment.weapon){var w=gameState.myEquipment.weapon;gameState.myEquipment.weapon=null;discardCard(w);log('🌉 拆掉你的'+cardDesc(w)+'！');}else if(gameState.myEquipment.armor){var a=gameState.myEquipment.armor;gameState.myEquipment.armor=null;discardCard(a);log('🌉 拆掉你的'+cardDesc(a)+'！');}else if(gameState.myHand.length>0){var ri=Math.floor(Math.random()*gameState.myHand.length);var dc=gameState.myHand.splice(ri,1)[0];discardCard(dc);log('🌉 拆掉你一张手牌。');}}renderBattle();setTimeout(function(){enemyAI_UseTricks();},800);return;}setTimeout(function(){enemyAI_Equip();},800);}
+function showEnemyHarvest(){var tc=[];if(drawPile.length===0&&discardPile.length>0){drawPile=discardPile.slice();discardPile=[];shuffleArray(drawPile);}if(drawPile.length>0)tc.push(drawPile.pop());if(drawPile.length===0&&discardPile.length>0){drawPile=discardPile.slice();discardPile=[];shuffleArray(drawPile);}if(drawPile.length>0)tc.push(drawPile.pop());if(tc.length===0){log('牌堆空了！');setTimeout(function(){enemyAI_UseTricks();},500);return;}var m=document.getElementById('response-modal');document.getElementById('modal-title').innerText='🌾 五谷丰登 - 敌人使用';document.getElementById('modal-desc').innerText='敌人先选了一张，你拿剩下的。';document.getElementById('modal-buttons').innerHTML='';var g=document.getElementById('modal-card-grid');g.innerHTML='';if(tc.length===1){var c=tc[0];gameState.enemyHand.push(c);log('🌾 敌人拿了'+cardDesc(c)+'。');closeModal();renderBattle();setTimeout(function(){enemyAI_UseTricks();},800);return;}tc.forEach(function(c,i){var e=document.createElement('div');e.className='card-back';e.style.background='#fdfdfd';e.style.color='#333';e.style.fontSize='14px';var cc=getSuitColor(c.suit);e.innerHTML='<div style="text-align:center;"><div class="'+cc+'" style="font-size:18px;">'+c.rank+c.suit+'</div><div>'+c.name+'</div></div>';e.onclick=function(){gameState.myHand.push(c);var o=null;for(var x=0;x<tc.length;x++){if(x!==i){o=tc[x];break;}}if(o){gameState.enemyHand.push(o);log('🌾 你拿了'+cardDesc(c)+'，敌人拿了'+cardDesc(o)+'。');}closeModal();renderBattle();setTimeout(function(){enemyAI_UseTricks();},800);};g.appendChild(e);});m.style.display='flex';}
+function enemyAI_Equip(){var w=gameState.enemyHand.findIndex(function(c){return isWeapon(c);});if(w!==-1&&!(gameState.enemyHeroId==='wangsheng'&&gameState.enemyHand[w].effect==='weapon_zhuge')){var c=gameState.enemyHand.splice(w,1)[0];if(gameState.enemyEquipment.weapon){discardCard(gameState.enemyEquipment.weapon);}gameState.enemyEquipment.weapon=c;log('🔫 敌人装备'+cardDesc(c)+'！');renderBattle();}var a=gameState.enemyHand.findIndex(function(c){return isArmor(c);});if(a!==-1){var c=gameState.enemyHand.splice(a,1)[0];if(gameState.enemyEquipment.armor){discardCard(gameState.enemyEquipment.armor);}gameState.enemyEquipment.armor=c;log('🛡️ 敌人装备'+cardDesc(c)+'！');renderBattle();}setTimeout(function(){enemyAI_AOE();},800);}
+function enemyAI_AOE(){var n=gameState.enemyHand.findIndex(function(c){return c.effect==='nanman';});var w=gameState.enemyHand.findIndex(function(c){return c.effect==='wanjian';});var pht=gameState.myEquipment.armor&&gameState.myEquipment.armor.effect==='armor_tengjia';if(n!==-1&&!pht&&gameState.myHand.length<=2){var c=gameState.enemyHand.splice(n,1)[0];discardCard(c);log('🐘 敌人使用'+cardDesc(c)+'！');gameState.isProcessing=true;var k=gameState.myHand.findIndex(function(c){return isKill(c);});if(k!==-1){var kc=gameState.myHand.splice(k,1)[0];discardCard(kc);log('🛡️ 你自动出'+cardDesc(kc)+'抵御！');gameState.isProcessing=false;renderBattle();setTimeout(function(){enemyAI_WineAndKill();},800);}else{log('❌ 你没有【杀】，受1伤！');takeDamage(1);}return;}if(w!==-1&&!pht&&gameState.myHand.length<=2){var c=gameState.enemyHand.splice(w,1)[0];discardCard(c);log('🏹 敌人使用'+cardDesc(c)+'！');gameState.isProcessing=true;var d=gameState.myHand.findIndex(function(c){return c.effect==='dodge';});if(d!==-1){var dc=gameState.myHand.splice(d,1)[0];discardCard(dc);log('🛡️ 你自动出'+cardDesc(dc)+'躲避！');gameState.isProcessing=false;renderBattle();setTimeout(function(){enemyAI_WineAndKill();},800);}else{log('❌ 你没有【闪】，受1伤！');takeDamage(1);}return;}setTimeout(function(){enemyAI_WineAndKill();},500);}
+function enemyAI_WineAndKill(){if(gameOver)return;var hasW=!!gameState.enemyEquipment.weapon;var ekl=1;if(gameState.enemyHeroId==='wangsheng')ekl=4;if(gameState.enemyHeroId==='xuzongwei')ekl=999;if(gameState.enemyHeroId==='manhongyi'&&gameState.enemyArmor>0&&!gameState.enemyHasUsedBeici){var kI2=gameState.enemyHand.findIndex(function(c){return isKill(c);});if(kI2!==-1){gameState.enemyArmor-=1;gameState.enemyHasUsedBeici=true;ekl+=1;log('🗡️ 敌人【背刺】发动！失去1层护甲('+gameState.enemyArmor+')，可额外出1杀！');if(gameState.myHand.length>0){var ri=Math.floor(Math.random()*gameState.myHand.length);var sc=gameState.myHand.splice(ri,1)[0];gameState.enemyHand.push(sc);log('🤏 敌人夺取你一张手牌！');}log('🚫 你无法出闪响应此杀！');renderBattle();var kc=gameState.enemyHand.splice(kI2,1)[0];discardCard(kc);var dmg=gameState.enemyHasUsedWine?2:1;gameState.enemyKillCountThisTurn++;log('⚔️ 敌人对你打出'+cardDesc(kc)+'！(伤害:'+dmg+'，无法闪避)');renderBattle();setTimeout(function(){handleEnemyKillHit(dmg,kc);},800);return;}}var cuk=gameState.enemyKillCountThisTurn<ekl||hasW;if(cuk&&!gameState.enemyHand.some(function(c){return isKill(c);})&&gameState.enemyHand.length>=2&&gameState.enemyEquipment.weapon&&gameState.enemyEquipment.weapon.effect==='weapon_zhangba'){var c1=gameState.enemyHand.splice(0,1)[0];var c2=gameState.enemyHand.splice(0,1)[0];discardCard(c1);discardCard(c2);log('🐍 敌人丈八蛇矛！两张牌当杀！');gameState.enemyKillCountThisTurn++;var fk={};var src=cardEffects.kill;for(var k in src)fk[k]=src[k];fk.id=Date.now();fk.suit='♠';fk.rank='A';setTimeout(function(){playerDefend(1,fk);},800);return;}var kI=-1;var ia=false;if(gameState.enemyEquipment.weapon&&gameState.enemyEquipment.weapon.effect==='weapon_qinggang')ia=true;var prw=!ia&&gameState.myEquipment.armor&&gameState.myEquipment.armor.effect==='armor_renwang';var pht=!ia&&gameState.myEquipment.armor&&gameState.myEquipment.armor.effect==='armor_tengjia';if(pht){kI=gameState.enemyHand.findIndex(function(c){return c.effect==='fire_damage';});if(kI===-1)kI=gameState.enemyHand.findIndex(function(c){return c.effect==='thunder_damage';});}else if(prw){kI=gameState.enemyHand.findIndex(function(c){return isKill(c)&&getSuitColor(c.suit)==='suit-red';});}else{kI=gameState.enemyHand.findIndex(function(c){return isKill(c);});}var ac=null;if(kI!==-1){ac=gameState.enemyHand[kI];if(gameState.enemyEquipment.weapon&&gameState.enemyEquipment.weapon.effect==='weapon_zhuque'&&ac.effect==='damage'){ac={};for(var k in gameState.enemyHand[kI])ac[k]=gameState.enemyHand[kI][k];ac.name='火杀';ac['class']='fire_kill';ac.effect='fire_damage';log('🔥 敌人【朱雀羽扇】将杀当火杀！');}}if(kI!==-1&&cuk){var wi=gameState.enemyHand.findIndex(function(c){return c.effect==='wine';});if(wi!==-1&&!gameState.enemyHasUsedWine){var wc=gameState.enemyHand.splice(wi,1)[0];discardCard(wc);gameState.enemyHasUsedWine=true;log('🍷 敌人饮酒！下次杀伤害+1。');renderBattle();}setTimeout(function(){var kc=gameState.enemyHand.splice(kI,1)[0];discardCard(kc);var dmg=gameState.enemyHasUsedWine?2:1;gameState.enemyKillCountThisTurn++;log('⚔️ 敌人对你打出'+cardDesc(ac)+'！(伤害:'+dmg+')');gameState.enemyHasUsedKill=true;renderBattle();playerDefend(dmg,ac);},800);}else{finishEnemyTurnWithExtraCheck();}}
+function finishEnemyTurnWithExtraCheck(){if(gameOver)return;if(gameState.enemyHeroId==='xuzongwei'&&!gameState.enemyExtraTurn){gameState.enemyExtraTurn=true;log('⏳ 敌人【当先】！跳过你的回合，敌人第二回合开始！');renderBattle();setTimeout(function(){startEnemyTurn();},1000);}else{gameState.enemyExtraTurn=false;enemyDiscardPhase();}}
+function playerDefend(dmg,ac){if(gameOver)return;var ia=false;if(gameState.enemyEquipment.weapon&&gameState.enemyEquipment.weapon.effect==='weapon_qinggang'){ia=true;log('⚔️ 敌人【青釭剑】无视你的防具！');}if(!ia&&gameState.myEquipment.armor&&gameState.myEquipment.armor.effect==='armor_tengjia'){if(ac.effect==='damage'){log('🌿 你的【藤甲】免疫！');closeModal();gameState.isProcessing=false;renderBattle();handleEnemyKillDodged(dmg,ac);return;}}if(!ia&&gameState.myEquipment.armor&&gameState.myEquipment.armor.effect==='armor_renwang'){if(getSuitColor(ac.suit)==='suit-black'){log('🛡️ 你的【仁王盾】免疫！');closeModal();gameState.isProcessing=false;renderBattle();handleEnemyKillDodged(dmg,ac);return;}}if(!ia&&gameState.myEquipment.armor&&gameState.myEquipment.armor.effect==='armor_bagua'){var jc=null;if(drawPile.length===0&&discardPile.length>0){drawPile=discardPile.slice();discardPile=[];shuffleArray(drawPile);}if(drawPile.length>0)jc=drawPile.pop();if(jc){log('☯️ 你的八卦判定：'+jc.suit+jc.rank);discardCard(jc);if(getSuitColor(jc.suit)==='suit-red'){log('☯️ 红色！八卦生效！');closeModal();gameState.isProcessing=false;renderBattle();handleEnemyKillDodged(dmg,ac);return;}else{log('☯️ 黑色，未生效。');}}}var btns=[{text:'打出【闪】',color:'#3498db',action:function(){var di=gameState.myHand.findIndex(function(c){return c.effect==='dodge';});var card=gameState.myHand.splice(di,1)[0];discardCard(card);log('🛡️ 你出'+cardDesc(card)+'闪避！');closeModal();renderBattle();handleEnemyKillDodged(dmg,ac);},needCard:'dodge'}];if(gameState.heroId==='wangsheng'&&!gameState.hasUsedFanke&&!gameState.duel.active&&gameState.myHand.some(function(c){return isKill(c);})){btns.unshift({text:'反客为主(弃杀反伤)',color:'#8e44ad',action:function(){var ki=gameState.myHand.findIndex(function(c){return isKill(c);});var kc=gameState.myHand.splice(ki,1)[0];discardCard(kc);playerLoseCard(kc,'discard');gameState.hasUsedFanke=true;gameState.enemyHp-=1;log('🔄 【反客为主】！敌人失去1点体力('+gameState.enemyHp+'/'+gameState.enemyMaxHp+')');renderBattle();checkWin();closeModal();if(gameState.enemyHp>0)takeDamage(dmg);else finishEnemyTurnWithExtraCheck();}});}btns.push({text:'不出闪(受'+dmg+'伤)',color:'#7f8c8d',action:function(){log('❌ 你未出闪，受'+dmg+'伤！');handleEnemyKillHit(dmg,ac);}});showModal('⚠️ 敌人对你使用【杀】！','需出【闪】抵消'+dmg+'点伤害。',btns);}
+function handleEnemyKillDodged(dmg,ac){if(gameState.enemyEquipment.weapon&&gameState.enemyEquipment.weapon.effect==='weapon_guanshi'&&gameState.enemyHand.length>=3){var dn=0;while(dn<2&&gameState.enemyHand.length>0){var ri=Math.floor(Math.random()*gameState.enemyHand.length);gameState.enemyHand.splice(ri,1);dn++;}log('🪓 敌人【贯石斧】强制命中！');renderBattle();setTimeout(function(){handleEnemyKillHit(dmg,ac);},800);return;}if(gameState.enemyEquipment.weapon&&gameState.enemyEquipment.weapon.effect==='weapon_qinglong'&&gameState.enemyHand.some(function(c){return isKill(c);})){var ki=gameState.enemyHand.findIndex(function(c){return isKill(c);});var kc=gameState.enemyHand.splice(ki,1)[0];discardCard(kc);log('🐉 敌人【青龙偃月刀】追加杀！');renderBattle();setTimeout(function(){playerDefend(dmg,kc);},800);return;}finishEnemyTurnWithExtraCheck();}
+function handleEnemyKillHit(dmg,ac){if(gameState.enemyEquipment.weapon&&gameState.enemyEquipment.weapon.effect==='weapon_guding'&&gameState.myHand.length===0){dmg+=1;log('🔪 敌人【古锭刀】你无手牌，伤害+1！');}if(gameState.myEquipment.armor&&gameState.myEquipment.armor.effect==='armor_tengjia'&&ac.effect==='fire_damage'){dmg+=1;log('🔥 你的【藤甲】受火焰伤害+1！');}if(gameState.enemyEquipment.weapon&&gameState.enemyEquipment.weapon.effect==='weapon_hanbing'&&gameState.myHand.length>=2){log('❄️ 敌人【寒冰剑】弃你两张牌！');triggerProtagonistSkill('【寒冰剑】');if(!gameOver){var dn=0,nm=[];while(dn<2&&gameState.myHand.length>0){var ri=Math.floor(Math.random()*gameState.myHand.length);var dc=gameState.myHand.splice(ri,1)[0];discardCard(dc);nm.push(dc.name);dn++;}if(dn>0)log('🗑️ 你弃置：'+nm.join('、'));closeModal();renderBattle();finishEnemyTurnWithExtraCheck();}else{closeModal();}return;}takeDamage(dmg);}
+function resolveXuSkills(q,acb){if(q.length===0){if(acb)acb();return;}var sn=q.shift();if(gameState.enemyHp<=0){log('⚠️ 敌人已阵亡，跳过'+sn+'。');resolveXuSkills(q,acb);return;}if(sn==='guixin'){showModal('❤️ 归心',['摸两张牌','敌人失去1体力'],[{text:'摸两张牌',color:'#3498db',action:function(){drawCard('me',2);log('❤️ 【归心】摸两张牌。');closeModal();renderBattle();setTimeout(function(){resolveXuSkills(q,acb);},600);}},{text:'敌人失去1体力',color:'#e74c3c',action:function(){gameState.enemyHp-=1;log('❤️ 【归心】敌人失去1体力('+gameState.enemyHp+'/'+gameState.enemyMaxHp+')');closeModal();renderBattle();checkWin();setTimeout(function(){resolveXuSkills(q,acb);},600);}}]);}else if(sn==='fangzhu'){var dn=0,nm=[];while(dn<2&&gameState.enemyHand.length>0){var ri=Math.floor(Math.random()*gameState.enemyHand.length);var dc=gameState.enemyHand.splice(ri,1)[0];discardCard(dc);nm.push(dc.name);dn++;}gameState.enemySkipNextDraw=true;if(dn>0)log('🌊 【放逐】敌人弃'+dn+'张('+nm.join('、')+')，跳过下次摸牌！');else log('🌊 【放逐】敌人无需弃牌，但跳过摸牌！');renderBattle();setTimeout(function(){resolveXuSkills(q,acb);},600);}}
+function promptXuSkillOrder(){showModal('👑 受伤触发技能','选择发动顺序：',[{text:'① 归心 → ② 放逐',color:'#3498db',action:function(){log('📋 顺序：归心→放逐');closeModal();resolveXuSkills(['guixin','fangzhu'],function(){if(!gameState.duel.active){gameState.isProcessing=false;enemyDiscardPhase();}});}},{text:'① 放逐 → ② 归心',color:'#8e44ad',action:function(){log('📋 顺序：放逐→归心');closeModal();resolveXuSkills(['fangzhu','guixin'],function(){if(!gameState.duel.active){gameState.isProcessing=false;enemyDiscardPhase();}});}}]);}
+function takeDamage(dmg){if(gameState.myArmor>0){gameState.myArmor-=1;log('🛡️ 护甲抵御'+dmg+'点伤害！(剩余:'+gameState.myArmor+')');renderBattle();closeModal();if(!gameState.duel.active){gameState.isProcessing=false;enemyDiscardPhase();}return;}gameState.myHp-=dmg;log('💔 你受'+dmg+'点伤害！('+gameState.myHp+'/'+gameState.myMaxHp+')');if(gameState.heroId==='default'&&dmg>0){drawCard('me',2);log('⚡ 【英姿】触发！摸两张牌。');}if(hasXinshouBaohu()&&dmg>0){triggerXinshouBaohu('受到伤害');}renderBattle();if(gameState.myHp<=0){promptForDying();}else{closeModal();if(checkWin())return;if(gameState.heroId==='xuzongwei'&&dmg>0&&!gameState.duel.active){gameState.isProcessing=true;promptXuSkillOrder();return;}if(!gameState.duel.active){gameState.isProcessing=false;enemyDiscardPhase();}}}
+function promptForDying(){var btns=[];if(gameState.myHand.some(function(c){return c.effect==='heal';})){btns.push({text:'使用【桃】',color:'#2ecc71',action:function(){var p=gameState.myHand.findIndex(function(c){return c.effect==='heal';});var c=gameState.myHand.splice(p,1)[0];discardCard(c);gameState.myHp+=1;log('🍑 使用'+cardDesc(c)+'自救！('+gameState.myHp+'/'+gameState.myMaxHp+')');closeModal();renderBattle();if(!gameState.duel.active){gameState.isProcessing=false;finishEnemyTurnWithExtraCheck();}}});}if(gameState.myHand.some(function(c){return c.effect==='wine';})){btns.push({text:'饮酒自救',color:'#8e44ad',action:function(){var w=gameState.myHand.findIndex(function(c){return c.effect==='wine';});var c=gameState.myHand.splice(w,1)[0];discardCard(c);gameState.myHp+=1;log('🍷 饮下'+cardDesc(c)+'自救！('+gameState.myHp+'/'+gameState.myMaxHp+')');closeModal();renderBattle();if(!gameState.duel.active){gameState.isProcessing=false;finishEnemyTurnWithExtraCheck();}}});}btns.push({text:'放弃(阵亡)',color:'#e74c3c',action:function(){closeModal();checkWin();}});showModal('⚠️ 濒死状态！','体力为'+gameState.myHp+'，可使用桃或酒自救。',btns);}
+function finishEnemyTurn(){if(gameState.duel.active)return;log('--- 敌人回合结束 ---');gameState.isProcessing=false;gameState.skipDraw=false;gameState.skipPlay=false;gameState.phase='play';gameState.enemyExtraTurn=false;renderBattle();setTimeout(function(){startMyTurn();},500);}
+function processJudgments(who,cb){var js=who==='me'?gameState.myJudgments:gameState.enemyJudgments;var ot=who==='me'?gameState.enemyJudgments:gameState.myJudgments;var nm=who==='me'?'你':'敌人';if(js.length===0){cb();return;}var j=js.pop();var jc=null;if(drawPile.length===0&&discardPile.length>0){drawPile=discardPile.slice();discardPile=[];shuffleArray(drawPile);}if(drawPile.length>0)jc=drawPile.pop();if(!jc){js.push(j);cb();return;}log('⏳ '+nm+'的'+cardDesc(j.card)+'判定：'+jc.suit+jc.rank);renderBattle();setTimeout(function(){var ef=false;if(j.type==='lightning'){if(jc.suit==='♠'&&getRankValue(jc.rank)>=2&&getRankValue(jc.rank)<=9)ef=true;}else if(j.type==='indulgence'){if(jc.suit!=='♥')ef=true;}else if(j.type==='supply'){if(jc.suit!=='♣')ef=true;}discardCard(jc);if(ef){log('❌ 判定生效！');if(j.type==='lightning'){log('⚡ 闪电劈中'+nm+'！受3点伤害！');discardCard(j.card);if(who==='me')takeDamage(3);else dealDamageToEnemy(3);}else if(j.type==='indulgence'){log('😴 '+nm+'跳过出牌！');discardCard(j.card);gameState.skipPlay=true;}else if(j.type==='supply'){log('🌾 '+nm+'跳过摸牌！');discardCard(j.card);gameState.skipDraw=true;}}else{log('✅ 判定未生效。');if(j.type==='lightning'){log('⚡ 闪电传给下家！');ot.push(j);}else{discardCard(j.card);}}renderBattle();setTimeout(function(){if(js.length>0)processJudgments(who,cb);else cb();},1000);},1200);}
+function showModal(t,d,btns){var m=document.getElementById('response-modal');document.getElementById('modal-title').innerText=t;document.getElementById('modal-desc').innerText=d;var bc=document.getElementById('modal-buttons');bc.innerHTML='';document.getElementById('modal-card-grid').innerHTML='';btns.forEach(function(btn){var b=document.createElement('button');b.className='modal-btn';b.style.background=btn.color;b.innerText=btn.text;if(btn.needCard&&!gameState.myHand.some(function(c){return btn.needCard==='damage'?isKill(c):c.effect===btn.needCard;})){b.disabled=true;b.style.opacity='0.5';}else{b.onclick=btn.action;}bc.appendChild(b);});m.style.display='flex';}
+function closeModal(){document.getElementById('response-modal').style.display='none';}
+function checkWin(){if(gameOver)return true;if(gameState.enemyHp<=0){gameOver=true;saveRankToCloud(true);alert('🎉 恭喜！你击败了敌人！段位+1');backToLobby();return true;}else if(gameState.myHp<=0){gameOver=true;saveRankToCloud(false);alert('💀 你被打败了...段位-1');backToLobby();return true;}return false;}
+
+var tooltipTimer=null,tooltipEl=document.getElementById('card-tooltip');
+function getCardTooltipHTML(c){var tn='基本牌';if(isTrickCard(c))tn='锦囊牌';else if(isWeapon(c))tn='装备牌·武器';else if(isArmor(c))tn='装备牌·防具';var ds=CARD_DESC[c.effect]||'未知效果';var wn='';if(gameState.heroId==='wangsheng'&&isTrickCard(c))wn='🧠 【无谋】：可弃杀/掉血发动效果，或当【杀】使用。';tooltipEl.querySelector('.tt-name').innerText=c.name+' ('+c.suit+c.rank+')';tooltipEl.querySelector('.tt-type').innerText=tn;tooltipEl.querySelector('.tt-desc').innerText=ds;var we=tooltipEl.querySelector('.tt-wangsheng');if(wn){we.innerText=wn;we.style.display='block';}else{we.style.display='none';}}
+function showTooltipAt(c,x,y){getCardTooltipHTML(c);tooltipEl.style.display='block';var tw=tooltipEl.offsetWidth,th=tooltipEl.offsetHeight,ww=window.innerWidth,wh=window.innerHeight;var l=x+10,t=y-th-10;if(l+tw>ww)l=ww-tw-10;if(t<10)t=y+20;if(l<10)l=10;tooltipEl.style.left=l+'px';tooltipEl.style.top=t+'px';}
+function hideTooltip(){clearTimeout(tooltipTimer);tooltipEl.style.display='none';}
+
+function renderBattle(){var hero=currentHero;var eh=HEROES.find(function(h){return h.id===gameState.enemyHeroId;})||HEROES[0];var hl=getHandLimit();var isD=gameState.phase==='discard',isH=gameState.phase==='haoqing_select',isT=gameState.phase==='tangyi_select',isZ=gameState.phase==='zhangba_select';var ex=gameState.myHand.length-hl;var pn=getDisplayNickname();document.getElementById('my-hero-name').innerText=pn+' ('+hero.name+')';document.getElementById('my-hp').innerText='❤️ '+gameState.myHp+'/'+gameState.myMaxHp;document.getElementById('my-armor').innerText=gameState.myArmor>0?'🛡️ '+gameState.myArmor:'';document.getElementById('hand-limit').innerText=hl;document.getElementById('my-portrait').innerHTML='<span style="font-size:30px;">'+hero.portrait+'</span>';document.getElementById('enemy-hero-name').innerText='敌人 ('+eh.name+')';document.getElementById('enemy-portrait').innerHTML='<span style="font-size:26px;">'+eh.portrait+'</span>';var pe=document.getElementById('passive-skills-display');if(hero.id==='liyucheng')pe.innerHTML='🔒彦祖 | 🔥豪情 | 🎁好施 | 🗡️藏刀';else if(hero.id==='manhongyi')pe.innerHTML='🍯糖浆 | 🍬糖衣 | 🗡️背刺 | 🚫禁桃';else if(hero.id==='default')pe.innerHTML=userProfile.level>=2?'⚡英姿 | 💨飒爽':'🛡️新手保护 | ⚡英姿 | 💨飒爽';else if(hero.id==='wangsheng')pe.innerHTML='🧠无谋 | 👻武魂 | 🦴狂骨 | ⚔️连斩 | 🔄反客';else if(hero.id==='xuzongwei')pe.innerHTML='👑皇威 | ❤️归心 | 🌊放逐 | 🌟盛哉 | ⏳当先';else pe.innerHTML='';document.getElementById('enemy-hp').innerText='❤️ '+gameState.enemyHp+'/'+gameState.enemyMaxHp;document.getElementById('enemy-hand-count').innerText=gameState.enemyHand.length;document.getElementById('draw-pile-count').innerText=drawPile.length;document.getElementById('discard-pile-count').innerText=discardPile.length;var mw=document.getElementById('my-weapon');mw.innerHTML='';if(gameState.myEquipment.weapon){var e=document.createElement('span');e.className='equipment-tag';e.innerText='🔫 '+gameState.myEquipment.weapon.name;mw.appendChild(e);}var ma=document.getElementById('my-armor-eq');ma.innerHTML='';if(gameState.myEquipment.armor){var e=document.createElement('span');e.className='equipment-tag armor-tag';e.innerText='🛡️ '+gameState.myEquipment.armor.name;ma.appendChild(e);}var ew=document.getElementById('enemy-weapon');ew.innerHTML='';if(gameState.enemyEquipment.weapon){var e=document.createElement('span');e.className='equipment-tag';e.innerText='🔫 '+gameState.enemyEquipment.weapon.name;ew.appendChild(e);}var ea=document.getElementById('enemy-armor');ea.innerHTML='';if(gameState.enemyEquipment.armor){var e=document.createElement('span');e.className='equipment-tag armor-tag';e.innerText='🛡️ '+gameState.enemyEquipment.armor.name;ea.appendChild(e);}var mj=document.getElementById('my-judgments');mj.innerHTML='';gameState.myJudgments.forEach(function(j){var e=document.createElement('div');e.className='judgment-card '+j.type;e.innerText=j.card.name;mj.appendChild(e);});var ej=document.getElementById('enemy-judgments');ej.innerHTML='';gameState.enemyJudgments.forEach(function(j){var e=document.createElement('div');e.className='judgment-card '+j.type;e.innerText=j.card.name;ej.appendChild(e);});var tip=document.getElementById('discard-tip');if(isD&&ex>0){var s=gameState.selectedIndices.length;tip.style.display='block';tip.innerText='⚠️ 弃牌：还需弃'+(ex-s)+'张('+s+'/'+ex+')';}else if(isH){var s=gameState.selectedIndices.length;tip.style.display='block';tip.innerText='🔥 豪情：选2张('+s+'/2)';}else if(isT){var s=gameState.selectedIndices.length;tip.style.display='block';tip.innerText='🍬 糖衣：选1张('+s+'/1)';}else if(isZ){var s=gameState.selectedIndices.length;tip.style.display='block';tip.innerText='🐍 蛇矛：选2张('+s+'/2)';}else{tip.style.display='none';}var ha=document.getElementById('hand-area');ha.className=(isD||isH||isT||isZ)?'discard-mode':'';ha.innerHTML='';gameState.myHand.forEach(function(card,index){var el=document.createElement('div');var isSel=gameState.selectedIndices.indexOf(index)!==-1;el.className='card '+(card['class']||'')+' '+(isSel?'selected':'');var cc=getSuitColor(card.suit);el.innerHTML='<div class="card-top '+cc+'">'+card.rank+'<br>'+card.suit+'</div><div class="card-center">'+card.name+'</div><div class="card-bottom '+cc+'">'+card.suit+card.rank+'</div>';
+var touchMoved = false;
+el.ontouchstart = function(e) { touchMoved = false; var t = e.touches[0]; tooltipTimer = setTimeout(function(){ showTooltipAt(card, t.clientX, t.clientY); }, 400); };
+el.ontouchmove = function() { touchMoved = true; clearTimeout(tooltipTimer); hideTooltip(); };
+el.ontouchend = function(e) { clearTimeout(tooltipTimer); setTimeout(hideTooltip, 1500); if (!touchMoved) { e.preventDefault(); selectCard(index); } };
+el.onclick = function(e) { if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; hideTooltip(); selectCard(index); };
+el.onmouseenter=function(e){tooltipTimer=setTimeout(function(){showTooltipAt(card,e.clientX,e.clientY);},300);};
+el.onmouseleave=function(){hideTooltip();};
+ha.appendChild(el);});renderSkillButtons();var gl=gameState.isProcessing||!gameState.isMyTurn||(gameState.phase!=='play'&&gameState.phase!=='haoqing_select'&&gameState.phase!=='tangyi_select'&&gameState.phase!=='zhangba_select');var bp=document.getElementById('btn-play'),be=document.getElementById('btn-end'),bd=document.getElementById('btn-discard-confirm');if(isD){bp.style.display='none';be.style.display='none';bd.style.display='inline-block';bd.innerText='确认弃牌';bd.onclick=confirmDiscard;bd.disabled=gameState.selectedIndices.length!==ex||gameState.isProcessing;bd.style.opacity=bd.disabled?'0.5':'1';}else if(isH){bp.style.display='none';be.style.display='none';bd.style.display='inline-block';bd.innerText='确认(豪情)';bd.onclick=confirmHaoqingCards;bd.disabled=gameState.selectedIndices.length!==2;bd.style.opacity=bd.disabled?'0.5':'1';}else if(isT){bp.style.display='none';be.style.display='none';bd.style.display='inline-block';bd.innerText='确认(糖衣)';bd.onclick=confirmTangyiCards;bd.disabled=gameState.selectedIndices.length!==1;bd.style.opacity=bd.disabled?'0.5':'1';}else if(isZ){bp.style.display='none';be.style.display='none';bd.style.display='inline-block';bd.innerText='确认(蛇矛)';bd.onclick=confirmZhangbaCards;bd.disabled=gameState.selectedIndices.length!==2;bd.style.opacity=bd.disabled?'0.5':'1';}else{bd.style.display='none';if(gameState.isMyTurn&&gameState.phase==='play'){bp.style.display='inline-block';be.style.display='inline-block';}else{bp.style.display='none';be.style.display='none';}bp.disabled=gl||gameState.selectedIndices.length!==1;be.disabled=gl;bp.style.opacity=bp.disabled?'0.5':'1';be.style.opacity=be.disabled?'0.5':'1';}}
+function renderSkillButtons(){var bar=document.getElementById('skills-bar');bar.innerHTML='';var hero=currentHero;var gl=gameState.isProcessing||!gameState.isMyTurn||gameState.phase!=='play'||gameState.skipPlay;if(hero.id==='liyucheng'){var b1=document.createElement('button');b1.className='skill-btn';b1.style.background='#e74c3c';b1.innerText='🔒彦祖';b1.disabled=true;b1.title='锁定技：摸牌+2，手牌上限+2';bar.appendChild(b1);var b2=document.createElement('button');b2.className='skill-btn';b2.style.background='#e67e22';b2.innerText='🔥豪情';b2.disabled=gl||gameState.myHand.length<2;b2.title='弃2牌回1血';b2.onclick=useSkill_Haoqing;bar.appendChild(b2);var b3=document.createElement('button');b3.className='skill-btn';b3.style.background='#27ae60';b3.innerText='🎁好施';b3.disabled=gl||gameState.hasUsedHaoshi;b3.title='令一名角色摸3牌，你回1血';b3.onclick=useSkill_Haoshi;bar.appendChild(b3);var b4=document.createElement('button');b4.className='skill-btn';b4.style.background='#8e44ad';b4.innerText='🗡️藏刀';b4.disabled=gl||gameState.hasUsedCangdao;b4.title='令敌人失去1体力';b4.onclick=useSkill_Cangdao;bar.appendChild(b4);}else if(hero.id==='manhongyi'){var b0=document.createElement('button');b0.className='skill-btn';b0.style.background='#e67e22';b0.innerText='🍯糖浆';b0.disabled=true;b0.title='锁定技：每回合摸5张';bar.appendChild(b0);var b1=document.createElement('button');b1.className='skill-btn';b1.style.background='#f39c12';b1.innerText='🍬糖衣';b1.disabled=gl||(gameState.hasUsedTangyiA&&gameState.hasUsedTangyiB);b1.title='弃1牌得1甲/掉1血得2甲';b1.onclick=useSkill_Tangyi;bar.appendChild(b1);var b2=document.createElement('button');b2.className='skill-btn';b2.style.background='#3498db';b2.innerText='🗡️背刺';b2.disabled=true;b2.title='被动：出杀时有护甲可夺牌+禁闪+额外杀';bar.appendChild(b2);}else if(hero.id==='default'){if(userProfile.level<2){var b0=document.createElement('button');b0.className='skill-btn';b0.style.background='#f39c12';b0.innerText='🛡️新手保护';b0.disabled=true;b0.title='准备阶段/受伤时：令敌弃光手牌或失去2体力。LV.2后移除';bar.appendChild(b0);}var b1=document.createElement('button');b1.className='skill-btn';b1.style.background='#9b59b6';b1.innerText='⚡英姿';b1.disabled=true;b1.title='锁定技：受伤摸两张牌';bar.appendChild(b1);var b2=document.createElement('button');b2.className='skill-btn';b2.style.background='#27ae60';b2.innerText='💨飒爽';b2.disabled=true;b2.title='锁定技：无手牌上限';bar.appendChild(b2);}else if(hero.id==='wangsheng'){[{n:'🧠无谋',c:'#8e44ad',t:'弃杀/掉血发动锦囊，或当杀使用'},{n:'👻武魂',c:'#2c3e50',t:'失去杀时摸2牌'},{n:'🦴狂骨',c:'#d35400',t:'造成伤害回血摸牌'},{n:'⚔️连斩',c:'#c0392b',t:'每回合4杀，禁连弩'},{n:'🔄反客',c:'#16a085',t:'受杀时弃杀反伤'}].forEach(function(s){var b=document.createElement('button');b.className='skill-btn';b.style.background=s.c;b.innerText=s.n;b.disabled=true;b.title=s.t;bar.appendChild(b);});}else if(hero.id==='xuzongwei'){[{n:'👑皇威',c:'#f1c40f',t:'跳过弃牌阶段'},{n:'❤️归心',c:'#e74c3c',t:'受伤后摸2牌或敌掉1血'},{n:'🌊放逐',c:'#8e44ad',t:'受伤后令敌弃2牌+断摸'},{n:'🌟盛哉',c:'#2ecc71',t:'无限出杀，摸连弩弃再摸2'},{n:'⏳当先',c:'#3498db',t:'双回合+回合开始获1杀'}].forEach(function(s){var b=document.createElement('button');b.className='skill-btn';b.style.background=s.c;b.innerText=s.n;b.disabled=true;b.title=s.t;bar.appendChild(b);});}else{var b=document.createElement('button');b.className='skill-btn';b.style.background='#9b59b6';b.innerText='⚡英姿';b.disabled=gl||gameState.hasUsedSkill;b.title='出牌阶段限一次，摸两张牌';b.onclick=useSkill_Default;bar.appendChild(b);}if(gameState.myEquipment.weapon&&gameState.myEquipment.weapon.effect==='weapon_zhangba'){var bz=document.createElement('button');bz.className='skill-btn';bz.style.background='#d35400';bz.innerText='🐍蛇矛';bz.disabled=gl||gameState.myHand.length<2;bz.title='两张手牌当【杀】';bz.onclick=useSkill_Zhangba;bar.appendChild(bz);}}
+function triggerProtagonistSkill(reason){if(gameState.heroId==='default'&&!gameOver){drawCard('me',1);gameState.enemyHp-=1;log('🌟 【主角】触发！受到'+reason+'，摸一张牌，敌人失去1点体力('+gameState.enemyHp+'/'+gameState.enemyMaxHp+')。');renderBattle();checkWin();}}
+</script>
+</body>
+</html>

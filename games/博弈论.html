@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>博弈论 · 均衡实验室 | 经典案例人机对战</title>
+<meta name="description" content="把《博弈论》中的经典案例做成可交互对战：囚徒困境、智猪、斗鸡、猎鹿、最后通牒、海盗分金……与 AI 自由博弈，亲手验证纳什均衡。">
+<link rel="preconnect" href="https://miaoda.feishu.cn">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+/* ============ 设计令牌 ============ */
+:root{
+  --bg:#0C1118;
+  --bg-soft:#101822;
+  --panel:#16202D;
+  --panel-2:#1C2836;
+  --line:#2A3A4F;
+  --line-soft:#223040;
+  --ink:#EAE4D6;
+  --ink-dim:#93A2B4;
+  --ink-faint:#5F6F83;
+  --gold:#E8B44C;
+  --gold-soft:rgba(232,180,76,.14);
+  --red:#E4573D;
+  --red-soft:rgba(228,87,61,.14);
+  --green:#4FB286;
+  --green-soft:rgba(79,178,134,.14);
+  --blue:#7FA8D9;
+  --blue-soft:rgba(127,168,217,.14);
+  --radius:14px;
+  --radius-s:9px;
+  --font-d:"Noto Serif SC", "Songti SC", "STSong", serif;
+  --font-b:"Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-b);
+  font-size:15px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(900px 500px at 15% -5%, rgba(232,180,76,.06), transparent 60%),
+    radial-gradient(800px 500px at 90% 0%, rgba(127,168,217,.07), transparent 60%),
+    radial-gradient(1000px 700px at 50% 110%, rgba(228,87,61,.05), transparent 60%);
+}
+a{color:var(--gold);text-decoration:none}
+button{font-family:var(--font-b)}
+::selection{background:var(--gold);color:#1a1206}
+
+/* ============ 布局 ============ */
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+header.site{
+  position:sticky;top:0;z-index:50;
+  background:rgba(12,17,24,.82);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line-soft);
+}
+.hd-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{
+  width:34px;height:34px;flex:none;
+  border:1px solid var(--gold);
+  display:grid;place-items:center;
+  font-family:var(--font-d);font-weight:900;font-size:17px;color:var(--gold);
+  border-radius:8px;letter-spacing:0;
+  box-shadow:0 0 14px rgba(232,180,76,.18);
+}
+.brand-name{font-family:var(--font-d);font-weight:700;font-size:17px;letter-spacing:.5px}
+.brand-name small{display:block;font-family:var(--font-b);font-weight:300;font-size:10px;color:var(--ink-dim);letter-spacing:2px}
+nav.hd-nav{display:flex;gap:6px}
+.nav-btn{
+  background:transparent;border:1px solid transparent;color:var(--ink-dim);
+  padding:8px 14px;border-radius:8px;font-size:14px;cursor:pointer;transition:.18s;
+}
+.nav-btn:hover{color:var(--ink);border-color:var(--line)}
+.nav-btn.on{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
+main{padding:34px 0 70px}
+
+/* ============ 首页 Hero ============ */
+.hero{padding:26px 0 30px;border-bottom:1px solid var(--line-soft);margin-bottom:26px}
+.hero-kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;letter-spacing:3px;color:var(--gold);
+  border:1px solid var(--line);padding:5px 12px;border-radius:999px;
+  background:var(--gold-soft);margin-bottom:18px;
+}
+.hero h1{
+  font-family:var(--font-d);font-weight:900;
+  font-size:clamp(30px,4.4vw,48px);line-height:1.22;letter-spacing:1px;
+}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p.sub{margin-top:14px;max-width:640px;color:var(--ink-dim);font-size:15.5px;font-weight:300}
+.hero-stats{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.stat{
+  display:flex;align-items:baseline;gap:8px;
+  background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius-s);
+  padding:10px 16px;
+}
+.stat b{font-family:var(--font-d);font-size:20px;color:var(--gold)}
+.stat span{font-size:12.5px;color:var(--ink-dim)}
+
+/* ============ 筛选 ============ */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.chip{
+  border:1px solid var(--line);background:var(--panel);color:var(--ink-dim);
+  padding:8px 18px;border-radius:999px;font-size:13.5px;cursor:pointer;transition:.18s;
+  min-height:40px;
+}
+.chip:hover{color:var(--ink);border-color:var(--ink-faint)}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#1a1206;font-weight:500}
+
+/* ============ 模式卡片网格 ============ */
+.grid-modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+.mode-card{
+  background:linear-gradient(180deg,var(--panel),var(--bg-soft));
+  border:1px solid var(--line-soft);border-radius:var(--radius);
+  padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px;
+  transition:transform .2s,border-color .2s,box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.mode-card::after{
+  content:"";position:absolute;right:-40px;top:-40px;width:120px;height:120px;
+  background:radial-gradient(circle,rgba(232,180,76,.08),transparent 70%);
+  pointer-events:none;
+}
+.mode-card:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.mc-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mc-cat{font-size:11px;letter-spacing:1px;color:var(--gold);border:1px solid var(--line);padding:3px 10px;border-radius:999px;white-space:nowrap}
+.mc-name{font-family:var(--font-d);font-weight:700;font-size:19px;letter-spacing:.5px}
+.mc-en{font-size:11px;color:var(--ink-faint);letter-spacing:1.5px;margin-top:2px}
+.mc-body{display:flex;gap:14px;align-items:center}
+.mc-tagline{flex:1;font-size:13px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.mini-matrix{flex:none;display:grid;grid-template-columns:repeat(2,1fr);gap:2px;width:86px;height:86px;background:var(--line-soft);border-radius:8px;padding:2px}
+.mini-matrix .mm-cell{
+  background:var(--panel-2);border-radius:4px;display:grid;place-items:center;
+  font-size:9.5px;font-family:var(--font-d);
+}
+.mm-cell.rw{color:var(--gold)}
+.mm-cell.cl{color:var(--blue)}
+.mc-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto}
+.mc-tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;color:var(--ink-dim);border:1px solid var(--line-soft);padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.02)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid var(--gold);background:var(--gold);color:#1a1206;
+  font-weight:500;font-size:14px;padding:10px 18px;border-radius:var(--radius-s);
+  cursor:pointer;transition:.18s;min-height:44px;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn.small{padding:7px 14px;min-height:38px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+
+/* ============ 对战页 ============ */
+.gt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.gt-title h2{font-family:var(--font-d);font-weight:900;font-size:clamp(22px,3vw,30px);letter-spacing:.5px}
+.gt-title .en{font-size:11.5px;color:var(--ink-faint);letter-spacing:2px;margin-top:4px}
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--ink-dim);font-size:13.5px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:transparent;transition:.18s}
+.back-btn:hover{color:var(--gold);border-color:var(--gold)}
+.gt-story{
+  background:var(--panel);border:1px solid var(--line-soft);border-left:3px solid var(--gold);
+  border-radius:var(--radius);padding:14px 18px;font-size:14px;color:var(--ink-dim);font-weight:300;line-height:1.75;
+  margin:14px 0 22px;
+}
+/* 博弈详解面板 */
+.gt-detail{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:-8px 0 22px;overflow:hidden}
+.gt-detail-head{display:flex;align-items:center;gap:10px;padding:13px 18px;cursor:pointer;user-select:none}
+.gt-detail-head:hover{background:var(--bg-soft)}
+.dt-title{font-family:var(--font-d);font-weight:700;font-size:15px;letter-spacing:1px;color:var(--gold)}
+.dt-hint{font-size:11.5px;color:var(--ink-faint);flex:1}
+.dt-arrow{color:var(--ink-dim);transition:transform .25s;flex:none}
+.gt-detail.collapsed .dt-arrow{transform:rotate(-90deg)}
+.gt-detail-body{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;padding:4px 18px 20px;border-top:1px solid var(--line-soft)}
+.dt-sec h4{font-size:12px;color:var(--ink-dim);letter-spacing:1.5px;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.dt-sec h4::before{content:"";width:6px;height:6px;background:var(--gold);border-radius:2px;flex:none}
+.dt-sec p{font-size:13.5px;color:var(--ink-dim);font-weight:300;line-height:1.85}
+.dt-sec.full{grid-column:1/-1}
+@media(max-width:640px){.gt-detail-body{grid-template-columns:1fr}}
+.gt-layout{display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:22px;align-items:start}
+.gt-col{display:flex;flex-direction:column;gap:18px}
+
+/* 收益矩阵卡 */
+.matrix-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.mc-label{font-size:12px;color:var(--ink-dim);letter-spacing:1.5px;display:flex;justify-content:space-between;margin-bottom:12px}
+.matrix{display:grid;gap:2px;background:var(--line);border-radius:10px;padding:2px}
+.matrix .cell{
+  position:relative;background:var(--panel-2);border-radius:8px;min-height:86px;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;
+  transition:background .25s,box-shadow .25s;
+}
+.matrix .cell::before{
+  content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:linear-gradient(180deg,transparent,var(--line) 20%,var(--line) 80%,transparent);
+}
+.matrix .cell .pv-r{position:absolute;left:12px;bottom:9px;font-family:var(--font-d);font-weight:700;font-size:20px;color:var(--gold)}
+.matrix .cell .pv-c{position:absolute;right:12px;top:9px;font-family:var(--font-d);font-weight:700;font-size:20px;color:var(--blue)}
+.matrix .cell .act{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:11.5px;color:var(--ink-faint);white-space:nowrap}
+.matrix .cell.nash{
+  box-shadow:inset 0 0 0 2px var(--gold);
+  animation:nashpulse 2.4s ease-in-out infinite;
+}
+@keyframes nashpulse{
+  0%,100%{box-shadow:inset 0 0 0 2px var(--gold),0 0 0 0 rgba(232,180,76,0)}
+  50%{box-shadow:inset 0 0 0 2px var(--gold),0 0 18px 3px rgba(232,180,76,.35)}
+}
+.matrix .cell.hit{background:linear-gradient(180deg,var(--panel-2),var(--gold-soft))}
+.mx-axis{display:flex;justify-content:space-between;margin-top:10px;font-size:11.5px;color:var(--ink-dim)}
+.mx-axis .you{color:var(--gold)}
+.mx-axis .rival{color:var(--blue)}
+.mx-legend{display:flex;gap:18px;margin-top:10px;font-size:11.5px;color:var(--ink-dim)}
+.mx-legend i{font-style:normal;display:inline-flex;align-items:center;gap:5px}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+/* 控制面板 */
+.ctrl-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.ctrl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ctrl-row label{font-size:13px;color:var(--ink-dim)}
+select,input[type=range]{
+  background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+  padding:8px 12px;border-radius:8px;font-size:14px;font-family:var(--font-b);min-height:40px;
+}
+select:focus{outline:1px solid var(--gold)}
+input[type=range]{accent-color:var(--gold);padding:0;border:none;width:100%}
+.range-wrap{display:flex;align-items:center;gap:12px;width:100%}
+.range-wrap output{font-family:var(--font-d);font-weight:700;color:var(--gold);font-size:17px;min-width:34px;text-align:right}
+.ai-hint{font-size:12px;color:var(--ink-faint);font-weight:300;line-height:1.6}
+
+/* 选择区 */
+.play-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.play-title{font-size:13px;color:var(--ink-dim);letter-spacing:1px;margin-bottom:14px}
+.play-actions{display:flex;gap:12px;flex-wrap:wrap}
+.action-btn{
+  flex:1;min-width:150px;min-height:60px;
+  background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+  border-radius:var(--radius-s);font-size:16px;font-family:var(--font-d);font-weight:600;letter-spacing:2px;
+  cursor:pointer;transition:.18s;position:relative;
+}
+.action-btn:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px)}
+.action-btn.on{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
+.action-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.action-btn .sub{display:block;font-family:var(--font-b);font-weight:300;font-size:11px;letter-spacing:.5px;color:var(--ink-faint);margin-top:3px}
+.slider-act{width:100%}
+
+/* 结果面板 */
+.result-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:none}
+.result-card.show{display:block;animation:fadeup .35s ease}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.rs-reveal{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.rs-pick{flex:1;min-width:200px;background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:var(--radius-s);padding:12px 14px}
+.rs-pick .who{font-size:11px;color:var(--ink-faint);letter-spacing:1.5px;margin-bottom:4px}
+.rs-pick .what{font-family:var(--font-d);font-weight:700;font-size:17px}
+.rs-pick.you .what{color:var(--gold)}
+.rs-pick.rival .what{color:var(--blue)}
+.rs-payoff{display:flex;gap:18px;flex-wrap:wrap;background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:var(--radius-s);padding:12px 16px;margin-bottom:14px}
+.rs-payoff .po{font-size:12.5px;color:var(--ink-dim)}
+.rs-payoff .po b{display:block;font-family:var(--font-d);font-size:20px;color:var(--ink)}
+.rs-payoff .po.you b{color:var(--gold)}
+.rs-payoff .po.rival b{color:var(--blue)}
+.rs-ana{font-size:13.5px;color:var(--ink-dim);font-weight:300;line-height:1.8;border-top:1px dashed var(--line);padding-top:12px}
+.rs-ana b{color:var(--gold);font-weight:500}
+.rs-ana .eq-line{color:var(--gold);margin-top:6px}
+
+/* 记分与图表 */
+.score-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.score-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.score-top .st-label{font-size:12px;color:var(--ink-dim);letter-spacing:1px}
+.score-nums{display:flex;gap:24px;font-family:var(--font-d)}
+.score-nums .s-you b{color:var(--gold);font-size:26px}
+.score-nums .s-rival b{color:var(--blue);font-size:26px}
+.score-nums .s-num{font-size:11px;color:var(--ink-faint);display:flex;flex-direction:column}
+.chart-box{width:100%;height:120px;margin-top:10px}
+.chart-box svg{width:100%;height:100%;display:block}
+.round-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.rpill{font-size:11px;color:var(--ink-dim);border:1px solid var(--line-soft);padding:3px 8px;border-radius:999px;background:var(--bg-soft)}
+.rpill.you-win{border-color:rgba(232,180,76,.5);color:var(--gold)}
+.rpill.ai-win{border-color:rgba(127,168,217,.5);color:var(--blue)}
+.rpill.tie{border-color:var(--line);color:var(--ink-faint)}
+
+/* 结算弹层 */
+.modal-mask{position:fixed;inset:0;background:rgba(5,8,12,.78);backdrop-filter:blur(6px);z-index:100;display:grid;place-items:center;padding:20px;animation:fadein .3s ease}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.modal{
+  width:100%;max-width:460px;background:linear-gradient(180deg,var(--panel),var(--bg-soft));
+  border:1px solid var(--gold);border-radius:18px;padding:28px;text-align:center;
+  box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 40px rgba(232,180,76,.08);
+  animation:fadeup .35s ease;
+}
+.modal .m-kicker{font-size:11.5px;letter-spacing:3px;color:var(--ink-faint);margin-bottom:8px}
+.modal h3{font-family:var(--font-d);font-weight:900;font-size:26px;letter-spacing:1px;margin-bottom:6px}
+.modal .m-rating{font-family:var(--font-d);font-weight:700;color:var(--gold);font-size:18px;margin:6px 0 14px}
+.modal .m-score{display:flex;justify-content:center;gap:34px;margin:16px 0}
+.modal .m-score .ms{font-size:12px;color:var(--ink-dim)}
+.modal .m-score .ms b{display:block;font-family:var(--font-d);font-size:26px;color:var(--ink)}
+.modal .m-score .ms.you b{color:var(--gold)}
+.modal .m-score .ms.rival b{color:var(--blue)}
+.modal .m-best{font-size:12.5px;color:var(--ink-dim);margin-bottom:8px}
+.modal .m-best b{color:var(--gold)}
+.modal .m-note{font-size:13px;color:var(--ink-dim);font-weight:300;line-height:1.8;margin:12px 0 20px}
+.modal .m-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ============ 概念手册 ============ */
+.learn-intro{max-width:720px;margin-bottom:26px}
+.learn-intro h2{font-family:var(--font-d);font-weight:900;font-size:clamp(24px,3.4vw,34px);letter-spacing:1px;margin-bottom:12px}
+.learn-intro p{color:var(--ink-dim);font-weight:300;font-size:14.5px}
+.grid-learn{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+.learn-card{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:10px}
+.learn-card .lc-no{font-family:var(--font-d);color:var(--gold);font-size:13px;letter-spacing:2px}
+.learn-card h3{font-family:var(--font-d);font-weight:700;font-size:18px;letter-spacing:.5px}
+.learn-card p{font-size:13.5px;color:var(--ink-dim);font-weight:300;line-height:1.8}
+.learn-card .lc-link{font-size:12.5px;color:var(--gold);cursor:pointer;border-top:1px dashed var(--line);padding-top:10px;margin-top:auto}
+.learn-card .lc-link:hover{text-decoration:underline}
+
+/* ============ 页脚 ============ */
+footer.site{border-top:1px solid var(--line-soft);padding:26px 0 40px;color:var(--ink-faint);font-size:12.5px}
+footer.site .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
+footer b{color:var(--ink-dim);font-weight:400}
+
+/* ============ 响应式 ============ */
+@media(max-width:900px){
+  .gt-layout{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .hd-inner{height:56px}
+  .brand-name{font-size:15px}
+  .nav-btn{padding:7px 10px;font-size:13px}
+  main{padding:24px 0 60px}
+  .grid-modes,.grid-learn{grid-template-columns:1fr}
+  .action-btn{min-width:130px}
+  .modal{padding:22px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ================= 数据层：17 个经典博弈案例 ================= */
+const CATS = [
+  {id:'matrix', name:'经典矩阵博弈'},
+  {id:'seq',    name:'序贯谈判博弈'},
+  {id:'social', name:'社会与市场博弈'}
+];
+
+const GAMES = {
+
+  /* ---------- 1 囚徒困境 ---------- */
+  prisoner:{
+    id:'prisoner', name:'囚徒困境', en:"Prisoner's Dilemma", cat:'matrix',
+    tagline:'你与同伙被分开审讯：沉默还是坦白？',
+    story:'你和同伙因案件被分开审讯，无法串供。警察分别给你们同样的选择：沉默，或坦白并指证对方。判决取决于你们两人各自的选择。',
+    type:'matrix',
+    matrix:{rows:['沉默','坦白'], cols:['沉默','坦白'], values:[[[1,1],[0,3]],[[3,0],[2,2]]], rowLabel:'你', colLabel:'同伙'},
+    nash:[[1,1]],
+    ai:[
+      {id:'rand',name:'随机',desc:'凭直觉随机出招'},
+      {id:'sneaky',name:'狡诈',desc:'总是坦白，利益至上'},
+      {id:'honest',name:'老实',desc:'总是沉默，选择信任'},
+      {id:'ttt',name:'一报还一报',desc:'模仿你上一轮的选择'}
+    ],
+    aiInit:{ttt:0},
+    concepts:['占优策略','纳什均衡'],
+    eqText:'双方都"坦白"是唯一的纳什均衡：无论对方怎么选，坦白都是你的最优选择——这是"占优策略"。但两人都沉默时合计收益最高，个体理性导致集体受损，这就是困境所在。',
+    real:'军备竞赛、价格战、公地悲剧都是囚徒困境的现实影子。',
+    tips:'想共赢又防背叛？试"一报还一报"式策略：先合作，对方背叛就回敬，对方回归合作也原谅。'
+  },
+
+  /* ---------- 2 智猪博弈 ---------- */
+  pig:{
+    id:'pig', name:'智猪博弈', en:"Boxed Pigs", cat:'matrix',
+    tagline:'大猪去按按钮，小猪等食——搭便车的智慧。',
+    story:'猪圈一端有按钮，按一下会从另一端食槽放出 10 份饲料，但按按钮要付出 2 份体力的成本。大猪（AI）和小猪（你）同时决定：按，还是等在食槽边。',
+    type:'matrix',
+    matrix:{rows:['按','等'], cols:['按','等'], values:[[[3,3],[-1,9]],[[4,4],[0,0]]], rowLabel:'你(小猪)', colLabel:'大猪'},
+    nash:[[1,0]],
+    ai:[
+      {id:'rand',name:'随机',desc:'随手决定'},
+      {id:'hard',name:'勤劳',desc:'总是去按按钮'},
+      {id:'smart',name:'狡猾',desc:'总是等在食槽边'},
+      {id:'ttt',name:'模仿',desc:'跟着你上一轮做'}
+    ],
+    aiInit:{ttt:0},
+    concepts:['占优策略','搭便车'],
+    eqText:'纳什均衡是：大猪按、小猪等。小猪"等"是占优策略——无论大猪按不按，小猪等着都更好。大猪明知吃亏也不得不按，否则都饿肚子。',
+    real:'小企业跟随大企业创新、行业老二搭老大的便车，都是智猪博弈。',
+    tips:'你扮演小猪：学会合理搭便车，但别把大猪逼到不按按钮。'
+  },
+
+  /* ---------- 3 胆小鬼博弈（斗鸡博弈） ---------- */
+  chicken:{
+    id:'chicken', name:'胆小鬼博弈', en:"Chicken Game · 斗鸡博弈", cat:'matrix',
+    tagline:'两车相向而行：冲过去，还是打方向？',
+    story:'你和对手各驾一辆车在窄桥上相向而行。谁先打方向躲开，谁就是"懦夫"；都冲则同归于尽。',
+    type:'matrix',
+    matrix:{rows:['冲','让'], cols:['冲','让'], values:[[[-10,-10],[5,-5]],[[-5,5],[0,0]]], rowLabel:'你', colLabel:'对手'},
+    nash:[[0,1],[1,0]],
+    ai:[
+      {id:'rand',name:'随机',desc:'看心情出招'},
+      {id:'tough',name:'硬汉',desc:'永远冲，不信你会撞'},
+      {id:'timid',name:'胆小',desc:'永远让，保住性命'},
+      {id:'probing',name:'试探',desc:'先冲，之后学你'}
+    ],
+    aiInit:{probing:0},
+    concepts:['纳什均衡','可信威胁'],
+    eqText:'两个纯策略纳什均衡：(冲,让) 和 (让,冲)——必须有人让步，谁先让步谁输面子。都冲是最坏结果。现实中双方会通过"把方向盘扔出窗外"之类的信号制造可信威胁，逼对方先让。',
+    real:'古巴导弹危机的对峙、企业之间的商战对赌，都是斗鸡博弈。',
+    tips:'当你扮演硬汉要小心：对方也可能真的撞上来。'
+  },
+
+  /* ---------- 4 猎鹿博弈 ---------- */
+  stag:{
+    id:'stag', name:'猎鹿博弈', en:"Stag Hunt", cat:'matrix',
+    tagline:'合作能猎到鹿，单干只能抓到兔。',
+    story:'两位猎人。一起猎鹿能捕到一头鹿（收益高），但需要两人同心；独自猎兔稳当，收益较低。你猜同伴会怎么选？',
+    type:'matrix',
+    matrix:{rows:['猎鹿','猎兔'], cols:['猎鹿','猎兔'], values:[[[4,4],[0,3]],[[3,0],[3,3]]], rowLabel:'你', colLabel:'同伴'},
+    nash:[[0,0],[1,1]],
+    ai:[
+      {id:'rand',name:'随机',desc:'随意决定'},
+      {id:'conserv',name:'保守',desc:'只猎兔，求稳'},
+      {id:'ideal',name:'理想',desc:'只猎鹿，赌合作'},
+      {id:'ttt',name:'一报还一报',desc:'学你上一轮'}
+    ],
+    aiInit:{ttt:0},
+    concepts:['纳什均衡','帕累托最优'],
+    eqText:'两个纳什均衡：双猎鹿（帕累托最优，合计 8）和双猎兔（风险更小）。猎鹿怕对方溜去猎兔，猎兔则永远稳妥——这就是"协调困境"：越信任越敢猎鹿。',
+    real:'团队协作、战略联盟、环保合作都需要解决猎鹿式的信任问题。',
+    tips:'想拿高收益就猎鹿，但要评估对方可靠度。'
+  },
+
+  /* ---------- 5 性别之战 ---------- */
+  battle:{
+    id:'battle', name:'性别之战', en:"Battle of the Sexes", cat:'matrix',
+    tagline:'你想看歌剧，对方想看拳赛——约在哪？',
+    story:'你们要去约会。你更想看歌剧，对方更想看拳赛。分开行动（各看各的）最没意思，在一起才有快乐，只是各自偏爱不同。',
+    type:'matrix',
+    matrix:{rows:['歌剧','拳赛'], cols:['歌剧','拳赛'], values:[[[2,1],[0,0]],[[0,0],[1,2]]], rowLabel:'你', colLabel:'对方'},
+    nash:[[0,0],[1,1]],
+    ai:[
+      {id:'rand',name:'随机',desc:'随机选择'},
+      {id:'opera',name:'固执歌剧',desc:'非歌剧不可'},
+      {id:'boxing',name:'固执拳赛',desc:'非拳赛不可'},
+      {id:'cycle',name:'轮换',desc:'上次看什么，这次换'}
+    ],
+    concepts:['纳什均衡','协调博弈'],
+    eqText:'两个纳什均衡：一起看歌剧、或一起看拳赛。你更爱歌剧、对方更爱拳赛，谁"迁就"谁取决于谈判筹码。没有哪边能单方面更好。',
+    real:'家庭决策、行业标准之争、恋人吵架，都是性别之战。',
+    tips:'提前沟通，或轮流迁就，是走出协调困境的办法。'
+  },
+
+  /* ---------- 6 鹰鸽博弈 ---------- */
+  hawk:{
+    id:'hawk', name:'鹰鸽博弈', en:"Hawk-Dove", cat:'matrix',
+    tagline:'一块食物：当鹰硬抢，还是当鸽退让？',
+    story:'你和对手同时发现一块价值 4 的食物。鹰派会拼死争夺（两鹰相争各损失 2）；鸽派会选择退让保平安。',
+    type:'matrix',
+    matrix:{rows:['鹰','鸽'], cols:['鹰','鸽'], values:[[[1,1],[4,0]],[[0,4],[2,2]]], rowLabel:'你', colLabel:'对手'},
+    nash:[],
+    ai:[
+      {id:'rand',name:'随机',desc:'随意决定'},
+      {id:'hawkish',name:'纯鹰',desc:'总是硬抢'},
+      {id:'dove',name:'纯鸽',desc:'总是退让'},
+      {id:'ttt',name:'模仿',desc:'学你上一轮'}
+    ],
+    aiInit:{ttt:0},
+    concepts:['混合策略','演化稳定'],
+    eqText:'没有纯策略纳什均衡，只有混合均衡：按"成本/收益"的比例随机扮演鹰与鸽。当鹰太普遍，当鸽反而划算；当鸽太普遍，当鹰又有利可图。',
+    real:'动物争夺领地的频率、行业进入与退出，都遵循鹰鸽比例的动态平衡。',
+    tips:'摸清对手性格再决定：对方是纯鹰，你就当鸽保平安。'
+  },
+
+  /* ---------- 7 猜硬币 ---------- */
+  pennies:{
+    id:'pennies', name:'猜硬币', en:"Matching Pennies", cat:'matrix',
+    tagline:'零和游戏：你猜中正反就赢。',
+    story:'你们各扣一枚硬币同时亮出。相同（正正或反反）你赢 1 分；不同他赢 1 分。典型零和博弈：你赢的每一分都是对方输的。',
+    type:'matrix',
+    matrix:{rows:['正','反'], cols:['正','反'], values:[[[1,-1],[-1,1]],[[-1,1],[1,-1]]], rowLabel:'你', colLabel:'对手'},
+    nash:[],
+    ai:[
+      {id:'rand',name:'随机',desc:'完全随机'},
+      {id:'balance',name:'五五开',desc:'正反各半'},
+      {id:'reader',name:'识破',desc:'统计你的习惯，反着出'}
+    ],
+    concepts:['混合策略','零和博弈'],
+    eqText:'如果对手能预测你，他就赢。唯一防破解的办法是混合策略：正反各 50% 随机——这也是唯一的均衡。任何固定规律都会被利用。',
+    real:'点球大战门将扑向哪边、麻将中的诈和，都是猜硬币式的博弈。',
+    tips:'对抗"识破"型对手，唯一出路是让自己真正随机。'
+  },
+
+  /* ---------- 8 石头剪刀布 ---------- */
+  rps:{
+    id:'rps', name:'石头剪刀布', en:"Rock-Paper-Scissors", cat:'matrix',
+    tagline:'最古老的零和游戏，试试你的直觉。',
+    story:'石头砸剪刀、剪刀剪布、布包石头。赢 +1，输 -1，平局 0。看似简单，却有完整的混合策略均衡。',
+    type:'matrix',
+    matrix:{rows:['石头','剪刀','布'], cols:['石头','剪刀','布'],
+      values:[[[0,0],[1,-1],[-1,1]],[[-1,1],[0,0],[1,-1]],[[1,-1],[-1,1],[0,0]]], rowLabel:'你', colLabel:'对手'},
+    nash:[],
+    ai:[
+      {id:'rand',name:'随机',desc:'完全随机'},
+      {id:'reader',name:'识破',desc:'统计你的出招习惯，专克你'},
+      {id:'cycle',name:'轮换',desc:'石头剪刀布循环出'},
+      {id:'counter',name:'镜像',desc:'出你上一手能克掉的那招'}
+    ],
+    concepts:['混合策略','零和博弈'],
+    eqText:'任何规律都会被对手利用，均衡是三种出招各 1/3 的随机混合。现实中高手靠"装随机"和观察对手微习惯取胜。',
+    real:'电竞赛前博弈、划拳、掷骰游戏中的心理战。',
+    tips:'连赢后先别得意——对手的"识破"型 AI 正在统计你。'
+  },
+
+  /* ---------- 9 最后通牒博弈 ---------- */
+  ultimatum:{
+    id:'ultimatum', name:'最后通牒博弈', en:"Ultimatum Game", cat:'seq',
+    tagline:'分 10 元：给多少，对方才不会掀桌？',
+    story:'桌上有 10 元。你提议怎么分，对方只能接受或拒绝：接受则按你的方案分，拒绝则两人都一无所获。',
+    type:'ultimatum', pot:10,
+    ai:[
+      {id:'rational',name:'理性人',desc:'只算钱：哪怕只给 1 元也接受'},
+      {id:'fair',name:'公平派',desc:'少于 4 成就翻脸拒绝'},
+      {id:'tough',name:'强硬派',desc:'少于一半就翻脸拒绝'},
+      {id:'rand',name:'随机',desc:'接不接受看心情'}
+    ],
+    concepts:['逆向归纳','公平偏好'],
+    eqText:'按纯理性逆向归纳：提议者应只给 1 元，回应者该接受（1 元也好过 0）。但实验里提议者平均给 40%，回应者普遍拒绝 20% 以下的提议——因为人有公平偏好，会为惩罚不公平而放弃金钱。',
+    real:'商业谈判、离婚财产分割、薪酬谈判都带着最后通牒的影子。',
+    tips:'对方拒绝你的低报价时，输的其实是你——试着换位思考。'
+  },
+
+  /* ---------- 10 独裁者博弈 ---------- */
+  dictator:{
+    id:'dictator', name:'独裁者博弈', en:"Dictator Game", cat:'seq',
+    tagline:'你说了算，对方只能接受——你会怎么分？',
+    story:'桌上有 10 元，你拥有绝对分配权，对方没有任何讨价还价的能力，只能接受。完全的"独裁"情境。',
+    type:'dictator', pot:10,
+    ai:[
+      {id:'rational',name:'理性旁观',desc:'按教科书期待：你应该全拿'},
+      {id:'moral',name:'道德旁观',desc:'期待你留下一些给陌生人'}
+    ],
+    concepts:['公平偏好','社会规范'],
+    eqText:'纯理性预测独裁者会拿走全部 10 元。但大量实验显示，独裁者平均留下 20%~30%——人们天生在意公平和名声，即使没有惩罚机制。',
+    real:'垄断定价、平台抽成、遗产分配都是独裁者式情境：权力不均衡时，人依然会约束自己。',
+    tips:'没有正确答案——这轮测的是你自己的价值观。'
+  },
+
+  /* ---------- 11 蜈蚣博弈 ---------- */
+  centipede:{
+    id:'centipede', name:'蜈蚣博弈', en:"Centipede Game", cat:'seq',
+    tagline:'桌上的钱每轮翻倍：见好就收，还是走到最后？',
+    story:'桌上摆着 2 元，轮到行动的人可以"拿"走桌上的钱结束游戏，也可以"过"让钱翻倍、把决定权交给对方。最多 6 步，走完则平分最后那笔钱。',
+    type:'centipede', seq:[2,4,8,16,32,64],
+    ai:[
+      {id:'rational',name:'逆向归纳者',desc:'每一步都该"拿"，他等你先犯错'},
+      {id:'coop',name:'合作到底',desc:'一路"过"到最后平分'},
+      {id:'rand',name:'随机',desc:'每步抛硬币'},
+      {id:'cautious',name:'谨慎者',desc:'前面都过，最后一手才拿'}
+    ],
+    concepts:['逆向归纳','有限理性'],
+    eqText:'逆向归纳的结论惊人：第一步就该"拿"走 2 元。因为最后一步对方必拿，倒数第二步你就该拿……一路推回起点。但现实中人们常合作好几轮，把 2 元变成更多——这挑战了完全理性的假设。',
+    real:'合资项目的逐步加码、谈判中的逐步让步，都是蜈蚣结构。',
+    tips:'对手是"逆向归纳者"时别幻想他会在最后平分——理性人只在不得不合作时合作。'
+  },
+
+  /* ---------- 12 海盗分金币 ---------- */
+  pirate:{
+    id:'pirate', name:'海盗分金币', en:"Pirate Game", cat:'seq',
+    tagline:'5 个海盗分 100 枚金币，提案不过半数就扔下海。',
+    story:'5 个海盗（你是船长）分 100 枚金币。由船长提出分配方案，全员投票：至少 3 票赞成（含自己）方案通过；否则船长被扔下海，由下一顺位继续提案。每个海盗都聪明且冷酷：先保命，再求更多金币。',
+    type:'pirate', n:5, coins:100, need:3,
+    ai:[
+      {id:'rational',name:'完全理性',desc:'只支持让自己严格更好的提案'},
+      {id:'kind',name:'念旧',desc:'给够下一轮预期就支持'},
+      {id:'rand',name:'摇摆',desc:'六成概率支持'}
+    ],
+    concepts:['逆向归纳','多数表决'],
+    eqText:'逆向归纳的经典答案：船长留下 97 枚，给"本来会空手而归"的海盗各 1~2 枚即可过关。因为每个海盗都清楚：船长被扔下海后自己在下一局能拿多少——你只需买通那些下一局会一无所有的人。',
+    real:'公司并购中的层级博弈、政治中的多数派结盟，都是海盗分金。',
+    tips:'重点不是给得多，而是给"对的人"：下一轮收益为 0 的海盗最便宜。'
+  },
+
+  /* ---------- 13 信任博弈 ---------- */
+  trust:{
+    id:'trust', name:'信任博弈', en:"Trust Game", cat:'seq',
+    tagline:'把钱交给对方，他会还你更多吗？',
+    story:'每轮你获得 10 元。你可以投资给对手任意金额 t：对手会收到 3 倍（3t），然后由他决定返还给你多少。你投资越多，双方可能都赚，但他也可能赖账。',
+    type:'trust', endowment:10,
+    ai:[
+      {id:'recip',name:'互惠者',desc:'返还你约六成收益'},
+      {id:'generous',name:'慷慨者',desc:'返还你八成收益'},
+      {id:'selfish',name:'自私人',desc:'只还一点点'},
+      {id:'rand',name:'随机',desc:'返还不固定'}
+    ],
+    concepts:['互惠','信任'],
+    eqText:'纯理性预测：你不投资、他不返还，信任为零。但实验里人们平均投资 50% 且对方大量返还——信任和互惠创造了额外价值（3 倍放大）。信任是把双刃剑。',
+    real:'商业合作、众筹、人际借贷，全靠信任创造增量。',
+    tips:'先小额试水识别对方人格，再决定要不要重仓信任。'
+  },
+
+  /* ---------- 14 公共品博弈 ---------- */
+  public:{
+    id:'public', name:'公共品博弈', en:"Public Goods Game", cat:'social',
+    tagline:'每人 10 元投入公共池，翻 1.5 倍平分——投多少？',
+    story:'每轮你和对各持 10 元，可投入 0~10 到公共池。公共池合计后放大 1.5 倍，再平均分给你们两人——无论各自投了多少。',
+    type:'public', endowment:10, factor:1.5,
+    ai:[
+      {id:'altruist',name:'利他者',desc:'每次都投满 10'},
+      {id:'selfish',name:'自私人',desc:'一毛不拔'},
+      {id:'recip',name:'有条件合作',desc:'首轮投满，之后跟着你走'},
+      {id:'rand',name:'随机',desc:'每次随机投'}
+    ],
+    concepts:['搭便车','帕累托最优'],
+    eqText:'纳什均衡是"都不投"：无论对方投多少，你少投都更划算（搭便车）。但帕累托最优是"都投满"：每人 10 元变 15 元。个人理性与集体最优在此冲突——这就是社会困境。',
+    real:'环保、公共设施、维基百科、开源社区都要对抗搭便车。',
+    tips:'对"有条件合作"者，你投满他就投满；对"自私人"，别当冤大头。'
+  },
+
+  /* ---------- 15 旅行者困境 ---------- */
+  traveler:{
+    id:'traveler', name:'旅行者困境', en:"Traveler's Dilemma", cat:'social',
+    tagline:'两个旅行者索赔：报高价还是报低价？',
+    story:'两家航空弄坏了你们的同款古董。你们各自私下填写索赔金额（2~100）。若相同，照数赔；若不同，赔较小的数，且报少的人多得 2 元奖金、报多的人被罚 2 元。',
+    type:'traveler', lo:2, hi:100,
+    ai:[
+      {id:'rational',name:'逻辑学家',desc:'报 2——唯一的纳什均衡'},
+      {id:'real',name:'现实派',desc:'报 90~100，相信人性'},
+      {id:'stalk',name:'贴身派',desc:'永远比你少报 1 元'},
+      {id:'rand',name:'随机',desc:'随便填'}
+    ],
+    concepts:['纳什均衡','有限理性'],
+    eqText:'通过"反复压低对方"的推理，唯一纳什均衡是双方都报 2——但实验中人们常报 90 以上。这个博弈暴露了逻辑与现实直觉的巨大裂缝。',
+    real:'打折竞争、市场比价、恶性压价战都是旅行者困境。',
+    tips:'对手是"贴身派"时很阴险：你报多少他都压你 1 元，只有报 2 才能锁死他。'
+  },
+
+  /* ---------- 16 少数者博弈 ---------- */
+  bar:{
+    id:'bar', name:'酒吧博弈', en:"El Farol / Minority Game", cat:'social',
+    tagline:'10 人决定去不去酒吧——人多就亏，人少才赚。',
+    story:'你和 9 位常客决定今晚是否去酒吧。去的人超过一半（6 人以上）酒吧就拥挤，去的人每人 -1；去的人不足 6 人则氛围很好，去的人每人 +1；不去的人拿到相反收益。',
+    type:'bar', n:10, crowd:6,
+    ai:[
+      {id:'mix',name:'混合人群',desc:'逆势、追势、随机各三位'},
+      {id:'contrarian',name:'逆势人群',desc:'上次人多这次不去'},
+      {id:'follower',name:'追势人群',desc:'哪里人多去哪里'}
+    ],
+    concepts:['自我实现预言','反身性'],
+    eqText:'这个博弈没有稳定均衡：当所有人都预测"人多"而不去，酒吧反而人少、去的赢；当大家都去，又变得拥挤。任何公开可用的规律都会被反噬——赢家永远是少数派。',
+    real:'股市拥挤交易、网红店打卡、考研热，全是少数者博弈。',
+    tips:'多数人以为的"稳妥"，恰恰是亏钱的入场券。'
+  },
+
+  /* ---------- 17 密封拍卖 ---------- */
+  auction:{
+    id:'auction', name:'密封拍卖', en:"Sealed-Bid Auction", cat:'social',
+    tagline:'一件价值 100 的物品，秘密出价竞拍。',
+    story:'拍卖一件价值 100 元的物品。你与对手秘密出价（0~100），出价高者得标并支付自己的出价。可选择"一级价格"（付自己的价）或"二级价格"（付第二高价）两种规则。',
+    type:'auction', value:100,
+    ai:[
+      {id:'rational',name:'理性人',desc:'一级压到 88，二级诚实报 100'},
+      {id:'agg',name:'激进派',desc:'直接顶格 100'},
+      {id:'conserv',name:'保守派',desc:'只报 70'},
+      {id:'rand',name:'随机',desc:'随手出价'}
+    ],
+    concepts:['占优策略','赢者诅咒'],
+    eqText:'一级价格拍卖：出价略低于估值（你赚差价）才是均衡，报得太高会"赢者诅咒"——赢了也亏。二级价格（Vickrey）拍卖更妙：如实报 100 是占优策略，报多报少都不如诚实。',
+    real:'房产竞拍、关键词竞价、频谱拍卖都在这两种规则间取舍。',
+    tips:'二级价格下诚实就是最优；一级价格下贪心报价等于送钱。'
+  }
+};
+
+const GAME_IDS = Object.keys(GAMES);
+
+/* 概念手册 */
+const CONCEPTS = [
+  {no:'01', title:'纳什均衡', body:'一组策略组合：任何一方单方面改变策略，都不会让自己更好。它是博弈论的"核心解"——但要小心：均衡未必对所有人公平（囚徒困境里双方都亏）。',
+   link:'囚徒困境', game:'prisoner'},
+  {no:'02', title:'占优策略', body:'无论对手怎么选，这个选择都对自己最优。找到自己的占优策略，等于删掉其他选项，博弈瞬间变简单。',
+   link:'智猪博弈', game:'pig'},
+  {no:'03', title:'混合策略', body:'当纯策略会被人利用（如猜硬币、石头剪刀布），最优解是随机化：按特定概率混合出招，让对方无从预测。',
+   link:'猜硬币', game:'pennies'},
+  {no:'04', title:'帕累托最优', body:'一种结果：无法在不损害任何人的前提下让某个人更好。它是效率的标尺——但纳什均衡常常达不到它。',
+   link:'猎鹿博弈', game:'stag'},
+  {no:'05', title:'逆向归纳', body:'从游戏最后一步往前倒推每一步的最优选择。它给出惊人结论：蜈蚣博弈第一步就该拿，海盗分金船长拿 97 枚。',
+   link:'蜈蚣博弈', game:'centipede'},
+  {no:'06', title:'可信威胁', body:'一句威胁要能"自我兑现"才有用。胆小鬼博弈里扔掉方向盘之所以有效，是因为它让对方确信：你没得选，只能撞。',
+   link:'胆小鬼博弈', game:'chicken'},
+  {no:'07', title:'公平偏好', body:'人不是纯理性计算器：宁可自己少拿，也要惩罚不公平。最后通牒博弈里拒绝 1 元提议，就是为公平"买单"。',
+   link:'最后通牒', game:'ultimatum'},
+  {no:'08', title:'搭便车', body:'让别人承担成本、自己坐享其成。智猪博弈里小猪"等"、公共品博弈里少投入，都是理性的搭便车——却可能毁掉公共福利。',
+   link:'公共品博弈', game:'public'}
+];
+
+/* ========== 博弈详解：零基础也能读懂 ========== */
+const GAME_DETAILS = {
+  prisoner:{
+    howto:'你们同时二选一：沉默，或坦白。得分越高结局越好——都沉默各得 1；都坦白各得 2；一人坦白一人沉默，坦白者得 3、沉默者得 0。连玩数轮累计总分，看看信任值多少钱。',
+    real:'军备竞赛：谁都想多造武器（坦白），结果都白花大钱；价格战：谁都想降价抢客，结果利润全没了。个体都"聪明"，集体却受损——这就是困境。',
+    tips:'对方狡诈就跟着坦白止损；对方老实或一报还一报，合作（沉默）才能双赢。经典策略：先合作，被背叛就还击，对方回头就原谅。'
+  },
+  pig:{
+    howto:'你是小猪、对手是大猪，同时决定"按按钮"（成本 2）或"守在食槽"（白吃）。按钮放出 10 份饲料，先到者多吃。收益矩阵四个格子对应四种组合，分数就是"吃到-成本"。',
+    real:'小公司等大公司开拓完市场再跟进、乘客等别人先排队、用户等平台补贴——搭便车无处不在。但小心：把"大猪"逼到不按按钮，大家都会饿肚子。',
+    tips:'你的占优策略是"等"——大猪为了不饿死只能去按。但别得寸进尺，让对方觉得合作无望。'
+  },
+  chicken:{
+    howto:'两车相向同时决定"冲"或"让"。都冲：同归于尽，各 -10；一人冲一人让：冲的 +5、让的 -5；都让：各 0。面子 vs 性命，你选哪个？',
+    real:'冷战对峙就是经典案例：双方都摆出"我绝不后退"的架势看谁先眨眼；商战对赌、抢地盘也是同样的结构。',
+    tips:'先试探对手性格：对方是"硬汉"就别硬碰，让一步保命；对方"胆小"就放心冲。双方都理性时，总得有人先让。'
+  },
+  stag:{
+    howto:'两位猎人同时决定"猎鹿"（要两人配合）还是"猎兔"（单干）。都猎鹿各得 4；都猎兔各得 3；一人猎鹿一人猎兔：猎鹿者 0、猎兔者 3。',
+    real:'团队项目、战略合作、环保行动：全力合作才有最大的蛋糕，但谁也不想自己卖力时对方摸鱼——信任决定你敢不敢搏大的。',
+    tips:'对方保守就猎兔保底；对方理想化或"一报还一报"，就大胆猎鹿拿最高分。'
+  },
+  battle:{
+    howto:'你们同时决定今晚去哪儿。你爱歌剧、对方爱拳赛。一起去歌剧：你得 2 对方得 1；一起去拳赛：你得 1 对方得 2；各去各的：都 0。重点不是"看什么"，是"在一起"。',
+    real:'夫妻吵架、朋友选餐厅、行业争标准——都是这个结构：协调一致本身就有价值，谁迁就谁看谈判筹码。',
+    tips:'能沟通就谈好轮流迁就；不能沟通就猜对方更可能选哪个，跟着选。'
+  },
+  hawk:{
+    howto:'同时决定当"鹰"（硬抢）还是"鸽"（退让）。食物值 4，两鹰相争各损 2：都鹰各得 1；鹰对鸽：鹰 4、鸽 0；都鸽各 2。',
+    real:'动物抢地盘、公司抢市场：硬抢的人太多时，退让者反而活得久；退让者太多时，硬抢又划算——比例会自我调节。',
+    tips:'对方纯鹰就乖乖当鸽保平安；对方纯鸽就放心当鹰；对手随机或模仿你，就随机混合出招。'
+  },
+  pennies:{
+    howto:'同时亮硬币正反。相同（正正或反反）你赢 1 分；不同对方赢 1 分。零和博弈：没有双赢，全是财富转移。',
+    real:'点球大战门将扑哪边、麻将诈和、多空对赌——所有"你死我活"的博弈都长这样。',
+    tips:'任何固定规律都会被对方统计破解；对抗"识破"型对手的唯一出路是让自己真正随机。'
+  },
+  rps:{
+    howto:'同时出手：石头砸剪刀、剪刀剪布、布包石头。赢 +1、输 -1、平 0。最简单的零和博弈模型。',
+    real:'电竞比赛前的心理博弈、童年划拳、掷骰游戏——人类最古老的策略博弈。',
+    tips:'别连续出同一招；观察对方连输之后会不会换招。'
+  },
+  ultimatum:{
+    howto:'每轮 10 元。你当提议者：拖动滑块定下"自己留多少、给对方多少"，对方接受则按方案分，拒绝则两人都 0；你当回应者：对方出价，你决定接受或拒绝。',
+    real:'砍价、分家、谈薪资：给得太少对方宁愿掀桌子，公平感比钱更重要——这就是"最后通牒"的现实版。',
+    tips:'对"理性人"给 1 元即可；对"公平派"至少给 4 元；对"强硬派"给一半最稳；拿不准就给 5 元。'
+  },
+  dictator:{
+    howto:'每轮 10 元，你说了算：留多少、给多少，对方只能接受、无权反对。你的得分=留下的钱。没有惩罚，也没有谈判。',
+    real:'垄断定价、平台抽成、遗产分配——绝对权力的场景。实验发现多数人即使无人监督也会主动留一些，人心里有把公平的尺。',
+    tips:'这道题没有"最优解"，它测的是你自己的价值观：全拿最理性，留一些更有人味。'
+  },
+  centipede:{
+    howto:'桌上的钱从 2 元起，每"过"一次翻倍，最多 6 步。轮到你时：拿=收下桌上的钱结束；过=翻倍后交给对方。6 步走完则平分最后的钱。',
+    real:'合作项目逐步加码、谈判逐步让步：每一步都有人想见好就收，能一起走到最后才是奇迹——而理性推演告诉你第一步就该拿。',
+    tips:'对"逆向归纳者"，第一手拿下 2 元是理性最优；想搏大的，就赌对方比你更愿意合作。'
+  },
+  pirate:{
+    howto:'5 个海盗分 100 金币。你是船长：给 B~E 每人分配若干，剩余归你。含你共 3 票通过则成，否则你被扔下海、B 继任。每个海盗都清楚"自己下一轮能拿多少"，只支持让自己更好的提案——面板上已显示他们的底线价。',
+    real:'公司并购中的层级斗争、选举中的多数派结盟、股权谈判——给"最可能一无所获"的人一点甜头，就能过关。',
+    tips:'经典最优解：自己留 97，给 C 1 枚、E 2 枚。他们下一轮会空手而归，是最便宜的票。'
+  },
+  trust:{
+    howto:'每轮你持 10 元，投资 t 元给对手，他收到 3 倍的 t，然后决定返还多少。你最终 = 10 - t + 返还。',
+    real:'借钱给朋友、供应链赊账、众筹——信任能把钱放大三倍，也可能血本无归。',
+    tips:'先小额试水识别对方人格：互惠者值得重仓，自私人一分都别给。'
+  },
+  public:{
+    howto:'每轮你俩各持 10 元，同时决定投入公共池多少（0~10）。池子合计后 ×1.5 再平分：你最终 = 10 - 你的投入 + 平分所得。',
+    real:'交税修路、减排、众筹维护开源软件：人人都想少出钱多享受，全靠制度和个人自觉——这就是"搭便车"难题。',
+    tips:'对方利他或有条件合作就投满（双 15 是帕累托最优）；对方自私就少投，别当冤大头。'
+  },
+  traveler:{
+    howto:'同时申报 2~100 元。相同照数赔；不同按较小的数赔，且报少者多得 2、报多者被扣 2。你报多少才聪明？',
+    real:'商场比价战、恶性低价竞争、职场汇报：逻辑推演应该报最低，现实里大家却都报高价——这就是逻辑和直觉的裂缝。',
+    tips:'对"逻辑学家"报 2 才能锁死他；对"现实派"报 90 以上才不吃大亏。'
+  },
+  bar:{
+    howto:'你 + 9 个 AI 同时决定去不去酒吧。去的人超过 5 个：去的 -1、不去的 +1；去的人不超过 5 个：去的 +1、不去的 -1。赢家永远是少数派。',
+    real:'股市追涨杀跌、网红店打卡、报志愿挤热门：当大家都想到同一个"稳赚"主意，它就不稳了——这是反身性。',
+    tips:'观察上一轮人数反向操作；但所有人都这么想时，又该反着来。'
+  },
+  auction:{
+    howto:'拍品值 100 元。你与对手秘密出价 0~100，价高者得标。一级价格：得标者付自己的出价；二级价格（Vickrey）：得标者付第二高价。收益 = 100 - 支付额，没得标收益 0。',
+    real:'房产竞拍、广告关键词竞价、频谱牌照拍卖：规则差一个字，最优策略天差地别。',
+    tips:'一级价格报 90 左右留出利润空间；二级价格老老实实报 100 是占优策略。'
+  }
+};
+/* ================= 引擎：状态与工具 ================= */
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rand = n => Math.floor(Math.random()*n);
+const pick = arr => arr[rand(arr.length)];
+
+const S = {
+  route:'home', gameId:null, aiId:null, total:5,
+  round:0, p:0, a:0, hist:[], over:false, busy:false,
+  role:'proposer',
+  auctionType:'first',
+  seq:{}
+};
+
+function bestScore(id){ try{ return +localStorage.getItem('gt-best-'+id)||0 }catch(e){ return 0 } }
+function saveBest(id,v){ try{ if(v>bestScore(id)) localStorage.setItem('gt-best-'+id, v) }catch(e){} }
+const g = () => GAMES[S.gameId];
+const aiObj = () => g().ai.find(a => a.id === S.aiId);
+
+function parseHash(){
+  const h = location.hash.replace(/^#\/?/,'');
+  const parts = h.split('/');
+  if(parts[0]==='game' && GAMES[parts[1]]) return {route:'game', id:parts[1]};
+  if(parts[0]==='learn') return {route:'learn'};
+  return {route:'home'};
+}
+
+function boot(){
+  const r = parseHash();
+  if(r.route==='game'){
+    if(S.gameId !== r.id) initGame(r.id);
+    S.route='game';
+  } else { S.route = r.route; }
+  render();
+}
+window.addEventListener('hashchange', boot);
+
+function initGame(id){
+  S.gameId=id; S.route='game'; S.aiId=g().ai[0].id; S.total=5; S.role='proposer'; S.auctionType='first';
+  resetRound();
+}
+function resetRound(){
+  S.round=0; S.p=0; S.a=0; S.hist=[]; S.over=false; S.busy=false; S.seq={};
+  if(S.gameId==='bar') S.seq.types = buildBarCrowd();
+}
+
+/* ================= 布局与导航 ================= */
+function render(){
+  const app = $('#app');
+  const r = S.route;
+  let body='';
+  if(r==='home') body = renderHome();
+  else if(r==='learn') body = renderLearn();
+  else body = renderGame();
+  app.innerHTML = `
+    <header class="site"><div class="wrap hd-inner">
+      <div class="brand">
+        <div class="brand-mark">衡</div>
+        <div class="brand-name">博弈论 · 均衡实验室<small>GAME THEORY LAB</small></div>
+      </div>
+      <nav class="hd-nav">
+        <button class="nav-btn ${r==='home'?'on':''}" data-nav="#/">全部博弈</button>
+        <button class="nav-btn ${r==='learn'?'on':''}" data-nav="#/learn">概念手册</button>
+      </nav>
+    </div></header>
+    <main class="wrap">${body}</main>
+    <footer class="site"><div class="wrap">
+      <div><b>博弈论 · 均衡实验室</b> — 17 个经典案例 × 人机对战</div>
+      <div>把教科书变成能玩的游戏</div>
+    </div></footer>`;
+  app.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => location.hash = b.dataset.nav));
+  if(r==='home') bindHome();
+  else if(r==='learn') bindLearn();
+  else bindGame();
+}
+
+/* ================= 首页 ================= */
+function renderHome(){
+  const stat = (n,t) => `<div class="stat"><b>${n}</b><span>${t}</span></div>`;
+  const cards = GAME_IDS.map(id => cardHTML(id)).join('');
+  return `
+    <section class="hero">
+      <div class="hero-kicker">亲手验证 · 纳什均衡 · 混合策略 · 逆向归纳</div>
+      <h1>把《博弈论》里的每个经典案例，<em>变成你能上手玩的游戏</em></h1>
+      <p class="sub">囚徒困境、智猪、胆小鬼、猎鹿、最后通牒、海盗分金……与不同人格的 AI 自由对战。每轮实时给出收益矩阵与均衡解读，输赢之间学会博弈思维。</p>
+      <div class="hero-stats">
+        ${stat(17,'个经典博弈案例')}
+        ${stat('40+','种 AI 人格组合')}
+        ${stat('实时','收益矩阵 + 均衡分析')}
+      </div>
+    </section>
+    <div class="filters" id="filters">
+      <button class="chip on" data-cat="all">全部案例</button>
+      ${CATS.map(c => `<button class="chip" data-cat="${c.id}">${c.name}</button>`).join('')}
+    </div>
+    <div class="grid-modes" id="modeGrid">${cards}</div>`;
+}
+
+function cardHTML(id){
+  const gm = GAMES[id];
+  const vals = gm.matrix ? gm.matrix.values : null;
+  const eqTag = gm.matrix ? (gm.nash && gm.nash.length ? '纯策略均衡' : '混合均衡') : (gm.cat==='seq' ? '序贯博弈' : '社会困境');
+  const mini = vals ? miniMatrix(vals) : '<div class="mini-matrix" style="grid-template-columns:repeat(2,1fr)"><div class="mm-cell rw" style="grid-column:span 2">'+(gm.cat==='seq'?'回合':'多轮')+'</div></div>';
+  const tags = gm.concepts.filter(c => c !== eqTag).slice(0,2);
+  return `
+    <article class="mode-card" data-id="${id}">
+      <div class="mc-top">
+        <span class="mc-cat">${CATS.find(c=>c.id===gm.cat).name}</span>
+        <div><div class="mc-name">${gm.name}</div><div class="mc-en">${gm.en}</div></div>
+      </div>
+      <div class="mc-body">
+        <p class="mc-tagline">${gm.tagline}</p>
+        ${mini}
+      </div>
+      <div class="mc-foot">
+        <div class="mc-tags"><span class="tag">${eqTag}</span>${tags.map(c=>`<span class="tag">${c}</span>`).join('')}</div>
+        <button class="btn small" data-start="${id}">开始对战</button>
+      </div>
+    </article>`;
+}
+function miniMatrix(vals){
+  const n = vals.length;
+  const cells = vals.flat().map(v => `<div class="mm-cell rw">${v[0]}</div>`).join('');
+  return `<div class="mini-matrix" style="grid-template-columns:repeat(${n},1fr);height:${n*43}px">${cells}</div>`;
+}
+function bindHome(){
+  $('#filters').querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    $('#filters').querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    ch.classList.add('on');
+    const cat = ch.dataset.cat;
+    $('#modeGrid').innerHTML = GAME_IDS.filter(id => cat==='all' || GAMES[id].cat===cat).map(cardHTML).join('');
+    bindStart();
+  }));
+  bindStart();
+}
+function bindStart(){
+  document.querySelectorAll('[data-start]').forEach(b => b.addEventListener('click', () => location.hash = '#/game/'+b.dataset.start));
+}
+
+/* ================= 概念手册 ================= */
+function renderLearn(){
+  const cards = CONCEPTS.map(c => `
+    <article class="learn-card">
+      <div class="lc-no">${c.no}</div>
+      <h3>${c.title}</h3>
+      <p>${c.body}</p>
+      <div class="lc-link" data-go="${c.game}">去「${c.link}」里亲手验证 →</div>
+    </article>`).join('');
+  return `
+    <section class="learn-intro">
+      <h2>博弈论 · 概念手册</h2>
+      <p>八个支撑起所有案例的核心概念。先读概念，再进游戏验证；或在游戏里吃瘪之后，回来找答案。</p>
+    </section>
+    <div class="grid-learn">${cards}</div>`;
+}
+function bindLearn(){
+  document.querySelectorAll('[data-go]').forEach(a => a.addEventListener('click', () => location.hash = '#/game/'+a.dataset.go));
+}
+
+/* ================= 对战页总渲染 ================= */
+function renderGame(){
+  const gm = g();
+  const catName = CATS.find(c=>c.id===gm.cat).name;
+  let left, right;
+  if(gm.type==='matrix') { left = matrixLeftHTML(gm); right = matrixRightHTML(gm); }
+  else { left = seqLeftHTML(gm); right = seqRightHTML(gm); }
+  return `
+    <div class="gt-head">
+      <div class="gt-title">
+        <h2>${gm.name} <span style="color:var(--ink-faint);font-size:15px">· ${catName}</span></h2>
+        <div class="en">${gm.en}</div>
+      </div>
+      <button class="back-btn" data-back>← 返回全部博弈</button>
+    </div>
+    <div class="gt-story">${gm.story}</div>
+    ${detailHTML()}
+    <div class="gt-layout">
+      <div class="gt-col">${left}</div>
+      <div class="gt-col">${right}</div>
+    </div>`;
+}
+function detailHTML(){
+  const d = GAME_DETAILS[S.gameId];
+  if(!d) return '';
+  const gm = g();
+  return `
+    <div class="gt-detail" id="gtDetail">
+      <div class="gt-detail-head" id="dtHead">
+        <div class="dt-title">读懂这个博弈</div>
+        <span class="dt-hint">玩法 · 均衡 · 现实 · 策略</span>
+        <svg class="dt-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="gt-detail-body">
+        <div class="dt-sec full"><h4>怎么玩</h4><p>${d.howto}</p></div>
+        <div class="dt-sec"><h4>均衡结论</h4><p>${gm.eqText}</p></div>
+        <div class="dt-sec"><h4>现实中的它</h4><p>${d.real}</p></div>
+        <div class="dt-sec full"><h4>怎么赢</h4><p>${d.tips}</p></div>
+      </div>
+    </div>`;
+}
+function bindGame(){
+  const back = $('[data-back]');
+  if(back) back.addEventListener('click', () => location.hash = '#/');
+  const dtHead = $('#dtHead');
+  if(dtHead) dtHead.addEventListener('click', () => { const el = $('#gtDetail'); if(el) el.classList.toggle('collapsed'); });
+  const gm = g();
+  bindGameCommon();
+  if(gm.type==='matrix') bindMatrix();
+  else bindSeq();
+}
+
+/* ========== 公共控制：AI 人格 + 轮数 ========== */
+function ctrlHTML(){
+  const gm = g();
+  const aiOpts = gm.ai.map(a => `<option value="${a.id}" ${a.id===S.aiId?'selected':''}>${a.name}</option>`).join('');
+  const rounds = [3,5,10,0].map(n => `<option value="${n}" ${S.total===n?'selected':''}>${n===0?'不限':n+' 轮'}</option>`).join('');
+  const hideRounds = gm.type==='centipede' || gm.type==='pirate';
+  const aiHint = gm.ai.find(a=>a.id===S.aiId).desc;
+  return `
+    <div class="ctrl-card">
+      <div class="ctrl-row"><label>对手 AI 人格</label>
+        <select id="aiSel">${aiOpts}</select></div>
+      <div class="ai-hint" id="aiHint">${aiHint}</div>
+      ${hideRounds?'':`<div class="ctrl-row"><label>对战轮数</label>
+        <select id="roundSel">${rounds}</select></div>`}
+    </div>`;
+}
+function bindGameCommon(){
+  const sel = $('#aiSel');
+  if(sel) sel.addEventListener('change', () => {
+    S.aiId = sel.value;
+    const h = $('#aiHint'); if(h) h.textContent = g().ai.find(a=>a.id===S.aiId).desc;
+    if(S.gameId==='bar') S.seq.types = buildBarCrowd();
+  });
+  const rs = $('#roundSel');
+  if(rs) rs.addEventListener('change', () => { S.total = +rs.value; });
+}
+
+/* ========== 矩阵博弈：左栏 ========== */
+function matrixLeftHTML(gm){
+  const m = gm.matrix;
+  const n = m.rows.length;
+  let cells='';
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+    const isNash = gm.nash.some(([a,b]) => a===i && b===j);
+    const v = m.values[i][j];
+    cells += `<div class="cell ${isNash?'nash':''}" data-cell="${i},${j}">
+      <span class="pv-c">${v[1]}</span><span class="pv-r">${v[0]}</span>
+      <span class="act">${m.rows[i]}×${m.cols[j]}</span></div>`;
+  }
+  const eqNote = gm.nash.length ? '金色描边 = 纳什均衡单元' : '本博弈无纯策略均衡（均衡在随机混合中）';
+  return `
+    <div class="matrix-card">
+      <div class="mc-label"><span>收益矩阵</span><span>${m.rowLabel} 行 / ${m.colLabel} 列</span></div>
+      <div class="matrix" style="grid-template-columns:repeat(${n},1fr)">${cells}</div>
+      <div class="mx-axis"><span class="you">● ${m.rowLabel}的收益</span><span class="rival">● ${m.colLabel}的收益</span></div>
+      <div class="mx-legend"><i><span class="dot" style="background:var(--gold)"></span>${eqNote}</i></div>
+    </div>
+    ${ctrlHTML()}`;
+}
+
+/* ========== 矩阵博弈：右栏 ========== */
+function matrixRightHTML(gm){
+  const btns = gm.matrix.rows.map((r,i) => `<button class="action-btn" data-act="${i}">${r}<span class="sub">${i===0?'选项 A':'选项 B'}</span></button>`).join('');
+  return `
+    <div class="play-card">
+      <div class="play-title">第 <b id="rNum">0</b> 轮 · 轮到你出招</div>
+      <div class="play-actions" id="actions">${btns}</div>
+    </div>
+    ${resultCardHTML()}
+    ${scoreCardHTML()}`;
+}
+function resultCardHTML(){
+  return `<div class="result-card" id="resultCard"></div>`;
+}
+function scoreCardHTML(){
+  return `
+    <div class="score-card">
+      <div class="score-top"><span class="st-label">累计得分</span><span class="st-label" id="bestLabel">最高分 ${bestScore(S.gameId)}</span></div>
+      <div class="score-nums">
+        <span class="s-you s-num"><b id="scP">0</b>你</span>
+        <span class="s-rival s-num"><b id="scA">0</b>${g().matrix?g().matrix.colLabel:'对手'}</span>
+      </div>
+      <div class="chart-box" id="chartBox"></div>
+      <div class="round-pills" id="pills"></div>
+    </div>`;
+}
+
+/* 矩阵 AI 决策 */
+function matrixAIMove(){
+  const gm = g(), n = gm.matrix.rows.length;
+  const ai = aiObj();
+  const ph = S.hist.map(h=>h.pi);
+  switch(ai.id){
+    case 'rand': return rand(n);
+    case 'a0': case 'honest': case 'hard': case 'timid': case 'conserv':
+    case 'ideal': case 'opera': case 'dove': case 'balance': return 0;
+    case 'a1': case 'sneaky': case 'smart': case 'tough': case 'boxing':
+    case 'hawkish': return n-1;
+    case 'ttt': case 'probing':
+      return S.hist.length ? ph[ph.length-1] : (gm.aiInit&&gm.aiInit.ttt!=null ? gm.aiInit.ttt : 0);
+    case 'cycle':
+      return S.hist.length ? (S.hist.length % n) : 0;
+    case 'adapt': case 'reader': {
+      if(!S.hist.length) return rand(n);
+      const freq = new Array(n).fill(0);
+      ph.forEach(i=>freq[i]++);
+      let best=0, bv=-Infinity;
+      for(let j=0;j<n;j++){
+        let ev=0;
+        for(let i=0;i<n;i++) ev += (freq[i]/S.hist.length) * gm.matrix.values[i][j][1];
+        if(ev>bv){ bv=ev; best=j; }
+      }
+      return best;
+    }
+    case 'counter': {
+      if(!S.hist.length) return rand(n);
+      const last = ph[ph.length-1];
+      if(gm.id==='rps') return (last+2)%3;
+      if(gm.id==='pennies') return 1-last;
+      return rand(n);
+    }
+    default: return rand(n);
+  }
+}
+
+/* 最佳应对计算 */
+function bestResponses(aiIdx){
+  const m = g().matrix;
+  const col = m.values.map(r => r[aiIdx][0]);
+  const mx = Math.max(...col);
+  return col.map((v,i) => v===mx ? i : -1).filter(i => i>=0);
+}
+
+/* 矩阵回合结算 */
+function matrixChoose(i){
+  if(S.busy || S.over) return;
+  S.busy = true;
+  const btns = document.querySelectorAll('.action-btn');
+  btns.forEach(b => b.disabled = true);
+  const aiIdx = matrixAIMove();
+  setTimeout(() => {
+    const cell = g().matrix.values[i][aiIdx];
+    S.round++; S.p += cell[0]; S.a += cell[1];
+    S.hist.push({r:S.round, pi:i, ai:aiIdx, p:cell[0], a:cell[1], pTot:S.p, aTot:S.a});
+    showMatrixResult(i, aiIdx, cell);
+    S.busy = false;
+    btns.forEach(b => b.disabled = false);
+    if(S.total>0 && S.round>=S.total) finishGame();
+  }, 500);
+}
+
+function showMatrixResult(i, aiIdx, cell){
+  const rc = $('#resultCard');
+  const m = g().matrix;
+  const myPick = m.rows[i], aiPick = m.cols[aiIdx];
+  const bests = bestResponses(aiIdx);
+  const gotIt = bests.includes(i);
+  const br = bests.map(b => m.rows[b]).join(' 或 ');
+  const brPay = Math.max(...m.values.map(r=>r[aiIdx][0]));
+  const winTag = cell[0] > cell[1] ? '你占优' : cell[0] < cell[1] ? '对手占优' : '打平';
+  rc.className = 'result-card show';
+  rc.innerHTML = `
+    <div class="rs-reveal">
+      <div class="rs-pick you"><div class="who">你出了</div><div class="what">${esc(myPick)}</div></div>
+      <div class="rs-pick rival"><div class="who">${esc(m.colLabel)}出了</div><div class="what">${esc(aiPick)}</div></div>
+    </div>
+    <div class="rs-payoff">
+      <span class="po you">本轮收益<b>${cell[0]>0?'+':''}${cell[0]}</b></span>
+      <span class="po rival">${esc(m.colLabel)}收益<b>${cell[1]>0?'+':''}${cell[1]}</b></span>
+      <span class="po">${winTag}</span>
+    </div>
+    <div class="rs-ana">
+      <div>${gotIt
+        ? `你选择了「${esc(myPick)}」，正是对对手「${esc(aiPick)}」的最佳应对（+${brPay}）——漂亮。`
+        : `对手选了「${esc(aiPick)}」，此时你的最佳应对是「${esc(br)}」（+${brPay}）。`}</div>
+      <div class="eq-line">${g().eqText}</div>
+    </div>`;
+  document.querySelectorAll('.cell').forEach(c => {
+    const [a,b] = c.dataset.cell.split(',').map(Number);
+    if(a===i && b===aiIdx) c.classList.add('hit');
+  });
+  $('#rNum').textContent = S.round;
+  $('#scP').textContent = S.p; $('#scA').textContent = S.a;
+  drawChart(); drawPills();
+  const bl = $('#bestLabel');
+  if(bl) bl.textContent = '最高分 ' + Math.max(bestScore(S.gameId), S.p);
+}
+
+function drawChart(){
+  const box = $('#chartBox'); if(!box) return;
+  const h = S.hist;
+  if(h.length < 2){
+    box.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:12px">再玩几轮，累计得分曲线就会出现</div>`;
+    return;
+  }
+  const W=560, H=112, pad=8;
+  const allV = h.flatMap(x => [x.pTot, x.aTot]);
+  const maxV = Math.max(...allV, 1), minV = Math.min(0, ...allV);
+  const range = (maxV-minV) || 1;
+  const px = i => pad + i*(W-2*pad)/(h.length-1);
+  const py = v => H - pad - (v-minV)*(H-2*pad)/range;
+  const pts = key => h.map((x,i) => `${px(i).toFixed(1)},${py(x[key]).toFixed(1)}`).join(' ');
+  const end = key => [px(h.length-1).toFixed(1), py(h[h.length-1][key]).toFixed(1)];
+  box.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <line x1="${pad}" y1="${py(0)}" x2="${W-pad}" y2="${py(0)}" stroke="var(--line-soft)" stroke-width="1" stroke-dasharray="4 5"/>
+      <polyline fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${pts('pTot')}"/>
+      <polyline fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${pts('aTot')}"/>
+      <circle cx="${end('pTot')[0]}" cy="${end('pTot')[1]}" r="3.5" fill="var(--gold)"/>
+      <circle cx="${end('aTot')[0]}" cy="${end('aTot')[1]}" r="3.5" fill="var(--blue)"/>
+    </svg>`;
+}
+function drawPills(){
+  const box = $('#pills'); if(!box) return;
+  box.innerHTML = S.hist.map(h => {
+    const cls = h.p > h.a ? 'you-win' : h.p < h.a ? 'ai-win' : 'tie';
+    return `<span class="rpill ${cls}">R${h.r} 你${h.p>0?'+':''}${h.p} 对${h.a>0?'+':''}${h.a}</span>`;
+  }).join('');
+}
+
+/* ================= 序贯博弈：左栏（局势面板） ================= */
+function seqLeftHTML(gm){
+  return seqSituationHTML(gm) + ctrlHTML();
+}
+function seqSituationHTML(gm){
+  const map = {
+    ultimatum:'<div style="font-size:13px;color:var(--ink-dim);font-weight:300">每轮桌上有 <b style="color:var(--gold);font-family:var(--font-d);font-size:16px">10 元</b> 可供分配。提议方提出分法，回应方接受或拒绝。累积你实际到手的钱。</div>',
+    dictator:'<div style="font-size:13px;color:var(--ink-dim);font-weight:300">每轮桌上有 <b style="color:var(--gold);font-family:var(--font-d);font-size:16px">10 元</b>，你拥有全部决定权。累积你留下的钱。</div>',
+    trust:'<div style="font-size:13px;color:var(--ink-dim);font-weight:300">你投资 t 元，对手收到 <b style="color:var(--gold);font-family:var(--font-d);font-size:16px">3t</b>，由他决定返还多少。累积你最终落袋的钱。</div>',
+    public:'<div style="font-size:13px;color:var(--ink-dim);font-weight:300">各持 <b style="color:var(--gold);font-family:var(--font-d);font-size:16px">10 元</b>，投入公共池后放大 1.5 倍平分。累积你的最终财富。</div>',
+    traveler:'<div style="font-size:13px;color:var(--ink-dim);font-weight:300">各自申报 <b style="color:var(--gold);font-family:var(--font-d);font-size:16px">2~100</b> 元。相同照赔，不同则按低价赔并奖少罚多 ±2。累积你的赔付。</div>',
+    auction:'<div style="font-size:13px;color:var(--ink-dim);font-weight:300">拍品价值 <b style="color:var(--gold);font-family:var(--font-d);font-size:16px">100</b> 元。出价高者得标；一级价格付自己的价，二级价格付第二高价。累积你的净收益。</div>',
+    bar:'<div style="font-size:13px;color:var(--ink-dim);font-weight:300">你 + <b style="color:var(--gold);font-family:var(--font-d);font-size:16px">9 位 AI</b> 决定是否去酒吧。去的人 &gt;5 则去的输 1 分，≤5 则去的赢 1 分。累积你的积分。</div>',
+    centipede:'' ,
+    pirate:''
+  };
+  const extra = gm.type==='centipede' ? centipedeLeftHTML(gm) : gm.type==='pirate' ? pirateLeftHTML(gm) : '';
+  if(gm.type==='centipede' || gm.type==='pirate') return extra;
+  return `<div class="matrix-card"><div class="mc-label"><span>局势说明</span><span>${gm.name}</span></div>${map[gm.type]}</div>`;
+}
+function centipedeLeftHTML(gm){
+  const pot = S.seq.pot !== undefined ? S.seq.pot : gm.seq[0];
+  const node = S.seq.node || 1;
+  return `
+    <div class="matrix-card">
+      <div class="mc-label"><span>蜈蚣棋盘</span><span>第 ${node} / ${gm.seq.length} 步</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        ${gm.seq.map((v,i)=>`<span style="flex:1;min-width:46px;text-align:center;padding:8px 4px;border-radius:8px;background:${i<node?'var(--gold-soft)':'var(--panel-2)'};border:1px solid ${i<node?'var(--gold)':'var(--line)'};font-family:var(--font-d);font-weight:700;color:${i<node?'var(--gold)':'var(--ink-dim)'}">${v}</span>`).join('')}
+      </div>
+      <div style="text-align:center;padding:10px;background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:9px">
+        <div style="font-size:12px;color:var(--ink-faint);letter-spacing:1px">桌上现在有</div>
+        <div style="font-family:var(--font-d);font-weight:900;font-size:38px;color:var(--gold)" id="potNum">${pot}</div>
+        <div style="font-size:12.5px;color:var(--ink-dim)" id="turnHint">轮到你了</div>
+      </div>
+    </div>`;
+}
+function pirateLeftHTML(gm){
+  const cont = pirateOutcome(4, gm.coins);
+  return `
+    <div class="matrix-card">
+      <div class="mc-label"><span>海盗分金</span><span>${gm.coins} 枚金币 · 5 人</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        ${['你(船长)','B','C','D','E'].map((nm,i)=>`
+          <div style="flex:1;min-width:80px;text-align:center;padding:10px 6px;border-radius:9px;background:${i===0?'var(--gold-soft)':'var(--panel-2)'};border:1px solid ${i===0?'var(--gold)':'var(--line)'}">
+            <div style="font-family:var(--font-d);font-weight:700;font-size:14px;color:${i===0?'var(--gold)':'var(--ink)'}">${nm}</div>
+            <div style="font-size:11px;color:var(--ink-faint);margin-top:2px">${i===0?'提案并表决':'若船长下海，他能拿 '+ cont[i-1] +' 枚'}</div>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:12.5px;color:var(--ink-dim);font-weight:300;line-height:1.7">你提出 B~E 各得多少。至少 <b style="color:var(--gold)">2 位</b> 海盗投赞成（加你自己共 3 票）方案通过，否则你被扔下海。提示：下方显示的就是他们"下一轮能拿多少"——买通最便宜的人。</div>
+    </div>`;
+}
+
+/* ================= 序贯博弈：右栏 ================= */
+function seqRightHTML(gm){
+  switch(gm.type){
+    case 'ultimatum': return ultimatumRightHTML(gm);
+    case 'dictator': return dictatorRightHTML(gm);
+    case 'trust': return trustRightHTML(gm);
+    case 'public': return publicRightHTML(gm);
+    case 'traveler': return travelerRightHTML(gm);
+    case 'auction': return auctionRightHTML(gm);
+    case 'bar': return barRightHTML(gm);
+    case 'centipede': return centipedeRightHTML(gm);
+    case 'pirate': return pirateRightHTML(gm);
+  }
+}
+
+function resultAndScore(){
+  return resultCardHTML() + scoreCardHTML();
+}
+function showSeqResult(html, p, a){
+  S.round++; S.p += p; S.a += a;
+  S.hist.push({r:S.round, p, a, pTot:S.p, aTot:S.a});
+  const rc = $('#resultCard');
+  rc.className = 'result-card show';
+  rc.innerHTML = html;
+  $('#scP').textContent = S.p; $('#scA').textContent = S.a;
+  drawChart(); drawPills();
+  const bl = $('#bestLabel');
+  if(bl) bl.textContent = '最高分 ' + Math.max(bestScore(S.gameId), S.p);
+  if(S.total>0 && S.round>=S.total) finishGame();
+}
+
+/* --- 最后通牒 --- */
+function ultimatumRightHTML(){
+  return `
+    <div class="play-card">
+      <div class="play-title">第 <b>${S.round+1}</b> 轮 · ${S.role==='proposer'?'你是提议者':'你是回应者'}</div>
+      ${S.role==='proposer' ? `
+        <div class="ctrl-row" style="margin-bottom:12px">
+          <select id="roleSel">
+            <option value="proposer" selected>我是提议者（我分钱）</option>
+            <option value="responder">我是回应者（对方分钱）</option>
+          </select>
+        </div>
+        <div class="range-wrap"><input type="range" id="keep" min="0" max="10" value="5"><output id="keepOut">5</output></div>
+        <div style="font-size:12.5px;color:var(--ink-dim)">你留下 <b id="mine" style="color:var(--gold)">5</b> 元，给对方 <b id="give" style="color:var(--blue)">5</b> 元</div>
+        <div style="margin-top:12px"><button class="btn" id="submitUlt" style="width:100%">提交方案</button></div>
+      ` : `
+        <div class="ctrl-row" style="margin-bottom:12px">
+          <select id="roleSel">
+            <option value="proposer">我是提议者（我分钱）</option>
+            <option value="responder" selected>我是回应者（对方分钱）</option>
+          </select>
+        </div>
+        <div id="aiOffer" style="font-size:14px;color:var(--ink-dim);padding:10px;background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:9px;margin-bottom:12px"></div>
+        <div class="play-actions">
+          <button class="action-btn" id="acceptBtn">接受<span class="sub">按方案分</span></button>
+          <button class="action-btn" id="rejectBtn">拒绝<span class="sub">两人都归零</span></button>
+        </div>`}
+    </div>
+    ${resultAndScore()}`;
+}
+function ultAccept(type, offer){
+  switch(type){
+    case 'rational': return offer >= 1;
+    case 'fair': return offer >= 4;
+    case 'tough': return offer >= 5;
+    case 'rand': return Math.random() < 0.5;
+  }
+}
+function ultPropose(type){
+  switch(type){
+    case 'rational': return 1;
+    case 'fair': return 5;
+    case 'tough': return 3;
+    case 'rand': return rand(11);
+  }
+}
+function bindUltimatum(){
+  const rs = $('#roleSel');
+  if(rs) rs.addEventListener('change', () => { S.role = rs.value; bindGame(); });
+  const kp = $('#keep');
+  if(kp) kp.addEventListener('input', () => {
+    $('#keepOut').textContent = kp.value; $('#mine').textContent = kp.value; $('#give').textContent = 10 - kp.value;
+  });
+  const sb = $('#submitUlt');
+  if(sb) sb.addEventListener('click', () => {
+    const keep = +$('#keep').value, offer = 10 - keep;
+    const ai = aiObj();
+    const ok = ultAccept(ai.id, offer);
+    const p = ok ? keep : 0, a = ok ? offer : 0;
+    showSeqResult(`
+      <div class="rs-reveal">
+        <div class="rs-pick you"><div class="who">你提议</div><div class="what">留 ${keep}，给 ${offer}</div></div>
+        <div class="rs-pick rival"><div class="who">${esc(ai.name)}（${esc(ai.desc)}）</div><div class="what">${ok?'接受':'拒绝'}</div></div>
+      </div>
+      <div class="rs-payoff">
+        <span class="po you">你到手<b>${p}</b></span><span class="po rival">对方到手<b>${a}</b></span>
+      </div>
+      <div class="rs-ana">${ok
+        ? `对方接受了你的方案——但想想：如果你只给 1 元，理性人会照单全收；给多了是你的"公平偏好"在让步。`
+        : `对方掀桌了。纯理性预测他会接受任何正数，现实中人们会为不公平买单。${g().eqText}`}
+      </div>`, p, a);
+    if(!S.over) bindGame();
+  });
+  const ao = $('#aiOffer');
+  if(ao){
+    const ai = aiObj();
+    const offer = ultPropose(ai.id);
+    ao.innerHTML = `${esc(ai.name)}（${esc(ai.desc)}）提议：<b style="color:var(--gold);font-family:var(--font-d);font-size:18px">给你 ${offer} 元</b>，自己留 ${10-offer} 元`;
+    $('#acceptBtn').addEventListener('click', () => {
+      showSeqResult(`
+        <div class="rs-reveal">
+          <div class="rs-pick rival"><div class="who">对方提议</div><div class="what">给你 ${offer}</div></div>
+          <div class="rs-pick you"><div class="who">你选择</div><div class="what">接受</div></div>
+        </div>
+        <div class="rs-payoff"><span class="po you">你到手<b>${offer}</b></span><span class="po rival">对方到手<b>${10-offer}</b></span></div>
+        <div class="rs-ana">你接受了。${g().eqText}</div>`, offer, 10-offer);
+      if(!S.over) bindGame();
+    });
+    $('#rejectBtn').addEventListener('click', () => {
+      showSeqResult(`
+        <div class="rs-reveal">
+          <div class="rs-pick rival"><div class="who">对方提议</div><div class="what">给你 ${offer}</div></div>
+          <div class="rs-pick you"><div class="who">你选择</div><div class="what">拒绝</div></div>
+        </div>
+        <div class="rs-payoff"><span class="po you">你到手<b>0</b></span><span class="po rival">对方到手<b>0</b></span></div>
+        <div class="rs-ana">你拒绝了——哪怕只少拿一点，也要惩罚不公平。${g().eqText}</div>`, 0, 0);
+      if(!S.over) bindGame();
+    });
+  }
+}
+
+/* --- 独裁者 --- */
+function dictatorRightHTML(){
+  return `
+    <div class="play-card">
+      <div class="play-title">第 <b>${S.round+1}</b> 轮 · 你来分</div>
+      <div class="range-wrap"><input type="range" id="keepD" min="0" max="10" value="7"><output id="keepDOut">7</output></div>
+      <div style="font-size:12.5px;color:var(--ink-dim)">你留下 <b id="mineD" style="color:var(--gold)">7</b> 元，给对方 <b id="giveD" style="color:var(--blue)">3</b> 元（对方无权反对）</div>
+      <div style="margin-top:12px"><button class="btn" id="submitD" style="width:100%">完成分配</button></div>
+    </div>
+    ${resultAndScore()}`;
+}
+function bindDictator(){
+  const kp = $('#keepD');
+  kp.addEventListener('input', () => {
+    $('#keepDOut').textContent = kp.value; $('#mineD').textContent = kp.value; $('#giveD').textContent = 10 - kp.value;
+  });
+  $('#submitD').addEventListener('click', () => {
+    const keep = +kp.value, give = 10 - keep;
+    const ai = aiObj();
+    const note = ai.id==='rational'
+      ? `「理性旁观」的评价：教科书说你应该全拿 10 元。你留下 ${keep}，说明你受社会规范约束——而这正是真实实验的结果。${g().eqText}`
+      : `「道德旁观」的评价：你留下 ${keep}（${keep*10}%）。实验里独裁者平均留下 20%~30%，${keep*10>=20?'你符合人群平均水平':'你比平均水平更自我'}。${g().eqText}`;
+    showSeqResult(`
+      <div class="rs-reveal">
+        <div class="rs-pick you"><div class="who">你的分配</div><div class="what">留 ${keep} · 给 ${give}</div></div>
+        <div class="rs-pick rival"><div class="who">对方</div><div class="what">无权反对，收下 ${give}</div></div>
+      </div>
+      <div class="rs-payoff"><span class="po you">你到手<b>${keep}</b></span><span class="po rival">对方到手<b>${give}</b></span></div>
+      <div class="rs-ana">${note}</div>`, keep, give);
+    if(!S.over) bindGame();
+  });
+}
+
+/* --- 蜈蚣 --- */
+function centipedeRightHTML(){
+  return `
+    <div class="play-card">
+      <div class="play-title">你的回合 · 选择</div>
+      <div class="play-actions">
+        <button class="action-btn" id="takeBtn">拿！<span class="sub">拿走桌上的钱，结束</span></button>
+        <button class="action-btn" id="passBtn">过<span class="sub">钱翻倍，交给对方</span></button>
+      </div>
+    </div>
+    ${resultAndScore()}`;
+}
+function centipedeAI(){
+  const ai = aiObj(), gm = g();
+  const node = S.seq.node || 1;
+  switch(ai.id){
+    case 'rational': return true;
+    case 'coop': return false;
+    case 'rand': return Math.random() < 0.5;
+    case 'cautious': return node >= gm.seq.length;
+  }
+}
+function centipedeEnd(msg, p, a){
+  S.over = true;
+  showSeqResult(msg, p, a);
+  setTimeout(finishGame, 400);
+}
+function bindCentipede(){
+  const gm = g();
+  if(S.seq.pot === undefined){ S.seq.pot = gm.seq[0]; S.seq.node = 1; }
+  const upd = () => {
+    const potEl = $('#potNum'); if(!potEl) return;
+    potEl.textContent = S.seq.pot;
+    $('#turnHint').textContent = S.seq.node % 2 === 1 ? '轮到你了' : '轮到对方……';
+  };
+  upd();
+  $('#takeBtn').addEventListener('click', () => {
+    if(S.busy) return;
+    S.busy = true;
+    centipedeEnd(`
+      <div class="rs-reveal"><div class="rs-pick you"><div class="who">你的选择</div><div class="what">拿走 ${S.seq.pot} 元</div></div>
+      <div class="rs-pick rival"><div class="who">对手</div><div class="what">两手空空</div></div></div>
+      <div class="rs-payoff"><span class="po you">你到手<b>${S.seq.pot}</b></span><span class="po rival">对方到手<b>0</b></span></div>
+      <div class="rs-ana">逆向归纳的结论正是：现在就拿。但你牺牲了合作走到最后、把钱翻到 64 的机会。${g().eqText}</div>`, S.seq.pot, 0);
+  });
+  $('#passBtn').addEventListener('click', () => {
+    if(S.busy) return;
+    S.busy = true;
+    S.seq.node++; S.seq.pot *= 2;
+    if(S.seq.node > gm.seq.length){
+      centipedeEnd(`
+        <div class="rs-reveal"><div class="rs-pick you"><div class="who">结果</div><div class="what">走完全程，平分 ${S.seq.pot}</div></div></div>
+        <div class="rs-payoff"><span class="po you">你到手<b>${S.seq.pot/2}</b></span><span class="po rival">对方到手<b>${S.seq.pot/2}</b></span></div>
+        <div class="rs-ana">你们合作到了最后一步——这违背逆向归纳的预测，却是现实中最常见的结局。${g().eqText}</div>`, S.seq.pot/2, S.seq.pot/2);
+      return;
+    }
+    if(S.seq.node % 2 === 0){
+      upd();
+      setTimeout(() => {
+        if(centipedeAI()){
+          centipedeEnd(`
+            <div class="rs-reveal"><div class="rs-pick rival"><div class="who">${esc(aiObj().name)}的选择</div><div class="what">拿走 ${S.seq.pot} 元</div></div>
+            <div class="rs-pick you"><div class="who">你</div><div class="what">两手空空</div></div></div>
+            <div class="rs-payoff"><span class="po you">你到手<b>0</b></span><span class="po rival">对方到手<b>${S.seq.pot}</b></span></div>
+            <div class="rs-ana">对方在关键时刻"拿"走了钱——逆向归纳的预言再次应验：如果你早知道他这样，上一轮你就该拿。${g().eqText}</div>`, 0, S.seq.pot);
+        } else {
+          S.seq.node++; S.seq.pot *= 2;
+          if(S.seq.node > gm.seq.length){
+            centipedeEnd(`
+              <div class="rs-reveal"><div class="rs-pick you"><div class="who">结果</div><div class="what">走完全程，平分 ${S.seq.pot}</div></div></div>
+              <div class="rs-payoff"><span class="po you">你到手<b>${S.seq.pot/2}</b></span><span class="po rival">对方到手<b>${S.seq.pot/2}</b></span></div>
+              <div class="rs-ana">连 AI 都选择合作到底——现实中人们确实常常如此。${g().eqText}</div>`, S.seq.pot/2, S.seq.pot/2);
+            return;
+          }
+          upd();
+          S.busy = false;
+        }
+      }, 600);
+    } else {
+      upd(); S.busy = false;
+    }
+  });
+}
+
+/* --- 海盗分金 --- */
+function pirateOutcome(k, coins){
+  if(k===1) return [coins];
+  const cont = pirateOutcome(k-1, coins);
+  const need = Math.floor(k/2);
+  const idx = [...Array(k-1).keys()].sort((a,b) => cont[a]-cont[b]);
+  const chosen = idx.slice(0, need);
+  const out = new Array(k).fill(0);
+  let keep = coins;
+  for(const i of chosen){
+    const give = Math.min(cont[i]+1, coins);
+    out[i+1] = give; keep -= give;
+  }
+  out[0] = keep;
+  return out;
+}
+function pirateRightHTML(){
+  return `
+    <div class="play-card">
+      <div class="play-title">船长提案 · 分配 100 枚金币</div>
+      ${['B','C','D','E'].map(nm => `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <span style="width:36px;font-family:var(--font-d);font-weight:700">海盗 ${nm}</span>
+          <input type="number" id="pOff${nm}" min="0" max="100" value="0" style="flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);padding:9px 12px;border-radius:8px;font-size:14px">
+        </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0 12px">
+        <span style="font-size:13px;color:var(--ink-dim)">你（船长）留下 <b id="captainKeep" style="color:var(--gold);font-family:var(--font-d);font-size:17px">100</b> 枚</span>
+        <span id="pirateSum" style="font-size:12.5px;color:var(--ink-faint)"></span>
+      </div>
+      <button class="btn" id="submitP" style="width:100%">提交提案并表决</button>
+    </div>
+    ${resultAndScore()}`;
+}
+function bindPirate(){
+  const gm = g();
+  const names = ['B','C','D','E'];
+  const sum = () => names.reduce((t,n) => t + (+$('#pOff'+n).value||0), 0);
+  names.forEach(nm => {
+    const inp = $('#pOff'+nm);
+    inp.addEventListener('input', () => {
+      let v = +inp.value; if(v<0)v=0; if(v>gm.coins)v=gm.coins; inp.value=v;
+      $('#captainKeep').textContent = gm.coins - sum();
+      $('#pirateSum').textContent = '已分配 ' + sum() + ' / 100';
+    });
+  });
+  $('#submitP').addEventListener('click', () => {
+    if(S.busy) return;
+    const cont = pirateOutcome(4, gm.coins);
+    const offers = names.map(nm => +$('#pOff'+nm).value||0);
+    const ai = aiObj();
+    const votes = offers.map((o,i) => {
+      const c = cont[i];
+      if(ai.id==='rand') return Math.random() < 0.6;
+      if(ai.id==='kind') return o >= c && (c>0 || o>0);
+      return o > c || (o === c && c > 0);
+    });
+    const yesCount = votes.filter(Boolean).length;
+    const pass = yesCount >= 2;
+    const keep = gm.coins - sum();
+    const p = pass ? keep : 0;
+    const a = pass ? sum() : 0;
+    const contText = 'B:'+cont[0]+' C:'+cont[1]+' D:'+cont[2]+' E:'+cont[3];
+    S.busy = true;
+    showSeqResult(`
+      <div class="rs-reveal">
+        <div class="rs-pick you"><div class="who">提案结果</div><div class="what">${pass ? '通过（'+ (yesCount+1) +'/5 票）' : '被否决（仅 '+ (yesCount+1) +'/5 票）'}</div></div>
+        <div class="rs-pick rival"><div class="who">投票</div><div class="what">${names.map((nm,i)=>nm+':'+(votes[i]?'赞成':'反对')).join(' · ')}</div></div>
+      </div>
+      <div class="rs-payoff"><span class="po you">你到手<b>${p}</b></span><span class="po rival">其余海盗共<b>${a}</b></span></div>
+      <div class="rs-ana">若你被扔下海，各海盗的预期是：${contText}。${pass
+        ? '你买通了最便宜的支持者——这正是逆向归纳的玩法。'
+        : '你给错了人。要给那些"下一轮会空手而归"的海盗各 1~2 枚，他们最便宜。'} ${g().eqText}</div>`, p, a);
+    setTimeout(() => { if(!S.over) finishGame(); }, 300);
+  });
+}
+
+/* --- 信任博弈 --- */
+function trustRightHTML(){
+  return `
+    <div class="play-card">
+      <div class="play-title">第 <b>${S.round+1}</b> 轮 · 你投资多少</div>
+      <div class="range-wrap"><input type="range" id="investT" min="0" max="10" value="5"><output id="investTOut">5</output></div>
+      <div style="font-size:12.5px;color:var(--ink-dim)">投资 <b id="tAmt" style="color:var(--gold)">5</b> 元 → 对方收到 <b id="tTriple" style="color:var(--blue)">15</b> 元</div>
+      <div style="margin-top:12px"><button class="btn" id="submitT" style="width:100%">投资</button></div>
+    </div>
+    ${resultAndScore()}`;
+}
+function bindTrust(){
+  const kp = $('#investT');
+  kp.addEventListener('input', () => {
+    $('#investTOut').textContent = kp.value; $('#tAmt').textContent = kp.value; $('#tTriple').textContent = kp.value*3;
+  });
+  $('#submitT').addEventListener('click', () => {
+    const t = +kp.value, recv = t*3;
+    const ai = aiObj();
+    let ret;
+    switch(ai.id){
+      case 'recip': ret = Math.round(recv * 0.6); break;
+      case 'generous': ret = Math.round(recv * 0.8); break;
+      case 'selfish': ret = Math.round(recv * 0.15); break;
+      case 'rand': ret = rand(recv+1); break;
+    }
+    const p = 10 - t + ret, a = recv - ret;
+    showSeqResult(`
+      <div class="rs-reveal">
+        <div class="rs-pick you"><div class="who">你投资</div><div class="what">${t} 元 → 变 ${recv}</div></div>
+        <div class="rs-pick rival"><div class="who">${esc(ai.name)}（${esc(ai.desc)}）</div><div class="what">返还 ${ret} 元</div></div>
+      </div>
+      <div class="rs-payoff"><span class="po you">你到手<b>${p}</b></span><span class="po rival">对方到手<b>${a}</b></span></div>
+      <div class="rs-ana">你净赚 ${p-10>=0?'+':''}${p-10}（相对手握 10 元不动）。${ret>=t
+        ? '对方信守了信任，创造了额外价值。'
+        : '对方背叛了信任——纯理性预测这会发生，所以理性人从不投资。'} ${g().eqText}</div>`, p, a);
+    if(!S.over) bindGame();
+  });
+}
+
+/* --- 公共品 --- */
+function publicRightHTML(){
+  return `
+    <div class="play-card">
+      <div class="play-title">第 <b>${S.round+1}</b> 轮 · 你投入多少</div>
+      <div class="range-wrap"><input type="range" id="investP" min="0" max="10" value="5"><output id="investPOut">5</output></div>
+      <div style="font-size:12.5px;color:var(--ink-dim)">你投入 <b id="pAmt" style="color:var(--gold)">5</b> 元进公共池</div>
+      <div style="margin-top:12px"><button class="btn" id="submitP2" style="width:100%">投入</button></div>
+    </div>
+    ${resultAndScore()}`;
+}
+function bindPublic(){
+  const gm = g();
+  const kp = $('#investP');
+  kp.addEventListener('input', () => { $('#investPOut').textContent = kp.value; $('#pAmt').textContent = kp.value; });
+  $('#submitP2').addEventListener('click', () => {
+    const t = +kp.value;
+    const ai = aiObj();
+    let aiT;
+    switch(ai.id){
+      case 'altruist': aiT = 10; break;
+      case 'selfish': aiT = 0; break;
+      case 'recip': {
+        const last = S.hist.length ? S.hist[S.hist.length-1].p : 10;
+        aiT = Math.min(10, last); break;
+      }
+      case 'rand': aiT = rand(11); break;
+    }
+    const pool = (t + aiT) * gm.factor;
+    const p = 10 - t + pool/2, a = 10 - aiT + pool/2;
+    const coop = aiT === 10 || (ai.id==='recip' && aiT >= 8);
+    showSeqResult(`
+      <div class="rs-reveal">
+        <div class="rs-pick you"><div class="who">你投入</div><div class="what">${t} 元</div></div>
+        <div class="rs-pick rival"><div class="who">${esc(ai.name)}投入</div><div class="what">${aiT} 元</div></div>
+      </div>
+      <div class="rs-payoff"><span class="po you">你到手<b>${p.toFixed(1)}</b></span><span class="po rival">对方到手<b>${a.toFixed(1)}</b></span></div>
+      <div class="rs-ana">公共池 ${pool.toFixed(1)} 元（放大 1.5 倍后）平分。${coop
+        ? '对方选择合作——当合作者配合作者，你们都能拿 15。'
+        : '对方选择了搭便车：你不投入，反而比投入更赚——这就是公共品的两难。'} ${g().eqText}</div>`, Math.round(p*10)/10, Math.round(a*10)/10);
+    if(!S.over) bindGame();
+  });
+}
+
+/* --- 旅行者困境 --- */
+function travelerRightHTML(){
+  return `
+    <div class="play-card">
+      <div class="play-title">第 <b>${S.round+1}</b> 轮 · 申报索赔金额</div>
+      <div class="range-wrap"><input type="range" id="claimT" min="2" max="100" value="95"><output id="claimTOut">95</output></div>
+      <div style="font-size:12.5px;color:var(--ink-dim)">你申报 <b id="claimAmt" style="color:var(--gold)">95</b> 元</div>
+      <div style="margin-top:12px"><button class="btn" id="submitTr" style="width:100%">提交申报</button></div>
+    </div>
+    ${resultAndScore()}`;
+}
+function bindTraveler(){
+  const gm = g();
+  const kp = $('#claimT');
+  kp.addEventListener('input', () => { $('#claimTOut').textContent = kp.value; $('#claimAmt').textContent = kp.value; });
+  $('#submitTr').addEventListener('click', () => {
+    const mine = +kp.value;
+    const ai = aiObj();
+    let aiClaim;
+    switch(ai.id){
+      case 'rational': aiClaim = gm.lo; break;
+      case 'real': aiClaim = 90 + rand(11); break;
+      case 'stalk': {
+        const last = S.hist.length ? S.hist[S.hist.length-1].p : 99;
+        aiClaim = Math.max(gm.lo, last - 1); break;
+      }
+      case 'rand': aiClaim = gm.lo + rand(gm.hi - gm.lo + 1); break;
+    }
+    let p, a, desc;
+    if(mine === aiClaim){ p = mine; a = mine; desc = '两人申报相同，各获赔 ' + mine + ' 元'; }
+    else {
+      const low = Math.min(mine, aiClaim), high = Math.max(mine, aiClaim);
+      const lowGuy = mine === low ? '你' : '对方';
+      p = mine === low ? low+2 : low-2;
+      a = aiClaim === low ? low+2 : low-2;
+      desc = `低者（${lowGuy}）报 ${low}，获赔 ${low}+2=${low+2}；高者报 ${high}，仅获 ${low}-2=${low-2}`;
+    }
+    showSeqResult(`
+      <div class="rs-reveal">
+        <div class="rs-pick you"><div class="who">你申报</div><div class="what">${mine} 元</div></div>
+        <div class="rs-pick rival"><div class="who">${esc(ai.name)}申报</div><div class="what">${aiClaim} 元</div></div>
+      </div>
+      <div class="rs-payoff"><span class="po you">你获赔<b>${p}</b></span><span class="po rival">对方获赔<b>${a}</b></span></div>
+      <div class="rs-ana">${desc}。${ai.id==='rational'
+        ? '对方是逻辑学家：唯一的纳什均衡是双方都报 2——你可以试试用 2 锁死他。'
+        : '对方没按纯逻辑来，而这正是真实实验里多数人的行为。'} ${g().eqText}</div>`, p, a);
+    if(!S.over) bindGame();
+  });
+}
+
+/* --- 密封拍卖 --- */
+function auctionRightHTML(){
+  return `
+    <div class="play-card">
+      <div class="play-title">第 <b>${S.round+1}</b> 轮 · 你的出价</div>
+      <div class="ctrl-row" style="margin-bottom:12px">
+        <select id="aucType">
+          <option value="first" ${S.auctionType==='first'?'selected':''}>一级价格（付自己的出价）</option>
+          <option value="second" ${S.auctionType==='second'?'selected':''}>二级价格（付第二高价）</option>
+        </select>
+      </div>
+      <div class="range-wrap"><input type="range" id="bidA" min="0" max="100" value="90"><output id="bidAOut">90</output></div>
+      <div style="font-size:12.5px;color:var(--ink-dim)">你出价 <b id="bidAmt" style="color:var(--gold)">90</b> 元</div>
+      <div style="margin-top:12px"><button class="btn" id="submitA" style="width:100%">密封出价</button></div>
+    </div>
+    ${resultAndScore()}`;
+}
+function bindAuction(){
+  const gm = g();
+  const at = $('#aucType');
+  at.addEventListener('change', () => { S.auctionType = at.value; bindGame(); });
+  const kp = $('#bidA');
+  kp.addEventListener('input', () => { $('#bidAOut').textContent = kp.value; $('#bidAmt').textContent = kp.value; });
+  $('#submitA').addEventListener('click', () => {
+    const mine = +kp.value;
+    const ai = aiObj();
+    let aiBid;
+    switch(ai.id){
+      case 'rational': aiBid = S.auctionType==='first' ? 88 : 100; break;
+      case 'agg': aiBid = 100; break;
+      case 'conserv': aiBid = 70; break;
+      case 'rand': aiBid = rand(101); break;
+    }
+    const v = gm.value;
+    let p=0, a=0, desc;
+    if(mine === aiBid){
+      const win = Math.random() < 0.5;
+      const pay = mine;
+      if(win){ p = v - pay; desc = `出价相同（${mine}），你抽中得标，支付 ${pay}，净收益 ${p}`; }
+      else { a = v - pay; desc = `出价相同（${mine}），对方抽中得标，支付 ${pay}，净收益 ${a}`; }
+    } else if(mine > aiBid){
+      const pay = S.auctionType==='first' ? mine : aiBid;
+      p = v - pay;
+      desc = `你以 ${mine} 得标，${S.auctionType==='first' ? `支付自己的 ${pay}` : `只需支付第二高价 ${pay}`}，净收益 ${p}`;
+    } else {
+      const pay = S.auctionType==='first' ? aiBid : mine;
+      a = v - pay;
+      desc = `对方以 ${aiBid} 得标，${S.auctionType==='first' ? `支付 ${pay}` : `只需支付第二高价 ${pay}`}，净收益 ${a}`;
+    }
+    showSeqResult(`
+      <div class="rs-reveal">
+        <div class="rs-pick you"><div class="who">你出价</div><div class="what">${mine}</div></div>
+        <div class="rs-pick rival"><div class="who">${esc(ai.name)}出价</div><div class="what">${aiBid}</div></div>
+      </div>
+      <div class="rs-payoff"><span class="po you">你净收益<b>${p>0?'+':''}${p}</b></span><span class="po rival">对方净收益<b>${a>0?'+':''}${a}</b></span></div>
+      <div class="rs-ana">${desc}。${S.auctionType==='first'
+        ? '一级价格下，报得比估值低才有利可图；报 100 赢下来就是 "赢者诅咒"。'
+        : '二级价格（Vickrey）下，如实报 100 是占优策略——报价高低都不影响你支付，只影响你能否得标。'} ${g().eqText}</div>`, p, a);
+    if(!S.over) bindGame();
+  });
+}
+
+/* --- 酒吧（少数者）博弈 --- */
+function buildBarCrowd(){
+  const id = S.aiId || 'mix';
+  const mk = t => ({t});
+  if(id==='contrarian') return [mk('c'),mk('c'),mk('c'),mk('c'),mk('c'),mk('c'),mk('c'),mk('c'),mk('c')];
+  if(id==='follower') return [mk('f'),mk('f'),mk('f'),mk('f'),mk('f'),mk('f'),mk('f'),mk('f'),mk('f')];
+  return [mk('c'),mk('c'),mk('c'),mk('f'),mk('f'),mk('f'),mk('r'),mk('r'),mk('r')];
+}
+function barAIMove(p){
+  const crowd = (S.seq.lastCrowd !== undefined) ? S.seq.lastCrowd : -1;
+  const go = Math.random() < 0.8;
+  if(p.t==='c'){
+    if(crowd>5) return go?0:1;
+    if(crowd>=0) return go?1:0;
+    return Math.random()<0.5?0:1;
+  }
+  if(p.t==='f'){
+    if(crowd>5) return go?1:0;
+    if(crowd>=0) return go?0:1;
+    return Math.random()<0.5?0:1;
+  }
+  return Math.random()<0.5?0:1;
+}
+function barRightHTML(){
+  return `
+    <div class="play-card">
+      <div class="play-title">第 <b>${S.round+1}</b> 轮 · 今晚去不去酒吧</div>
+      <div class="play-actions">
+        <button class="action-btn" data-bar="1">去酒吧<span class="sub">人少就赚，人多就亏</span></button>
+        <button class="action-btn" data-bar="0">不去<span class="sub">人少就亏，人多就赚</span></button>
+      </div>
+    </div>
+    ${resultAndScore()}`;
+}
+function bindBar(){
+  document.querySelectorAll('[data-bar]').forEach(b => b.addEventListener('click', () => {
+    if(S.busy || S.over) return;
+    S.busy = true;
+    const go = +b.dataset.bar;
+    const crowd = S.seq.types.map(p => barAIMove(p));
+    const goCount = go + crowd.filter(x=>x===1).length;
+    const crowded = goCount > 5;
+    const p = go ? (crowded ? -1 : 1) : (crowded ? 1 : -1);
+    const a = crowd.reduce((s,x) => s + (x ? (crowded?-1:1) : (crowded?1:-1)), 0) / 9;
+    S.seq.lastCrowd = goCount;
+    setTimeout(() => {
+      showSeqResult(`
+        <div class="rs-reveal">
+          <div class="rs-pick you"><div class="who">你的选择</div><div class="what">${go?'去酒吧':'不去'}</div></div>
+          <div class="rs-pick rival"><div class="who">结果</div><div class="what">${goCount} 人去了酒吧（${crowded?'拥挤':'清静'}）</div></div>
+        </div>
+        <div class="rs-payoff"><span class="po you">你本轮<b>${p>0?'+':''}${p}</b></span><span class="po rival">AI 平均<b>${a>0?'+':''}${a.toFixed(2)}</b></span></div>
+        <div class="rs-ana">${crowded
+          ? '去的人太多，去的都亏了。多数人猜"会火"时，火已经结束了。'
+          : '去的人少，少数派赢了。'} ${g().eqText}</div>`, p, Math.round(a*10)/10);
+      S.busy = false;
+      if(S.total>0 && S.round>=S.total) finishGame();
+    }, 500);
+  }));
+}
+
+/* ================= 结算 ================= */
+function finishGame(){
+  S.over = true;
+  const gm = g();
+  const best = Math.max(bestScore(S.gameId), S.p);
+  saveBest(S.gameId, S.p);
+  let rate, note;
+  if(gm.type==='matrix'){
+    const hits = S.hist.filter(h => bestResponses(h.ai).includes(h.pi)).length;
+    const hr = S.hist.length ? hits/S.hist.length : 0;
+    rate = hr < 0.4 ? '直觉玩家' : hr < 0.65 ? '老练策略家' : hr < 0.85 ? '均衡猎手' : '博弈论宗师';
+    note = `你的 ${S.hist.length} 次出招中 ${hits} 次命中最佳应对（${Math.round(hr*100)}%）` + (hr>=0.85 ? '——你已经能稳定读出对手的最优反制。' : '——对手的每个选择都有唯一最优解，去矩阵里找它。');
+  } else {
+    const net = S.p - S.a;
+    rate = net >= 20 ? '收割者' : net > 0 ? '精明玩家' : net > -10 ? '诚实玩家' : '理想主义者';
+    note = `净收益 ${net>0?'+':''}${net}（你对 ${S.a} 对方）。` + (net>0 ? '你用策略把好处攥在了手里。' : '你更在意合作与公平——这也是一种博弈观。');
+  }
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.innerHTML = `
+    <div class="modal">
+      <div class="m-kicker">本局结算</div>
+      <h3>${gm.name}</h3>
+      <div class="m-rating">${rate}</div>
+      <div class="m-score">
+        <span class="ms you"><b>${S.p}</b>你的累计收益</span>
+        <span class="ms rival"><b>${S.a}</b>对手累计收益</span>
+      </div>
+      <div class="m-best">历史最高分 <b>${best}</b></div>
+      <div class="m-note">${note}</div>
+      <div class="m-actions">
+        <button class="btn" id="again">再来一局</button>
+        <button class="btn ghost" id="more">换一个博弈</button>
+      </div>
+    </div>`;
+  document.body.appendChild(mask);
+  $('#again').addEventListener('click', () => { mask.remove(); resetRound(); render(); });
+  $('#more').addEventListener('click', () => { mask.remove(); location.hash = '#/'; });
+}
+
+/* ================= 分发绑定 ================= */
+function bindMatrix(){
+  document.querySelectorAll('.action-btn').forEach(b => b.addEventListener('click', () => matrixChoose(+b.dataset.act)));
+}
+function bindSeq(){
+  switch(g().type){
+    case 'ultimatum': bindUltimatum(); break;
+    case 'dictator': bindDictator(); break;
+    case 'centipede': bindCentipede(); break;
+    case 'pirate': bindPirate(); break;
+    case 'trust': bindTrust(); break;
+    case 'public': bindPublic(); break;
+    case 'traveler': bindTraveler(); break;
+    case 'auction': bindAuction(); break;
+    case 'bar': bindBar(); break;
+  }
+}
+
+boot();
+
+</script>
+<script>
+/* HanBer云坛 · 云坛一键登录（强制登录 + 存档按账号隔离） */
+(function(){
+  try{
+    var qs = new URLSearchParams(location.search);
+    var u = qs.get('yt_user');
+    var logged = u && u !== 'guest';
+    if(!logged){
+      var ov = document.createElement('div');
+      ov.id = 'yt-login-mask';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:linear-gradient(160deg,#101828,#1a2a4a);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;gap:14px;text-align:center;padding:20px';
+      var t1 = document.createElement('div'); t1.style.cssText = 'font-size:40px'; t1.textContent = '🔒'; ov.appendChild(t1);
+      var t2 = document.createElement('div'); t2.style.cssText = 'font-size:18px;font-weight:600'; t2.textContent = '此游戏需云坛一键登录'; ov.appendChild(t2);
+      var t3 = document.createElement('div'); t3.style.cssText = 'font-size:13px;color:#9fb3d0;max-width:320px'; t3.textContent = '返回云坛登录后，进入「小程序」再点本游戏即可自动带账号游玩。'; ov.appendChild(t3);
+      var btn = document.createElement('button');
+      btn.textContent = '去登录';
+      btn.style.cssText = 'margin-top:6px;padding:9px 22px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;cursor:pointer';
+      btn.onclick = function(){ try{ if(window.parent && window.parent.location){ window.parent.location.hash = '#/login'; } }catch(e){} };
+      ov.appendChild(btn);
+      document.body.appendChild(ov);
+      return;
+    }
+    var el = document.createElement('div');
+    el.id = 'yt-login-bar';
+    el.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;display:flex;align-items:center;gap:6px;background:rgba(10,14,26,.74);color:#fff;padding:5px 8px 5px 12px;border-radius:20px;font:12px/1 "PingFang SC","Microsoft YaHei",sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.35);backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.16);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    var b1 = document.createElement('b'); b1.style.color = '#7cc4ff'; b1.textContent = String(u).replace(/[<>&]/g, '');
+    var b2 = document.createElement('span'); b2.textContent = '✕'; b2.style.cssText = 'cursor:pointer;opacity:.65;margin-left:6px;font-size:11px';
+    b2.title = '关闭';
+    b2.onclick = function(){ var bar = document.getElementById('yt-login-bar'); if(bar) bar.remove(); };
+    el.appendChild(document.createTextNode('👤 云坛登录：')); el.appendChild(b1); el.appendChild(b2);
+    document.body.appendChild(el);
+    window.YT_USER = u;
+    window.YT_LOGGED = true;
+    /* 存档按账号隔离：所有 localStorage 自动带账号前缀，旧档自动迁移 */
+    var pre = '_yt_' + u + '_';
+    var g = Storage.prototype.getItem, sw = Storage.prototype.setItem, r = Storage.prototype.removeItem;
+    Storage.prototype.getItem = function(k){
+      if(typeof k !== 'string' || k.indexOf(pre) === 0) return g.call(this, k);
+      var scoped = g.call(this, pre + k);
+      if(scoped !== null) return scoped;
+      var legacy = g.call(this, k);
+      if(legacy !== null){ try{ sw.call(this, pre + k, legacy); r.call(this, k); }catch(e){} }
+      return legacy;
+    };
+    Storage.prototype.setItem = function(k, v){
+      if(typeof k === 'string' && k.indexOf(pre) !== 0){ try{ sw.call(this, pre + k, v); }catch(e){} }
+      else{ try{ sw.call(this, k, v); }catch(e){} }
+    };
+    Storage.prototype.removeItem = function(k){
+      if(typeof k === 'string'){ r.call(this, pre + k); r.call(this, k); }
+      else r.call(this, k);
+    };
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
