@@ -25,6 +25,9 @@ const MapGen = {
     // 1) 水域
     (cfg.water || []).forEach(r => this.fillWater(tiles, w, h, r));
 
+    // 1.5) 公园绿地（矩形/圆形/椭圆）
+    (cfg.greens || []).forEach(r => this.fillGreens(tiles, w, h, r));
+
     // 2) 道路网格（遇水自动成桥）
     this.genRoads(tiles, roadGrid, w, h, cfg.road);
 
@@ -33,20 +36,69 @@ const MapGen = {
                     id === 'city' ? 0 : 0.82;
     this.fillBlocks(tiles, roadGrid, w, h, density);
 
-    // 4) 地标
-    const landmarks = (cfg.landmarks || []).map(lm => this.placeLandmark(tiles, w, h, lm));
+    // 3.5) 行政区形状裁剪（区外填郊野，形状如实还原）
+    this.applyShape(tiles, roadGrid, w, h, cfg.shape);
 
-    // 5) 业务点 / 任务点 / 警局 / 传送点 / 出生点
+    // 3.6) 住宅小区（中海城等内部结构）
+    (cfg.estates || []).forEach(es => this.makeEstate(tiles, roadGrid, w, h, es.cx, es.cy, es.cols, es.rows));
+
+    // 4) 地标
+    const landmarks = (cfg.landmarks || []).map(lm => this.placeLandmark(tiles, roadGrid, w, h, lm));
+
+    // 5) 业务点 / 任务点 / 警局 / 传送点 / 出生点 / 房产楼盘
     const businesses = (cfg.businesses || []).map(b => Object.assign({}, b));
     const tasks      = (cfg.tasks || []).map(t => Object.assign({}, t));
     const police     = (cfg.police || []).map(p => Object.assign({}, p));
     const transfers  = (cfg.transfer || []).map(t => Object.assign({}, t));
+    const homes      = (cfg.homes || []).map(h => Object.assign({}, h));
     const spawn      = cfg.spawn || { x: w >> 1, y: h >> 1 };
 
     const map = { id, name: cfg.name, intro: cfg.intro, w, h, tiles, roadGrid,
-             landmarks, businesses, tasks, police, transfers, spawn };
+             landmarks, businesses, tasks, police, transfers, homes, spawn };
+    // 交互点矫正：所有可交互位置(便利店/任务/警局/传送点/楼盘)移到可行走格并挖出空地
+    this.fixInteractPoints(map);
     this.normalizeSpawn(map);
+    // 红绿灯：主路交叉口放置信号灯（必须落在可走道路格上）
+    map.trafficLights = this.genTrafficLights(map, cfg.road);
     return map;
+  },
+
+  /* ---- 红绿灯：主路交叉口放信号灯（隔一个交叉口放一个，密度适中） ---- */
+  genTrafficLights(map, road) {
+    const w = map.w, h = map.h;
+    const { main, off } = road;
+    const lights = [];
+    if (!main) return lights;
+    for (let ky = 0; ; ky++) {
+      const y0 = off + ky * main;
+      if (y0 >= h - 2) break;
+      for (let kx = 0; ; kx++) {
+        const x0 = off + kx * main;
+        if (x0 >= w - 2) break;
+        if (((kx + ky) & 1) !== 0) continue;   // 隔一个交叉口，避免满城灯
+        const cx = x0 + 1, cy = y0 + 1;
+        const i = cy * w + cx;
+        if (map.roadGrid[i]) lights.push({ x: cx, y: cy });
+      }
+    }
+    return lights;
+  },
+
+  /* 交互点矫正：BFS找最近可走格，并在点周围1格挖出空地(不破坏道路/水域/区外) */
+  fixInteractPoints(map) {
+    [map.businesses, map.tasks, map.police, map.transfers, map.homes].forEach(list => {
+      list.forEach(pt => {
+        const f = MapGen.findWalkable(map, pt.x, pt.y);
+        pt.x = f.x; pt.y = f.y;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const nx = pt.x + dx, ny = pt.y + dy;
+          if (nx < 0 || ny < 0 || nx >= map.w || ny >= map.h) continue;
+          const i = ny * map.w + nx;
+          if (map.roadGrid[i] || map.tiles[i] === T.WATER || map.tiles[i] === T.OUTSKIRT || map.tiles[i] === T.BRIDGE) continue;
+          map.tiles[i] = T.GROUND;
+        }
+      });
+    });
   },
 
   /* 出生点矫正：若落在不可走格（地标/水域），BFS找最近可走格 */
@@ -60,10 +112,44 @@ const MapGen = {
       const k = cy * map.w + cx;
       if (seen.has(k)) continue;
       seen.add(k);
-      if (MapGen.isWalkable(map, cx, cy)) return { x: cx, y: cy };
+      if (MapGen.isWalkable(map, cx, cy)) {
+        // 要求出生格上下左右四邻至少有2格可走，避免困在死角出不去
+        let nb = 0;
+        if (MapGen.isWalkable(map, cx + 1, cy)) nb++;
+        if (MapGen.isWalkable(map, cx - 1, cy)) nb++;
+        if (MapGen.isWalkable(map, cx, cy + 1)) nb++;
+        if (MapGen.isWalkable(map, cx, cy - 1)) nb++;
+        if (nb >= 2) return { x: cx, y: cy };
+      }
       queue.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
     }
     return { x: sx, y: sy };
+  },
+  /* 找最近"非道路"可走格（人行道/街区空地）：被车撞进医院后重生用，
+     避免重生到道路中央被车立刻再撞（无限送医循环） */
+  findWalkableNotRoad(map, sx, sy) {
+    const queue = [[sx, sy]];
+    const seen = new Set();
+    let head = 0;
+    while (head < queue.length) {
+      const [cx, cy] = queue[head++];
+      if (cx < 0 || cy < 0 || cx >= map.w || cy >= map.h) continue;
+      const k = cy * map.w + cx;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      if (MapGen.isWalkable(map, cx, cy) && !MapGen.isRoad(map, cx, cy)) {
+        // 要求四邻至少2格可走（同样防死角）
+        let nb = 0;
+        if (MapGen.isWalkable(map, cx + 1, cy)) nb++;
+        if (MapGen.isWalkable(map, cx - 1, cy)) nb++;
+        if (MapGen.isWalkable(map, cx, cy + 1)) nb++;
+        if (MapGen.isWalkable(map, cx, cy - 1)) nb++;
+        if (nb >= 2) return { x: cx, y: cy };
+      }
+      queue.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
+    }
+    // 全图无满足格（极小概率）：退化为任意可走格
+    return MapGen.findWalkable(map, sx, sy);
   },
   normalizeSpawn(map) {
     if (MapGen.isWalkable(map, map.spawn.x, map.spawn.y)) return map.spawn;
@@ -72,19 +158,93 @@ const MapGen = {
     return map.spawn;
   },
 
-  /* ---- 水域（矩形或圆形） ---- */
+  /* ---- 水域（矩形 / 圆形 / 椭圆） ---- */
   fillWater(tiles, w, h, rect) {
     if (rect.round) {
-      const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2, r = rect.w / 2;
+      const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+      const rx = rect.w / 2, ry = (rect.ry || rect.h) / 2;
       for (let y = rect.y; y < rect.y + rect.h; y++)
         for (let x = rect.x; x < rect.x + rect.w; x++) {
           const dx = x - cx, dy = y - cy;
-          if (dx * dx + dy * dy <= r * r) tiles[y * w + x] = T.WATER;
+          if ((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1) tiles[y * w + x] = T.WATER;
         }
     } else {
       for (let y = rect.y; y < Math.min(rect.y + rect.h, h); y++)
         for (let x = rect.x; x < Math.min(rect.x + rect.w, w); x++)
           tiles[y * w + x] = T.WATER;
+    }
+  },
+
+  /* ---- 行政区形状裁剪：区外填郊野(不可走)，自然水体保留 ---- */
+  applyShape(tiles, roadGrid, w, h, shape) {
+    if (!shape || !shape.length) return;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (this.pointInShape(x / w, y / h, shape)) continue;
+      const i = y * w + x;
+      if (tiles[i] === T.WATER || tiles[i] === T.OUTSKIRT) continue;
+      tiles[i] = T.OUTSKIRT;
+      roadGrid[i] = 0;
+    }
+  },
+  pointInShape(px, py, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  },
+
+  /* ---- 小区生成器：外圈道路 + 内部 5x5 模块(3x3楼栋 + 十字路) ---- */
+  makeEstate(tiles, roadGrid, w, h, cx, cy, cols, rows) {
+    const x0 = Math.round(cx - cols / 2), y0 = Math.round(cy - rows / 2);
+    const road = (x, y) => {
+      if (x < 0 || y < 0 || x >= w || y >= h) return;
+      const i = y * w + x;
+      if (tiles[i] === T.WATER || tiles[i] === T.OUTSKIRT) return;  // 不越区界
+      tiles[i] = T.ROAD; roadGrid[i] = 1;
+    };
+    const build = (x, y) => {
+      if (x < 0 || y < 0 || x >= w || y >= h) return;
+      const i = y * w + x;
+      if (tiles[i] === T.OUTSKIRT) return;   // 不越区界
+      tiles[i] = hash2(x, y, 71) < 0.28 ? T.GRASS : T.BUILDING;
+      roadGrid[i] = 0;
+    };
+    // 外圈路
+    for (let i = -1; i <= cols; i++) { road(x0 + i, y0 - 1); road(x0 + i, y0 + rows); }
+    for (let j = -1; j <= rows; j++) { road(x0 - 1, y0 + j); road(x0 + cols, y0 + j); }
+    // 内部 5x5 模块：中心 3x3 楼栋，模块边界为内部路
+    for (let ry = 0; ry * 5 < rows; ry++) {
+      for (let rx = 0; rx * 5 < cols; rx++) {
+        const bx = x0 + rx * 5, by = y0 + ry * 5;
+        for (let dy = 1; dy < 4; dy++) for (let dx = 1; dx < 4; dx++) build(bx + dx, by + dy);
+        for (let i = 0; i < 5; i++) {
+          road(bx + i, by); road(bx + i, by + 4);
+          road(bx, by + i); road(bx + 4, by + i);
+        }
+      }
+    }
+  },
+
+  /* ---- 公园绿地（与水域同形，填 GRASS；用于湖畔/林带） ---- */
+  fillGreens(tiles, w, h, rect) {
+    const mark = (x, y) => {
+      if (x < 0 || y < 0 || x >= w || y >= h) return;
+      const i = y * w + x;
+      if (tiles[i] !== T.WATER) tiles[i] = T.GRASS;   // 不覆盖水
+    };
+    if (rect.round) {
+      const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+      const rx = rect.w / 2, ry = (rect.ry || rect.h) / 2;
+      for (let y = rect.y; y < rect.y + rect.h; y++)
+        for (let x = rect.x; x < rect.x + rect.w; x++) {
+          const dx = x - cx, dy = y - cy;
+          if ((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1) mark(x, y);
+        }
+    } else {
+      for (let y = rect.y; y < Math.min(rect.y + rect.h, h); y++)
+        for (let x = rect.x; x < Math.min(rect.x + rect.w, w); x++) mark(x, y);
     }
   },
 
@@ -131,7 +291,7 @@ const MapGen = {
   },
 
   /* ---- 地标放置 ---- */
-  placeLandmark(tiles, w, h, lm) {
+  placeLandmark(tiles, roadGrid, w, h, lm) {
     const walkable = /公园|湿地|林|体育/.test(lm.name);
     const x = Math.max(3, Math.min(w - 4, Math.round(lm.x)));
     const y = Math.max(3, Math.min(h - 4, Math.round(lm.y)));
@@ -140,8 +300,10 @@ const MapGen = {
       for (let dx = -2; dx <= 2; dx++) {
         const nx = x + dx, ny = y + dy;
         if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
-        // 建筑地标覆盖道路？不覆盖主路，保留道路连通
-        tiles[ny * w + nx] = fill;
+        const i = ny * w + nx;
+        // 跳过道路格：地标不切断道路，也不产生"伪道路"(标记是路但不可走)
+        if (roadGrid[i]) continue;
+        tiles[i] = fill;
       }
     return { name: lm.name, x, y, color: lm.color, walkable };
   },
@@ -192,7 +354,8 @@ const MapGen = {
       [T.BUILDING]: ['#d8cfc2', '#d2c9bc', '#cdd6e0', '#e0d2c8', '#c9cdd4', '#dcc9b5', '#cfd6c6'],
       [T.WATER]:    ['#3a6ea5', '#3a6ea5'],
       [T.GRASS]:    ['#6aab4c', '#639f47'],
-      [T.LANDMARK]: ['#8a7f6a', '#847a66']
+      [T.LANDMARK]: ['#8a7f6a', '#847a66'],
+      [T.OUTSKIRT]: ['#5d7a4a', '#557244', '#658453']
     };
 
     for (let y = 0; y < map.h; y++) {
@@ -219,12 +382,17 @@ const MapGen = {
         }
       }
     }
-    // 地标：画中心标识色块
+    // 地标：画中心标识色块（跳过道路格，避免视觉上"道路被切断"）
     (map.landmarks || []).forEach(lm => {
-      ctx.fillStyle = lm.color;
-      ctx.fillRect((lm.x - 1) * P, (lm.y - 1) * P, 3 * P, 3 * P);
-      ctx.fillStyle = 'rgba(255,255,255,.35)';
-      ctx.fillRect((lm.x - 1) * P + 3, (lm.y - 1) * P + 3, 3 * P - 6, 3 * P - 6);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = lm.x + dx, ny = lm.y + dy;
+        if (nx < 0 || ny < 0 || nx >= map.w || ny >= map.h) continue;
+        if (map.roadGrid[ny * map.w + nx]) continue;
+        ctx.fillStyle = lm.color;
+        ctx.fillRect(nx * P, ny * P, P, P);
+        ctx.fillStyle = 'rgba(255,255,255,.35)';
+        ctx.fillRect(nx * P + 3, ny * P + 3, P - 6, P - 6);
+      }
     });
     // 总览区块
     (map.zones || []).forEach(z => {

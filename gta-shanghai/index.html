@@ -15,7 +15,11 @@
     <div id="hud-money">¥ 0</div>
     <div id="hud-wanted" title="通缉等级"></div>
     <div id="hud-loc"></div>
+    <div id="hud-season" title="当前季节"></div>
+    <div id="hud-gear" style="display:none">档 1</div>
     <div id="hud-speed" style="display:none">0 km/h</div>
+    <div id="hud-weather" style="display:none"></div>
+    <div id="hud-cold" style="display:none"></div>
     <div id="hud-hint"></div>
     <div id="hud-notice"></div>
   </div>
@@ -33,15 +37,24 @@
       <button id="btn-new" class="btn-main">新 游 戏</button>
       <button id="btn-continue" class="btn-main">继续游戏</button>
     </div>
-    <p class="tip">WASD/方向键移动 · E上下车 · F互动 · M总地图 · B产业菜单 · Tab暂停</p>
-    <p class="notice">本游戏为虚构像素沙盒，不含任何真实犯罪内容。游戏世界与现实上海仅为地名致敬，无真实还原。</p>
+    <p id="title-notice" style="color:#f88;min-height:20px;font-size:14px"></p>
+    <p class="tip">WASD移动 · E上下车 · F互动 · G交谈 · 1-5挂档 · 空格手刹(漂移) · Q/R转向灯 · M总地图 · B资产 · C统计 · H帮助 · Tab暂停</p>
+    <p class="notice">🎮 仅限电脑游玩（需键盘）· 本游戏为虚构像素沙盒，不含任何真实犯罪内容。</p>
   </div>
 
   <!-- 死亡/被捕 -->
   <div id="arrest-screen" class="screen hidden">
-    <h2>你被警方控制</h2>
+    <h2 id="arrest-title">你被警方控制</h2>
     <p id="arrest-msg"></p>
     <button id="btn-respawn" class="btn-main">缴纳罚金继续</button>
+  </div>
+
+  <!-- 移动端拦截：本游戏仅限电脑游玩 -->
+  <div id="mobile-block" class="screen hidden">
+    <h1 style="font-size:34px;letter-spacing:4px">GTA · 上海像素城</h1>
+    <p class="sub">⚠️ 仅限电脑游玩</p>
+    <p style="max-width:520px;line-height:1.9">本游戏需要<strong>键盘</strong>（WASD 移动 · E 上下车 · F 互动）操作，<br>请在<strong>电脑浏览器</strong>（Chrome / Edge）中打开游玩。</p>
+    <p class="notice">手机 / 平板触屏设备暂不支持。</p>
   </div>
 </div>
 

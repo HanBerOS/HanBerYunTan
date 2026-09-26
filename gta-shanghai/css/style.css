@@ -44,6 +44,29 @@ body {
   background:rgba(0,0,0,.5); padding:4px 10px;
   border-radius:4px; font-size:13px; color:#ffd;
 }
+#hud-gear {
+  position:absolute; top:70px; right:12px;
+  background:rgba(0,0,0,.55); padding:4px 10px;
+  border:1px solid #9cf; border-radius:4px;
+  font-size:14px; color:#9cf; letter-spacing:1px;
+}
+#hud-weather {
+  position:absolute; top:70px; left:12px;
+  background:rgba(0,0,0,.55); padding:4px 10px;
+  border:1px solid #fc6; border-radius:4px;
+  font-size:13px; color:#fc6;
+}
+#hud-cold {
+  position:absolute; top:96px; left:12px;
+  background:rgba(20,40,80,.6); padding:4px 10px;
+  border:1px solid #6cf; border-radius:4px;
+  font-size:13px; color:#9df;
+}
+#hud-season {
+  position:absolute; top:96px; right:12px;
+  background:rgba(0,0,0,.5); padding:4px 10px;
+  border-radius:4px; font-size:12px; color:#cdd;
+}
 #hud-hint {
   position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
   background:rgba(0,0,0,.7); padding:6px 14px;
@@ -89,6 +112,7 @@ body {
 #panel button .price { float:right; color:#8f8; }
 #panel button.owned { border-color:#66a; color:#aac; }
 #panel button.owned:hover { background:#1a2233; }
+#panel button.mini { display:inline; width:auto; margin:0; padding:2px 10px; font-size:12px; border-color:#368; color:#9cf; }
 #panel button.danger { border-color:#a33; color:#f99; }
 #panel button.back { text-align:center; color:#9cf; border-color:#368; }
 #panel .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
