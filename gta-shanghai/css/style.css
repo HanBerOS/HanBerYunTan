@@ -1,0 +1,124 @@
+/* GTA 上海像素城 */
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { width:100%; height:100%; overflow:hidden; background:#0d1117; }
+body {
+  font-family:"Courier New","SimSun",monospace;
+  color:#e6edf3;
+  user-select:none;
+}
+#game-wrap { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+#game-canvas {
+  image-rendering: pixelated;
+  background:#202830;
+  border:2px solid #333;
+  box-shadow:0 0 40px rgba(0,0,0,.6);
+}
+
+/* ---------- HUD ---------- */
+#hud {
+  position:absolute; top:0; left:0; right:0;
+  pointer-events:none;
+  text-shadow:1px 1px 2px #000;
+  font-size:15px;
+}
+#hud-money {
+  position:absolute; top:10px; left:12px;
+  background:rgba(0,0,0,.55); padding:6px 12px;
+  border:1px solid #4a4; border-radius:4px;
+  color:#8f8; font-weight:bold; letter-spacing:1px;
+}
+#hud-wanted {
+  position:absolute; top:10px; right:12px;
+  background:rgba(0,0,0,.55); padding:6px 10px;
+  border:1px solid #a33; border-radius:4px;
+  color:#f77; letter-spacing:3px; font-size:14px;
+}
+#hud-wanted::before { content:"通缉 "; color:#ccc; font-size:12px; }
+#hud-loc {
+  position:absolute; top:44px; left:12px;
+  background:rgba(0,0,0,.5); padding:4px 10px;
+  border-radius:4px; font-size:13px; color:#cfe3ff;
+}
+#hud-speed {
+  position:absolute; top:44px; right:12px;
+  background:rgba(0,0,0,.5); padding:4px 10px;
+  border-radius:4px; font-size:13px; color:#ffd;
+}
+#hud-hint {
+  position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,.7); padding:6px 14px;
+  border-radius:4px; font-size:14px; color:#fff;
+  opacity:0; transition:opacity .2s;
+}
+#hud-hint.show { opacity:1; }
+#hud-notice {
+  position:absolute; top:80px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,.72); padding:8px 16px;
+  border:1px solid #5af; border-radius:4px;
+  font-size:14px; color:#9cf; white-space:nowrap;
+  opacity:0; transition:opacity .25s; pointer-events:none;
+}
+#hud-notice.show { opacity:1; }
+
+/* ---------- 遮罩面板 ---------- */
+#overlay {
+  position:absolute; inset:0;
+  background:rgba(5,8,12,.78);
+  display:flex; align-items:center; justify-content:center;
+  z-index:30;
+}
+#overlay.hidden { display:none; }
+#panel {
+  min-width:420px; max-width:640px; max-height:80vh; overflow-y:auto;
+  background:#10151c; border:1px solid #2e6; border-radius:8px;
+  padding:22px 26px;
+}
+#panel h2 { color:#2e6; margin-bottom:12px; letter-spacing:2px; font-size:20px; }
+#panel h3 { color:#9cf; margin:10px 0 6px; }
+#panel .row { display:flex; justify-content:space-between; padding:5px 2px; border-bottom:1px dashed #2a3441; font-size:14px; }
+#panel .row .name { color:#dfe; }
+#panel .row .val { color:#ffd; }
+#panel .desc { color:#9aa; font-size:12px; margin:4px 0 8px; }
+#panel button {
+  display:block; width:100%; margin:6px 0;
+  padding:8px; font-family:inherit; font-size:14px;
+  background:#15222f; color:#e6edf3; border:1px solid #3a5;
+  border-radius:4px; cursor:pointer; text-align:left;
+}
+#panel button:hover { background:#1d3b2a; border-color:#4f8; }
+#panel button .price { float:right; color:#8f8; }
+#panel button.owned { border-color:#66a; color:#aac; }
+#panel button.owned:hover { background:#1a2233; }
+#panel button.danger { border-color:#a33; color:#f99; }
+#panel button.back { text-align:center; color:#9cf; border-color:#368; }
+#panel .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+#panel .key { display:inline-block; background:#233; padding:1px 6px; border-radius:3px; border:1px solid #567; font-size:12px; color:#ffd; }
+#panel .muted { color:#789; font-size:12px; }
+#panel .big { font-size:16px; color:#ffd; }
+
+/* ---------- 标题 ---------- */
+.screen {
+  position:absolute; inset:0; z-index:40;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:linear-gradient(180deg,#0a1220 0%,#101a2b 60%,#0c1420 100%);
+  text-align:center;
+}
+.screen.hidden { display:none; }
+.screen h1 {
+  font-size:56px; letter-spacing:10px; color:#3f9;
+  text-shadow:0 0 18px rgba(51,255,153,.6), 2px 2px 0 #000;
+  margin-bottom:8px;
+}
+.screen .sub { color:#8fb; letter-spacing:3px; margin-bottom:30px; }
+.screen h2 { font-size:32px; color:#f88; letter-spacing:6px; margin-bottom:10px; }
+.screen p { color:#bcd; margin:8px 0; }
+.screen .tip { color:#789; font-size:13px; margin-top:28px; }
+.screen .notice { color:#567; font-size:11px; max-width:640px; margin-top:10px; }
+.btn-main {
+  font-family:inherit; font-size:18px; letter-spacing:4px;
+  padding:12px 40px; margin:10px 8px;
+  background:#14281c; color:#3f9; border:2px solid #3f9;
+  border-radius:6px; cursor:pointer;
+}
+.btn-main:hover { background:#1d3b2a; box-shadow:0 0 14px rgba(51,255,153,.4); }
+#arrest-screen p { font-size:16px; }
