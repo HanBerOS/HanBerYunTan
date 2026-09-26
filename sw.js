@@ -15,8 +15,8 @@ self.addEventListener('push', function (e) {
   var title = data.title || 'HanBer云坛';
   var options = {
     body: data.body || '你有一条新消息',
-    icon: data.icon || '/favicon.png',
-    badge: data.badge || '/favicon.png',
+    icon: data.icon || 'data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>☁️</text></svg>',
+    badge: data.badge || 'data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>☁️</text></svg>',
     data: { url: data.url || '/', postId: data.postId || '' }
   };
   e.waitUntil(self.registration.showNotification(title, options));

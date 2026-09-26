@@ -189,9 +189,14 @@ body[data-theme="viking"] { --bg: #3a3026; --accent: #8fa8bd; --accent-dark: #6e
 /* 希腊式：大理石米白 / 爱琴海深蓝 / 橄榄绿 / 金色（浅色） */
 body[data-theme="greek"] { --bg: #f2ede2; --accent: #1d4f8f; --accent-dark: #163d6e; --accent-soft: rgba(29,79,143,0.15); --theme-bg: linear-gradient(180deg, #f8f4ea 0%, #efe8d8 55%, #d9dfc8 100%); }
 /* 拉丁西班牙：赤陶橙 / 深蓝 / 金黄 / 朱红 */
-body[data-theme="latin"] { --bg: #b4551d; --accent: #ffd34d; --accent-dark: #e0b432; --accent-soft: rgba(255,211,77,0.2); --theme-bg: linear-gradient(180deg, #c9622a 0%, #b4551d 55%, #8a1f2d 100%); }
 /* 拜占庭马赛克：金箔 / 深蓝 / 深红 / 祖母绿 */
 body[data-theme="byzantine"] { --bg: #1a1033; --accent: #f0c75e; --accent-dark: #d4a93e; --accent-soft: rgba(240,199,94,0.2); --theme-bg: linear-gradient(180deg, #2a1c4d 0%, #1a1033 55%, #0d3b33 100%); }
+body[data-theme="arab"] { --bg: #3f2d14; --accent: #d9a441; --accent-dark: #b8862f; --accent-soft: rgba(217,164,65,0.22); --theme-bg: linear-gradient(180deg, #5a3f1e 0%, #3f2d14 55%, #2a1c0a 100%); }
+body[data-theme="ottoman"] { --bg: #3d0f14; --accent: #e0b34a; --accent-dark: #c4963a; --accent-soft: rgba(224,179,74,0.2); --theme-bg: linear-gradient(180deg, #57151c 0%, #3d0f14 55%, #260a0e 100%); }
+body[data-theme="roman"] { --bg: #26241f; --accent: #b33a2c; --accent-dark: #932e22; --accent-soft: rgba(179,58,44,0.2); --theme-bg: linear-gradient(180deg, #3a342a 0%, #26241f 55%, #17150f 100%); }
+body[data-theme="korean"] { --bg: #f2ece0; --accent: #2f5d8a; --accent-dark: #274d72; --accent-soft: rgba(47,93,138,0.15); --theme-bg: linear-gradient(180deg, #faf6ec 0%, #f2ece0 60%, #e6dcc8 100%); }
+body[data-theme="gaudi"] { --bg: #14313f; --accent: #3aa0c8; --accent-dark: #2d84a6; --accent-soft: rgba(58,160,200,0.22); --theme-bg: linear-gradient(180deg, #1d4457 0%, #14313f 55%, #0b1d28 100%); }
+body[data-theme="tno"] { --bg: #1a0d0d; --accent: #d9a03f; --accent-dark: #b8862f; --accent-soft: rgba(217,160,63,0.2); --theme-bg: linear-gradient(180deg, #2b1210 0%, #1a0d0d 55%, #0d0606 100%); }
 
 /* --- 5. 液态玻璃模式（仅纯色/渐变可用，可配玻璃颜色+透明度） --- */
 /* 所有UI组件统一应用液态玻璃效果 */
@@ -475,24 +480,12 @@ body[data-theme].dark-theme .auth-tab.active { background: rgba(255,255,255,0.12
 .post-excerpt { color: var(--ink-2); font-size: 14px; margin: 0 0 10px; line-height: 1.55; }
 .post-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-3); }
 .stat { display: inline-flex; align-items: center; gap: 3px; }
-/* 有新回复高亮 */
-.post-item.highlight {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), var(--shadow);
-}
-.post-item.highlight::after {
-  content: '新回复';
-  position: absolute; top: 12px; right: 12px;
-  font-size: 10px; font-weight: 700; color: #fff;
-  background: var(--accent); padding: 2px 8px; border-radius: 999px;
-}
 /* 回复量角标 */
 .reply-badge {
   position: absolute; top: 12px; right: 12px;
   font-size: 11px; font-weight: 700; color: var(--accent);
   background: var(--accent-soft); padding: 2px 9px; border-radius: 999px;
 }
-.post-item.highlight .reply-badge { display: none; }
 
 /* ===== 帖子详情 ===== */
 .post-full h1 { font-size: 26px; margin: 0 0 12px; }
@@ -878,52 +871,6 @@ body[data-theme="german"] .input, body[data-theme="german"] .textarea, body[data
 }
 body[data-theme="german"] .auth-tabs { background: rgba(255,255,255,.05); }
 body[data-theme="german"] .auth-tab.active { background: #3a3a3a; color: #fff; }
-
-/* ============================================================
- * 拉丁西班牙：赤陶橙 / 深蓝 / 金黄 / 朱红
- * ============================================================ */
-body[data-theme="latin"] .topbar {
-  background: linear-gradient(180deg, #16283f, #1e3a5c);
-  border-bottom: 2px solid #c9a227;
-}
-body[data-theme="latin"] .brand { color: #ffd34d; }
-body[data-theme="latin"] .brand-dot { background: #ffd34d; box-shadow: 0 0 8px rgba(255,211,77,.6); }
-body[data-theme="latin"] .nav-link { color: #e8c88a; }
-body[data-theme="latin"] .nav-link:hover { background: rgba(201,162,39,.16); color: #ffd34d; }
-body[data-theme="latin"] .chip {
-  background: linear-gradient(180deg, #1e3a5c, #16283f);
-  border: 1px solid #c9a227; color: #ffd34d;
-}
-body[data-theme="latin"] .chip:hover { border-color: #ffd34d; }
-body[data-theme="latin"] .chip.active { background: linear-gradient(180deg, #c9a227, #a8873a); color: #16283f; border-color: #ffd34d; }
-body[data-theme="latin"] .searchbox input {
-  background: rgba(201,162,39,.1); border: 1px solid #c9a227; color: #ffd34d;
-}
-body[data-theme="latin"] .searchbox input::placeholder { color: #b39a5a; }
-body[data-theme="latin"] .searchbox svg { color: #ffd34d; }
-body[data-theme="latin"] .card {
-  background: linear-gradient(180deg, rgba(125,47,31,.88), rgba(93,31,24,.92));
-  border: 1px solid #c9622a;
-}
-body[data-theme="latin"] .post-item {
-  background: linear-gradient(180deg, #7a2f1f, #5d1f18);
-  border: 1px solid #c9622a; box-shadow: 0 4px 14px rgba(0,0,0,.35);
-}
-body[data-theme="latin"] .post-title { color: #ffd9a0; }
-body[data-theme="latin"] .post-title:hover { color: #ffd34d; }
-body[data-theme="latin"] .post-excerpt { color: #e8b880; }
-body[data-theme="latin"] .post-meta { color: #c99a5a; }
-body[data-theme="latin"] .post-meta a { color: #ffd34d !important; }
-body[data-theme="latin"] .btn-primary {
-  background: linear-gradient(180deg, #a12b35, #6d1823);
-  border: 1px solid #c9a227; color: #ffd34d;
-}
-body[data-theme="latin"] .btn-primary:hover { background: linear-gradient(180deg, #b8353f, #7a1f2d); box-shadow: 0 4px 16px rgba(201,162,39,.35); }
-body[data-theme="latin"] .input, body[data-theme="latin"] .textarea, body[data-theme="latin"] .select {
-  background: rgba(22,40,63,.35); border-color: #c9622a; color: #ffe8c0;
-}
-body[data-theme="latin"] .auth-tabs { background: rgba(22,40,63,.5); }
-body[data-theme="latin"] .auth-tab.active { background: #7a2f1f; color: #ffd34d; }
 
 /* ============================================================
  * 维京北欧：木棕 / 铁灰 / 深蓝 / 羊皮黄
@@ -1359,33 +1306,6 @@ body[data-theme="german"] .input, body[data-theme="german"] .textarea, body[data
 body[data-theme="german"] .auth-tabs { background: #2c2c31; border: 1px solid #55555c; }
 body[data-theme="german"] .auth-tab.active { background: #3b3b40; color: #e05a4e; }
 
-/* —— 拉丁西班牙：赤陶陶纹 / 摩尔斜纹 / 深蓝 —— */
-body[data-theme="latin"]::before {
-  background:
-    repeating-linear-gradient(45deg, rgba(120,40,20,.10) 0 3px, transparent 3px 14px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 2px, transparent 2px 18px),
-    linear-gradient(180deg, #b4551d, #8f3c12 60%, #772f0d);
-}
-body[data-theme="latin"] .topbar { border-bottom: 3px solid #ffd34d; box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 3px 0 #1d3a5f; }
-body[data-theme="latin"] .brand-dot { background: radial-gradient(circle at 35% 35%, #ffd34d, #d9a520 70%); box-shadow: 0 0 0 3px rgba(255,211,77,.25); }
-body[data-theme="latin"] .card, body[data-theme="latin"] .card.post-item {
-  background:
-    repeating-linear-gradient(45deg, rgba(120,40,20,.05) 0 4px, transparent 4px 12px),
-    linear-gradient(180deg, #d98a4a, #c4703a);
-  border: 1px solid #7a3a15;
-  box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,211,77,.15);
-}
-body[data-theme="latin"] .card.post-item { border-left: 4px solid #ffd34d; }
-body[data-theme="latin"] .chip { background: linear-gradient(180deg, #c86a2e, #a34c1a); border: 1px solid #ffd34d; color: #ffe9b8; }
-body[data-theme="latin"] .chip.active { background: linear-gradient(180deg, #ffd34d, #e0b02a); color: #5a2a10; border-color: #fff0c0; }
-body[data-theme="latin"] .searchbox input { background: rgba(255,240,215,.9); border: 1px solid #ffd34d; color: #5a2a10; }
-body[data-theme="latin"] .btn-primary { background: linear-gradient(180deg, #e05a2a, #b43f12); border: 1px solid #ffd34d; box-shadow: 0 3px 10px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,211,77,.3); }
-body[data-theme="latin"] .input, body[data-theme="latin"] .textarea, body[data-theme="latin"] .select {
-  background: rgba(255,240,220,.92); border: 1px solid #b86a2a; color: #5a2a10;
-}
-body[data-theme="latin"] .auth-tabs { background: #8f3c12; border: 1px solid #ffd34d; }
-body[data-theme="latin"] .auth-tab.active { background: #d98a4a; color: #ffd34d; }
-
 /* —— 维京北欧：粗木纹 / 铁灰铆钉 —— */
 body[data-theme="viking"]::before {
   background:
@@ -1496,6 +1416,286 @@ body[data-theme="byzantine"] .input, body[data-theme="byzantine"] .textarea, bod
 }
 body[data-theme="byzantine"] .auth-tabs { background: #261542; border: 1px solid #f0c75e; }
 body[data-theme="byzantine"] .auth-tab.active { background: #3a2666; color: #f0c75e; }
+/* ============================================================
+ * 阿拉伯：沙漠金 / 羊皮纸 / 新月
+ * ============================================================ */
+body[data-theme="arab"] .topbar {
+  background: linear-gradient(180deg, #4a3418 0%, #3a2810 100%);
+  border-bottom: 2px solid #d9a441;
+}
+body[data-theme="arab"] .brand { color: #f0dcae; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+body[data-theme="arab"] .brand-dot { background: radial-gradient(circle at 35% 35%, #f5cf6e, #d9a441 70%); box-shadow: 0 0 10px rgba(217,164,65,.7); }
+body[data-theme="arab"] .nav-link { color: #dcc28a; }
+body[data-theme="arab"] .nav-link:hover { background: rgba(217,164,65,.16); color: #f5e6bd; }
+body[data-theme="arab"] .chip {
+  background: linear-gradient(180deg, #5a4522, #47341a);
+  border: 1px solid #a8853f; color: #e8d3a3;
+}
+body[data-theme="arab"] .chip:hover { border-color: #d9a441; color: #f5e6bd; }
+body[data-theme="arab"] .chip.active { background: linear-gradient(180deg, #d9a441, #b8862f); color: #2a1c0a; border-color: #f0c75e; }
+body[data-theme="arab"] .searchbox input {
+  background: rgba(232,211,163,.1); border: 1px solid #a8853f; color: #f0e0b8;
+}
+body[data-theme="arab"] .searchbox input::placeholder { color: #a89060; }
+body[data-theme="arab"] .searchbox svg { color: #d9a441; }
+body[data-theme="arab"] .card {
+  background: linear-gradient(180deg, rgba(232,211,163,.13), rgba(232,211,163,.05));
+  border: 1px solid rgba(217,164,65,.35);
+}
+body[data-theme="arab"] .post-item {
+  background: linear-gradient(180deg, #ede0b8 0%, #dfcf9e 100%);
+  border: 1px solid #c9a052; box-shadow: 0 4px 14px rgba(0,0,0,.35);
+}
+body[data-theme="arab"] .post-title { color: #4a3418; }
+body[data-theme="arab"] .post-title:hover { color: #9a6a1a; }
+body[data-theme="arab"] .post-excerpt { color: #6b5630; }
+body[data-theme="arab"] .post-meta { color: #96803f; }
+body[data-theme="arab"] .post-meta a { color: #8a5a10 !important; }
+body[data-theme="arab"] .btn-primary {
+  background: linear-gradient(180deg, #c9983a, #a87a28);
+  border: 1px solid #e0b34a; color: #2a1c0a; font-weight: 700;
+}
+body[data-theme="arab"] .btn-primary:hover { background: linear-gradient(180deg, #e0b34a, #c08a30); box-shadow: 0 4px 16px rgba(217,164,65,.4); }
+body[data-theme="arab"] .input, body[data-theme="arab"] .textarea, body[data-theme="arab"] .select {
+  background: rgba(232,211,163,.1); border-color: #a8853f; color: #f0e0b8;
+}
+body[data-theme="arab"] .auth-tabs { background: rgba(232,211,163,.1); }
+body[data-theme="arab"] .auth-tab.active { background: #5a4522; color: #f5e6bd; }
+
+/* ============================================================
+ * 奥斯曼帝国：酒红绒布 / 鎏金 / 繁复纹样
+ * ============================================================ */
+body[data-theme="ottoman"] .topbar {
+  background: linear-gradient(180deg, #4a1218 0%, #360d12 100%);
+  border-bottom: 2px solid #e0b34a;
+}
+body[data-theme="ottoman"] .brand { color: #f5d98a; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+body[data-theme="ottoman"] .brand-dot { background: radial-gradient(circle at 35% 35%, #ffe39a, #e0b34a 70%); box-shadow: 0 0 12px rgba(224,179,74,.75); }
+body[data-theme="ottoman"] .nav-link { color: #e3c48a; }
+body[data-theme="ottoman"] .nav-link:hover { background: rgba(224,179,74,.15); color: #ffe9b0; }
+body[data-theme="ottoman"] .chip {
+  background: linear-gradient(180deg, #5a1a22, #451218);
+  border: 1px solid #a8763a; color: #ecd9a8;
+}
+body[data-theme="ottoman"] .chip:hover { border-color: #e0b34a; color: #ffe9b0; }
+body[data-theme="ottoman"] .chip.active { background: linear-gradient(180deg, #e0b34a, #c4963a); color: #2a0a0e; border-color: #f5d98a; }
+body[data-theme="ottoman"] .searchbox input {
+  background: rgba(236,217,168,.08); border: 1px solid #a8763a; color: #f2e2b0;
+}
+body[data-theme="ottoman"] .searchbox input::placeholder { color: #a8905a; }
+body[data-theme="ottoman"] .searchbox svg { color: #e0b34a; }
+body[data-theme="ottoman"] .card {
+  background: linear-gradient(180deg, rgba(178,60,48,.14), rgba(178,60,48,.06));
+  border: 1px solid rgba(224,179,74,.38);
+}
+body[data-theme="ottoman"] .post-item {
+  background: linear-gradient(180deg, #5a1820 0%, #471218 100%);
+  border: 1px solid #a8763a; box-shadow: 0 4px 14px rgba(0,0,0,.45);
+}
+body[data-theme="ottoman"] .post-title { color: #f5d98a; }
+body[data-theme="ottoman"] .post-title:hover { color: #ffe9b0; }
+body[data-theme="ottoman"] .post-excerpt { color: #e0c48a; }
+body[data-theme="ottoman"] .post-meta { color: #b8975a; }
+body[data-theme="ottoman"] .post-meta a { color: #e0b34a !important; }
+body[data-theme="ottoman"] .btn-primary {
+  background: linear-gradient(180deg, #c4963a, #a3762c);
+  border: 1px solid #f5d98a; color: #2a0a0e; font-weight: 700;
+}
+body[data-theme="ottoman"] .btn-primary:hover { background: linear-gradient(180deg, #e0b34a, #b8862f); box-shadow: 0 4px 16px rgba(224,179,74,.45); }
+body[data-theme="ottoman"] .input, body[data-theme="ottoman"] .textarea, body[data-theme="ottoman"] .select {
+  background: rgba(236,217,168,.08); border-color: #a8763a; color: #f2e2b0;
+}
+body[data-theme="ottoman"] .auth-tabs { background: rgba(236,217,168,.08); border: 1px solid #a8763a; }
+body[data-theme="ottoman"] .auth-tab.active { background: #5a1a22; color: #ffe9b0; }
+
+/* ============================================================
+ * 古罗马：大理石 / 罗马红 / 青铜金
+ * ============================================================ */
+body[data-theme="roman"] .topbar {
+  background: linear-gradient(180deg, #2e2b25 0%, #242119 100%);
+  border-bottom: 2px solid #b33a2c;
+}
+body[data-theme="roman"] .brand { color: #e8dfc8; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+body[data-theme="roman"] .brand-dot { background: radial-gradient(circle at 35% 35%, #d85a4a, #b33a2c 70%); box-shadow: 0 0 10px rgba(179,58,44,.7); }
+body[data-theme="roman"] .nav-link { color: #cfc4a8; }
+body[data-theme="roman"] .nav-link:hover { background: rgba(179,58,44,.16); color: #f0e6cc; }
+body[data-theme="roman"] .chip {
+  background: linear-gradient(180deg, #3d3930, #2f2b22);
+  border: 1px solid #6d6552; color: #d8cdb2;
+}
+body[data-theme="roman"] .chip:hover { border-color: #b33a2c; color: #f0e6cc; }
+body[data-theme="roman"] .chip.active { background: linear-gradient(180deg, #a33426, #8a2a1f); color: #f5ede0; border-color: #d85a4a; }
+body[data-theme="roman"] .searchbox input {
+  background: rgba(232,223,198,.08); border: 1px solid #6d6552; color: #ece2c8;
+}
+body[data-theme="roman"] .searchbox input::placeholder { color: #8a8068; }
+body[data-theme="roman"] .searchbox svg { color: #b33a2c; }
+body[data-theme="roman"] .card {
+  background: linear-gradient(180deg, rgba(232,223,198,.12), rgba(232,223,198,.05));
+  border: 1px solid rgba(179,58,44,.3);
+}
+body[data-theme="roman"] .post-item {
+  background: linear-gradient(180deg, #e3dbc2 0%, #d3c9ab 100%);
+  border: 1px solid #a39a7a; box-shadow: 0 4px 14px rgba(0,0,0,.4);
+}
+body[data-theme="roman"] .post-title { color: #3a3025; }
+body[data-theme="roman"] .post-title:hover { color: #8a2a1f; }
+body[data-theme="roman"] .post-excerpt { color: #5d5440; }
+body[data-theme="roman"] .post-meta { color: #8a8068; }
+body[data-theme="roman"] .post-meta a { color: #8a2a1f !important; }
+body[data-theme="roman"] .btn-primary {
+  background: linear-gradient(180deg, #a33426, #7a2218);
+  border: 1px solid #c96a5a; color: #f5ede0; font-weight: 700;
+}
+body[data-theme="roman"] .btn-primary:hover { background: linear-gradient(180deg, #b8422f, #8a2a1f); box-shadow: 0 4px 16px rgba(179,58,44,.45); }
+body[data-theme="roman"] .input, body[data-theme="roman"] .textarea, body[data-theme="roman"] .select {
+  background: rgba(232,223,198,.08); border-color: #6d6552; color: #ece2c8;
+}
+body[data-theme="roman"] .auth-tabs { background: rgba(232,223,198,.08); }
+body[data-theme="roman"] .auth-tab.active { background: #3d3930; color: #f0e6cc; }
+
+/* ============================================================
+ * 韩式传统：宣纸 / 青瓦蓝 / 墨色
+ * ============================================================ */
+body[data-theme="korean"] .topbar {
+  background: linear-gradient(180deg, rgba(255,253,247,.94), rgba(246,240,226,.94));
+  border-bottom: 1px solid #b8c8d8;
+}
+body[data-theme="korean"] .brand { color: #274d72; }
+body[data-theme="korean"] .brand-dot { background: linear-gradient(135deg, #5b8cb5, #2f5d8a); box-shadow: 0 0 8px rgba(47,93,138,.5); }
+body[data-theme="korean"] .nav-link { color: #4a6a8a; }
+body[data-theme="korean"] .nav-link:hover { background: rgba(47,93,138,.12); color: #274d72; }
+body[data-theme="korean"] .chip {
+  background: linear-gradient(135deg, #fdfbf4, #f2ecdc);
+  border: 1px solid #c8d4e0; color: #3a5a7a;
+}
+body[data-theme="korean"] .chip:hover { border-color: #2f5d8a; color: #274d72; }
+body[data-theme="korean"] .chip.active { background: linear-gradient(135deg, #5b8cb5, #2f5d8a); color: #fff; border-color: #5b8cb5; }
+body[data-theme="korean"] .searchbox input { background: #fff; border: 1px solid #c8d4e0; color: #3a4a5a; }
+body[data-theme="korean"] .searchbox input::placeholder { color: #a8b8c8; }
+body[data-theme="korean"] .searchbox svg { color: #2f5d8a; }
+body[data-theme="korean"] .card {
+  background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(248,243,230,.75));
+  border: 1px solid #dce4ec;
+}
+body[data-theme="korean"] .post-item {
+  background: linear-gradient(135deg, #fffef9, #f6f1e2);
+  border: 1px solid #dce4ec; box-shadow: 0 4px 14px rgba(47,93,138,.12);
+}
+body[data-theme="korean"] .post-title { color: #2a3a4a; }
+body[data-theme="korean"] .post-title:hover { color: #2f5d8a; }
+body[data-theme="korean"] .post-excerpt { color: #5a6a7a; }
+body[data-theme="korean"] .post-meta { color: #8a9aaa; }
+body[data-theme="korean"] .post-meta a { color: #2f5d8a !important; }
+body[data-theme="korean"] .btn-primary {
+  background: linear-gradient(135deg, #5b8cb5, #2f5d8a);
+  border: 1px solid #8ab0d0; color: #fff; font-weight: 600;
+}
+body[data-theme="korean"] .btn-primary:hover { background: linear-gradient(135deg, #6b9cc5, #3a6d9a); box-shadow: 0 4px 16px rgba(47,93,138,.4); }
+body[data-theme="korean"] .input, body[data-theme="korean"] .textarea, body[data-theme="korean"] .select {
+  background: #fff; border-color: #c8d4e0; color: #3a4a5a;
+}
+body[data-theme="korean"] .auth-tabs { background: #f2ecdc; }
+body[data-theme="korean"] .auth-tab.active { background: #fff; color: #274d72; }
+
+/* ============================================================
+ * 西班牙高迪：马赛克蓝绿 / 彩色瓷砖
+ * ============================================================ */
+body[data-theme="gaudi"] .topbar {
+  background: linear-gradient(180deg, #1c4455 0%, #14313f 100%);
+  border-bottom: 3px solid #3aa0c8;
+}
+body[data-theme="gaudi"] .brand { color: #e8f4f8; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+body[data-theme="gaudi"] .brand-dot { background: linear-gradient(135deg, #6ec8e8, #3aa0c8 45%, #e89b3c 120%); box-shadow: 0 0 10px rgba(58,160,200,.6); }
+body[data-theme="gaudi"] .nav-link { color: #b8dce8; }
+body[data-theme="gaudi"] .nav-link:hover { background: rgba(58,160,200,.16); color: #e8f4f8; }
+body[data-theme="gaudi"] .chip {
+  background: linear-gradient(180deg, #1d3f4e, #163240);
+  border: 1px solid #2f7a96; color: #c8e4ee;
+}
+body[data-theme="gaudi"] .chip:hover { border-color: #3aa0c8; color: #e8f4f8; }
+body[data-theme="gaudi"] .chip.active { background: linear-gradient(180deg, #3aa0c8, #2d84a6); color: #fff; border-color: #6ec8e8; }
+body[data-theme="gaudi"] .searchbox input {
+  background: rgba(200,228,238,.08); border: 1px solid #2f7a96; color: #dceef4;
+}
+body[data-theme="gaudi"] .searchbox input::placeholder { color: #6a9ab0; }
+body[data-theme="gaudi"] .searchbox svg { color: #3aa0c8; }
+body[data-theme="gaudi"] .card {
+  background: linear-gradient(180deg, rgba(58,160,200,.12), rgba(232,155,60,.05));
+  border: 1px solid rgba(58,160,200,.35);
+}
+body[data-theme="gaudi"] .post-item {
+  background: linear-gradient(180deg, #163a4a 0%, #122e3c 100%);
+  border: 1px solid #3aa0c8;
+  box-shadow: 0 4px 14px rgba(0,0,0,.4), inset 0 0 0 2px rgba(232,155,60,.18);
+}
+body[data-theme="gaudi"] .post-title { color: #e8f4f8; }
+body[data-theme="gaudi"] .post-title:hover { color: #6ec8e8; }
+body[data-theme="gaudi"] .post-excerpt { color: #b8dce8; }
+body[data-theme="gaudi"] .post-meta { color: #7aa8bc; }
+body[data-theme="gaudi"] .post-meta a { color: #6ec8e8 !important; }
+body[data-theme="gaudi"] .btn-primary {
+  background: linear-gradient(135deg, #3aa0c8, #2d84a6);
+  border: 1px solid #6ec8e8; color: #fff; font-weight: 600;
+}
+body[data-theme="gaudi"] .btn-primary:hover { background: linear-gradient(135deg, #4fb4d8, #3490b2); box-shadow: 0 4px 16px rgba(58,160,200,.45); }
+body[data-theme="gaudi"] .input, body[data-theme="gaudi"] .textarea, body[data-theme="gaudi"] .select {
+  background: rgba(200,228,238,.08); border-color: #2f7a96; color: #dceef4;
+}
+body[data-theme="gaudi"] .auth-tabs { background: rgba(200,228,238,.08); }
+body[data-theme="gaudi"] .auth-tab.active { background: #1d3f4e; color: #e8f4f8; }
+
+/* ============================================================
+ * TNO · 新秩序（管理员专属）：红黑宣传画 / 警戒黄 / 老报纸
+ * ============================================================ */
+body[data-theme="tno"] .topbar {
+  background: linear-gradient(180deg, #240e0c 0%, #1a0d0d 100%);
+  border-bottom: 3px solid #d9a03f;
+  box-shadow: 0 0 0 1px rgba(217,160,63,.35), 0 0 18px rgba(217,160,63,.18);
+}
+body[data-theme="tno"] .brand { color: #f0c75e; text-shadow: 0 0 8px rgba(217,160,63,.55), 0 1px 2px rgba(0,0,0,.8); letter-spacing: 1px; }
+body[data-theme="tno"] .brand-dot { background: radial-gradient(circle at 30% 30%, #ffe39a, #d9a03f 60%, #7a3a1a); box-shadow: 0 0 12px rgba(217,160,63,.8); }
+body[data-theme="tno"] .nav-link { color: #d8b878; }
+body[data-theme="tno"] .nav-link:hover { background: rgba(178,42,34,.35); color: #ffe9b0; }
+body[data-theme="tno"] .chip {
+  background: linear-gradient(180deg, #3a1a14, #2a120e);
+  border: 1px solid #8a5a2a; color: #e0c88a;
+}
+body[data-theme="tno"] .chip:hover { border-color: #d9a03f; color: #ffe9b0; }
+body[data-theme="tno"] .chip.active { background: linear-gradient(180deg, #b23a26, #8a2a1a); color: #ffe9b0; border-color: #d9a03f; box-shadow: 0 0 10px rgba(217,160,63,.4); }
+body[data-theme="tno"] .searchbox input {
+  background: rgba(224,200,138,.08); border: 1px solid #8a5a2a; color: #f0e0b8;
+}
+body[data-theme="tno"] .searchbox input::placeholder { color: #9a7a48; }
+body[data-theme="tno"] .searchbox svg { color: #d9a03f; }
+body[data-theme="tno"] .card {
+  background: linear-gradient(180deg, rgba(178,42,34,.14), rgba(26,13,13,.35));
+  border: 1px solid rgba(217,160,63,.4);
+}
+body[data-theme="tno"] .post-item {
+  background: linear-gradient(180deg, #2e1512 0%, #24100d 100%);
+  border: 1px solid #8a5a2a;
+  border-left: 4px solid #d9a03f;
+  box-shadow: 0 4px 16px rgba(0,0,0,.5), inset 0 0 0 1px rgba(217,160,63,.1);
+}
+body[data-theme="tno"] .post-title { color: #f0c75e; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+body[data-theme="tno"] .post-title:hover { color: #ffe9b0; }
+body[data-theme="tno"] .post-excerpt { color: #d8c098; }
+body[data-theme="tno"] .post-meta { color: #a89068; }
+body[data-theme="tno"] .post-meta a { color: #d9a03f !important; }
+body[data-theme="tno"] .btn-primary {
+  background: linear-gradient(180deg, #b23a26, #7a2018);
+  border: 1px solid #d9a03f; color: #ffe9b0; font-weight: 700; letter-spacing: 1px;
+  box-shadow: 0 2px 0 #4a140e, 0 0 14px rgba(217,160,63,.3);
+}
+body[data-theme="tno"] .btn-primary:hover { background: linear-gradient(180deg, #cc4a30, #8a2a1a); box-shadow: 0 2px 0 #4a140e, 0 0 20px rgba(217,160,63,.5); }
+body[data-theme="tno"] .input, body[data-theme="tno"] .textarea, body[data-theme="tno"] .select {
+  background: rgba(224,200,138,.08); border-color: #8a5a2a; color: #f0e0b8;
+}
+body[data-theme="tno"] .auth-tabs { background: rgba(224,200,138,.08); border: 1px solid #8a5a2a; }
+body[data-theme="tno"] .auth-tab.active { background: #3a1a14; color: #ffe9b0; }
+
+
 
 /* —— 日式传统：和纸点纹 / 朱砂边 —— */
 body[data-theme="japanese"]::before {
@@ -1547,6 +1747,177 @@ body[data-theme="greek"] .input, body[data-theme="greek"] .textarea, body[data-t
 }
 body[data-theme="greek"] .auth-tabs { background: #ede8da; }
 body[data-theme="greek"] .auth-tab.active { background: #fff; color: #1d4f8f; }
+/* —— 阿拉伯：沙漠沙丘 / 伊斯兰菱形雕花 / 驼色 —— */
+body[data-theme="arab"]::before {
+  background:
+    radial-gradient(ellipse 80% 40% at 20% 90%, rgba(217,164,65,.14), transparent 60%),
+    radial-gradient(ellipse 60% 30% at 85% 95%, rgba(217,164,65,.10), transparent 55%),
+    repeating-linear-gradient(45deg, transparent 0 12px, rgba(120,90,40,.05) 12px 14px, transparent 14px 26px),
+    repeating-linear-gradient(-45deg, transparent 0 12px, rgba(120,90,40,.05) 12px 14px, transparent 14px 26px),
+    linear-gradient(180deg, #5a3f1e 0%, #4a3418 45%, #2f2008 100%);
+}
+body[data-theme="arab"] .topbar { border-bottom: 3px solid #d9a441; box-shadow: 0 2px 0 rgba(0,0,0,.35); }
+body[data-theme="arab"] .brand-dot { background: radial-gradient(circle at 35% 35%, #f5cf6e, #d9a441 70%); box-shadow: 0 0 0 3px rgba(217,164,65,.22); }
+body[data-theme="arab"] .card, body[data-theme="arab"] .card.post-item {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(217,164,65,.10), transparent 32%),
+    linear-gradient(180deg, #ede0b8, #dfcf9e);
+  border: 1px solid #c9a052;
+  box-shadow: 0 6px 18px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,235,190,.5);
+}
+body[data-theme="arab"] .card.post-item { border-left: 4px solid #d9a441; }
+body[data-theme="arab"] .chip { background: linear-gradient(180deg, #6a5128, #4a3418); border: 1px solid #a8853f; color: #f0dcae; }
+body[data-theme="arab"] .chip.active { background: linear-gradient(180deg, #d9a441, #b8862f); color: #2a1c0a; border-color: #f0c75e; }
+body[data-theme="arab"] .searchbox input { background: rgba(240,224,180,.92); border: 1px solid #c9a052; color: #4a3418; }
+body[data-theme="arab"] .input, body[data-theme="arab"] .textarea, body[data-theme="arab"] .select {
+  background: rgba(240,224,180,.14); border-color: #a8853f; color: #f0dcae;
+}
+body[data-theme="arab"] .auth-tabs { background: #4a3418; border: 1px solid #a8853f; }
+body[data-theme="arab"] .auth-tab.active { background: #6a5128; color: #f5e6bd; }
+
+/* —— 奥斯曼：酒红绒布 / 拱形纹样 / 鎏金点 —— */
+body[data-theme="ottoman"]::before {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(224,179,74,.12), transparent 42%),
+    radial-gradient(circle at 12% 30%, rgba(224,179,74,.06), transparent 26%),
+    radial-gradient(circle at 88% 70%, rgba(224,179,74,.06), transparent 30%),
+    repeating-linear-gradient(90deg, transparent 0 34px, rgba(224,179,74,.045) 34px 36px, transparent 36px 70px),
+    linear-gradient(180deg, #57151c 0%, #4a1218 45%, #2a0a0e 100%);
+}
+body[data-theme="ottoman"] .topbar { border-bottom: 3px solid #e0b34a; box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 4px 14px rgba(224,179,74,.12); }
+body[data-theme="ottoman"] .brand-dot { background: radial-gradient(circle at 35% 35%, #ffe39a, #e0b34a 70%); box-shadow: 0 0 0 3px rgba(224,179,74,.25); }
+body[data-theme="ottoman"] .card, body[data-theme="ottoman"] .card.post-item {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(224,179,74,.08), transparent 50%),
+    linear-gradient(180deg, #5a1820, #471218);
+  border: 1px solid #a8763a;
+  box-shadow: 0 6px 18px rgba(0,0,0,.5), inset 0 0 0 1px rgba(224,179,74,.12);
+}
+body[data-theme="ottoman"] .card.post-item { border-left: 4px solid #e0b34a; }
+body[data-theme="ottoman"] .chip { background: linear-gradient(180deg, #6a2028, #451218); border: 1px solid #a8763a; color: #f2e2b0; }
+body[data-theme="ottoman"] .chip.active { background: linear-gradient(180deg, #e0b34a, #c4963a); color: #2a0a0e; border-color: #ffe9b0; }
+body[data-theme="ottoman"] .searchbox input { background: rgba(242,226,176,.92); border: 1px solid #a8763a; color: #451218; }
+body[data-theme="ottoman"] .input, body[data-theme="ottoman"] .textarea, body[data-theme="ottoman"] .select {
+  background: rgba(242,226,176,.08); border-color: #a8763a; color: #f2e2b0;
+}
+body[data-theme="ottoman"] .auth-tabs { background: #451218; border: 1px solid #a8763a; }
+body[data-theme="ottoman"] .auth-tab.active { background: #6a2028; color: #ffe9b0; }
+
+/* —— 古罗马：大理石柱槽 / 浮雕光带 / 青铜 —— */
+body[data-theme="roman"]::before {
+  background:
+    linear-gradient(115deg, transparent 30%, rgba(190,180,150,.10) 38%, transparent 46%),
+    linear-gradient(25deg, transparent 60%, rgba(190,180,150,.07) 68%, transparent 76%),
+    repeating-linear-gradient(90deg, transparent 0 42px, rgba(220,210,180,.05) 42px 46px, transparent 46px 88px),
+    linear-gradient(180deg, #3a342a 0%, #2e2b25 50%, #1a1812 100%);
+}
+body[data-theme="roman"] .topbar { border-bottom: 4px solid #b33a2c; box-shadow: 0 2px 0 #c9a24a, 0 4px 10px rgba(0,0,0,.4); }
+body[data-theme="roman"] .brand-dot { background: radial-gradient(circle at 35% 35%, #d85a4a, #b33a2c 70%); box-shadow: 0 0 0 3px rgba(179,58,44,.22); }
+body[data-theme="roman"] .card, body[data-theme="roman"] .card.post-item {
+  background:
+    linear-gradient(115deg, transparent 35%, rgba(140,135,115,.10) 43%, transparent 50%),
+    linear-gradient(180deg, #e3dbc2, #d3c9ab);
+  border: 1px solid #a39a7a;
+  box-shadow: 0 6px 18px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,248,230,.5);
+}
+body[data-theme="roman"] .card.post-item { border-left: 4px solid #b33a2c; }
+body[data-theme="roman"] .chip { background: linear-gradient(180deg, #4a4538, #2f2b22); border: 1px solid #6d6552; color: #e8dfc8; }
+body[data-theme="roman"] .chip.active { background: linear-gradient(180deg, #b33a2c, #8a2a1f); color: #fff; border-color: #d85a4a; }
+body[data-theme="roman"] .searchbox input { background: rgba(232,223,198,.92); border: 1px solid #6d6552; color: #2f2b22; }
+body[data-theme="roman"] .input, body[data-theme="roman"] .textarea, body[data-theme="roman"] .select {
+  background: rgba(232,223,198,.1); border-color: #6d6552; color: #ece2c8;
+}
+body[data-theme="roman"] .auth-tabs { background: #2f2b22; border: 1px solid #6d6552; }
+body[data-theme="roman"] .auth-tab.active { background: #4a4538; color: #f0e6cc; }
+
+/* —— 韩式：宣纸点纹 / 青瓦山影 / 飘带 —— */
+body[data-theme="korean"]::before {
+  background:
+    radial-gradient(rgba(80,110,140,.05) 1px, transparent 1.4px),
+    radial-gradient(rgba(80,110,140,.035) 1px, transparent 1.4px),
+    linear-gradient(115deg, transparent 30%, rgba(140,170,200,.07) 42%, transparent 50%),
+    linear-gradient(180deg, #faf6ec, #f0e8d6);
+  background-size: 12px 12px, 12px 12px, 100% 100%, 100% 100%;
+  background-position: 0 0, 6px 6px, 0 0, 0 0;
+}
+body[data-theme="korean"] .topbar { border-bottom: 3px solid #2f5d8a; box-shadow: 0 1px 0 #b8c8d8; }
+body[data-theme="korean"] .brand-dot { background: radial-gradient(circle at 35% 35%, #6b9cc5, #2f5d8a 70%); box-shadow: 0 0 0 3px rgba(47,93,138,.2); }
+body[data-theme="korean"] .card, body[data-theme="korean"] .card.post-item {
+  background:
+    radial-gradient(rgba(47,93,138,.04) 1px, transparent 1.4px),
+    linear-gradient(135deg, #fffef9, #f6f1e2);
+  background-size: 10px 10px;
+  border: 1px solid #dce4ec;
+  box-shadow: 0 4px 14px rgba(47,93,138,.12), inset 0 0 0 1px rgba(255,255,255,.6);
+}
+body[data-theme="korean"] .card.post-item { border-left: 4px solid #2f5d8a; }
+body[data-theme="korean"] .chip { background: #fdfbf4; border: 1px solid #c8d4e0; color: #3a5a7a; }
+body[data-theme="korean"] .chip.active { background: linear-gradient(180deg, #5b8cb5, #2f5d8a); color: #fff; border-color: #6b9cc5; }
+body[data-theme="korean"] .searchbox input { background: #fff; border: 1px solid #c8d4e0; }
+body[data-theme="korean"] .input, body[data-theme="korean"] .textarea, body[data-theme="korean"] .select {
+  background: #fff; border-color: #c8d4e0; color: #3a4a5a;
+}
+body[data-theme="korean"] .auth-tabs { background: #f2ecdc; }
+body[data-theme="korean"] .auth-tab.active { background: #fff; color: #2f5d8a; }
+
+/* —— 高迪：马赛克瓷砖 / 彩色格栅 / 彩色角点 —— */
+body[data-theme="gaudi"]::before {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 44px, rgba(58,160,200,.09) 44px 46px, transparent 46px 92px),
+    repeating-linear-gradient(90deg, transparent 0 44px, rgba(58,160,200,.09) 44px 46px, transparent 46px 92px),
+    radial-gradient(circle at 15% 12%, rgba(232,155,60,.10), transparent 30%),
+    radial-gradient(circle at 88% 82%, rgba(232,155,60,.08), transparent 30%),
+    linear-gradient(180deg, #1d4457 0%, #14313f 55%, #0b1d28 100%);
+}
+body[data-theme="gaudi"] .topbar { border-bottom: 3px solid #3aa0c8; box-shadow: 0 2px 0 #e89b3c, 0 4px 12px rgba(0,0,0,.4); }
+body[data-theme="gaudi"] .brand-dot { background: linear-gradient(135deg, #6ec8e8, #3aa0c8 45%, #e89b3c 120%); box-shadow: 0 0 0 3px rgba(58,160,200,.22); }
+body[data-theme="gaudi"] .card, body[data-theme="gaudi"] .card.post-item {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 30px, rgba(110,200,232,.06) 30px 31px, transparent 31px 62px),
+    repeating-linear-gradient(90deg, transparent 0 30px, rgba(110,200,232,.06) 30px 31px, transparent 31px 62px),
+    linear-gradient(180deg, #163a4a, #122e3c);
+  border: 1px solid #3aa0c8;
+  box-shadow: 0 6px 18px rgba(0,0,0,.45), inset 0 0 0 2px rgba(232,155,60,.12);
+}
+body[data-theme="gaudi"] .card.post-item { border-left: 4px solid #e89b3c; }
+body[data-theme="gaudi"] .chip { background: linear-gradient(180deg, #1d3f4e, #163240); border: 1px solid #2f7a96; color: #c8e4ee; }
+body[data-theme="gaudi"] .chip.active { background: linear-gradient(135deg, #3aa0c8, #2d84a6); color: #fff; border-color: #6ec8e8; }
+body[data-theme="gaudi"] .searchbox input { background: rgba(200,228,238,.9); border: 1px solid #2f7a96; color: #14313f; }
+body[data-theme="gaudi"] .input, body[data-theme="gaudi"] .textarea, body[data-theme="gaudi"] .select {
+  background: rgba(200,228,238,.08); border-color: #2f7a96; color: #dceef4;
+}
+body[data-theme="gaudi"] .auth-tabs { background: #163240; border: 1px solid #2f7a96; }
+body[data-theme="gaudi"] .auth-tab.active { background: #1d3f4e; color: #e8f4f8; }
+
+/* —— TNO：红黑宣传 / 警戒斜纹带 / 老报纸点阵（管理员专属） —— */
+body[data-theme="tno"]::before {
+  background:
+    repeating-linear-gradient(45deg, rgba(217,160,63,.16) 0 6px, transparent 6px 26px),
+    repeating-linear-gradient(-45deg, rgba(217,160,63,.07) 0 4px, transparent 4px 30px),
+    radial-gradient(circle at 85% 15%, rgba(217,160,63,.14), transparent 34%),
+    radial-gradient(circle at 10% 80%, rgba(178,42,34,.25), transparent 40%),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,.16) 3px 4px),
+    linear-gradient(180deg, #2b1210 0%, #1f0c0a 50%, #120606 100%);
+}
+body[data-theme="tno"] .topbar { border-bottom: 4px solid #d9a03f; box-shadow: 0 3px 0 rgba(0,0,0,.6), 0 0 22px rgba(217,160,63,.2); }
+body[data-theme="tno"] .brand-dot { background: radial-gradient(circle at 30% 30%, #ffe39a, #d9a03f 55%, #6a2a12); box-shadow: 0 0 0 3px rgba(217,160,63,.3), 0 0 14px rgba(217,160,63,.6); }
+body[data-theme="tno"] .card, body[data-theme="tno"] .card.post-item {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,.018) 3px 4px),
+    linear-gradient(180deg, #2e1512, #24100d);
+  border: 1px solid #8a5a2a;
+  border-left: 4px solid #d9a03f;
+  box-shadow: 0 6px 20px rgba(0,0,0,.55), inset 0 0 0 1px rgba(217,160,63,.1);
+}
+body[data-theme="tno"] .chip { background: linear-gradient(180deg, #3a1a14, #2a120e); border: 1px solid #8a5a2a; color: #e0c88a; }
+body[data-theme="tno"] .chip.active { background: linear-gradient(180deg, #b23a26, #8a2a1a); color: #ffe9b0; border-color: #d9a03f; box-shadow: 0 0 12px rgba(217,160,63,.35); }
+body[data-theme="tno"] .searchbox input { background: rgba(224,200,138,.92); border: 1px solid #8a5a2a; color: #24100d; }
+body[data-theme="tno"] .input, body[data-theme="tno"] .textarea, body[data-theme="tno"] .select {
+  background: rgba(224,200,138,.08); border-color: #8a5a2a; color: #f0e0b8;
+}
+body[data-theme="tno"] .auth-tabs { background: #2a120e; border: 1px solid #8a5a2a; }
+body[data-theme="tno"] .auth-tab.active { background: #3a1a14; color: #ffe9b0; }
+
 </style>
 </head>
 <body>
@@ -1826,7 +2197,7 @@ var I18N = {
     'signup.title': '创建账号', 'signup.sub': '注册一个专属账号。', 'signup.username': '用户名', 'signup.submit': '注册',
     'new.title': '发新帖', 'new.sub': '写下你想聊的话题，标题要让人一眼看懂。', 'new.t': '标题', 'new.cat': '分类', 'new.body': '内容',
     'new.file': '附件（可选）', 'new.filePick': '点击选择文件', 'new.submit': '发布', 'new.phTitle': '一句话说清主题', 'new.phBody': '展开说说…（支持换行）',
-    'post.back': '← 返回首页', 'post.reply': '回复', 'post.pin': '置顶', 'post.replies': ' 回复',
+    'post.back': '← 返回首页', 'post.reply': '回复', 'post.replies': ' 回复',
     'settings.theme': '主题外观', 'settings.themeHint': '选择你喜欢的界面风格', 'settings.official': '官方', 'settings.solid': '纯色', 'settings.gradient': '渐变', 'settings.culture': '文化式', 'settings.default': '默认',
     'settings.glass': '液态玻璃', 'settings.glassHint': '仅「纯色」「渐变」主题可用，玻璃拟态质感 + 可选颜色与透明度',
     'settings.glassOn': '开启液态玻璃模式', 'settings.glassColor': '玻璃颜色', 'settings.opacity': '透明度',
@@ -1847,7 +2218,7 @@ var I18N = {
     'signup.title': 'Create Account', 'signup.sub': 'Register a new account.', 'signup.username': 'Username', 'signup.submit': 'Sign up',
     'new.title': 'New Post', 'new.sub': 'Share a topic with a clear title.', 'new.t': 'Title', 'new.cat': 'Category', 'new.body': 'Content',
     'new.file': 'Attachment (optional)', 'new.filePick': 'Click to choose files', 'new.submit': 'Publish', 'new.phTitle': 'Summarize in one line', 'new.phBody': 'Details… (line breaks supported)',
-    'post.back': '← Back to Home', 'post.reply': 'Reply', 'post.pin': 'Pinned', 'post.replies': ' replies',
+    'post.back': '← Back to Home', 'post.reply': 'Reply', 'post.replies': ' replies',
     'settings.theme': 'Appearance', 'settings.themeHint': 'Pick a style you like', 'settings.official': 'Official', 'settings.solid': 'Solid', 'settings.gradient': 'Gradient', 'settings.culture': 'Cultural', 'settings.default': 'Default',
     'settings.glass': 'Liquid Glass', 'settings.glassHint': 'Available for Solid & Gradient themes. Glassmorphism UI with customizable color and opacity',
     'settings.glassOn': 'Enable Liquid Glass', 'settings.glassColor': 'Glass color', 'settings.opacity': 'Opacity',
@@ -1868,7 +2239,7 @@ var I18N = {
     'signup.title': 'Crear Cuenta', 'signup.sub': 'Registra una cuenta nueva.', 'signup.username': 'Nombre de usuario', 'signup.submit': 'Registrarse',
     'new.title': 'Nueva Publicación', 'new.sub': 'Comparte un tema con un título claro.', 'new.t': 'Título', 'new.cat': 'Categoría', 'new.body': 'Contenido',
     'new.file': 'Adjunto (opcional)', 'new.filePick': 'Elige archivos', 'new.submit': 'Publicar', 'new.phTitle': 'Resume en una línea', 'new.phBody': 'Detalles… (admite saltos de línea)',
-    'post.back': '← Volver al Inicio', 'post.reply': 'Responder', 'post.pin': 'Fijado', 'post.replies': ' respuestas',
+    'post.back': '← Volver al Inicio', 'post.reply': 'Responder', 'post.replies': ' respuestas',
     'settings.theme': 'Apariencia', 'settings.themeHint': 'Elige un estilo que te guste', 'settings.official': 'Oficial', 'settings.solid': 'Sólido', 'settings.gradient': 'Degradado', 'settings.culture': 'Cultural', 'settings.default': 'Predeterminado',
     'settings.glass': 'Vidrio Líquido', 'settings.glassHint': 'Disponible solo en temas Sólido y Degradado. UI de vidrio con color y opacidad personalizables',
     'settings.glassOn': 'Activar Vidrio Líquido', 'settings.glassColor': 'Color del vidrio', 'settings.opacity': 'Opacidad',
@@ -1889,7 +2260,7 @@ var I18N = {
     'signup.title': 'Создать аккаунт', 'signup.sub': 'Зарегистрируйте новый аккаунт.', 'signup.username': 'Имя пользователя', 'signup.submit': 'Регистрация',
     'new.title': 'Новая запись', 'new.sub': 'Поделитесь темой с понятным заголовком.', 'new.t': 'Заголовок', 'new.cat': 'Категория', 'new.body': 'Содержание',
     'new.file': 'Вложение (необязательно)', 'new.filePick': 'Выберите файлы', 'new.submit': 'Опубликовать', 'new.phTitle': 'Кратко в одной строке', 'new.phBody': 'Подробнее… (поддерживаются переносы)',
-    'post.back': '← На главную', 'post.reply': 'Ответить', 'post.pin': 'Закреплено', 'post.replies': ' ответов',
+    'post.back': '← На главную', 'post.reply': 'Ответить', 'post.replies': ' ответов',
     'settings.theme': 'Оформление', 'settings.themeHint': 'Выберите стиль оформления', 'settings.official': 'Официальные', 'settings.solid': 'Сплошные', 'settings.gradient': 'Градиент', 'settings.culture': 'Культурные', 'settings.default': 'По умолчанию',
     'settings.glass': 'Жидкое стекло', 'settings.glassHint': 'Доступно только для тем «Сплошные» и «Градиент». Стеклянный интерфейс с настройкой цвета и прозрачности',
     'settings.glassOn': 'Включить жидкое стекло', 'settings.glassColor': 'Цвет стекла', 'settings.opacity': 'Прозрачность',
@@ -1910,7 +2281,7 @@ var I18N = {
     'signup.title': 'إنشاء حساب', 'signup.sub': 'سجّل حساباً جديداً.', 'signup.username': 'اسم المستخدم', 'signup.submit': 'تسجيل',
     'new.title': 'مشاركة جديدة', 'new.sub': 'شارك موضوعاً بعنوان واضح.', 'new.t': 'العنوان', 'new.cat': 'التصنيف', 'new.body': 'المحتوى',
     'new.file': 'مرفق (اختياري)', 'new.filePick': 'انقر لاختيار الملفات', 'new.submit': 'نشر', 'new.phTitle': 'لخّص في سطر واحد', 'new.phBody': 'التفاصيل… (يدعم الأسطر الجديدة)',
-    'post.back': '→ العودة للرئيسية', 'post.reply': 'رد', 'post.pin': 'مثبّت', 'post.replies': ' ردود',
+    'post.back': '→ العودة للرئيسية', 'post.reply': 'رد', 'post.replies': ' ردود',
     'settings.theme': 'المظهر', 'settings.themeHint': 'اختر النمط الذي يعجبك', 'settings.official': 'رسمية', 'settings.solid': 'ألوان صلبة', 'settings.gradient': 'تدرّج', 'settings.culture': 'ثقافية', 'settings.default': 'افتراضي',
     'settings.glass': 'زجاج سائل', 'settings.glassHint': 'متاح فقط لمواضيع «ألوان صلبة» و«تدرّج». واجهة زجاجية مع لون وشفافية قابلة للتخصيص',
     'settings.glassOn': 'تفعيل الزجاج السائل', 'settings.glassColor': 'لون الزجاج', 'settings.opacity': 'الشفافية',
@@ -1921,7 +2292,7 @@ var I18N = {
     'footer': 'HanBerOS 3.0'
   },
   fr: {
-    'nav.home': 'Accueil', 'nav.new': 'Publier', 'nav.chat': 'Messages', 'nav.notif': 'Notifications',
+    'nav.home': 'Accueil', 'nav.new': 'Publier', 'nav.chat': 'Messages', 'nav.notif': 'Notifications', 'nav.apps': 'Mini-apps',
     'nav.login': 'Connexion', 'nav.signup': 'Inscription', 'nav.logout': 'Déconnexion',
     'search.ph': 'Rechercher des posts…',
     'cat.all': 'Tout', 'cat.chat': 'Discussions', 'cat.study': 'Études', 'cat.game': 'Jeux', 'cat.tech': 'Tech', 'cat.announce': 'Annonces',
@@ -1931,7 +2302,7 @@ var I18N = {
     'signup.title': 'Créer un compte', 'signup.sub': 'Enregistrez un nouveau compte.', 'signup.username': "Nom d'utilisateur", 'signup.submit': "S'inscrire",
     'new.title': 'Nouvelle publication', 'new.sub': 'Partagez un sujet avec un titre clair.', 'new.t': 'Titre', 'new.cat': 'Catégorie', 'new.body': 'Contenu',
     'new.file': 'Pièce jointe (optionnel)', 'new.filePick': 'Cliquez pour choisir', 'new.submit': 'Publier', 'new.phTitle': 'Résumez en une ligne', 'new.phBody': 'Détails… (sauts de ligne pris en charge)',
-    'post.back': '← Retour à l’accueil', 'post.reply': 'Répondre', 'post.pin': 'Épinglé', 'post.replies': ' réponses',
+    'post.back': '← Retour à l’accueil', 'post.reply': 'Répondre', 'post.replies': ' réponses',
     'settings.theme': 'Apparence', 'settings.themeHint': 'Choisissez un style qui vous plaît', 'settings.official': 'Officiels', 'settings.solid': 'Couleurs unies', 'settings.gradient': 'Dégradé', 'settings.culture': 'Culturels', 'settings.default': 'Défaut',
     'settings.glass': 'Verre liquide', 'settings.glassHint': 'Disponible uniquement pour les thèmes « Couleurs unies » et « Dégradé ». Interface en verre avec couleur et opacité réglables',
     'settings.glassOn': 'Activer le verre liquide', 'settings.glassColor': 'Couleur du verre', 'settings.opacity': 'Opacité',
@@ -1955,7 +2326,7 @@ function setLang(id) {
   renderChips();
   if (location.hash === '#/settings') renderSettings();
   if (location.hash === '#/login') renderLogin();
-  if (location.hash === '#/new') renderNewPage();
+  if (location.hash === '#/new') renderNew();
   if (location.hash === '#/') renderHome();
 }
 
@@ -2965,24 +3336,47 @@ function renderApps() {
   var wrap = $('#apps-frame-wrap');
   wrap.className = '';
   var apps = [
-    { key: 'bread', icon: '🀄', name: '面包杀 · 群雄争霸', tag: '云坛一键登录',
-      desc: '三国杀风单人卡牌对战：匹配 / 排位、自定义武将、技能博弈、装备锦囊全手牌。',
-      src: 'games/全手牌版.html' },
+    { key: 'bread', icon: '🀄', name: '面包杀 · 群雄争霸', tag: '合作出品 · 进入需阅声明',
+      desc: '三国杀风卡牌对战：匹配 / 排位、武将技能、装备锦囊全手牌。Han Ber & Bread Guard Team 联合出品。',
+      src: 'games/面包杀.html' },
     { key: 'gta', icon: '🚗', name: 'GTA · 上海像素城', tag: '单机游玩',
       desc: '2D 像素开放世界：12 个行政区、产业经营、货运/押运/竞速任务、通缉追捕，浏览器本地存档。',
-      src: 'gta-shanghai/index.html' }
+      src: 'gta-shanghai/index.html' },
+    { key: 'tank', icon: '🪖', name: '铁甲战史 2D', tag: '云坛一键登录',
+      desc: '四战役战争游戏：铁甲洪流、兵种克制、阵地推进，指挥你的装甲部队。',
+      src: 'games/铁甲战史.html', needYtLogin: true },
+    { key: 'century', icon: '🌍', name: '世纪战争', tag: '云坛一键登录',
+      desc: '四大战役横跨百年：从堑壕到闪电战，经典战史回合对决。',
+      src: 'games/世纪战争.html', needYtLogin: true },
+    { key: 'game', icon: '⚖️', name: '博弈论 · 均衡实验室', tag: '云坛一键登录',
+      desc: '经典博弈案例人机对战：囚徒困境、纳什均衡、智猪博弈，边玩边学。',
+      src: 'games/博弈论.html', needYtLogin: true },
+    { key: 'potato', icon: '🥔', name: '疯狂土豆', tag: '云坛一键登录',
+      desc: '打土豆休闲小游戏：反应速度大挑战，越打越上头。',
+      src: 'games/疯狂土豆.html', needYtLogin: true },
+    { key: 'puff', icon: '🐡', name: '鼓气河豚 Puff!', tag: '云坛一键登录',
+      desc: '鼓气河豚休闲小游戏：吹气、膨胀、翻转，一玩就停不下来。',
+      src: 'games/鼓气河豚.html', needYtLogin: true }
   ];
   grid.innerHTML = apps.map(function (a) {
-    return '<div class="app-card" data-src="' + a.src + '" data-name="' + esc(a.name) + '">'
+    return '<div class="app-card" data-src="' + a.src + '" data-name="' + esc(a.name) + '"' + (a.needYtLogin ? ' data-needlogin="1"' : '') + '>'
       + '<div class="app-icon">' + a.icon + '</div><h3>' + esc(a.name) + '</h3>'
       + '<p>' + esc(a.desc) + '</p><span class="app-tag">' + esc(a.tag) + '</span></div>';
   }).join('');
   grid.querySelectorAll('.app-card').forEach(function (card) {
     card.addEventListener('click', function () {
+      var needLogin = card.getAttribute('data-needlogin') === '1';
+      if (needLogin && !session) {
+        toast('此游戏需云坛一键登录，请先登录云坛');
+        location.hash = '#/login';
+        return;
+      }
       grid.style.display = 'none';
       $('#apps-user-line').style.display = 'none';
       wrap.className = 'active';
-      $('#apps-frame').src = card.getAttribute('data-src');
+      /* 云坛一键登录：把当前登录身份随 URL 传给游戏（无需登录的游戏传 guest） */
+      var ytUser = (session && session.username) ? encodeURIComponent(session.username) : 'guest';
+      $('#apps-frame').src = card.getAttribute('data-src') + '?yt_user=' + ytUser;
       $('#apps-frame-title').innerText = card.getAttribute('data-name');
     });
   });
@@ -3045,11 +3439,7 @@ function postCardHtml(p, counts, likes, commentedPosts) {
   var excerpt = (p.content || '').replace(/\s+/g, ' ').slice(0, 80);
   var lk = likes[p.id] || { count: 0 };
   var replyCount = counts[p.id] || 0;
-  /* 新回复判断：我发的帖 OR 我评论过的帖，且回复时间晚于上次查看 */
-  var isMine = session && p.user_id === session.id;
-  var commented = commentedPosts && commentedPosts.indexOf(p.id) >= 0;
-  var isNewReply = p.last_reply_at && p.last_reply_at > lastNotifSeen && session && (isMine || commented);
-  return '<article class="card post-item' + (isNewReply ? ' highlight' : '') + '">'
+  return '<article class="card post-item">'
     + '<div class="post-ribbon" style="background:' + cat.color + '"></div>'
     + (replyCount > 0 ? '<span class="reply-badge">' + replyCount + t('post.replies') + '</span>' : '')
     + '<div class="post-body">'
@@ -3102,15 +3492,8 @@ function renderHomeData(posts, counts, likes, commentedPosts, list) {
     if (kw && p.title.toLowerCase().indexOf(kw) < 0 && p.content.toLowerCase().indexOf(kw) < 0) return false;
     return true;
   });
-  /* 排序：有新回复的（自己的帖或我评论过的帖）排最前，其余按发布时间倒序（新发的在最顶） */
+  /* 排序：按发布时间倒序（新发的在最顶） */
   filtered.sort(function (a, b) {
-    function isNewReply(p) {
-      if (!session || !p.last_reply_at || p.last_reply_at <= lastNotifSeen) return false;
-      return p.user_id === session.id || commentedPosts.indexOf(p.id) >= 0;
-    }
-    var aNew = isNewReply(a), bNew = isNewReply(b);
-    if (aNew && !bNew) return -1;
-    if (!aNew && bNew) return 1;
     return new Date(b.created_at) - new Date(a.created_at);
   });
   if (!filtered.length) {
@@ -3609,8 +3992,13 @@ var THEME_GROUPS = [
       { id: 'mayan', label: '玛雅', swatch: 'linear-gradient(135deg, #14553f, #23b5a8)' },
       { id: 'viking', label: '维京', swatch: 'linear-gradient(135deg, #3a3026, #8fa8bd)' },
       { id: 'greek', label: '希腊', swatch: 'linear-gradient(135deg, #f2ede2, #1d4f8f)' },
-      { id: 'latin', label: '拉丁', swatch: 'linear-gradient(135deg, #b4551d, #ffd34d)' },
-      { id: 'byzantine', label: '拜占庭', swatch: 'linear-gradient(135deg, #1a1033, #f0c75e)' }
+      { id: 'arab', label: '阿拉伯', swatch: 'linear-gradient(135deg, #5a3f1e, #d9a441)' },
+      { id: 'ottoman', label: '奥斯曼', swatch: 'linear-gradient(135deg, #57151c, #e0b34a)' },
+      { id: 'roman', label: '古罗马', swatch: 'linear-gradient(135deg, #3a342a, #b33a2c)' },
+      { id: 'korean', label: '韩式', swatch: 'linear-gradient(135deg, #faf6ec, #2f5d8a)' },
+      { id: 'gaudi', label: '西班牙高迪', swatch: 'linear-gradient(135deg, #1d4457, #3aa0c8)' },
+      { id: 'byzantine', label: '拜占庭', swatch: 'linear-gradient(135deg, #1a1033, #f0c75e)' },
+      { id: 'tno', label: 'TNO · 新秩序', adminOnly: true, swatch: 'linear-gradient(135deg, #2b1210, #d9a03f)' }
     ]
   }
 ];
@@ -3618,9 +4006,10 @@ var THEME_GROUPS = [
 var DARK_THEMES = ['official', 'official-forest', 'official-maple', 'official-city', 'official-sakura', 'official-bridge', 'official-sunset',
   'red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple',
   'red-orange', 'orange-yellow', 'yellow-green', 'green-cyan', 'cyan-blue', 'blue-purple', 'purple-pink',
-  'british', 'german', 'egyptian', 'mayan', 'viking', 'latin', 'byzantine'];
+  'british', 'german', 'egyptian', 'mayan', 'viking', 'byzantine',
+  'arab', 'ottoman', 'roman', 'gaudi', 'tno'];
 /* 浅色文化主题（法式/中式/日式/希腊） */
-var LIGHT_THEMES = ['french', 'chinese', 'japanese', 'greek'];
+var LIGHT_THEMES = ['french', 'chinese', 'japanese', 'greek', 'korean'];
 /* 液态玻璃可用主题（纯色+渐变） */
 var GLASS_THEMES = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple',
   'red-orange', 'orange-yellow', 'yellow-green', 'green-cyan', 'cyan-blue', 'blue-purple', 'purple-pink'];
@@ -3791,10 +4180,6 @@ function renderSettings() {
     picker.innerHTML = '<p style="font-size:13px;color:var(--ink-3)">' + t('pleaseLogin') + '。</p>';
     return;
   }
-  if (isAdminUser) {
-    picker.innerHTML = '<p style="font-size:13px;color:var(--ink-3)">管理员账号使用默认主题。</p>';
-    return;
-  }
   CloudStore.getSettings().then(function (s) {
     var currentTheme = s.theme || 'default';
     /* 恢复液态玻璃设置 */
@@ -3808,8 +4193,9 @@ function renderSettings() {
       html += '<div class="theme-section"><div class="theme-section-title">' + t(group.key || 'settings.theme') + '</div><div class="theme-grid">';
       html += '<div class="theme-item' + (currentTheme === 'default' ? ' active' : '') + '" data-theme-id="default"><div class="theme-swatch" style="background:#F6F4EE"></div>' + t('settings.default') + '</div>';
       group.themes.forEach(function (t) {
-        html += '<div class="theme-item' + (currentTheme === t.id ? ' active' : '') + '" data-theme-id="' + t.id + '">'
-          + '<div class="theme-swatch" style="background:' + t.swatch + '"></div>' + t.label + '</div>';
+        if (t.adminOnly && !isAdminUser) return;
+        html += '<div class="theme-item' + (currentTheme === t.id ? ' active' : '') + '" data-theme-id="' + t.id + '"' + (t.adminOnly ? ' data-admin-only="1"' : '') + '>'
+          + '<div class="theme-swatch" style="background:' + t.swatch + '"></div>' + t.label + (t.adminOnly ? ' <span style="font-size:10px;color:#d9a03f">👑 管理员</span>' : '') + '</div>';
       });
       html += '</div></div>';
     });
@@ -4081,7 +4467,14 @@ document.addEventListener('click', function (e) {
         renderProfile(); 
         renderNav(); 
       })
-      .catch(function (err) { toast(err.message); })
+      .catch(function (err) {
+        var msg = (err && err.message) || '';
+        if (/duplicate|23505|profiles_username_key/i.test(msg)) {
+          toast('这个昵称已被别人占用，换一个吧');
+        } else {
+          toast(msg || '保存失败');
+        }
+      })
       .finally(function() { saveBtn.disabled = false; saveBtn.textContent = '保存'; });
     return;
   }
@@ -4323,7 +4716,8 @@ document.addEventListener('submit', function (e) {
           color: settings.glass_color || 'red',
           alpha: parseFloat(settings.glass_alpha) || 0.72
         };
-        var theme = (s.role === 'admin' || s.role === 'super') ? 'default' : (settings.theme || 'default');
+        var theme = settings.theme || 'default';
+        if (theme === 'tno' && s.role !== 'admin' && s.role !== 'super') theme = 'default';
         setTheme(theme);
         toast(authMode === 'login' ? t('welcome') + s.username : t('signupOk'));
         location.hash = '#/';
@@ -4482,6 +4876,8 @@ document.addEventListener('click', function (e) {
   /* 修复：玻璃颜色按钮同样带 .theme-item 类，若不排除会误触发主题切换（读不到 data-theme-id → setTheme(null) → 整体恢复默认） */
   if (item.hasAttribute('data-glass-id')) return;
   var themeId = item.getAttribute('data-theme-id');
+  var isAdminUser2 = session && (session.role === 'admin' || session.role === 'super');
+  if (item.hasAttribute('data-admin-only') && !isAdminUser2) { toast('此主题仅管理员可用'); return; }
   setTheme(themeId);
   CloudStore.saveSettings({ theme: themeId })
     .then(function () { toast(t('settings.themeSaved')); renderSettings(); })
@@ -4600,7 +4996,8 @@ window.addEventListener('hashchange', router);
           color: settings.glass_color || 'red',
           alpha: parseFloat(settings.glass_alpha) || 0.72
         };
-        var theme = (s.role === 'admin' || s.role === 'super') ? 'default' : (settings.theme || 'default');
+        var theme = settings.theme || 'default';
+        if (theme === 'tno' && s.role !== 'admin' && s.role !== 'super') theme = 'default';
         setTheme(theme);
         router();
       }).catch(function () { router(); });
