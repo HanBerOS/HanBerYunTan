@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>星旅者 Star Voyager · 星星宇宙探险</title>
+<style>
+  :root{
+    --gold:#ffd76a; --cyan:#7df3ff; --pink:#ff8ad8; --red:#ff6b7a; --violet:#c59be8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#0a0d2e;
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #game{position:fixed;inset:0;display:block;touch-action:none;cursor:crosshair}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;
+    align-items:flex-start;padding:14px 18px;pointer-events:none;z-index:10;
+    text-shadow:0 0 8px rgba(0,0,0,.6)}
+  #hud .stat{display:flex;align-items:baseline;gap:8px;font-size:14px;color:#c3d2ff}
+  #hud .stat b{font-size:26px;color:#fff;font-weight:800}
+  #hud .stat .x{color:var(--gold);font-size:16px;opacity:0}
+  #hud .stat .x.on{opacity:1;animation:pulse .5s ease}
+  @keyframes pulse{0%{transform:scale(1.6)}100%{transform:scale(1)}}
+  #hud .left{display:flex;gap:22px;align-items:baseline}
+  #hud .mid{flex:1;max-width:300px;margin:4px 18px 0;display:flex;flex-direction:column;gap:5px;align-items:center}
+  #hud .mid .region{font-size:14px;color:var(--gold);letter-spacing:2px;font-weight:700}
+  #hud .mid .nextr{font-size:11px;color:#9db0e6}
+  #hud .right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  #hud #lives{font-size:22px;letter-spacing:3px;color:var(--pink);text-shadow:0 0 12px rgba(255,138,216,.7)}
+  #hud #lives .lost{opacity:.18;filter:grayscale(1)}
+  #hud #shield{font-size:15px;letter-spacing:4px;color:var(--cyan)}
+  #hud #shield .off{opacity:.15}
+  #hud #shield .charge{color:#9fb4ff;font-size:12px;letter-spacing:2px}
+
+  /* ---------- Overlays ---------- */
+  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 40%,rgba(45,60,150,.4),rgba(8,10,38,.92));
+    z-index:20;backdrop-filter:blur(2px)}
+  .overlay.hidden{display:none}
+  .card{text-align:center;padding:38px 46px;border-radius:22px;max-width:92vw;
+    background:rgba(24,34,100,.82);border:1px solid rgba(160,215,255,.38);
+    box-shadow:0 0 60px rgba(130,170,255,.3),inset 0 0 40px rgba(150,210,255,.08)}
+  .card h1{font-size:52px;letter-spacing:10px;color:#fff;font-weight:900;
+    text-shadow:0 0 18px var(--gold),0 0 40px rgba(255,215,106,.55);margin-bottom:4px}
+  .card .sub{font-size:13px;letter-spacing:5px;color:var(--cyan);margin-bottom:20px;opacity:.9}
+  .card .intro{font-size:15px;line-height:2;color:#d6e0ff;margin-bottom:16px}
+  .card .intro b{color:var(--gold)}
+  .card .intro .c{color:var(--cyan)}
+  .card .intro .w{color:var(--pink)}
+  .card .keys{font-size:12px;color:#7d8bc4;margin-bottom:26px;letter-spacing:1px}
+  .card button{font-size:17px;font-weight:700;color:#04102a;padding:13px 46px;border:none;border-radius:40px;
+    cursor:pointer;background:linear-gradient(135deg,var(--gold),#ffb84d);
+    box-shadow:0 4px 24px rgba(255,200,100,.45);transition:transform .12s ease,box-shadow .12s ease}
+  .card button:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 32px rgba(255,200,100,.6)}
+  .card button:active{transform:scale(.97)}
+  .card .tip{font-size:12px;color:#6874ad;margin-top:16px}
+  .card h2{font-size:34px;color:#fff;letter-spacing:6px;text-shadow:0 0 16px var(--pink);margin-bottom:20px}
+  .card .rows{display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+  .card .rows div{display:flex;justify-content:space-between;gap:46px;font-size:15px;color:#b9c4ef}
+  .card .rows b{color:#fff;font-size:18px}
+  .card .rows .hl b{color:var(--gold);text-shadow:0 0 12px rgba(255,215,106,.6)}
+
+  @media (max-width:560px){
+    .card{padding:30px 26px}
+    .card h1{font-size:38px;letter-spacing:8px}
+    #hud .stat b{font-size:22px}
+    #hud .mid{max-width:150px}
+    #hud .stat{font-size:12px}
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="left">
+    <div class="stat"><span>得分</span><b id="score">0</b></div>
+    <div class="stat"><span>星程</span><b id="dist">0</b></div>
+    <div class="stat"><span>连击</span><b id="combo">0</b><span class="x" id="comboX">×</span></div>
+  </div>
+  <div class="mid">
+    <div class="region" id="region">星尘平原</div>
+    <div class="nextr" id="nextr">下一站：小行星带</div>
+  </div>
+  <div class="right">
+    <div id="shield"></div>
+    <div id="lives"></div>
+  </div>
+</div>
+
+<div id="pausePanel" class="overlay hidden">
+  <div class="card">
+    <h2>已暂停</h2>
+    <p class="keys" style="margin-bottom:22px">按 P 或 空格键继续飞行</p>
+    <button id="btnResume">继续游戏</button>
+  </div>
+</div>
+
+<div id="menu" class="overlay">
+  <div class="card">
+    <h1>星旅者</h1>
+    <p class="sub">STAR VOYAGER</p>
+    <p class="intro">
+      你是一颗流浪的小星星，出发穿越整个宇宙<br>
+      <b>收集光点</b> · <span class="c">捡起能量星攒护盾</span> · <span class="w">躲开陨石与黑洞</span><br>
+      一路飞向银河之心 ✦
+    </p>
+    <p class="keys">↑ ↓ / W S 移动&nbsp;&nbsp;·&nbsp;&nbsp;鼠标 / 手指拖动</p>
+    <button id="btnStart">出发探险</button>
+    <p class="tip">M 音乐 · P 暂停 · 点击后开启音效</p>
+  </div>
+</div>
+
+<div id="over" class="overlay hidden">
+  <div class="card">
+    <h2>星 陨</h2>
+    <div class="rows">
+      <div class="hl"><span>得分</span><b id="fScore">0</b></div>
+      <div><span>最高分</span><b id="fBest">0</b></div>
+      <div><span>飞行星程</span><b id="fDist">0</b></div>
+      <div><span>抵达区域</span><b id="fRegion">0</b></div>
+      <div><span>最佳连击</span><b id="fCombo">0</b></div>
+    </div>
+    <button id="btnAgain">再次启程</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   星旅者 Star Voyager · 星星宇宙探险
+   单文件 / 无外部依赖 / 可直接部署 Netlify
+   玩法：上下飞行躲避陨石与黑洞，收集光点得分、
+         能量星攒护盾，穿越宇宙区域抵达银河之心
+   ========================================================= */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+
+/* ---------------- 宇宙区域（探险里程碑） ---------------- */
+const REGIONS = [
+  { d:0,     name:'星尘平原',  sub:'旅程开始' },
+  { d:1200,  name:'小行星带',  sub:'小心碎石!' },
+  { d:3000,  name:'红巨星之海',sub:'热浪翻涌' },
+  { d:5500,  name:'光环星域',  sub:'行星环很美，别撞上' },
+  { d:8500,  name:'银河之心',  sub:'勇敢的星星，到了!' },
+];
+/* 途经的背景星球装饰 */
+const PLANETS = [
+  { d:1100, r:95,  y:.30, type:'gas',    c1:'#8fc0ea', c2:'#3f6fb0' },
+  { d:2900, r:115, y:.55, type:'giant',  c1:'#ffa06a', c2:'#a83220' },
+  { d:5400, r:88,  y:.34, type:'ringed', c1:'#cda6f0', c2:'#7a4fb0' },
+  { d:8400, r:135, y:.46, type:'core',   c1:'#ffe9b0', c2:'#d98a2a' },
+];
+
+/* ---------------- 游戏状态 ---------------- */
+const state = {
+  status:'menu',           // menu | playing | paused | over
+  score:0, dist:0, distScore:0, combo:0, maxCombo:0, comboT:0,
+  lives:3, shield:0, energy:0,
+  regionIdx:0,
+  time:0, shake:0, flash:0, inv:0,
+  orbIn:0, metIn:0, bhIn:0, shootIn:6,
+};
+
+/* ---------------- 玩家 ---------------- */
+const player = { x:0, y:0, r:17, targetY:0, bob:0, face:'normal', faceT:0 };
+
+/* ---------------- 实体池 ---------------- */
+let orbs = [], meteors = [], holes = [], planets = [], bgPlanets = [];
+let particles = [], texts = [], bgStars = [], nebulas = [], shoots = [];
+let regionBanner = null;
+
+/* ---------------- 输入 ---------------- */
+const key = { up:false, down:false };
+
+/* ---------------- 音效 ---------------- */
+const Audio = {
+  ctx:null, master:null, musicOn:true, mstep:0, mtimer:null,
+  init(){
+    if(this.ctx) return;
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = .3;
+      this.master.connect(this.ctx.destination);
+    }catch(e){ this.ctx=null; }
+  },
+  resume(){ if(this.ctx && this.ctx.state==='suspended') this.ctx.resume(); },
+  tone(freq,dur,type='sine',vol=.4,slideTo=null,delay=0){
+    if(!this.ctx || !this.sfxOn) return;
+    const t0=this.ctx.currentTime+delay;
+    const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+    o.type=type; o.frequency.setValueAtTime(freq,t0);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(slideTo,1),t0+dur);
+    g.gain.setValueAtTime(vol,t0);
+    g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+    o.connect(g); g.connect(this.master);
+    o.start(t0); o.stop(t0+dur+.02);
+  },
+  noise(dur,vol=.3,delay=0){
+    if(!this.ctx || !this.sfxOn) return;
+    const t0=this.ctx.currentTime+delay;
+    const buf=this.ctx.createBuffer(1,this.ctx.sampleRate*dur,this.ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+    const s=this.ctx.createBufferSource(); s.buffer=buf;
+    const g=this.ctx.createGain(); g.gain.value=vol;
+    const f=this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=700;
+    s.connect(f); f.connect(g); g.connect(this.master);
+    s.start(t0);
+  },
+  collect(c){ this.tone(620+c*25,.1,'triangle',.32); this.tone(880+c*25,.12,'sine',.22,null,.05); },
+  energy(){ [523,784,1046].forEach((f,i)=>this.tone(f,.12,'triangle',.28,null,i*.06)); },
+  shield(){ [392,523,659,784].forEach((f,i)=>this.tone(f,.14,'sine',.3,null,i*.08)); },
+  breakS(){ this.tone(700,.2,'sawtooth',.3,300); this.noise(.15,.2); },
+  hit(){ this.tone(150,.28,'sawtooth',.4,50); this.noise(.35,.45); },
+  region(){ [523,659,784,1046,1318].forEach((f,i)=>this.tone(f,.22,'sine',.3,null,i*.12)); },
+  over(){ [660,520,392,261].forEach((f,i)=>this.tone(f,.3,'triangle',.3,null,i*.16)); },
+  click(){ this.tone(880,.07,'square',.14); },
+  toggleMusic(){ this.musicOn=!this.musicOn; if(this.musicOn&&this.ctx) this.startMusic(); else this.stopMusic(); },
+  startMusic(){
+    if(!this.ctx||this.mtimer||!this.musicOn) return;
+    this.mtimer=setInterval(()=>this.musicStep(),2100);
+  },
+  stopMusic(){ if(this.mtimer){ clearInterval(this.mtimer); this.mtimer=null; } },
+  musicStep(){
+    if(!this.ctx||!this.musicOn) return;
+    const chords=[[261.6,329.6,392.0],[220.0,277.2,329.6],[196.0,246.9,293.7],[174.6,220.0,261.6]];
+    const c=chords[this.mstep%4]; this.mstep++;
+    const t0=this.ctx.currentTime;
+    c.forEach((f,i)=>{
+      const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+      o.type='sine'; o.frequency.value=f;
+      const st=t0+i*.55;
+      g.gain.setValueAtTime(.0001,st);
+      g.gain.exponentialRampToValueAtTime(.04,st+.2);
+      g.gain.exponentialRampToValueAtTime(.0001,st+1.6);
+      o.connect(g); g.connect(this.master);
+      o.start(st); o.stop(st+1.7);
+    });
+  }
+};
+
+/* ---------------- 工具 ---------------- */
+const rand=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function starPoly(ctx,x,y,outer,inner,rot){
+  ctx.beginPath();
+  for(let i=0;i<5;i++){
+    const a1=rot+i*Math.PI*2/5, a2=rot+(i+.5)*Math.PI*2/5;
+    const px=x+Math.cos(a1)*outer, py=y+Math.sin(a1)*outer;
+    const qx=x+Math.cos(a2)*inner, qy=y+Math.sin(a2)*inner;
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    ctx.lineTo(qx,qy);
+  }
+  ctx.closePath();
+}
+function spawnText(x,y,text,color,size){
+  texts.push({x,y,text,color,size:size||16,life:1.3});
+}
+
+/* ---------------- 初始化 ---------------- */
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=window.innerWidth; H=window.innerHeight;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  player.x=W*.22;
+  player.y=clamp(player.y,H*.15,H*.85);
+  player.targetY=player.y;
+  buildBg();
+}
+function buildBg(){
+  bgStars=[];
+  for(let i=0;i<180;i++){
+    bgStars.push({
+      x:Math.random(), y:Math.random(), z:rand(.4,1),
+      r:rand(.5,2.4)*1.6, tw:rand(0,6.28), sp:rand(.25,1.3),
+      hue: Math.random()<.18?'warm':(Math.random()<.12?'pink':(Math.random()<.3?'cool':'white')),
+    });
+  }
+  nebulas=[
+    { x:.2, y:.22, r:380, c:[140,110,255], a:.12, dx:.006, dy:.004 },
+    { x:.8, y:.4,  r:340, c:[80,200,255], a:.11, dx:-.005, dy:.003 },
+    { x:.5, y:.7,  r:420, c:[255,130,225], a:.09, dx:.004, dy:-.005 },
+    { x:.35, y:.5, r:300, c:[110,220,190], a:.07, dx:-.004, dy:.004 },
+  ];
+}
+
+/* ---------------- 流程 ---------------- */
+function startGame(){
+  Audio.init(); Audio.resume(); Audio.click();
+  state.status='playing';
+  state.score=0; state.dist=0; state.distScore=0; state.combo=0; state.maxCombo=0; state.comboT=0;
+  state.lives=3; state.shield=0; state.energy=0; state.regionIdx=0;
+  state.time=0; state.shake=0; state.flash=0; state.inv=0;
+  state.orbIn=.5; state.metIn=2.6; state.bhIn=8; state.shootIn=4;
+  orbs=[]; meteors=[]; holes=[]; bgPlanets=[]; particles=[]; texts=[];
+  regionBanner = null;
+  PLANETS.forEach(p=>p.entered=false);
+  player.x=W*.22; player.y=H*.5; player.targetY=player.y; player.face='normal';
+  document.getElementById('menu').classList.add('hidden');
+  document.getElementById('over').classList.add('hidden');
+  document.getElementById('pausePanel').classList.add('hidden');
+  Audio.startMusic();
+  updateHud();
+}
+function gameOver(){
+  state.status='over';
+  Audio.stopMusic(); Audio.over();
+  document.getElementById('pausePanel').classList.add('hidden');
+  let best=0;
+  try{ best=+localStorage.getItem('starvoyager_best')||0; }catch(e){}
+  if(state.score>best){ best=state.score; try{ localStorage.setItem('starvoyager_best',best); }catch(e){} }
+  document.getElementById('fScore').textContent=state.score;
+  document.getElementById('fBest').textContent=best;
+  document.getElementById('fDist').textContent=Math.floor(state.dist);
+  document.getElementById('fRegion').textContent=REGIONS[state.regionIdx].name;
+  document.getElementById('fCombo').textContent=state.maxCombo;
+  document.getElementById('over').classList.remove('hidden');
+}
+function togglePause(){
+  if(state.status==='playing'){
+    state.status='paused';
+    Audio.stopMusic();
+    document.getElementById('pausePanel').classList.remove('hidden');
+  }else if(state.status==='paused'){
+    state.status='playing';
+    Audio.startMusic();
+    document.getElementById('pausePanel').classList.add('hidden');
+  }
+}
+
+/* ---------------- 难度与生成 ---------------- */
+function level(){ return 1+Math.floor(state.dist/1500); }
+function speed(){ return 165+Math.min(level()*20,120); }
+function spawnOrb(){
+  const type=Math.random()<.1?'energy':'dust';
+  orbs.push({
+    x:W+30, y:rand(H*.12,H*.88),
+    r:type==='dust'?rand(7,10):11,
+    vy:rand(-10,10), sway:rand(0,6.28), swayA:rand(8,20),
+    type,
+  });
+}
+function spawnMeteor(){
+  meteors.push({
+    x:W+40, y:rand(H*.1,H*.9), r:rand(13,25),
+    vy:rand(-22,22),
+    rot:rand(0,6.28), vr:rand(-1.7,1.7),
+    verts:Array.from({length:8},()=>({a:rand(0,6.28),r:rand(.72,1.15)})),
+  });
+}
+function spawnHole(){
+  if(holes.length>=2) return;
+  holes.push({ x:W+120, y:rand(H*.18,H*.82), r:rand(42,62), rot:rand(0,6.28) });
+}
+
+/* ---------------- 更新 ---------------- */
+function update(dt, ambient){
+  state.time+=dt;
+  // 只有「游戏中」才推进星程/得分/生成（暂停、菜单、结算都不推进）
+  if(!ambient && state.status==='playing'){
+    state.dist += speed()*dt;
+    // 飞行得分：每 50 星程 +1 分
+    const ds=Math.floor(state.dist/50);
+    if(ds>state.distScore){ state.score+=ds-state.distScore; state.distScore=ds; }
+    // 连击衰减
+    if(state.combo>0){
+      state.comboT-=dt;
+      if(state.comboT<=0){ state.combo=0; updateComboUi(); }
+    }
+    // 生成
+    state.orbIn-=dt;
+    if(state.orbIn<=0){ spawnOrb(); state.orbIn=rand(.42,.78)-Math.min(level()*.02,.12); }
+    state.metIn-=dt;
+    if(state.metIn<=0){ spawnMeteor(); state.metIn=Math.max(2.6-level()*.18,1.15)*rand(.75,1.2); }
+    state.bhIn-=dt;
+    if(level()>=2 && state.bhIn<=0){ spawnHole(); state.bhIn=rand(8,13); }
+    // 区域里程碑
+    checkRegion();
+    // 行星入场
+    for(const p of PLANETS){
+      if(!p.entered && state.dist>=p.d){
+        p.entered=true;
+        bgPlanets.push({ x:W+p.r, y:H*p.y, r:p.r, type:p.type, c1:p.c1, c2:p.c2, rot:rand(0,6.28) });
+      }
+    }
+  }
+  // 背景
+  state.shootIn-=dt;
+  if(state.shootIn<=0){ shoot(); state.shootIn=rand(5,10); }
+  updateShoots(dt);
+  for(const s of bgStars){
+    s.x -= s.sp*s.z*speed()*dt/W*.9;
+    if(s.x<-0.02){ s.x=1.02; s.y=Math.random(); }
+  }
+  for(const n of nebulas){ n.x+=n.dx*dt; n.y+=n.dy*dt; if(n.x<-.1||n.x>1.1)n.dx*=-1; if(n.y<-.1||n.y>1.1)n.dy*=-1; }
+
+  if(!ambient && state.status==='playing'){
+    updatePlayer(dt);
+    const sp=speed();
+    updateOrbs(dt,sp);
+    updateMeteors(dt,sp);
+    updateHoles(dt,sp);
+    updateBgPlanets(dt,sp);
+  }
+  updateParticles(dt);
+  updateTexts(dt);
+  if(regionBanner){ regionBanner.life-=dt; if(regionBanner.life<=0) regionBanner=null; }
+  if(state.shake>0) state.shake-=dt*2.2;
+  if(state.flash>0) state.flash-=dt*3;
+  if(state.inv>0) state.inv-=dt;
+  if(player.faceT>0){ player.faceT-=dt; if(player.faceT<=0) player.face='normal'; }
+}
+function updatePlayer(dt){
+  const spd=520;
+  if(key.up) player.targetY-=spd*dt;
+  if(key.down) player.targetY+=spd*dt;
+  player.targetY=clamp(player.targetY,H*.1,H*.9);
+  player.y+=(player.targetY-player.y)*Math.min(1,dt*10);
+  player.bob+=dt*3.4;
+  // 星尘拖尾
+  for(let i=0;i<2;i++){
+    particles.push({
+      x:player.x-rand(8,14), y:player.y+rand(-5,5),
+      vx:rand(-70,-20), vy:rand(-14,14), life:rand(.3,.55), max:.55,
+      size:rand(1.2,2.8), color:Math.random()<.7?'#ffd76a':'#fff3c4', kind:'spark' });
+  }
+  // 表情恢复
+  if(player.faceT<=0) player.face='normal';
+}
+function updateOrbs(dt,sp){
+  for(let i=orbs.length-1;i>=0;i--){
+    const o=orbs[i];
+    o.sway+=dt*2.4;
+    o.x-=sp*dt; o.y+=(o.vy+Math.sin(o.sway)*o.swayA)*dt;
+    if(circHit(player.x,player.y,player.r*.9,o.x,o.y,o.r)){
+      collectOrb(o); orbs.splice(i,1); continue;
+    }
+    if(o.x<-40) orbs.splice(i,1);
+  }
+}
+function updateMeteors(dt,sp){
+  for(let i=meteors.length-1;i>=0;i--){
+    const m=meteors[i];
+    m.rot+=m.vr*dt;
+    m.x-=sp*dt; m.y+=m.vy*dt;
+    if(state.inv<=0 && circHit(player.x,player.y,player.r*.85,m.x,m.y,m.r)){
+      onDamage();
+      spawnSpark(m.x,m.y,'#ff9a6a',16,220,3);
+      meteors.splice(i,1);
+      continue;
+    }
+    if(m.x<-60) meteors.splice(i,1);
+  }
+}
+function updateHoles(dt,sp){
+  for(let i=holes.length-1;i>=0;i--){
+    const h=holes[i];
+    h.rot+=dt*.9;
+    h.x-=sp*dt;
+    // 引力：吸力半径内拉动玩家
+    const dx=player.x-h.x, dy=player.y-h.y;
+    const d=Math.hypot(dx,dy);
+    if(d<h.r*2.3){
+      const pull=h.r*120*(1-d/(h.r*2.3));
+      player.targetY+=(dy/d)*pull*dt*.25;
+      player.targetY=clamp(player.targetY,H*.1,H*.9);
+    }
+    if(state.inv<=0 && d<h.r+player.r*.7){
+      onDamage();
+      spawnSpark(player.x,player.y,'#c59be8',24,260,3.5);
+      h.r=Math.max(h.r-14,h.r*.5);
+      if(h.r<26) holes.splice(i,1);
+      continue;
+    }
+    if(h.x<-h.r*3) holes.splice(i,1);
+  }
+}
+function updateBgPlanets(dt,sp){
+  for(let i=bgPlanets.length-1;i>=0;i--){
+    const p=bgPlanets[i];
+    p.x-=sp*dt; p.rot+=dt*.12;
+    if(p.x<-p.r*2.5) bgPlanets.splice(i,1);
+  }
+}
+function circHit(x1,y1,r1,x2,y2,r2){
+  const dx=x1-x2, dy=y1-y2, rr=r1+r2;
+  return dx*dx+dy*dy<rr*rr;
+}
+function collectOrb(o){
+  if(o.type==='energy'){
+    state.energy++;
+    spawnText(o.x,o.y-20,'+能量','#7df3ff',15);
+    spawnSpark(o.x,o.y,'#7df3ff',10,150,2.5);
+    Audio.energy();
+    if(state.energy>=3){
+      state.energy=0;
+      if(state.shield<3){
+        state.shield++;
+        spawnText(player.x,player.y-44,'🛡 护盾+1','#7df3ff',18);
+        spawnRing(player.x,player.y,'#7df3ff');
+        Audio.shield();
+      }else{
+        state.score+=30;
+        spawnText(player.x,player.y-44,'护盾已满 +30','#ffd76a',16);
+      }
+    }
+  }else{
+    state.combo++;
+    state.comboT=3;
+    state.maxCombo=Math.max(state.maxCombo,state.combo);
+    state.score+=Math.round(5*(1+Math.min(state.combo,10)*.1));
+    spawnSpark(o.x,o.y,'#ffd76a',6,120,2);
+    Audio.collect(state.combo);
+  }
+  updateHud();
+}
+function onDamage(){
+  if(state.shield>0){
+    state.shield--;
+    state.inv=.9;
+    spawnRing(player.x,player.y,'#7df3ff');
+    spawnSpark(player.x,player.y,'#7df3ff',18,220,3);
+    player.face='hurt'; player.faceT=.8;
+    Audio.breakS();
+    spawnText(player.x,player.y-40,'护盾破裂!','#7df3ff',16);
+  }else{
+    state.lives--;
+    state.inv=1.7;
+    state.shake=1; state.flash=1;
+    spawnRing(player.x,player.y,'#ff6b7a');
+    spawnSpark(player.x,player.y,'#ff6b7a',20,240,3);
+    player.face='hurt'; player.faceT=1.2;
+    Audio.hit();
+    spawnText(player.x,player.y-40,'💥','#ff6b7a',24);
+  }
+  refreshLives();
+  updateHud();
+  if(state.lives<=0) gameOver();
+}
+function checkRegion(){
+  for(let i=state.regionIdx;i<REGIONS.length;i++){
+    if(state.dist>=REGIONS[i].d){
+      state.regionIdx=i;
+      const r=REGIONS[i];
+      if(i>0){
+        regionBanner = { name:r.name, sub:r.sub, life:2.4, max:2.4 };
+        spawnSpark(W/2,H*.28,'#ffd76a',26,260,3);
+        Audio.region();
+      }
+    }
+  }
+  updateHud();
+}
+
+/* ---------------- HUD ---------------- */
+function updateHud(){
+  document.getElementById('score').textContent=state.score;
+  document.getElementById('dist').textContent=Math.floor(state.dist);
+  document.getElementById('combo').textContent=state.combo;
+  document.getElementById('comboX').classList.toggle('on',state.combo>=5);
+  document.getElementById('region').textContent=REGIONS[state.regionIdx].name;
+  document.getElementById('nextr').textContent =
+    state.regionIdx<REGIONS.length-1 ? '下一站：'+REGIONS[state.regionIdx+1].name : '✦ 已抵达银河之心，继续向前!';
+  // 护盾
+  let s='';
+  for(let i=0;i<3;i++) s+=i<state.shield?'<span>◆</span>':'<span class="off">◆</span>';
+  s+='<span class="charge">'+'●'.repeat(state.energy)+'</span>';
+  document.getElementById('shield').innerHTML=s;
+}
+function updateComboUi(){ document.getElementById('combo').textContent=state.combo; }
+function refreshLives(){
+  let h='';
+  for(let i=0;i<3;i++) h+=i<state.lives?'<span>❤</span>':'<span class="lost">❤</span>';
+  document.getElementById('lives').innerHTML=h;
+}
+
+/* ---------------- 流星 ---------------- */
+function shoot(){
+  const fromLeft=Math.random()<.5;
+  shoots.push({
+    x:fromLeft?rand(-80,80):rand(W-80,W+80),
+    y:rand(0,H*.3),
+    vx:(fromLeft?1:-1)*rand(320,460), vy:rand(140,240),
+    life:1.2,
+  });
+}
+function updateShoots(dt){
+  for(let i=shoots.length-1;i>=0;i--){
+    const s=shoots[i];
+    s.x+=s.vx*dt; s.y+=s.vy*dt; s.life-=dt;
+    if(s.life<=0) shoots.splice(i,1);
+  }
+}
+
+/* ---------------- 粒子 / 文字 ---------------- */
+function spawnSpark(x,y,color,n,speed,size){
+  for(let i=0;i<n;i++){
+    const a=rand(0,6.28), sp=rand(.4,1)*speed;
+    particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:rand(.4,.8),max:.8,size:rand(1.5,3.5),color,kind:'spark'});
+  }
+}
+function spawnRing(x,y,color){
+  particles.push({x,y,vx:0,vy:0,life:.5,max:.5,size:0,color,kind:'ring',grow:90});
+}
+function updateParticles(dt){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.life-=dt;
+    if(p.kind==='spark'){ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=300*dt; }
+    if(p.life<=0) particles.splice(i,1);
+  }
+  if(particles.length>320) particles.splice(0,particles.length-320);
+}
+function updateTexts(dt){
+  for(let i=texts.length-1;i>=0;i--){
+    texts[i].life-=dt;
+    texts[i].y-=26*dt;
+    if(texts[i].life<=0) texts.splice(i,1);
+  }
+}
+
+/* ---------------- 绘制 ---------------- */
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(state.shake>0) ctx.translate(rand(-6,6)*state.shake,rand(-6,6)*state.shake);
+  drawBg();
+  drawBgPlanets();
+  drawShoots();
+  drawHoles();
+  drawOrbs();
+  drawMeteors();
+  if(state.status==='playing'||state.status==='paused') drawPlayer();
+  drawParticles();
+  drawTexts();
+  drawRegionBanner();
+  ctx.restore();
+  if(state.flash>0){ ctx.fillStyle='rgba(255,80,90,'+(state.flash*.4)+')'; ctx.fillRect(0,0,W,H); }
+}
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function drawRegionBanner(){
+  if(!regionBanner || regionBanner.life<=0) return;
+  const b=regionBanner;
+  const a=clamp(b.life/b.max,0,1);
+  const cy=H*.28;
+  const bw=Math.min(W*.46,440), bh=100;
+  ctx.save();
+  ctx.globalAlpha=a;
+  // 深色底条 + 金边
+  roundRect(W/2-bw/2, cy-bh/2, bw, bh, 20);
+  ctx.fillStyle='rgba(10,14,48,.74)';
+  ctx.fill();
+  ctx.strokeStyle='rgba(255,215,106,.6)';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+  // 顶部小装饰线
+  roundRect(W/2-bw/2+14, cy-bh/2+10, bw-28, 3, 2);
+  ctx.fillStyle='rgba(255,215,106,.4)';
+  ctx.fill();
+  // 区域大字（深色描边 + 金色填充）
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font=`900 32px "PingFang SC","Microsoft YaHei",sans-serif`;
+  ctx.lineWidth=5; ctx.strokeStyle='rgba(6,8,26,.95)';
+  ctx.strokeText(b.name, W/2, cy-12);
+  ctx.fillStyle='#ffd76a';
+  ctx.fillText(b.name, W/2, cy-12);
+  // 副标题
+  ctx.font=`600 15px "PingFang SC","Microsoft YaHei",sans-serif`;
+  ctx.lineWidth=4;
+  ctx.strokeText(b.sub, W/2, cy+26);
+  ctx.fillStyle='#c6d2ff';
+  ctx.fillText(b.sub, W/2, cy+26);
+  ctx.restore();
+}
+function drawBg(){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0b0e30');
+  g.addColorStop(.5,'#1a1f5e');
+  g.addColorStop(1,'#33206e');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  ctx.globalCompositeOperation='lighter';
+  for(const n of nebulas){
+    const cx=n.x*W, cy=n.y*H;
+    const rg=ctx.createRadialGradient(cx,cy,0,cx,cy,n.r);
+    rg.addColorStop(0,`rgba(${n.c[0]},${n.c[1]},${n.c[2]},${n.a})`);
+    rg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=rg;
+    ctx.fillRect(cx-n.r,cy-n.r,n.r*2,n.r*2);
+  }
+  ctx.globalCompositeOperation='source-over';
+
+  for(const s of bgStars){
+    const tw=.5+.5*Math.abs(Math.sin(state.time*1.6*s.sp+s.tw));
+    const col=s.hue==='warm'?'255,200,140':(s.hue==='cool'?'150,210,255':(s.hue==='pink'?'255,170,225':'255,255,255'));
+    ctx.globalAlpha=tw*(.3+.55*s.z);
+    ctx.fillStyle=`rgb(${col})`;
+    ctx.beginPath();
+    ctx.arc(s.x*W,s.y*H,s.r*s.z,0,6.283);
+    ctx.fill();
+    if(s.z>.8){
+      ctx.fillStyle=`rgba(${col},${.18*tw})`;
+      ctx.beginPath();
+      ctx.arc(s.x*W,s.y*H,s.r*s.z*2.6,0,6.283);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1;
+}
+function drawBgPlanets(){
+  for(const p of bgPlanets){
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    // 平滑淡入 / 淡出
+    const fadeIn=clamp((W+p.r*2-p.x)/140,0,1);
+    const fadeOut=clamp((p.x+p.r*2)/140,0,1);
+    const base=Math.min(fadeIn,fadeOut);
+    if(base<=0){ ctx.restore(); continue; }
+    // 柔和光晕（无硬边阴影）
+    ctx.globalAlpha=base*.45;
+    const halo=ctx.createRadialGradient(0,0,0,0,0,p.r*1.8);
+    halo.addColorStop(0,p.c1);
+    halo.addColorStop(.5,p.c2);
+    halo.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=halo;
+    ctx.beginPath(); ctx.arc(0,0,p.r*1.8,0,6.283); ctx.fill();
+    // 星球本体（左上高光，立体感）
+    ctx.globalAlpha=base*.8;
+    const rg=ctx.createRadialGradient(-p.r*.35,-p.r*.35,p.r*.1,0,0,p.r);
+    rg.addColorStop(0,'rgba(255,255,255,.9)');
+    rg.addColorStop(.28,p.c1);
+    rg.addColorStop(1,p.c2);
+    ctx.fillStyle=rg;
+    ctx.beginPath(); ctx.arc(0,0,p.r,0,6.283); ctx.fill();
+    // 类型纹理（更淡雅）
+    if(p.type==='gas'){
+      ctx.globalAlpha=base*.3;
+      ctx.strokeStyle='rgba(255,255,255,.5)';
+      ctx.lineWidth=5;
+      for(let i=0;i<4;i++){
+        ctx.beginPath();
+        ctx.ellipse(0,0,p.r*(.5+i*.22),p.r*(.16+i*.05),-.2,0,Math.PI);
+        ctx.stroke();
+      }
+    }else if(p.type==='giant'){
+      ctx.globalAlpha=base*.3;
+      ctx.fillStyle='rgba(255,160,90,.6)';
+      for(let i=0;i<6;i++){
+        const sx=Math.sin(i*127.1)*p.r*.7, sy=Math.cos(i*311.7)*p.r*.55;
+        const sr=(Math.sin(i*74.7)*.5+.5)*16+8;
+        ctx.beginPath();
+        ctx.arc(sx,sy,sr,0,6.283);
+        ctx.fill();
+      }
+    }else if(p.type==='ringed'){
+      ctx.globalAlpha=base*.4;
+      ctx.strokeStyle='rgba(235,215,255,.8)';
+      ctx.lineWidth=8;
+      ctx.beginPath(); ctx.ellipse(0,0,p.r*1.6,p.r*.55,-.35,0,6.283); ctx.stroke();
+      ctx.strokeStyle='rgba(255,255,255,.5)';
+      ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.ellipse(0,0,p.r*1.25,p.r*.42,-.35,0,6.283); ctx.stroke();
+    }else if(p.type==='core'){
+      // 银河旋臂（柔化）
+      ctx.globalAlpha=base*.55;
+      ctx.strokeStyle='rgba(255,225,150,.7)';
+      ctx.lineWidth=2.5;
+      for(let arm=0; arm<2; arm++){
+        ctx.beginPath();
+        for(let t=0; t<=1; t+=.02){
+          const ang=arm*Math.PI+t*Math.PI*2.2+state.time*.25;
+          const rr=p.r*.15+t*t*p.r*.85;
+          const px=Math.cos(ang)*rr, py=Math.sin(ang)*rr*.7;
+          if(t===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+        }
+        ctx.stroke();
+      }
+      // 柔和亮核
+      ctx.globalAlpha=base*.75;
+      const core=ctx.createRadialGradient(0,0,0,0,0,p.r*.55);
+      core.addColorStop(0,'rgba(255,255,245,.9)');
+      core.addColorStop(.45,'rgba(255,215,120,.7)');
+      core.addColorStop(1,'rgba(255,150,60,.12)');
+      ctx.fillStyle=core;
+      ctx.beginPath(); ctx.arc(0,0,p.r*.55,0,6.283); ctx.fill();
+      ctx.fillStyle='rgba(255,235,190,.85)';
+      ctx.beginPath(); ctx.arc(0,0,p.r*.16,0,6.283); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+function drawShoots(){
+  ctx.save();
+  ctx.globalCompositeOperation='lighter';
+  for(const s of shoots){
+    const a=clamp(s.life,0,1)*.7;
+    const g=ctx.createLinearGradient(s.x,s.y,s.x-s.vx*.12,s.y-s.vy*.12);
+    g.addColorStop(0,`rgba(255,255,255,${a})`);
+    g.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.strokeStyle=g; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(s.x,s.y);
+    ctx.lineTo(s.x-s.vx*.12,s.y-s.vy*.12);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawOrbs(){
+  for(const o of orbs){
+    ctx.save();
+    ctx.translate(o.x,o.y);
+    if(o.type==='energy'){
+      ctx.rotate(Math.sin(state.time*3)*.3);
+      ctx.shadowColor='#7df3ff'; ctx.shadowBlur=16;
+      ctx.fillStyle='#bfefff';
+      ctx.beginPath();
+      ctx.moveTo(0,-o.r); ctx.lineTo(o.r*.7,0); ctx.lineTo(0,o.r); ctx.lineTo(-o.r*.7,0);
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.fillStyle='rgba(255,255,255,.9)';
+      ctx.beginPath(); ctx.arc(0,0,o.r*.35,0,6.283); ctx.fill();
+    }else{
+      ctx.rotate(Math.sin(state.time*2.4+o.sway)*.5);
+      ctx.shadowColor='#ffd76a'; ctx.shadowBlur=14;
+      ctx.fillStyle='#ffd76a';
+      starPoly(ctx,0,0,o.r,o.r*.42,0);
+      ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.fillStyle='rgba(255,255,255,.85)';
+      starPoly(ctx,0,0,o.r*.42,o.r*.2,0);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+function drawMeteors(){
+  for(const m of meteors){
+    ctx.save();
+    ctx.translate(m.x,m.y);
+    // 尾焰（右侧拖尾）
+    ctx.globalCompositeOperation='lighter';
+    const tg=ctx.createLinearGradient(m.r*.3,0,m.r*2.2,0);
+    tg.addColorStop(0,'rgba(255,170,90,.55)');
+    tg.addColorStop(1,'rgba(255,120,60,0)');
+    ctx.fillStyle=tg;
+    ctx.beginPath();
+    ctx.moveTo(m.r*.3,-m.r*.45);
+    ctx.lineTo(m.r*2.2,0);
+    ctx.lineTo(m.r*.3,m.r*.45);
+    ctx.closePath(); ctx.fill();
+    ctx.globalCompositeOperation='source-over';
+    // 岩石本体（暖棕色）
+    ctx.rotate(m.rot);
+    ctx.shadowColor='#ff9a5a'; ctx.shadowBlur=18;
+    ctx.fillStyle='#a4714f';
+    ctx.beginPath();
+    m.verts.forEach((v,i)=>{
+      const px=Math.cos(v.a)*m.r*v.r, py=Math.sin(v.a)*m.r*v.r;
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    });
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(255,150,90,.5)';
+    ctx.beginPath(); ctx.arc(-m.r*.25,-m.r*.25,m.r*.32,0,6.283); ctx.fill();
+    ctx.fillStyle='rgba(255,230,200,.4)';
+    ctx.beginPath(); ctx.arc(m.r*.15,m.r*.35,m.r*.18,0,6.283); ctx.fill();
+    ctx.restore();
+  }
+}
+function drawHoles(){
+  for(const h of holes){
+    ctx.save();
+    ctx.translate(h.x,h.y);
+    // 柔和光晕
+    ctx.globalCompositeOperation='lighter';
+    const rg=ctx.createRadialGradient(0,0,0,0,0,h.r*2.2);
+    rg.addColorStop(0,'rgba(160,130,255,.42)');
+    rg.addColorStop(.5,'rgba(110,90,230,.14)');
+    rg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=rg;
+    ctx.beginPath(); ctx.arc(0,0,h.r*2.2,0,6.283); ctx.fill();
+    // 旋转吸积盘：四片柔和光弧（像星云漩涡，不是一圈圈线条）
+    ctx.rotate(h.rot);
+    for(let i=0;i<4;i++){
+      const a0=i*Math.PI/2;
+      const seg=ctx.createRadialGradient(0,0,0,0,0,h.r*1.5);
+      seg.addColorStop(0,'rgba(255,240,255,.55)');
+      seg.addColorStop(.4,'rgba(160,140,255,.28)');
+      seg.addColorStop(1,'rgba(90,70,190,0)');
+      ctx.fillStyle=seg;
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.arc(0,0,h.r*1.5,a0,a0+Math.PI/2.6);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // 环绕流动的星光
+    for(let i=0;i<6;i++){
+      const a=i*1.047+state.time*1.5;
+      const rr=h.r*(1.1+Math.sin(i*2.3)*.2);
+      ctx.fillStyle='rgba(225,220,255,.9)';
+      ctx.beginPath(); ctx.arc(Math.cos(a)*rr,Math.sin(a)*rr,2.2,0,6.283); ctx.fill();
+    }
+    ctx.globalCompositeOperation='source-over';
+    // 内核：明亮紫罗兰漩涡球（传送门感，不再阴森）
+    ctx.shadowColor='#b48cff'; ctx.shadowBlur=24;
+    const core=ctx.createRadialGradient(0,0,0,0,0,h.r);
+    core.addColorStop(0,'#6a4fd0');
+    core.addColorStop(.5,'#3d2a8a');
+    core.addColorStop(1,'#241a5c');
+    ctx.fillStyle=core;
+    ctx.beginPath(); ctx.arc(0,0,h.r,0,6.283); ctx.fill();
+    ctx.shadowBlur=0;
+    // 内圈亮环
+    ctx.strokeStyle='rgba(255,240,255,.7)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,0,h.r*.42,0,6.283); ctx.stroke();
+    ctx.restore();
+  }
+}
+function drawPlayer(){
+  const p=player;
+  const bobY=Math.sin(p.bob)*3;
+  ctx.save();
+  ctx.translate(p.x,p.y+bobY);
+  // 无敌闪烁
+  if(state.inv>0 && Math.floor(state.time*12)%2===0) ctx.globalAlpha=.35;
+  // 护盾环
+  if(state.shield>0){
+    ctx.save();
+    ctx.rotate(state.time*1.4);
+    ctx.strokeStyle='rgba(125,243,255,.55)';
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,0,p.r+7,0,6.283); ctx.stroke();
+    for(let i=0;i<3;i++){
+      const a=i*2.09+state.time*2;
+      ctx.fillStyle='rgba(125,243,255,.8)';
+      ctx.beginPath();
+      ctx.arc(Math.cos(a)*(p.r+7),Math.sin(a)*(p.r+7),2.2,0,6.283);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  // 本体（五角星）
+  const pulse=1+Math.sin(state.time*3)*.05;
+  // 柔和光晕
+  ctx.globalCompositeOperation='lighter';
+  const glow=ctx.createRadialGradient(0,0,0,0,0,p.r*1.8);
+  glow.addColorStop(0,'rgba(255,215,106,.38)');
+  glow.addColorStop(1,'rgba(255,215,106,0)');
+  ctx.fillStyle=glow;
+  ctx.beginPath(); ctx.arc(0,0,p.r*1.8,0,6.283); ctx.fill();
+  ctx.globalCompositeOperation='source-over';
+  ctx.shadowColor='#ffd76a'; ctx.shadowBlur=28;
+  starPoly(ctx,0,0,p.r*pulse,p.r*.44*pulse,state.time*.6);
+  ctx.fillStyle='#ffd76a';
+  ctx.fill();
+  ctx.shadowBlur=0;
+  starPoly(ctx,0,0,p.r*.55*pulse,p.r*.3*pulse,state.time*.6);
+  ctx.fillStyle='rgba(255,255,255,.8)';
+  ctx.fill();
+  // 腮红
+  ctx.fillStyle='rgba(255,140,180,.55)';
+  ctx.beginPath(); ctx.arc(-p.r*.55,4.5,2.6,0,6.283); ctx.fill();
+  ctx.beginPath(); ctx.arc(p.r*.55,4.5,2.6,0,6.283); ctx.fill();
+  // 表情
+  ctx.fillStyle='#3a2508';
+  const eyeY=-2;
+  if(p.face==='hurt'){
+    ctx.beginPath();
+    ctx.moveTo(-5,eyeY-2); ctx.lineTo(-1,eyeY+1); ctx.lineTo(-5,eyeY+2); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(5,eyeY-2); ctx.lineTo(1,eyeY+1); ctx.lineTo(5,eyeY+2); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#3a2508'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.arc(0,5,3.4,0,Math.PI); ctx.stroke();
+  }else{
+    ctx.beginPath();
+    ctx.arc(-3.4,eyeY,1.7,0,6.283); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(3.4,eyeY,1.7,0,6.283); ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(-3,eyeY-1,.7,0,6.283); ctx.fill();
+    ctx.beginPath(); ctx.arc(3.8,eyeY-1,.7,0,6.283); ctx.fill();
+    ctx.fillStyle='#3a2508';
+    if(p.face==='happy'){
+      ctx.beginPath(); ctx.arc(-2.2,5,1.5,0,Math.PI); ctx.fill();
+      ctx.beginPath(); ctx.arc(2.2,5,1.5,0,Math.PI); ctx.fill();
+    }else{
+      ctx.beginPath(); ctx.arc(0,4.5,1.8,0,Math.PI); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+function drawParticles(){
+  for(const p of particles){
+    const a=clamp(p.life/p.max,0,1);
+    if(p.kind==='ring'){
+      const r=(1-a)*p.grow+10;
+      ctx.strokeStyle=p.color; ctx.globalAlpha=a*.7; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(p.x,p.y,r,0,6.283); ctx.stroke();
+      ctx.globalAlpha=1;
+    }else{
+      ctx.globalAlpha=a;
+      ctx.fillStyle=p.color;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size*a,0,6.283); ctx.fill();
+      ctx.globalAlpha=1;
+    }
+  }
+}
+function drawTexts(){
+  for(const t of texts){
+    const a=clamp(t.life,0,1);
+    ctx.globalAlpha=a;
+    ctx.font=`700 ${t.size}px "PingFang SC","Microsoft YaHei",sans-serif`;
+    ctx.textAlign='center';
+    ctx.shadowColor=t.color; ctx.shadowBlur=14;
+    ctx.fillStyle=t.color;
+    ctx.fillText(t.text,t.x,t.y-(1-a)*26);
+    ctx.shadowBlur=0;
+  }
+  ctx.globalAlpha=1;
+}
+
+/* ---------------- 主循环 ---------------- */
+let lastT=0;
+function loop(t){
+  requestAnimationFrame(loop);
+  const dt=Math.min((t-lastT)/1000||.016,.033);
+  lastT=t;
+  const ambient=state.status==='menu'||state.status==='over';
+  update(dt,ambient);
+  draw();
+  if(state.status==='playing'||state.status==='paused') updateHud();
+}
+
+/* ---------------- 输入 ---------------- */
+window.addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(k==='arrowup'||k==='w'){ key.up=true; e.preventDefault(); }
+  if(k==='arrowdown'||k==='s'){ key.down=true; e.preventDefault(); }
+  if(k===' '||k==='enter'){
+    if(state.status==='menu'||state.status==='over') startGame();
+    else if(state.status==='playing'||state.status==='paused') togglePause();
+    e.preventDefault();
+  }
+  if(k==='p'&&(state.status==='playing'||state.status==='paused')) togglePause();
+  if(k==='m') Audio.toggleMusic();
+});
+window.addEventListener('keyup',e=>{
+  const k=e.key.toLowerCase();
+  if(k==='arrowup'||k==='w') key.up=false;
+  if(k==='arrowdown'||k==='s') key.down=false;
+});
+canvas.addEventListener('pointermove',e=>{
+  if(state.status==='playing'||state.status==='paused') player.targetY=e.clientY;
+});
+canvas.addEventListener('pointerdown',e=>{
+  if(state.status==='playing') player.targetY=e.clientY;
+});
+document.getElementById('btnStart').addEventListener('click',startGame);
+document.getElementById('btnAgain').addEventListener('click',startGame);
+document.getElementById('btnResume').addEventListener('click',togglePause);
+window.addEventListener('resize',resize);
+window.addEventListener('blur',()=>{ if(state.status==='playing') togglePause(); });
+
+/* ---------------- 启动 ---------------- */
+resize();
+refreshLives();
+updateHud();
+requestAnimationFrame(t=>{ lastT=t; loop(t); });
+</script>
+
+<script>
+
+/* HanBer云坛 · 云坛一键登录（强制登录 + 存档按账号隔离） */
+(function(){
+  try{
+    var qs = new URLSearchParams(location.search);
+    var u = qs.get('yt_user');
+    var logged = u && u !== 'guest';
+    if(!logged){
+      var ov = document.createElement('div');
+      ov.id = 'yt-login-mask';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:linear-gradient(160deg,#101828,#1a2a4a);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;gap:14px;text-align:center;padding:20px';
+      var t1 = document.createElement('div'); t1.style.cssText = 'font-size:40px'; t1.textContent = '🔒'; ov.appendChild(t1);
+      var t2 = document.createElement('div'); t2.style.cssText = 'font-size:18px;font-weight:600'; t2.textContent = '此游戏需云坛一键登录'; ov.appendChild(t2);
+      var t3 = document.createElement('div'); t3.style.cssText = 'font-size:13px;color:#9fb3d0;max-width:320px'; t3.textContent = '返回云坛登录后，进入「小程序」再点本游戏即可自动带账号游玩。'; ov.appendChild(t3);
+      var btn = document.createElement('button');
+      btn.textContent = '去登录';
+      btn.style.cssText = 'margin-top:6px;padding:9px 22px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;cursor:pointer';
+      btn.onclick = function(){ try{ if(window.parent && window.parent.location){ window.parent.location.hash = '#/login'; } }catch(e){} };
+      ov.appendChild(btn);
+      document.body.appendChild(ov);
+      return;
+    }
+    var el = document.createElement('div');
+    el.id = 'yt-login-bar';
+    el.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;display:flex;align-items:center;gap:6px;background:rgba(10,14,26,.74);color:#fff;padding:5px 8px 5px 12px;border-radius:20px;font:12px/1 "PingFang SC","Microsoft YaHei",sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.35);backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.16);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    var b1 = document.createElement('b'); b1.style.color = '#7cc4ff'; b1.textContent = String(u).replace(/[<>&]/g, '');
+    var b2 = document.createElement('span'); b2.textContent = '✕'; b2.style.cssText = 'cursor:pointer;opacity:.65;margin-left:6px;font-size:11px';
+    b2.title = '关闭';
+    b2.onclick = function(){ var bar = document.getElementById('yt-login-bar'); if(bar) bar.remove(); };
+    el.appendChild(document.createTextNode('👤 云坛登录：')); el.appendChild(b1); el.appendChild(b2);
+    document.body.appendChild(el);
+    window.YT_USER = u;
+    window.YT_LOGGED = true;
+    /* 存档按账号隔离：所有 localStorage 自动带账号前缀，旧档自动迁移 */
+    var pre = '_yt_' + u + '_';
+    var g = Storage.prototype.getItem, sw = Storage.prototype.setItem, r = Storage.prototype.removeItem;
+    Storage.prototype.getItem = function(k){
+      if(typeof k !== 'string' || k.indexOf(pre) === 0) return g.call(this, k);
+      var scoped = g.call(this, pre + k);
+      if(scoped !== null) return scoped;
+      var legacy = g.call(this, k);
+      if(legacy !== null){ try{ sw.call(this, pre + k, legacy); r.call(this, k); }catch(e){} }
+      return legacy;
+    };
+    Storage.prototype.setItem = function(k, v){
+      if(typeof k === 'string' && k.indexOf(pre) !== 0){ try{ sw.call(this, pre + k, v); }catch(e){} }
+      else{ try{ sw.call(this, k, v); }catch(e){} }
+    };
+    Storage.prototype.removeItem = function(k){
+      if(typeof k === 'string'){ r.call(this, pre + k); r.call(this, k); }
+      else r.call(this, k);
+    };
+  }catch(e){}
+})();
+
+</script>
+</body>
+</html>

@@ -974,10 +974,19 @@ const Game = {
       const d = Math.hypot(dx, dy); const max = 70;
       if(d > max){ dx = dx / d * max; dy = dy / d * max; }
       this.joy.x = dx; this.joy.y = dy;
+      /* 修复：摇杆偏移映射到移动方向（原先只画圈不移动） */
+      const TH = 12;
+      this.input.left = this.joy.x < -TH;
+      this.input.right = this.joy.x > TH;
+      this.input.up = this.joy.y < -TH;
+      this.input.down = this.joy.y > TH;
     }
   },
   pUp(e){
-    if(this.joy && this.joy.id === e.pointerId) this.joy = null;
+    if(this.joy && this.joy.id === e.pointerId){
+      this.joy = null;
+      this.input.left = this.input.right = this.input.up = this.input.down = false;
+    }
     this.input.fire = false;
   },
   /* ---- 调试 ---- */
@@ -1233,7 +1242,7 @@ const Game = {
         '<div class="reload"><i id="hudRel"></i></div></div>' +
         '<div class="obj"><div class="ot" id="hudObj">-</div><div class="os" id="hudSub">-</div></div>' +
         '<div class="info" id="hudInfo">-</div>' +
-        '<div class="hint" id="hudHint">WASD 移动 · 鼠标瞄准 · 左键 / 空格开火</div>' +
+        '<div class="hint" id="hudHint">' + ('ontouchstart' in window ? '左摇杆移动 · 右侧拖动瞄准 · 右下开火' : 'WASD 移动 · 鼠标瞄准 · 左键 / 空格开火') + '</div>' +
         '<div id="pauseOverlay"><div class="panel" style="max-width:420px">' +
           '<h2 style="text-align:center">已暂停</h2><div class="btnrow" style="justify-content:center">' +
           '<button class="btn" id="btnResume">继续战斗</button>' +

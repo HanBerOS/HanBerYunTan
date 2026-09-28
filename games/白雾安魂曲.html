@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>白雾安魂曲 · 2D像素探索</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Press+Start+2P&family=ZCOOL+KuaiLe&display=swap">
+<style>
+:root{--ink:#e6ecf4;--dim:#93a1b3;--blood:#e05548;--note:#f7f0d6;--deep:#0a1018;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--deep);color:var(--ink);overflow:hidden;font-family:'ZCOOL KuaiLe','Noto Sans SC',system-ui,sans-serif;user-select:none;-webkit-user-select:none}
+#stage{position:relative;width:min(100vw,133.4vh);aspect-ratio:4/3;margin:0 auto;background:#0d1420}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);mix-blend-mode:overlay;z-index:3}
+#hud{position:absolute;top:8px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:5}
+#hearts{font-size:22px;letter-spacing:2px;color:var(--blood);text-shadow:0 0 6px rgba(224,85,72,.6)}
+#notes{font-size:17px;color:var(--note);text-shadow:0 0 8px rgba(247,240,214,.5)}
+#hint{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:13px;color:var(--dim);pointer-events:none;z-index:5;text-shadow:0 1px 3px #000}
+#dlg{position:absolute;left:6%;right:6%;bottom:5%;min-height:104px;background:rgba(10,16,24,.9);border:2px solid rgba(230,236,244,.35);border-radius:8px;padding:12px 16px;display:none;z-index:8;box-shadow:0 0 24px rgba(0,0,0,.6)}
+#dlgName{font-size:15px;color:var(--note);margin-bottom:4px}
+#dlgText{font-size:17px;line-height:1.55;min-height:54px;color:var(--ink)}
+#dlgHint{position:absolute;right:10px;bottom:6px;font-size:12px;color:var(--dim)}
+#choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+#choices button{font-family:inherit;font-size:16px;color:var(--ink);background:rgba(46,61,74,.85);border:1px solid rgba(230,236,244,.35);border-radius:6px;padding:10px 12px;text-align:left;cursor:pointer;min-height:44px}
+#choices button:hover{background:rgba(70,90,110,.92)}
+#panel{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:10;background:rgba(6,10,16,.84)}
+#card{width:min(600px,88%);background:rgba(13,20,32,.96);border:2px solid rgba(230,236,244,.3);border-radius:10px;padding:26px 28px;text-align:center;max-height:90%;overflow:auto}
+#card h1{font-family:'Press Start 2P',monospace;font-size:24px;line-height:1.6;color:var(--note);margin:10px 0 4px;text-shadow:0 0 16px rgba(247,240,214,.45)}
+#card h2{font-size:20px;color:var(--ink);margin:6px 0 12px}
+#card p{font-size:15px;line-height:1.7;color:var(--dim);margin:6px 0}
+#card .sub{font-size:13px;color:#5f6f81}
+#card .btns{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+#card button{font-family:inherit;font-size:17px;padding:12px 14px;border-radius:8px;cursor:pointer;min-height:46px}
+#card .primary{background:var(--note);color:#1a1a1a;border:none;font-weight:700}
+#card .ghost{background:transparent;color:var(--ink);border:1px solid rgba(230,236,244,.4)}
+#card .primary:hover{background:#fff6d8}
+#card .ghost:hover{background:rgba(255,255,255,.08)}
+#card .endTitle{font-family:'Press Start 2P',monospace;font-size:18px;line-height:1.7;margin:10px 0}
+#card .epilogue{font-size:16px;line-height:2;color:var(--ink);text-align:left;white-space:pre-line;background:rgba(255,255,255,.04);border-left:3px solid rgba(247,240,214,.5);padding:12px 14px;border-radius:0 6px 6px 0}
+#card .stats{font-size:14px;color:var(--dim);margin-top:12px;line-height:1.8}
+#gallery{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+#gallery span{font-size:13px;padding:5px 12px;border-radius:20px;border:1px solid rgba(230,236,244,.3);color:var(--dim)}
+#gallery span.on{color:#1a1a1a;background:var(--note);border-color:var(--note)}
+#tpad{position:absolute;left:10px;bottom:10px;display:none;z-index:7;flex-direction:column;gap:5px}
+#tpad .row{display:flex;gap:5px;justify-content:center}
+#tpad button{width:54px;height:54px;font-size:18px;color:var(--ink);background:rgba(46,61,74,.5);border:1px solid rgba(230,236,244,.3);border-radius:10px;touch-action:none}
+#actWrap{position:absolute;right:14px;bottom:14px;display:none;z-index:7}
+#actWrap button{width:76px;height:76px;font-size:15px;color:var(--ink);background:rgba(46,61,74,.55);border:1px solid rgba(230,236,244,.35);border-radius:50%;touch-action:none}
+@media (pointer:coarse){#tpad,#actWrap{display:flex}}
+#vignette{position:absolute;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 130px rgba(0,0,0,.55)}
+#redv{position:absolute;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 100px rgba(176,58,46,.6);opacity:0;transition:opacity .4s}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" width="640" height="480"></canvas>
+  <div class="scan"></div>
+  <div id="vignette"></div>
+  <div id="redv"></div>
+  <div id="hud"><span id="hearts"></span><span id="notes"></span></div>
+  <div id="hint"></div>
+  <div id="dlg">
+    <div id="dlgName"></div>
+    <div id="dlgText"></div>
+    <div id="choices"></div>
+    <div id="dlgHint">E / 点击 继续</div>
+  </div>
+  <div id="panel"><div id="card"></div></div>
+  <div id="tpad">
+    <div class="row"><button data-d="up">▲</button></div>
+    <div class="row"><button data-d="left">◀</button><button data-d="down">▼</button><button data-d="right">▶</button></div>
+  </div>
+  <div id="actWrap"><button id="actBtn">互动</button></div>
+</div>
+<script>
+'use strict';
+/* ================= 基础常量 / 工具 ================= */
+var VW=640,VH=480,TILE=16;
+var CV=document.getElementById('game'),ctx=CV.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+function $(id){return document.getElementById(id);}
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function dist(ax,ay,bx,by){var dx=ax-bx,dy=ay-by;return Math.sqrt(dx*dx+dy*dy);}
+function rnd(a,b){return a+Math.random()*(b-a);}
+function noise(x,y){var n=(x*73856093^y*19349663)>>>0;return (n%1000)/1000;}
+
+var PAL={W:'#f2f5f8',w:'#c3ccd8',g:'#8a96a6',d:'#39414f',k:'#14171d',R:'#b03a2e',r:'#e05548',Y:'#f7d774',y:'#fbeaa5',B:'#2b3a4a',b:'#44586c',G:'#2e5d43',g2:'#4d8a5f',O:'#d98a3d',o:'#f0b27a',P:'#6d4b8a',p:'#c9a7e0',M:'#10151f',m:'#2c3e50',N:'#0a1524',n:'#1e3a52',E:'#cfe0ee',e:'#eef4fa',C:'#7f8c8d',c:'#b8c1c9',F:'#5d4037',f:'#8d6e63',L:'#aab7c4',l:'#d6dee6',T:'#1d2733',t:'#37424f'};
+
+function drawPix(p,x,y,opt){
+  opt=opt||{};var al=(opt.alpha!=null)?opt.alpha:1,s=opt.scale||1;
+  ctx.save();ctx.globalAlpha=al;
+  for(var j=0;j<p.h;j++){var row=p.rows[j];
+    for(var i=0;i<row.length;i++){var ch=row[i];if(ch==='.'||ch===' ')continue;var c=p.pal[ch];if(!c)continue;
+      ctx.fillStyle=c;ctx.fillRect(Math.round(x+i*s),Math.round(y+j*s),s,s);}}
+  ctx.restore();
+}
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
+function circ(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fill();}
+function P(rows,pal){return {rows:rows,pal:pal||PAL,w:Math.max.apply(null,rows.map(function(r){return r.length;})),h:rows.length};}
+
+/* ================= 像素精灵 ================= */
+var SPR={};
+SPR.playerF=P([
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.hhhhhhhh.',
+'..hhhhhh..',
+'..hsssss..',
+'..sseess..',
+'..ssssss..',
+'.WWWWWWWW.',
+'..RRRRRR..',
+'.bbbbbbbb.',
+'.bbbbbbbb.',
+'.BBBBBBBB.',
+'..pp..pp..',
+'..PP..PP..',
+'..........',
+'..........'],{h:'#2a2a30',s:'#f6cba8',e:'#23262e',W:'#f2f5f8',R:'#c0392b',b:'#5f9ad1',B:'#4a80b8',p:'#39465a',P:'#23272f'});
+SPR.playerB=P([
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.hhhhhhhh.',
+'..hhhhhh..',
+'..hhhhhh..',
+'..hhhhhh..',
+'..hhhhhh..',
+'..RRRRRR..',
+'.kkkkkkkk.',
+'.kKbbbbKk.',
+'.kKbbbbKk.',
+'.kkkkkkkk.',
+'..pp..pp..',
+'..PP..PP..',
+'..........',
+'..........'],{h:'#2a2a30',s:'#f6cba8',e:'#23262e',W:'#f2f5f8',R:'#c0392b',b:'#5f9ad1',B:'#4a80b8',p:'#39465a',P:'#23272f',k:'#15161a',K:'#33363d'});
+SPR.playerL=P([
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.hhhhhhhh.',
+'..hhhhhh..',
+'..hhsssh..',
+'..hsessh..',
+'..hssssh..',
+'.WWWWWWWW.',
+'..RRRRRR..',
+'kbbbbbbb..',
+'kbbbbbbb..',
+'kpp..pp...',
+'..pp..pp..',
+'..PP..PP..',
+'..........',
+'..........'],{h:'#2a2a30',s:'#f6cba8',e:'#23262e',W:'#f2f5f8',R:'#c0392b',b:'#5f9ad1',B:'#4a80b8',p:'#39465a',P:'#23272f',k:'#15161a'});
+SPR.playerR=P([
+'..hhhhhh..',
+'.hhhhhhhh.',
+'.hhhhhhhh.',
+'..hhhhhh..',
+'..hssshh..',
+'..hssesh..',
+'..hssssh..',
+'.WWWWWWWW.',
+'..RRRRRR..',
+'..bbbbbbbk',
+'..bbbbbbbk',
+'...pp..ppk',
+'..pp..pp..',
+'..PP..PP..',
+'..........',
+'..........'],{h:'#2a2a30',s:'#f6cba8',e:'#23262e',W:'#f2f5f8',R:'#c0392b',b:'#5f9ad1',B:'#4a80b8',p:'#39465a',P:'#23272f',k:'#15161a'});
+SPR.ghost=P([
+'..llllll..',
+'.llllllll.',
+'.llllllll.',
+'..llllll..',
+'..lkkkkl..',
+'..llllll..',
+'..LLLLLL..',
+'.LLllllLL.',
+'.LLllllLL.',
+'.LLlLLlLL.',
+'..LL..LL..',
+'.LL....LL.',
+'.LL....LL.',
+'..........',
+'..........',
+'..........'],{W:'#eef2f7',w:'#cdd6e2',l:'#e2e9f2',L:'#dfe7f0',k:'#4a5565'});
+SPR.ling=P([
+'...WWWW...',
+'..WWWWWW..',
+'..WwkkwW..',
+'..WwwwwW..',
+'..wwwwww..',
+'..WWWWWW..',
+'..WwwwwW..',
+'..WwwwwW..',
+'..WwwwwW..',
+'...WWWW...',
+'..WW..WW..',
+'..WW..WW..',
+'..........',
+'..........']);
+SPR.xian=P([
+'..kkkkkk..',
+'.kkkkkkkk.',
+'.kksssskk.',
+'.kksssskk.',
+'.kksesskk.',
+'.kksssskk.',
+'..kkkkkk..',
+'..WWWWWW..',
+'..bbbbbb..',
+'..bWWWWb..',
+'...pppp...',
+'...pppp...',
+'..........',
+'..........',
+'..........',
+'..........'],{k:'#2a2a30',s:'#f6cba8',e:'#23262e',W:'#f2f5f8',b:'#7fb0dc',p:'#39465a'});
+SPR.huang=P([
+'....dddddddddd....',
+'..dddddddddddddd..',
+'.ddkkkkkkkkkkkkdd.',
+'.dkRRkkkkkkkkRRkd.',
+'.dkRRkkkkkkkkRRkd.',
+'.ddkkkkkkkkkkkkdd.',
+'..dddddddddddddd..',
+'..dddddddddddddd..',
+'..dddddddddddddd..',
+'..dWWddddddddWWd..',
+'...dddddddddddd...',
+'...dddddddddddd...',
+'....dddddddddd....',
+'....dWddddddWd....',
+'.....dddddddd.....',
+'.....dddddddd.....',
+'......dddddd......',
+'......dddddd......',
+'..................',
+'..................']);
+SPR.huangLunge=P([
+'....dddddddddd....',
+'..dddddddddddddd..',
+'.ddkkkkkkkkkkkkdd.',
+'.dkRRkkkkkkkkRRkd.',
+'.dkRRkkkkkkkkRRkd.',
+'.ddkkkkkkkkkkkkdd.',
+'..dddddddddddddd..',
+'..dddddddddddddd..',
+'...dddddddddddd...',
+'...dWWddddddWWd...',
+'....dddddddddd....',
+'....dWddddddWd....',
+'.....dddddddd.....',
+'.....dddddddd.....',
+'......dddddd......',
+'......dddddd......',
+'..................',
+'..................']);
+SPR.shadow=P([
+'......dddd......',
+'....dddddddd....',
+'...dddddddddd...',
+'..dddddddddddd..',
+'..ddwddddddwdd..',
+'..dddddddddddd..',
+'..dddddddddddd..',
+'...dddddddddd...',
+'....dddddddd....',
+'......dddd......',
+'..................',
+'..................',
+'..................',
+'..................']);
+SPR.note=P([
+'.ww..ww.',
+'.ww..ww.',
+'.ww..ww.',
+'.ww..ww.',
+'wwwwww..',
+'.wwww...',
+'..ww....',
+'........']);
+SPR.heart=P([
+'.rr.rr.',
+'rrrrrrr',
+'rrrrrrr',
+'.rrrrr.',
+'..rrr..',
+'...r...',
+'........']);
+SPR.sword=P([
+'.........W.',
+'.........W.',
+'.........W.',
+'.........W.',
+'..WWWWWWWW.',
+'..W........',
+'..W........',
+'..W........'],{W:'#b9c4d2'});
+
+/* ================= 瓦片缓存 ================= */
+var TILES={};
+function tileCanvas(ch){
+  if(TILES[ch])return TILES[ch];
+  var c=document.createElement('canvas');c.width=c.height=TILE;
+  var g=c.getContext('2d');drawTile(g,ch);TILES[ch]=c;return c;
+}
+function speckle(g,base,cols,seed){
+  g.fillStyle=base;g.fillRect(0,0,TILE,TILE);
+  for(var i=0;i<cols;i++){
+    var x=Math.floor(noise(seed*97+i*13,seed*31+i*7)*16);
+    var y=Math.floor(noise(seed*53+i*17,seed*11+i*3)*16);
+    g.fillStyle=(i%2)?'rgba(0,0,0,0.12)':'rgba(255,255,255,0.07)';
+    g.fillRect(x,y,2,2);
+  }
+}
+function drawTile(g,ch){
+  switch(ch){
+    case '.':speckle(g,'#24402e',10,1);break;
+    case 'r':speckle(g,'#4c5561',8,2);break;
+    case 'R':g.fillStyle='#55606e';g.fillRect(0,0,16,16);g.fillStyle='rgba(0,0,0,.14)';g.fillRect(0,7,16,2);g.fillRect(7,0,2,16);break;
+    case '#':g.fillStyle='#3a4150';g.fillRect(0,0,16,16);g.fillStyle='rgba(0,0,0,.22)';g.fillRect(0,14,16,2);g.fillStyle='rgba(255,255,255,.06)';g.fillRect(0,0,16,1);g.fillRect(0,0,1,16);break;
+    case 'A':g.fillStyle='#2b3a4a';g.fillRect(0,0,16,16);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(0,4,16,1);g.fillRect(0,8,16,1);g.fillRect(0,12,16,1);g.fillStyle='rgba(255,255,255,.05)';g.fillRect(0,0,16,1);break;
+    case 'T':g.fillStyle='#24402e';g.fillRect(0,0,16,16);g.fillStyle='#5d4037';g.fillRect(6,9,4,7);g.fillStyle='#2e5d43';g.fillRect(2,2,12,9);g.fillStyle='#3a7250';g.fillRect(4,4,6,5);g.fillRect(9,2,3,3);break;
+    case 'W':g.fillStyle='#16324a';g.fillRect(0,0,16,16);g.fillStyle='rgba(255,255,255,.10)';g.fillRect(2,5,10,1);g.fillRect(6,10,7,1);break;
+    case 'F':g.fillStyle='#24402e';g.fillRect(0,0,16,16);g.fillStyle='#5d4037';g.fillRect(1,6,2,10);g.fillRect(13,6,2,10);g.fillStyle='#6d513f';g.fillRect(0,7,16,2);g.fillRect(0,11,16,2);break;
+    case 'G':speckle(g,'#1f3a2c',8,3);g.fillStyle='#8a96a6';g.fillRect(3,5,10,11);g.fillStyle='#9aa6b6';g.fillRect(3,5,10,2);g.fillStyle='#5c6774';g.fillRect(6,8,4,2);g.fillRect(7,7,2,6);break;
+    case 'P':g.fillStyle='#14171d';g.fillRect(0,4,16,12);g.fillStyle='#f2f5f8';g.fillRect(2,4,12,2);g.fillRect(2,6,12,1);g.fillRect(2,8,12,1);g.fillRect(2,10,12,1);break;
+    case 'B':g.fillStyle='#39424f';g.fillRect(0,0,16,16);g.fillStyle='rgba(0,0,0,.28)';g.fillRect(0,13,16,3);g.fillStyle='#4a5565';g.fillRect(3,2,10,4);g.fillRect(3,2,2,12);g.fillRect(11,2,2,12);break;
+    case 'D':g.fillStyle='#39424f';g.fillRect(0,0,16,16);g.fillStyle='#0b1017';g.fillRect(4,4,8,12);g.fillStyle='rgba(255,255,255,.10)';g.fillRect(4,4,8,1);break;
+    case 'L':speckle(g,'#24402e',8,4);g.fillStyle='#5d4037';g.fillRect(7,8,2,8);g.fillStyle='#f7d774';g.fillRect(5,4,6,6);g.fillStyle='rgba(247,215,116,.25)';g.fillRect(3,2,10,10);break;
+    case 'S':speckle(g,'#1d3350',6,5);g.fillStyle='rgba(255,255,255,.05)';g.fillRect(0,14,16,2);break;
+    default:speckle(g,'#24402e',8,9);
+  }
+}
+
+/* ================= 地图构建 ================= */
+function blank(w,h,ch){var m=[];for(var y=0;y<h;y++){var r=[];for(var x=0;x<w;x++)r.push(ch);m.push(r);}return m;}
+function fill(m,x0,y0,x1,y1,ch){for(var y=y0;y<=y1;y++)for(var x=x0;x<=x1;x++)m[y][x]=ch;}
+function stamp(m,rows,x0,y0){for(var dy=0;dy<rows.length;dy++){var r=rows[dy];for(var dx=0;dx<r.length;dx++){var c=r[dx];if(c===' ')continue;var yy=y0+dy,xx=x0+dx;if(yy>=0&&yy<m.length&&xx>=0&&xx<m[0].length)m[yy][xx]=c;}}}
+function isSolid(ch){return ch==='#'||ch==='T'||ch==='W'||ch==='G'||ch==='P'||ch==='D'||ch==='B'||ch==='F';}
+
+var SCENES={};
+function makeScene(id,cfg){SCENES[id]=cfg;}
+
+var HOUSE1=[
+'##############',
+'#AAAAAAAAAAAA#',
+'#A..........A#',
+'#A..........A#',
+'#A..........A#',
+'#A..........A#',
+'#AAAAAAAAAAAA#',
+'##############'];
+var HOUSE2=[
+'##############',
+'#AAAAAAAAAAAA#',
+'#A..........A#',
+'#A..........A#',
+'#A..........A#',
+'#A..........A#',
+'#A..........A#',
+'#AAAAAAAAAAAA#',
+'##############'];
+var HOUSE3=[
+'##########',
+'#AAAAAAAA#',
+'#A......A#',
+'#A......A#',
+'#A......A#',
+'#A......A#',
+'#AAAAAAAA#',
+'##########'];
+
+function buildScenes(){
+  /* ---- 镇门 gate (m[行][列]) ---- */
+  var m=blank(40,26,'.');
+  fill(m,18,0,21,25,'r'); // 纵向路
+  fill(m,0,0,39,2,'#');fill(m,0,23,39,25,'#'); // 上下墙
+  fill(m,0,0,4,14,'#');fill(m,35,0,39,14,'#');
+  m[0][19]='.';m[0][20]='.';m[0][21]='.';m[1][19]='.';m[1][20]='.';m[1][21]='.';m[2][19]='.';m[2][20]='.';m[2][21]='.'; // 顶部门洞
+  m[17][6]='L';m[23][6]='L';
+  var cfg={name:'镇门',amb:'#0d1420',m:m,spawn:{x:20,y:22},
+    exits:[{tx:20,ty:2,to:'street',sx:20,sy:4}],
+    notes:[{x:20,y:18,id:1}],npcs:[],enemies:[],inter:[]};
+  cfg.inter.push({x:20,y:18,label:'拾起白色音符',fn:function(){pickNote(1);}});
+  makeScene('gate',cfg);
+
+  /* ---- 主街 street ---- */
+  m=blank(40,26,'.');
+  fill(m,0,10,39,13,'r');
+  stamp(m,HOUSE1,3,2);stamp(m,HOUSE2,25,2);
+  stamp(m,HOUSE3,4,15);stamp(m,HOUSE1,26,15);
+  m[2][19]='L';m[2][24]='L';m[14][8]='L';
+  var street={name:'主街',amb:'#0d1420',m:m,spawn:{x:20,y:12},
+    exits:[
+      {tx:20,ty:2,to:'gate',sx:20,sy:22},
+      {tx:0,ty:11,to:'school',sx:33,sy:12},
+      {tx:39,ty:12,to:'grave',sx:1,sy:12}
+    ],
+    notes:[
+      {x:17,y:11,id:2},{x:23,y:11,id:3}
+    ],
+    npcs:[
+      {x:9,y:12,id:'old',sp:SPR.ghost},
+      {x:29,y:12,id:'teacher',sp:SPR.ghost},
+      {x:26,y:16,id:'girl',sp:SPR.ghost}
+    ],
+    enemies:[{x:6,y:19},{x:34,y:5}],inter:[]};
+  street.inter.push({x:17,y:11,label:'拾起白色音符',fn:function(){pickNote(2);}});
+  street.inter.push({x:23,y:11,label:'拾起白色音符',fn:function(){pickNote(3);}});
+  street.inter.push({x:20,y:20,label:'进入钟楼',fn:function(){enterTower();}});
+  makeScene('street',street);
+
+  /* ---- 学堂 school ---- */
+  m=blank(36,24,'.');
+  stamp(m,['####################','#AAAAAAAAAAAAAAAAAA#','#A................A#','#A................A#','#A................A#','#A................A#','#A................A#','#AAAAAAAAAAAAAAAAAA#','####################'],8,3);
+  m[11][17]='D';
+  m[2][8]='T';m[2][30]='T';m[16][4]='T';
+  var school={name:'学堂·庭院',amb:'#0e1522',m:m,spawn:{x:33,y:12},
+    exits:[{tx:0,ty:11,to:'street',sx:38,sy:12}],
+    notes:[],npcs:[],enemies:[{x:6,y:18}],inter:[]};
+  school.inter.push({x:17,y:12,label:'走进学堂',fn:function(){enterClassroom();}});
+  makeScene('school',school);
+
+  /* ---- 教室 classroom ---- */
+  m=blank(24,18,'.');
+  fill(m,0,0,23,17,'#');fill(m,2,2,21,15,'.');
+  fill(m,8,8,10,15,'#');m[8][11]='G';m[2][19]='D';
+  m[16][17]='.';
+  var cls={name:'学堂·教室',amb:'#0d141f',m:m,spawn:{x:17,y:15},
+    exits:[{tx:17,ty:16,to:'school',sx:17,sy:9}],
+    notes:[{x:11,y:5,id:4}],
+    npcs:[{x:16,y:10,id:'pupil',sp:SPR.ghost}],
+    enemies:[],inter:[]};
+  cls.inter.push({x:11,y:5,label:'查看书桌',fn:function(){deskEvent();}});
+  cls.inter.push({x:19,y:3,label:'进入琴房',fn:function(){enterPiano();}});
+  makeScene('classroom',cls);
+
+  /* ---- 琴房 piano ---- */
+  m=blank(20,16,'.');
+  fill(m,0,0,19,15,'#');fill(m,2,2,18,13,'.');
+  m[11][9]='P';m[14][18]='.';
+  var pn={name:'琴房',amb:'#101623',m:m,spawn:{x:18,y:13},
+    exits:[{tx:18,ty:14,to:'classroom',sx:19,sy:3}],
+    notes:[{x:9,y:8,id:5}],
+    npcs:[],enemies:[],inter:[]};
+  pn.inter.push({x:9,y:11,label:'触碰钢琴',fn:function(){pianoEvent();}});
+  pn.inter.push({x:9,y:8,label:'拾起白色音符',fn:function(){pickNote(5);}});
+  makeScene('piano',pn);
+
+  /* ---- 墓园 grave ---- */
+  m=blank(36,24,'.');
+  for(var gx=4;gx<32;gx+=5){for(var gy=3;gy<20;gy+=4){m[gy][gx]='G';m[gy][gx+1]='G';}}
+  m[10][17]='G';m[10][18]='G';
+  m[6][8]='T';m[8][28]='T';m[18][28]='T';
+  var grv={name:'墓园',amb:'#0c131e',m:m,spawn:{x:1,y:12},
+    exits:[{tx:0,ty:12,to:'street',sx:38,sy:12}],
+    notes:[{x:18,y:12,id:6}],
+    npcs:[],enemies:[{x:8,y:20},{x:26,y:6},{x:26,y:20}],inter:[]};
+  grv.inter.push({x:18,y:12,label:'拾起白色音符',fn:function(){pickNote(6);}});
+  grv.inter.push({x:17,y:11,label:'查看墓碑',fn:function(){graveEvent();}});
+  makeScene('grave',grv);
+
+  /* ---- 钟楼 tower ---- */
+  m=blank(40,26,'.');
+  fill(m,0,0,39,25,'S');fill(m,10,5,29,21,'r');
+  fill(m,16,8,23,16,'B');
+  m[17][19]='D';m[17][20]='D';m[17][21]='D';
+  fill(m,0,0,39,2,'#');fill(m,0,23,39,25,'#');fill(m,0,0,2,25,'#');fill(m,37,0,39,25,'#');
+  m[23][19]='.';m[23][20]='.';m[23][21]='.';m[24][19]='.';m[24][20]='.';m[24][21]='.';
+  var tw={name:'钟楼广场',amb:'#0b111c',m:m,spawn:{x:20,y:21},
+    exits:[{tx:20,ty:22,to:'street',sx:20,sy:18}],
+    notes:[{x:22,y:18,id:7}],
+    npcs:[],enemies:[],inter:[]};
+  tw.inter.push({x:22,y:18,label:'拾起最后的音符',fn:function(){pickNote(7);}});
+  tw.inter.push({x:20,y:19,label:'与剑魔对话',fn:function(){towerTalk();}});
+  makeScene('tower',tw);
+
+  /* 归一化敌人像素坐标 */
+  for(var k in SCENES){
+    var s=SCENES[k];
+    s.enemies.forEach(function(e){e.sx=e.x;e.sy=e.y;e.x=e.sx*TILE+8;e.y=e.sy*TILE+8;});
+  }
+}
+
+/* ================= 文本：记忆 / 对话 ================= */
+var NOTE_TEXT={
+1:'白色的音符飘在雾里，像雪。\n——这是弟弟刘若谷说的。他说，雾是天上掉下来的乐谱，只要有人能读懂，城就会醒。',
+2:'今天雾又厚了。城里的人开始忘记回家的路。\n他们走过我窗前，叫我“弹琴的”。\n没有人再叫我名字了。',
+3:'荒大人说，只要我停下琴，他就能保护我。\n可他不知道——我一停，雾就会吞掉半座城。\n我停不下来。琴，也停不下来。',
+4:'琴键开始结霜。我的手指被冻在键上，拔下来的时候，少了一根。\n没关系。反正我弹琴，本来也不需要那么多手指。',
+5:'那天晚上，琴房的门自己开了，琴在没人碰的情况下，响了一整夜。\n我坐在门口听，忽然明白：\n安魂曲不是弹给死人听的，是弹给活人听的——让他们，别去死。',
+6:'他劈下来的时候，我还在弹最后一个音。好疼啊。\n可是琴没有停——琴声自己接了下去。\n原来这首安魂曲，早就不是我一个人在弹了。',
+7:'刘若谷，如果你能听到这段记忆——别恨他。\n他杀掉我，以为能救这座城。他只是……太想救谁了。\n告诉他：雾散了以后，别再当剑魔了。\n当个普通人吧。'
+};
+var NPC_DIALOG={
+old:[
+['老人','雾是那晚的琴声带来的。琴声一停，雾就吃人。'],
+['老人','她停不下来。谁让她停，雾就吃掉谁。'],
+['老人','……我已经忘了自己叫什么了。只记得，我在等一个打渔回来的儿子。'],
+['老人','（他抬起头，空洞地望着雾）天快黑了。儿子，该回来了。']],
+teacher:[
+['先生','那天晚上，琴房的门自己开了。没有人的琴，响了一整夜。'],
+['先生','她弹的是安魂曲。安魂曲不是给死人听的，是给活人听的。'],
+['先生','十年了，这雾里连钟声都听不见。可琴声，一直没停过。你听——'],
+['先生','（他侧耳，雾里果然有极轻的琴声，若有若无）……她还在。']],
+girl:[
+['卖花的女孩','若彬姐姐说，白雾是思念太重，凝成的水。'],
+['卖花的女孩','可一个人，怎么装得下整座城的思念呢？'],
+['卖花的女孩','她走后，花都谢了。我每天还在卖花，只是没有人买了。'],
+['卖花的女孩','（她低头，怀里的花束早已枯萎成灰）要是她还在，就好了。']],
+pupil:[
+['琴房里的幽灵','先生让我们练琴，可我们都在听隔壁的姐姐弹。'],
+['琴房里的幽灵','她的曲子，会把窗户上的霜化掉。'],
+['琴房里的幽灵','那天之后，琴房里就一直有一个音，弹错了，没有人纠正。'],
+['琴房里的幽灵','（他指着琴房的门，声音发抖）姐姐说，那不是她弹的。']]
+};
+
+/* ================= 全局状态 ================= */
+var GS={
+  mode:'title',scene:'gate',px:0,py:0,dir:0,walk:0,hp:3,iframes:0,
+  notes:0,notesGot:{},deaths:0,startTime:0,runTime:0,
+  flags:{},dead:false,paused:false,
+  whisperTimer:0,shake:0,flash:0
+};
+var BOSS=null;
+var KEY={},TOUCH={up:false,down:false,left:false,right:false};
+var PARTICLES=[],WHISPERS=[];
+var DIALOG=null; // {lines,idx,typing,timer,onDone}
+var FOG_ALPHA=0.94, FOG_TARGET=0.94;
+var raf=0,lastT=0;
+
+/* ================= 输入 ================= */
+function keyDown(e){
+  if(e.code==='ArrowLeft'||e.code==='KeyA')KEY.left=true;
+  if(e.code==='ArrowRight'||e.code==='KeyD')KEY.right=true;
+  if(e.code==='ArrowUp'||e.code==='KeyW')KEY.up=true;
+  if(e.code==='ArrowDown'||e.code==='KeyS')KEY.down=true;
+  if(e.code==='KeyE'||e.code==='Space'||e.code==='Enter'){e.preventDefault();primaryPress();}
+  if(e.code==='Escape'||e.code==='KeyP'){if(GS.mode==='play')togglePause();else if(GS.mode==='pause')togglePause();}
+}
+function keyUp(e){
+  if(e.code==='ArrowLeft'||e.code==='KeyA')KEY.left=false;
+  if(e.code==='ArrowRight'||e.code==='KeyD')KEY.right=false;
+  if(e.code==='ArrowUp'||e.code==='KeyW')KEY.up=false;
+  if(e.code==='ArrowDown'||e.code==='KeyS')KEY.down=false;
+}
+window.addEventListener('keydown',keyDown);
+window.addEventListener('keyup',keyUp);
+document.querySelectorAll('#tpad button').forEach(function(b){
+  var d=b.getAttribute('data-d');
+  b.addEventListener('pointerdown',function(ev){ev.preventDefault();TOUCH[d]=true;});
+  b.addEventListener('pointerup',function(ev){ev.preventDefault();TOUCH[d]=false;});
+  b.addEventListener('pointerleave',function(){TOUCH[d]=false;});
+  b.addEventListener('pointercancel',function(){TOUCH[d]=false;});
+});
+$('actBtn').addEventListener('pointerdown',function(ev){ev.preventDefault();primaryPress();});
+$('actBtn').addEventListener('pointerup',function(){});
+$('dlg').addEventListener('pointerdown',function(){if(DIALOG&&!DIALOG.choices)advanceDialog();});
+
+/* ================= 存档 ================= */
+var SAVE={best:0,seen:[],deaths:0};
+function loadSave(){try{var s=localStorage.getItem('wfr_save');if(s){var o=JSON.parse(s);if(o&&o.best!=null)SAVE=o;}}catch(e){}}
+function writeSave(){try{localStorage.setItem('wfr_save',JSON.stringify(SAVE));}catch(e){}}
+loadSave();
+
+/* ================= 面板 ================= */
+function showPanel(html){$('panel').style.display='flex';$('card').innerHTML=html;}
+function hidePanel(){$('panel').style.display='none';}
+function setHUD(){
+  var h='';for(var i=0;i<3;i++)h+=(i<GS.hp)?'♥':'·';
+  $('hearts').textContent=h;
+  $('notes').textContent='♪ '+GS.notes+' / 7';
+  var hints={gate:'WASD / 方向键移动 · E / 空格 互动',street:'在雾里寻找白色的音符',school:'雾影会靠近声音……小心',classroom:'课桌上有东西在发光',piano:'琴键结着霜',grave:'……这里很安静',tower:'钟楼里站着一个人'};
+  $('hint').textContent=hints[GS.scene]||'';
+}
+function titleScreen(){
+  GS.mode='title';
+  var seen=['安魂·雾散','白刃·寂灭','残响·成雾'];
+  var html='<h1>白雾安魂曲</h1><h2>WHITE FOG REQUIEM</h2>'+
+    '<p>一座被白雾困了十年的城。七个白色音符，一段没有弹完的安魂曲。<br>拾音者，你叫什么名字？……你也不记得了？没关系。雾会让人忘记很多事。</p>'+
+    '<div class="sub">2D 像素探索 · 恐怖 / 致郁 · 建议戴耳机（本作无音效，请脑补琴声）</div>'+
+    '<div id="gallery">'+seen.map(function(s,i){return '<span class="'+(SAVE.seen.indexOf(i)>=0?'on':'')+'">'+(SAVE.seen.indexOf(i)>=0?'✔ ':'? ')+s+'</span>';}).join('')+'</div>'+
+    '<div class="stats">已死亡 '+SAVE.deaths+' 次</div>'+
+    '<div class="btns">'+
+    '<button class="primary" id="bStart">开始游戏</button>'+
+    '<button class="ghost" id="bHelp">操作说明</button>'+
+    '</div>';
+  showPanel(html);
+  $('bStart').onclick=function(){hidePanel();newRun();};
+  $('bHelp').onclick=function(){helpScreen();};
+}
+function helpScreen(){
+  var html='<h1>操作说明</h1>'+
+    '<p>移动：WASD 或 方向键（触屏使用左下虚拟按键）</p>'+
+    '<p>互动 / 对话 / 攻击：E 或 空格（触屏点右下“互动”）</p>'+
+    '<p>暂停：Esc 或 P</p>'+
+    '<p class="sub">捡齐 7 个白色音符，走进钟楼。届时，你将面对这座城唯一的活人——剑魔。</p>'+
+    '<p class="sub">雾里的东西不会说话。但它们会追。</p>'+
+    '<div class="btns"><button class="ghost" id="bBack">返回</button></div>';
+  showPanel(html);
+  $('bBack').onclick=function(){titleScreen();};
+}
+function pauseScreen(){
+  var html='<h1>暂停</h1>'+
+    '<p>雾不会等你。</p>'+
+    '<div class="btns">'+
+    '<button class="primary" id="bResume">继续</button>'+
+    '<button class="ghost" id="bRestart">重新开始</button>'+
+    '<button class="ghost" id="bTitle">回到标题</button></div>';
+  showPanel(html);
+  $('bResume').onclick=function(){hidePanel();GS.mode='play';GS.paused=false;};
+  $('bRestart').onclick=function(){hidePanel();newRun();};
+  $('bTitle').onclick=function(){hidePanel();titleScreen();};
+}
+function deathScreen(){
+  GS.deaths++;SAVE.deaths++;writeSave();
+  var html='<h2>你被雾吞没了</h2>'+
+    '<p>白色的雾灌进你的口鼻。你不记得自己是谁了。</p>'+
+    '<p class="sub">——然后，你猛地睁开眼。</p>'+
+    '<div class="btns"><button class="primary" id="bWake">再次醒来</button>'+
+    '<button class="ghost" id="bT2">回到标题</button></div>';
+  showPanel(html);
+  $('bWake').onclick=function(){hidePanel();respawn();};
+  $('bT2').onclick=function(){hidePanel();titleScreen();};
+}
+function endingScreen(id){
+  var data={
+    A:{t:'安魂 · 雾散',c:'#f7f0d6',ep:'你按下第一个音。琴声像白色的鸟，从钟楼里飞出去。\n\n雾开始退散。街上的影子一个个站住，回过头，露出十年没有过的表情。\n老人终于想起了儿子的名字。先生听见了钟声。卖花的女孩，看见花又开了。\n\n荒站在你身后，剑落在地上。他哭了。\n\n——刘若彬没有醒。她本来就不会醒。\n但你听见她在最后一个音符里，轻轻说了一句：\n“谢谢你来接我回家。”\n\n雾散了。城醒了。你留在钟楼里，成为新的守夜人。\n每一个起雾的夜晚，你都会弹起那首安魂曲。\n让活着的人，别去死。'},
+    B:{t:'白刃 · 寂灭',c:'#b9c4d2',ep:'你挥下那一剑。\n\n雾，散了。\n城，塌了。\n所有还困在雾里的人——老人、先生、卖花的女孩、琴房里的幽灵——都像白色的音符一样，轻轻飘散。\n他们终于可以死了。\n\n你站在废墟中央，手里只剩一枚白色的音符。\n那是刘若彬留下的最后一个音。\n它说：“好好活着。”\n\n你把它按在胸口。\n白雾散尽，故人皆无。\n而你，还要继续活。'},
+    C:{t:'残响 · 成雾',c:'#8a96a6',ep:'你按下琴键。\n\n可是记忆缺了一枚音符。\n安魂曲在第七个音上，断掉了。\n\n雾没有散。雾扑向你。\n你听见刘若彬的声音在很远的地方喊：“快跑——”\n来不及了。\n白雾涌进你的眼睛、耳朵、喉咙。\n你忘记了自己的名字。\n你忘记了那七个音符。\n\n你开始在这座城里，漫无目的地走。\n……\n多年后，又一个拾音者来到镇门口。\n你站在雾里，看着他。\n你说：“滚开，拾音的。”\n\n——轮回，还在继续。'}
+  };
+  var d=data[id],idx=(id==='A'?0:(id==='B'?1:2));
+  if(SAVE.seen.indexOf(idx)<0)SAVE.seen.push(idx);
+  if(idx+1>SAVE.best)SAVE.best=idx+1;
+  writeSave();
+  GS.mode='ending';
+  var html='<div class="endTitle" style="color:'+d.c+'">'+d.t+'</div>'+
+    '<div class="epilogue">'+d.ep+'</div>'+
+    '<div class="stats">拾得音符 '+GS.notes+' / 7 · 死亡 '+GS.deaths+' 次 · 用时 '+Math.floor(GS.runTime/60)+' 分 '+Math.floor(GS.runTime%60)+' 秒</div>'+
+    '<div class="btns">'+
+    '<button class="primary" id="bAgain">再玩一次</button>'+
+    '<button class="ghost" id="bT3">回到标题</button></div>';
+  showPanel(html);
+  $('bAgain').onclick=function(){hidePanel();newRun();};
+  $('bT3').onclick=function(){hidePanel();titleScreen();};
+}
+
+/* ================= 对话系统 ================= */
+function startDialog(lines,onDone){
+  DIALOG={lines:lines,idx:0,typing:true,ch:'',timer:0,onDone:onDone||null,choices:false};
+  $('dlg').style.display='block';
+  $('choices').innerHTML='';
+  var sp=lines[0][0];
+  $('dlgName').textContent=sp||'';
+  typeLine(lines[0][1]);
+}
+function typeLine(txt){
+  DIALOG.txt=txt;DIALOG.ch='';DIALOG.typing=true;DIALOG.timer=0;
+  $('dlgText').textContent='';
+}
+function advanceDialog(){
+  if(!DIALOG)return;
+  if(DIALOG.choices)return;
+  if(DIALOG.typing){DIALOG.typing=false;$('dlgText').textContent=DIALOG.txt;return;}
+  DIALOG.idx++;
+  if(DIALOG.idx>=DIALOG.lines.length){
+    var cb=DIALOG.onDone;DIALOG=null;
+    $('dlg').style.display='none';$('choices').innerHTML='';
+    if(cb)cb();
+    return;
+  }
+  var sp=DIALOG.lines[DIALOG.idx][0];
+  $('dlgName').textContent=sp||'';
+  typeLine(DIALOG.lines[DIALOG.idx][1]);
+}
+function showChoices(opts,onPick){
+  if(!DIALOG){return;}
+  DIALOG.choices=true;
+  $('dlgHint').textContent='';
+  var box=$('choices');box.innerHTML='';
+  opts.forEach(function(o,i){
+    var b=document.createElement('button');
+    b.textContent=o;
+    b.onclick=function(){box.innerHTML='';DIALOG.choices=false;$('dlgHint').textContent='E / 点击 继续';onPick(i);};
+    box.appendChild(b);
+  });
+}
+function primaryPress(){
+  if(GS.mode==='title'||GS.mode==='pause'||GS.mode==='ending')return;
+  if(DIALOG){advanceDialog();return;}
+  if(GS.mode==='boss'){tryAttack();return;}
+  if(GS.mode==='play'){tryInteract();return;}
+}
+
+/* ================= 新游戏 / 重置 ================= */
+function newRun(){
+  GS.scene='gate';GS.hp=3;GS.notes=0;GS.notesGot={};GS.deaths=0;
+  GS.flags={};GS.iframes=0;GS.runTime=0;GS.startTime=Date.now();
+  GS.mode='play';GS.paused=false;BOSS=null;
+  PARTICLES=[];WHISPERS=[];
+  FOG_ALPHA=0.94;FOG_TARGET=0.94;
+  var sc=SCENES[GS.scene];
+  GS.px=sc.spawn.x*TILE+TILE/2;GS.py=sc.spawn.y*TILE+TILE/2;
+  resetSceneEnemies();
+  setHUD();
+  introDialogue();
+}
+function respawn(){
+  GS.mode='play';GS.hp=3;GS.iframes=0;
+  var sc=SCENES[GS.scene];
+  GS.px=sc.spawn.x*TILE+TILE/2;GS.py=sc.spawn.y*TILE+TILE/2;
+  resetSceneEnemies();
+  setHUD();
+  FOG_ALPHA=0.94;FOG_TARGET=0.94;
+}
+function resetSceneEnemies(){
+  var sc=SCENES[GS.scene];
+  sc.enemies.forEach(function(e){e.x=e.sx*TILE+TILE/2;e.y=e.sy*TILE+TILE/2;e.vx=0;e.vy=0;});
+}
+function introDialogue(){
+  startDialog([
+    ['铃','刘若谷，你醒了。'],
+    ['铃','……你不记得我了？没关系。雾会让人忘记很多事。'],
+    ['铃','姐姐把她的记忆，藏成了七个白色音符，散在这座城里。'],
+    ['铃','把它们捡起来吧。捡齐了，你就能听见她最后想说的话。'],
+    ['铃','小心雾里的东西。它们……也是忘记了自己的人。'],
+    ['铃','去吧。顺着路往前走。我在钟楼那边等你。']
+  ],null);
+}
+
+/* ================= 场景切换 ================= */
+function switchScene(to,sx,sy){
+  GS.scene=to;
+  var sc=SCENES[to];
+  GS.px=sx*TILE+TILE/2;GS.py=sy*TILE+TILE/2;
+  GS.dir=0;
+  resetSceneEnemies();
+  setHUD();
+  if(to==='tower'&&GS.notes>=6&&!GS.flags.towerTalk)setTimeout(function(){towerTalk();},400);
+}
+function enterClassroom(){
+  if(GS.flags.classroomFirst){switchScene('classroom',17,15);return;}
+  GS.flags.classroomFirst=true;
+  startDialog([
+    ['？？','（学堂的门吱呀一声开了。一股霉味。）'],
+    ['？？','（雾里，有小孩练琴的声音，断断续续。）']
+  ],function(){switchScene('classroom',17,15);});
+}
+function enterPiano(){
+  if(GS.flags.pianoOpen){switchScene('piano',18,13);return;}
+  startDialog([
+    ['？？','琴房的门锁着。锁上结着霜。'],
+    ['？？','门上刻着一行小字：“琴键亮起的顺序：1 → 3 → 2 → 4”']
+  ],function(){GS.flags.pianoOpen=true;openPianoPuzzle();});
+}
+function openPianoPuzzle(){
+  GS.mode='play';GS.paused=true;
+  var seq=[1,3,2,4],p=0;
+  var html='<h1>琴房的锁</h1><p>按刻在门上的顺序，依次按下琴键。</p>'+
+    '<p class="sub">顺序：1 → 3 → 2 → 4</p>'+
+    '<div class="btns">'+[1,2,3,4].map(function(n){return '<button class="ghost" id="key'+n+'">琴键 '+n+'</button>';}).join('')+'</div>';
+  showPanel(html);
+  [1,2,3,4].forEach(function(n){
+    $('key'+n).onclick=function(){
+      if(seq[p]===n){p++;if(p>=seq.length){hidePanel();puzzleWin();}}
+      else{p=0;$('key'+n).style.opacity='0.4';setTimeout(function(){$('key'+n).style.opacity='1';},200);}
+    };
+  });
+}
+function puzzleWin(){
+  GS.paused=false;
+  startDialog([
+    ['？？','（咔哒。琴房的门，自己开了。）'],
+    ['？？','（里面传出一个音——只有一个音，孤独地，一直响着。）']
+  ],function(){});
+}
+function enterTower(){
+  if(GS.notes<6){
+    startDialog([['？？','（钟楼的门锁着。门缝里透出一点红光。）'],['？？','“凑齐七个音符再来。”']],null);
+    return;
+  }
+  switchScene('tower',20,23);
+}
+
+/* ================= 互动 / 拾音 ================= */
+function tryInteract(){
+  var sc=SCENES[GS.scene];
+  var nearest=null,bd=30;
+  sc.inter.forEach(function(it){
+    var d=dist(GS.px,GS.py,it.x*TILE+8,it.y*TILE+8);
+    if(d<bd){bd=d;nearest=it;}
+  });
+  if(nearest){nearest.fn();return;}
+  sc.npcs.forEach(function(n){
+    var d=dist(GS.px,GS.py,n.x*TILE+8,n.y*TILE+8);
+    if(d<bd){bd=d;npcTalk(n);}
+  });
+}
+function npcTalk(n){
+  var lines=NPC_DIALOG[n.id];
+  if(!lines)return;
+  startDialog(lines.slice(),null);
+}
+function pickNote(id){
+  if(GS.notesGot[id])return;
+  GS.notesGot[id]=true;GS.notes++;setHUD();
+  burst(GS.px,GS.py-10,14,'note');
+  startDialog([
+    ['白色音符','（一枚白色的音符落在你掌心，微微发烫。）'],
+    ['刘若彬的记忆',NOTE_TEXT[id]]
+  ],function(){
+    if(GS.notes===3&&!GS.flags.note3){
+      GS.flags.note3=true;
+      startDialog([['铃','三枚了。姐姐的记忆，开始自己拼起来了。'],['铃','她弹琴的时候，总喜欢把窗户打开。让雾进来一点，她说，这样曲子才不会寂寞。']],null);
+    }
+    if(GS.notes===6&&!GS.flags.note6){
+      GS.flags.note6=true;
+      startDialog([['铃','……刘若谷，你知道吗。姐姐最后那晚，弹的不是安魂曲。'],['铃','她在弹一首摇篮曲。她以为，只要大家都睡着了，就不会有人看见雾里那些东西。'],['铃','去钟楼吧。他在那里等你。']],null);
+    }
+    if(GS.notes===7&&!GS.flags.note7){
+      GS.flags.note7=true;
+      startDialog([['剑魔·荒','……七个。凑齐了。'],['剑魔·荒','她最后的话，在你手里了。'],['剑魔·荒','来吧。把那首曲子，弹完。或者，把剑拔出来。']],null);
+    }
+  });
+}
+function deskEvent(){
+  if(GS.flags.deskDone){startDialog([['？？','（书桌上放着一本琴谱，名字被霜盖住了。）']],null);return;}
+  GS.flags.deskDone=true;
+  startDialog([
+    ['？？','（书桌的抽屉里，有一枚发白的音符，和半块冻住的橡皮。）'],
+    ['？？','（琴谱的扉页写着：致刘若谷——等我回来。）']
+  ],function(){pickNote(4);});
+}
+function pianoEvent(){
+  if(GS.flags.pianoDone){startDialog([['？？','（琴键上结着霜。你不敢碰。）']],null);return;}
+  GS.flags.pianoDone=true;
+  GS.mode='play';
+  FOG_TARGET=0.55;
+  startDialog([
+    ['？？','（你按下琴键。霜在指尖化开，琴声很轻，像有人在很远的地方和声。）'],
+    ['？？','（琴房角落的凳子上，坐着一个女孩的背影。长发垂进雾里。她没有回头。）'],
+    ['刘若彬','……你来了。'],
+    ['刘若彬','别碰那架琴。它记住我了。我弹了十年，它会把每一个音都还给你。'],
+    ['刘若彬','（她伸手，指了指琴顶：一枚音符，正静静浮着。）'],
+    ['刘若彬','拿走吧。那是我最怕的一段记忆。你听完，就别再回头了。']
+  ],function(){GS.flags.pianoGhost=true;FOG_TARGET=0.94;});
+}
+function graveEvent(){
+  if(GS.flags.graveTalk){startDialog([['？？','（墓碑上刻着一个名字：刘若彬。）'],['？？','（墓是空的。里面只有一截断弦。）']],null);return;}
+  GS.flags.graveTalk=true;
+  startDialog([
+    ['？？','（墓碑上刻着一个名字：刘若彬。墓边放着一把锈剑。）'],
+    ['？？','（雾里传来脚步声。很重。）']
+  ],function(){huangFirstMeet();});
+}
+function huangFirstMeet(){
+  var sc=SCENES['grave'];
+  sc.npcs.push({x:20,y:10,id:'huang',sp:SPR.huang,boss:true});
+  startDialog([
+    ['剑魔·荒','……拾音者。上一个像你这样捡音符的人，已经变成雾影了。'],
+    ['剑魔·荒','你说刘若彬？她死了。我杀的。为了这座城。'],
+    ['剑魔·荒','别用那种眼神看我。那时候，她弹的曲子，就要把整座城都拖进雾里了。'],
+    ['剑魔·荒','我只是……做了一件必须做的事。滚吧。趁我还能忍住不杀你。']
+  ],function(){
+    sc.npcs=sc.npcs.filter(function(n){return n.id!=='huang';});
+    FOG_ALPHA=0.96;
+  });
+}
+function towerTalk(){
+  if(GS.flags.towerTalk){
+    startDialog([
+      ['剑魔·荒','（他抱着剑，看着你。）'],
+      ['剑魔·荒',GS.notes>=7?'……七个音符，都在你手上了。':'你还差一枚音符。不过，想动手的话，我奉陪。']
+    ],function(){towerChoices();});
+    return;
+  }
+  GS.flags.towerTalk=true;
+  startDialog([
+    ['剑魔·荒','你还是来了。七个音符，你捡了六个。'],
+    ['剑魔·荒','刘若彬的记忆很甜，对吧？可你知不知道，那些记忆，每一段，都是一座城的人忘记的东西。'],
+    ['剑魔·荒','她一个人在雾里弹了十年。谁靠近她，谁就被雾吃掉。'],
+    ['剑魔·荒','是我让她停下的。我砍下去的时候，她还在笑。她说：“荒，雾不是我的错。”'],
+    ['剑魔·荒','……她是对的。这雾，从来就不是她招来的。'],
+    ['剑魔·荒','是我的罪。十年前，是我亲手把这座城的钟楼，沉进雾里的。她弹琴，只是替我赎罪。'],
+    ['剑魔·荒','她死了，雾却还在。因为我还在。只要我活着，这座城就永远困在那一夜。'],
+    ['剑魔·荒','拾音者，给你三个选择。'],
+    ['剑魔·荒','一，奏响那首安魂曲——她会真正死去，雾会散，城会醒。二，拔剑——杀了我，让一切随我一起消失。三，离开，当作没来过。']
+  ],function(){towerChoices();});
+}
+function towerChoices(){
+  startDialog([['剑魔·荒','说吧。你的答案。']],function(){});
+  var _d=DIALOG;
+  showChoices(['演奏安魂曲','拔剑，了结一切','转身离开'],function(i){
+    if(i===0){
+      if(GS.notes>=7)requiemEnding();
+      else requiemEndingC();
+    }else if(i===1){
+      startBoss();
+    }else{
+      DIALOG=null;$('dlg').style.display='none';
+    }
+  });
+}
+function requiemEnding(){
+  GS.mode='ending';
+  FOG_TARGET=0;
+  startDialog([
+    ['剑魔·荒','……七个。凑齐了。'],
+    ['剑魔·荒','她最后的话，在你手里。'],
+    ['剑魔·荒','去吧。把那首曲子，弹完。'],
+    ['铃','刘若谷。姐姐说——'],
+    ['铃','“雾散了以后，替我看着他，别再让他，一个人扛了。”']
+  ],function(){FOG_ALPHA=0;setTimeout(function(){endingScreen('A');},1600);});
+}
+function requiemEndingC(){
+  FOG_TARGET=1;
+  startDialog([
+    ['？？','（你按下琴键。可是记忆缺了一枚音符。）'],
+    ['？？','（安魂曲在第七个音上，断掉了。）'],
+    ['刘若彬','快跑——']
+  ],function(){FOG_ALPHA=1;setTimeout(function(){endingScreen('C');},1400);});
+}
+
+/* ================= 战斗 ================= */
+function startBoss(){
+  GS.mode='boss';
+  BOSS={x:20*TILE+8,y:10*TILE+8,hp:5,state:'talk',t:0,dir:1,flash:0,minions:[],cycle:0,swordAng:0};
+  startDialog([
+    ['剑魔·荒','（他拔剑。剑身映着雾里唯一一点红光。）'],
+    ['剑魔·荒','我砍她的时候，她还在笑。'],
+    ['剑魔·荒','你知道最可笑的是什么吗？这雾，从来就不是她招来的。'],
+    ['剑魔·荒','是我。是我一直不肯放过这座城。'],
+    ['剑魔·荒','来吧，拾音者。让我看看，刘若彬用命换来的你，够不够快。']
+  ],function(){BOSS.state='idle';BOSS.t=1.2;});
+}
+function tryAttack(){
+  if(!BOSS||BOSS.state==='talk'||BOSS.state==='dead')return;
+  if(BOSS.state==='recover'||BOSS.state==='stagger'){
+    var d=dist(GS.px,GS.py,BOSS.x,BOSS.y);
+    if(d<30){
+      BOSS.hp--;BOSS.state='stagger';BOSS.t=0.5;BOSS.flash=1;
+      GS.shake=8;
+      burst(BOSS.x,BOSS.y-14,10,'spark');
+      if(BOSS.hp<=0){bossDefeated();}
+      return;
+    }
+  }
+}
+function bossDefeated(){
+  BOSS.state='dead';BOSS.minions=[];
+  GS.mode='play';
+  startDialog([
+    ['剑魔·荒','……好快。比十年前的我，还要快。'],
+    ['剑魔·荒','刘若彬的弟弟，果然，也是怪物啊。'],
+    ['剑魔·荒','动手吧。这座城，是我用执念拖着的。我死了，它就没了。'],
+    ['剑魔·荒','雾散了以后……替我告诉她：我这一生，只后悔一剑。'],
+    ['剑魔·荒','（他垂下头。剑，落进雾里。）']
+  ],function(){FOG_TARGET=0;setTimeout(function(){endingScreen('B');},1500);});
+}
+
+/* ================= 粒子 / 耳语 ================= */
+function burst(x,y,n,type){
+  for(var i=0;i<n;i++){
+    PARTICLES.push({x:x,y:y,vx:rnd(-40,40),vy:rnd(-70,-10),life:rnd(0.5,1.2),max:1.2,type:type||'note'});
+  }
+}
+function spawnWhisper(){
+  var lines=['别回头……','琴声……停了……','雾里有东西……','她还在弹……','别捡那些音符……','荒大人……对不起了……','好冷……','不要相信铃……'];
+  WHISPERS.push({x:GS.px+rnd(-120,120),y:GS.py+rnd(-80,20),txt:lines[Math.floor(Math.random()*lines.length)],life:2.6,max:2.6});
+}
+
+/* ================= 敌人 AI ================= */
+function updateEnemies(dt){
+  var sc=SCENES[GS.scene];
+  sc.enemies.forEach(function(e){
+    var d=dist(GS.px,GS.py,e.x,e.y);
+    var sp=34+(GS.notes*3);
+    if(d<170){
+      var ang=Math.atan2(GS.py-e.y,GS.px-e.x);
+      e.vx=Math.cos(ang)*sp;e.vy=Math.sin(ang)*sp;
+    }else{
+      if(Math.random()<0.02){e.vx=rnd(-20,20);e.vy=rnd(-20,20);}
+      if(Math.random()<0.01){e.vx=0;e.vy=0;}
+    }
+    var nx=e.x+e.vx*dt,ny=e.y+e.vy*dt;
+    if(!solidAt(nx,e.y))e.x=nx;
+    if(!solidAt(e.x,ny))e.y=ny;
+    e.x=clamp(e.x,TILE,TILE*(sc.m[0].length-1));e.y=clamp(e.y,TILE,TILE*(sc.m.length-1));
+    if(d<14&&GS.iframes<=0)damagePlayer();
+  });
+}
+function damagePlayer(){
+  GS.hp--;GS.iframes=1.6;GS.shake=10;GS.flash=1;
+  $('redv').style.opacity='1';
+  setTimeout(function(){$('redv').style.opacity='0';},350);
+  if(GS.hp<=0){
+    GS.mode='dead';GS.paused=false;
+    setTimeout(function(){deathScreen();},600);
+  }else{
+    setHUD();
+  }
+}
+
+/* ================= 碰撞 ================= */
+function solidAt(x,y){
+  var sc=SCENES[GS.scene],m=sc.m;
+  var tx=Math.floor(x/TILE),ty=Math.floor(y/TILE);
+  if(tx<0||ty<0||tx>=m[0].length||ty>=m.length)return true;
+  return isSolid(m[ty][tx]);
+}
+function movePlayer(dx,dy){
+  var k=(GS.iframes>0)?0.8:1;
+  var nx=GS.px+dx*k,ny=GS.py+dy*k;
+  var hw=3,hh=2;
+  if(!solidAt(nx-hw,GS.py-hh)&&!solidAt(nx+hw,GS.py-hh)&&!solidAt(nx-hw,GS.py+6)&&!solidAt(nx+hw,GS.py+6))GS.px=nx;
+  if(!solidAt(GS.px-hw,ny-hh)&&!solidAt(GS.px+hw,ny-hh)&&!solidAt(GS.px-hw,ny+6)&&!solidAt(GS.px+hw,ny+6))GS.py=ny;
+  GS.px=clamp(GS.px,TILE,TILE*(SCENES[GS.scene].m[0].length-1)-1);
+  GS.py=clamp(GS.py,TILE,TILE*(SCENES[GS.scene].m.length-1)-1);
+}
+
+/* ================= 主更新 ================= */
+function updatePlay(dt){
+  GS.runTime=(Date.now()-GS.startTime)/1000;
+  if(GS.iframes>0)GS.iframes-=dt;
+  if(GS.shake>0)GS.shake=Math.max(0,GS.shake-dt*30);
+  if(GS.flash>0)GS.flash=Math.max(0,GS.flash-dt*2.5);
+  var dx=(KEY.right||TOUCH.right?1:0)-(KEY.left||TOUCH.left?1:0);
+  var dy=(KEY.down||TOUCH.down?1:0)-(KEY.up||TOUCH.up?1:0);
+  if(dx||dy){
+    var len=Math.sqrt(dx*dx+dy*dy);
+    movePlayer(dx/len*92*dt,dy/len*92*dt);
+    if(dx<0)GS.dir=2;else if(dx>0)GS.dir=3;
+    if(dy<0)GS.dir=0;else if(dy>0)GS.dir=1;
+    GS.walk=(GS.walk+dt*7)%2;
+  }
+  var inBoss=GS.scene==='tower'&&BOSS;
+  if(!inBoss){
+    var sc=SCENES[GS.scene];
+    sc.exits.forEach(function(ex){
+      var tx=Math.floor(GS.px/TILE),ty=Math.floor((GS.py+4)/TILE);
+      if(tx===ex.tx&&ty===ex.ty){switchScene(ex.to,ex.sx,ex.sy);}
+    });
+  }
+  if(!inBoss){
+    GS.whisperTimer-=dt;
+    if(GS.whisperTimer<=0){GS.whisperTimer=rnd(3,6);if(Math.random()<0.6)spawnWhisper();}
+    updateEnemies(dt);
+  }
+  updateParticles(dt);
+  updateWhispers(dt);
+  updateFog(dt);
+}
+function updateBoss(dt){
+  updatePlay(dt);
+  if(!BOSS||BOSS.state==='dead'||BOSS.state==='talk')return;
+  var b=BOSS;
+  b.t-=dt;
+  if(b.flash>0)b.flash=Math.max(0,b.flash-dt*4);
+  if(b.state==='idle'){
+    if(b.t<=0){
+      b.state='telegraph';b.t=0.7;
+    }
+  }else if(b.state==='telegraph'){
+    b.dir=(GS.px<b.x)?-1:1;
+    if(b.t<=0){b.state='lunge';b.t=0.55;b.lvx=b.dir*240;b.lvy=0;}
+  }else if(b.state==='lunge'){
+    var nx=b.x+b.lvx*dt,ny=b.y+b.lvy*dt;
+    if(!solidAt(nx,b.y))b.x=nx;
+    if(!solidAt(b.x,ny))b.y=ny;
+    if(dist(GS.px,GS.py,b.x,b.y)<16&&GS.iframes<=0){damagePlayer();}
+    b.t-=dt;
+    if(b.t<=0){
+      b.state='recover';b.t=1.4;b.cycle++;
+      if(b.cycle%2===0&&b.minions.length<2){
+        b.minions.push({x:b.x+rnd(-60,60),y:b.y+rnd(-30,60),vx:0,vy:0});
+      }
+    }
+  }else if(b.state==='recover'){
+    if(b.t<=0){b.state='idle';b.t=rnd(0.9,1.3);}
+  }else if(b.state==='stagger'){
+    if(b.t<=0){b.state='idle';b.t=rnd(1.1,1.5);}
+  }
+  // 荒的小弟（雾影）
+  b.minions.forEach(function(mn){
+    var d=dist(GS.px,GS.py,mn.x,mn.y);
+    var ang=Math.atan2(GS.py-mn.y,GS.px-mn.x);
+    mn.vx=Math.cos(ang)*40;mn.vy=Math.sin(ang)*40;
+    var nx=mn.x+mn.vx*dt,ny=mn.y+mn.vy*dt;
+    if(!solidAt(nx,mn.y))mn.x=nx;
+    if(!solidAt(mn.x,ny))mn.y=ny;
+    if(d<14&&GS.iframes<=0)damagePlayer();
+  });
+}
+function updateFog(dt){
+  FOG_ALPHA+=(FOG_TARGET-FOG_ALPHA)*dt*0.6;
+}
+function updateParticles(dt){
+  PARTICLES.forEach(function(p){
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=40*dt;p.life-=dt;
+  });
+  PARTICLES=PARTICLES.filter(function(p){return p.life>0;});
+}
+function updateWhispers(dt){
+  WHISPERS.forEach(function(w){w.y-=12*dt;w.life-=dt;});
+  WHISPERS=WHISPERS.filter(function(w){return w.life>0;});
+}
+
+/* ================= 渲染 ================= */
+var fogCanvas=document.createElement('canvas');fogCanvas.width=VW;fogCanvas.height=VH;
+var fogCtx=fogCanvas.getContext('2d');
+var cam={x:0,y:0};
+function render(){
+  ctx.save();
+  ctx.fillStyle='#0d1420';ctx.fillRect(0,0,VW,VH);
+  if(GS.shake>0){ctx.translate(rnd(-GS.shake,GS.shake),rnd(-GS.shake,GS.shake));}
+  var sc=SCENES[GS.scene];
+  cam.x=clamp(GS.px-VW/2,0,Math.max(0,sc.m[0].length*TILE-VW));
+  cam.y=clamp(GS.py-VH/2,0,Math.max(0,sc.m.length*TILE-VH));
+  if(sc.m[0].length*TILE<VW)cam.x=(sc.m[0].length*TILE-VW)/2;
+  if(sc.m.length*TILE<VH)cam.y=(sc.m.length*TILE-VH)/2;
+  var x0=Math.max(0,Math.floor(cam.x/TILE)),y0=Math.max(0,Math.floor(cam.y/TILE));
+  var x1=Math.min(sc.m[0].length-1,Math.ceil((cam.x+VW)/TILE)),y1=Math.min(sc.m.length-1,Math.ceil((cam.y+VH)/TILE));
+  for(var ty=y0;ty<=y1;ty++)for(var tx=x0;tx<=x1;tx++){
+    ctx.drawImage(tileCanvas(sc.m[ty][tx]),tx*TILE-cam.x,ty*TILE-cam.y);
+  }
+  // 铃（开场引导，门附近）
+  if(GS.scene==='gate'&&GS.notes===0&&!GS.flags.lingGone){
+    var lx=20*TILE+8-cam.x,ly=16*TILE+8-cam.y;
+    drawPix(SPR.ling,lx-5,ly-14,{alpha:0.85});
+    circ(lx,ly-18,2,'#f7f0d6');
+  }
+  // 实体（按 y 排序）
+  var ents=[];
+  sc.npcs.forEach(function(n){ents.push({y:n.y*TILE+8,draw:function(){drawNPC(n);}});});
+  sc.enemies.forEach(function(e){ents.push({y:e.y,draw:function(){drawShadow(e);}});});
+  if(BOSS&&GS.scene==='tower'&&BOSS.state!=='dead'){ents.push({y:BOSS.y,draw:function(){drawBoss();}});}
+  if(BOSS&&BOSS.minions&&BOSS.minions.length){BOSS.minions.forEach(function(mn){ents.push({y:mn.y,draw:function(){drawShadow({x:mn.x,y:mn.y});}});});}
+  sc.notes.forEach(function(n){if(!GS.notesGot[n.id])ents.push({y:n.y*TILE,draw:function(){drawNote(n);}});});
+  ents.push({y:GS.py,draw:function(){drawPlayer();}});
+  ents.sort(function(a,b){return a.y-b.y;});
+  ents.forEach(function(e){e.draw();});
+  // 白雾
+  drawFog();
+  // 飘雾团
+  drawDrift();
+  // 耳语
+  WHISPERS.forEach(function(w){
+    var a=Math.max(0,w.life/w.max);
+    ctx.fillStyle='rgba(220,228,240,'+(a*0.5)+')';
+    ctx.font='12px "ZCOOL KuaiLe",sans-serif';
+    ctx.fillText(w.txt,w.x-cam.x,w.y-cam.y);
+  });
+  ctx.restore();
+  if(GS.flash>0){
+    ctx.fillStyle='rgba(255,255,255,'+(GS.flash*0.35)+')';
+    ctx.fillRect(0,0,VW,VH);
+  }
+}
+function drawPlayer(){
+  var spr=GS.dir===0?SPR.playerB:(GS.dir===1?SPR.playerF:(GS.dir===2?SPR.playerL:SPR.playerR));
+  var bob=GS.walk<1?0:1;
+  var px=Math.round(GS.px-cam.x),py=Math.round(GS.py-cam.y);
+  var al=GS.iframes>0?(0.4+0.3*Math.sin(GS.iframes*20)):1;
+  drawPix(spr,px-6,py-16+bob,{alpha:al});
+}
+function drawNPC(n){
+  var t=Date.now()/1000;
+  var al=0.68+0.12*Math.sin(t*3+n.x);
+  var offx=(n.id==='huang')?10:6;
+  drawPix(n.sp,n.x*TILE+8-offx-cam.x,n.y*TILE+8-16-cam.y+Math.sin(t*2+n.x)*1.5,{alpha:al});
+  if(n.id==='huang'){drawBossStand(n);}
+}
+function drawBossStand(n){
+  var sx=n.x*TILE+8-cam.x,sy=n.y*TILE+8-cam.y;
+  ctx.fillStyle='rgba(176,58,46,0.8)';
+  ctx.fillRect(sx-1,sy-20,2,8);
+}
+function drawShadow(e){
+  var t=Date.now()/1000;
+  var al=0.55+0.25*Math.sin(t*5+e.x);
+  drawPix(SPR.shadow,e.x-7-cam.x,e.y-13-cam.y+Math.sin(t*4+e.x)*1.2,{alpha:al});
+}
+function drawBoss(){
+  var b=BOSS;
+  var t=Date.now()/1000;
+  var spr=(b.state==='lunge'||b.state==='telegraph')?SPR.huangLunge:SPR.huang;
+  var x=b.x-cam.x,y=b.y-cam.y;
+  var fl=(b.state==='telegraph')?(0.6+0.4*Math.sin(t*18)):1;
+  ctx.save();
+  if(b.state==='stagger'||b.state==='recover')ctx.translate(rnd(-1.5,1.5),rnd(-1.5,1.5));
+  // 剑
+  ctx.save();
+  ctx.translate(x+8*b.dir,y+4);
+  ctx.rotate(b.dir*0.5+Math.sin(t*2)*0.06);
+  drawPix(SPR.sword,-2,-2,{alpha:fl});
+  ctx.restore();
+  drawPix(spr,x-10,y-24,{alpha:fl});
+  ctx.restore();
+  // 血条
+  if(b.state!=='dead'&&b.state!=='talk'){
+    ctx.fillStyle='rgba(10,16,24,0.7)';ctx.fillRect(x-26,y-32,52,6);
+    ctx.fillStyle='#b03a2e';ctx.fillRect(x-25,y-31,50*(b.hp/5),4);
+  }
+  if(b.state==='recover'){
+    ctx.fillStyle='rgba(247,240,214,'+(0.4+0.4*Math.sin(t*10))+')';
+    ctx.fillRect(x-14,y-40,28,2);
+  }
+}
+function drawNote(n){
+  var t=Date.now()/1000;
+  var x=n.x*TILE+8-cam.x,y=n.y*TILE+8-cam.y;
+  var bob=Math.sin(t*2.2+n.id)*2;
+  var glow=0.5+0.3*Math.sin(t*3+n.id);
+  ctx.fillStyle='rgba(247,240,214,'+glow+')';
+  ctx.beginPath();ctx.arc(x,y-8+bob,10,0,6.2832);ctx.fill();
+  drawPix(SPR.note,x-4,y-12+bob);
+}
+function drawFog(){
+  fogCtx.clearRect(0,0,VW,VH);
+  var flick=FOG_ALPHA+(Math.sin(Date.now()/900)*0.02);
+  fogCtx.fillStyle='rgba(232,238,246,'+clamp(flick,0.85,1)+')';
+  fogCtx.fillRect(0,0,VW,VH);
+  fogCtx.globalCompositeOperation='destination-out';
+  var grd=fogCtx.createRadialGradient(GS.px-cam.x,GS.py-cam.y,10,GS.px-cam.x,GS.py-cam.y,105);
+  grd.addColorStop(0,'rgba(0,0,0,1)');grd.addColorStop(1,'rgba(0,0,0,0)');
+  fogCtx.fillStyle=grd;fogCtx.fillRect(0,0,VW,VH);
+  var sc=SCENES[GS.scene];
+  sc.notes.forEach(function(n){
+    if(GS.notesGot[n.id])return;
+    var x=n.x*TILE+8-cam.x,y=n.y*TILE+8-cam.y;
+    var g2=fogCtx.createRadialGradient(x,y-8,4,x,y-8,34);
+    g2.addColorStop(0,'rgba(0,0,0,0.9)');g2.addColorStop(1,'rgba(0,0,0,0)');
+    fogCtx.fillStyle=g2;fogCtx.fillRect(x-40,y-48,80,80);
+  });
+  sc.npcs.forEach(function(n){
+    var x=n.x*TILE+8-cam.x,y=n.y*TILE+8-cam.y;
+    var g3=fogCtx.createRadialGradient(x,y,4,x,y,30);
+    g3.addColorStop(0,'rgba(0,0,0,0.7)');g3.addColorStop(1,'rgba(0,0,0,0)');
+    fogCtx.fillStyle=g3;fogCtx.fillRect(x-40,y-40,80,80);
+  });
+  sc.inter.forEach(function(it){
+    if(it.label.indexOf('拾起')<0)return;
+    var x=it.x*TILE+8-cam.x,y=it.y*TILE+8-cam.y;
+    var g4=fogCtx.createRadialGradient(x,y-6,4,x,y-6,26);
+    g4.addColorStop(0,'rgba(0,0,0,0.8)');g4.addColorStop(1,'rgba(0,0,0,0)');
+    fogCtx.fillStyle=g4;fogCtx.fillRect(x-34,y-40,68,68);
+  });
+  fogCtx.globalCompositeOperation='source-over';
+  ctx.drawImage(fogCanvas,0,0);
+}
+var drift=[];
+function initDrift(){for(var i=0;i<5;i++)drift.push({x:rnd(0,VW),y:rnd(0,VH),r:rnd(30,70),vx:rnd(3,8),vy:rnd(-2,2)});}
+function drawDrift(){
+  drift.forEach(function(d){
+    d.x+=d.vx*0.016;d.y+=d.vy*0.016;
+    if(d.x>VW+80)d.x=-80;if(d.x<-80)d.x=VW+80;
+    ctx.fillStyle='rgba(255,255,255,0.05)';
+    ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,6.2832);ctx.fill();
+  });
+}
+
+/* ================= 暂停 ================= */
+function togglePause(){
+  if(GS.mode==='play'){GS.mode='pause';GS.paused=true;pauseScreen();}
+  else if(GS.mode==='pause'){hidePanel();GS.mode='play';GS.paused=false;}
+}
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden&&(GS.mode==='play'||GS.mode==='boss')){GS.mode='pause';GS.paused=true;pauseScreen();}
+});
+
+/* ================= 主循环 / 启动 ================= */
+function frame(t){
+  raf=requestAnimationFrame(frame);
+  var dt=Math.min((t-lastT)/1000||0.016,0.05);lastT=t;
+  if(!GS.paused){
+    if(GS.mode==='play')updatePlay(dt);
+    else if(GS.mode==='boss')updateBoss(dt);
+    else if(GS.mode==='ending'){updateFog(dt);updateParticles(dt);updateWhispers(dt);}
+  }
+  if(DIALOG&&DIALOG.typing){
+    DIALOG.timer+=dt;
+    var n=Math.min(DIALOG.txt.length,Math.floor(DIALOG.timer/0.045));
+    DIALOG.ch=DIALOG.txt.slice(0,n);
+    $('dlgText').textContent=DIALOG.ch;
+    if(n>=DIALOG.txt.length)DIALOG.typing=false;
+  }
+  render();
+}
+function boot(){
+  buildScenes();
+  initDrift();
+  lastT=performance.now();
+  raf=requestAnimationFrame(frame);
+  titleScreen();
+}
+boot();
+</script>
+
+
+</body>
+</html>
