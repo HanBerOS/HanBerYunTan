@@ -39,6 +39,10 @@ const MapGen = {
     // 3.5) 行政区形状裁剪（区外填郊野，形状如实还原）
     this.applyShape(tiles, roadGrid, w, h, cfg.shape);
 
+    // 3.55) 江中岛（复兴岛等）步行空地：岛上撒空地/绿地，避免整岛全是建筑不可走
+    (cfg.water || []).map(r => r.island).filter(Boolean).forEach(isl =>
+      this.scatterIsland(tiles, roadGrid, w, h, isl));
+
     // 3.6) 住宅小区（中海城等内部结构）
     (cfg.estates || []).forEach(es => this.makeEstate(tiles, roadGrid, w, h, es.cx, es.cy, es.cols, es.rows));
 
@@ -158,20 +162,27 @@ const MapGen = {
     return map.spawn;
   },
 
-  /* ---- 水域（矩形 / 圆形 / 椭圆） ---- */
+  /* ---- 水域（矩形 / 圆形 / 椭圆）----
+     rect.island: 水体内的陆地（如复兴岛），填水时跳过该矩形，保持原地面 */
   fillWater(tiles, w, h, rect) {
+    const isl = rect.island;
+    const skipIsland = (x, y) => {
+      if (!isl) return false;
+      return x >= isl.x && x < isl.x + isl.w && y >= isl.y && y < isl.y + isl.h;
+    };
     if (rect.round) {
       const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
       const rx = rect.w / 2, ry = (rect.ry || rect.h) / 2;
       for (let y = rect.y; y < rect.y + rect.h; y++)
         for (let x = rect.x; x < rect.x + rect.w; x++) {
+          if (skipIsland(x, y)) continue;
           const dx = x - cx, dy = y - cy;
           if ((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1) tiles[y * w + x] = T.WATER;
         }
     } else {
       for (let y = rect.y; y < Math.min(rect.y + rect.h, h); y++)
         for (let x = rect.x; x < Math.min(rect.x + rect.w, w); x++)
-          tiles[y * w + x] = T.WATER;
+          if (!skipIsland(x, y)) tiles[y * w + x] = T.WATER;
     }
   },
 
@@ -225,6 +236,19 @@ const MapGen = {
         }
       }
     }
+  },
+
+  /* ---- 江中岛步行空地：30% 空地 + 15% 绿地，其余保持建筑（不破坏岛内道路/水域/桥） ---- */
+  scatterIsland(tiles, roadGrid, w, h, isl) {
+    for (let y = isl.y; y < isl.y + isl.h; y++)
+      for (let x = isl.x; x < isl.x + isl.w; x++) {
+        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        const i = y * w + x;
+        if (roadGrid[i] || tiles[i] === T.WATER || tiles[i] === T.BRIDGE) continue;
+        const r = hash2(x, y, 97);
+        if (r < 0.3) tiles[i] = T.GROUND;
+        else if (r < 0.45) tiles[i] = T.GRASS;
+      }
   },
 
   /* ---- 公园绿地（与水域同形，填 GRASS；用于湖畔/林带） ---- */
@@ -355,8 +379,10 @@ const MapGen = {
       [T.WATER]:    ['#3a6ea5', '#3a6ea5'],
       [T.GRASS]:    ['#6aab4c', '#639f47'],
       [T.LANDMARK]: ['#8a7f6a', '#847a66'],
-      [T.OUTSKIRT]: ['#5d7a4a', '#557244', '#658453']
+      // 区界外：暗色空白（不加载的"图外"虚空），不再用绿色绿化带
+      [T.OUTSKIRT]: ['#1d2024', '#1d2024']
     };
+    MapGen.PALETTE = PALETTE;
 
     for (let y = 0; y < map.h; y++) {
       for (let x = 0; x < map.w; x++) {

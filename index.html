@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>☁️</text></svg>">
 <meta name="referrer" content="no-referrer">
-<title>云坛 v3.0 · HanBerOS 3.0</title>
+<title>云坛 v4.0 · HanBerOS 4.0</title>
 <script>
 /* 点击劫持防护：禁止本页被 iframe 嵌入 */
 if (window.top !== window.self) { window.top.location = window.self.location; }
@@ -378,6 +378,15 @@ body[data-theme].light-theme .topbar {
 .app-card .app-tag { display: inline-block; margin-top: 9px; font-size: 11px; padding: 3px 10px; border-radius: 999px; background: var(--brand-1); color: #fff; }
 #apps-frame-wrap { display: none; margin-top: 6px; }
 #apps-frame-wrap.active { display: block; }
+/* 游戏全屏模式 */
+#apps-frame-wrap.fullscreen {
+  position: fixed; inset: 0; z-index: 9999; margin: 0;
+  background: #0b0e14; display: flex; flex-direction: column;
+}
+#apps-frame-wrap.fullscreen #apps-frame { flex: 1; height: auto; border: none; border-radius: 0; }
+#apps-frame-wrap .fs-bar { display: none; }
+#apps-frame-wrap.fullscreen .fs-bar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #141a24; color: #d7dee8; font-size: 13px; }
+body.no-scroll { overflow: hidden; }
 #apps-back { margin-left: 2px; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .section-title { font-family: "Noto Serif SC", "Songti SC", serif; font-weight: 900; font-size: 26px; margin: 0 0 4px; }
@@ -2035,6 +2044,7 @@ body[data-theme="tno"] .auth-tab.active { background: #3a1a14; color: #ffe9b0; }
   <section class="route" id="route-notifications">
     <h2 class="section-title">消息通知</h2>
     <p class="section-sub">谁回复了你、关注了你、给你发了私信。</p>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-ghost btn-sm" id="notif-clear-read" data-i18n="nav.notifClear" style="display:none">清除已读</button></div>
     <div class="card" id="notif-list"></div>
   </section>
 
@@ -2127,9 +2137,10 @@ body[data-theme="tno"] .auth-tab.active { background: #3a1a14; color: #ffe9b0; }
     <div id="apps-user-line" style="text-align:center;margin:10px 0 16px;font-size:13px"></div>
     <div id="apps-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;max-width:820px;margin:0 auto"></div>
     <div id="apps-frame-wrap">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div class="fs-bar">
         <button class="btn btn-outline" id="apps-back" type="button">← 返回游戏列表</button>
-        <span id="apps-frame-title" style="font-weight:600;color:var(--ink)"></span>
+        <span id="apps-frame-title" style="font-weight:600;color:var(--ink);flex:1"></span>
+        <button class="btn btn-outline" id="apps-fs-btn" type="button" style="padding:4px 12px">⛶ 全屏</button>
       </div>
       <iframe id="apps-frame" src="" style="width:100%;height:calc(100vh - 240px);border:1px solid var(--line);border-radius:12px;background:#fff" title="小程序"></iframe>
     </div>
@@ -2143,7 +2154,7 @@ body[data-theme="tno"] .auth-tab.active { background: #3a1a14; color: #ffe9b0; }
   </section>
 </main>
 
-<div class="footer">HanBer云坛 · <span style="opacity:.6">HanBerOS 3.0</span></div>
+<div class="footer">HanBer云坛 · <span id="ver-stamp" style="opacity:.6;cursor:default">HanBerOS 4.0</span></div>
 
 <!-- 管理员登录弹窗已移除 -->
 
@@ -2187,6 +2198,7 @@ var LANGS = [
 ];
 var I18N = {
   zh: {
+
     'nav.home': '首页', 'nav.new': '发帖', 'nav.chat': '私信', 'nav.notif': '通知', 'nav.apps': '小程序',
     'nav.login': '登录', 'nav.signup': '注册', 'nav.logout': '退出登录',
     'search.ph': '搜索帖子…',
@@ -2205,9 +2217,58 @@ var I18N = {
     'settings.themeSaved': '主题已切换', 'settings.saveFail': '保存失败：', 'settings.glassOnDone': '液态玻璃已开启', 'settings.glassOffDone': '液态玻璃已关闭',
     'settings.glassColorDone': '玻璃颜色已更新', 'settings.glassAlphaDone': '玻璃透明度已更新', 'settings.langDone': '语言已切换',
     'welcome': '欢迎回来，', 'signupOk': '注册成功，欢迎加入HanBer云坛', 'pleaseLogin': '请先登录', 'uploadFail': '上传失败', 'netErr': '请求超时',
-    'footer': 'HanBerOS 3.0'
+    'footer': 'HanBerOS 4.0',
+    'nav.notifClear': '清除已读',
+    'nav.notifCleared': '已清除已读通知',
+    'apps.login.ok1': '✅ 已通过云坛登录：',
+    'apps.login.ok2': ' —— 进入游戏自动带账号',
+    'apps.login.no1': '🔒 未登录云坛，',
+    'apps.login.no2': '后进游戏可一键登录（不登录也能试玩）',
+    'apps.needlogin': '此游戏需云坛一键登录，请先登录云坛',
+    'apps.fs.on': '⛶ 退出全屏',
+    'apps.fs.off': '⛶ 全屏',
+    'apps.name.bread': '面包杀 · 群雄争霸',
+    'apps.tag.bread': '合作出品 · 进入需阅声明',
+    'apps.desc.bread': '三国杀风卡牌对战：匹配 / 排位、武将技能、装备锦囊全手牌。Han Ber & Bread Guard Team 联合出品。',
+    'apps.name.gta': 'GTA · 上海像素城',
+    'apps.tag.gta': '单机游玩',
+    'apps.desc.gta': '2D 像素开放世界：12 个行政区、产业经营、货运/押运/竞速任务、通缉追捕，浏览器本地存档。',
+    'apps.name.tank': '铁甲战史 2D',
+    'apps.tag.tank': '云坛一键登录',
+    'apps.desc.tank': '四战役战争游戏：铁甲洪流、兵种克制、阵地推进，指挥你的装甲部队。',
+    'apps.name.century': '世纪战争',
+    'apps.tag.century': '云坛一键登录',
+    'apps.desc.century': '四大战役横跨百年：从堑壕到闪电战，经典战史回合对决。',
+    'apps.name.game': '博弈论 · 均衡实验室',
+    'apps.tag.game': '云坛一键登录',
+    'apps.desc.game': '经典博弈案例人机对战：囚徒困境、纳什均衡、智猪博弈，边玩边学。',
+    'apps.name.potato': '疯狂土豆',
+    'apps.tag.potato': '云坛一键登录',
+    'apps.desc.potato': '打土豆休闲小游戏：反应速度大挑战，越打越上头。',
+    'apps.name.puff': '鼓气河豚 Puff!',
+    'apps.tag.puff': '云坛一键登录',
+    'apps.desc.puff': '鼓气河豚休闲小游戏：吹气、膨胀、翻转，一玩就停不下来。',
+    'apps.name.mist': '白雾安魂曲',
+    'apps.tag.mist': '单机',
+    'apps.desc.mist': '2D 像素探索：迷雾小镇、失忆主角，拨开白雾找回真相。',
+    'apps.name.hanba': '旱魃传奇',
+    'apps.tag.hanba': '云坛一键登录',
+    'apps.desc.hanba': 'HANBA LEGEND：东方传说冒险，御旱驱灾，逐鹿中原。',
+    'apps.name.croissant': '可颂传奇',
+    'apps.tag.croissant': '云坛一键登录',
+    'apps.desc.croissant': 'Croissant Legend：烘焙世界的冒险物语，酥皮英雄救巴黎。',
+    'apps.name.panglong': '胖龙减肥记',
+    'apps.tag.panglong': '云坛一键登录',
+    'apps.desc.panglong': '贪吃小龙的瘦身大作战，控制饮食，动起来！',
+    'apps.name.weiren': '煒人 · 伪人模拟研究所',
+    'apps.tag.weiren': '单机',
+    'apps.desc.weiren': '观察、辨别、模拟，在真假之间做出你的选择。',
+    'apps.name.star': '星旅者',
+    'apps.tag.star': '云坛一键登录',
+    'apps.desc.star': 'Star Voyager：星星宇宙探险，驾驶飞船穿越星海。',
   },
   en: {
+
     'nav.home': 'Home', 'nav.new': 'New Post', 'nav.chat': 'Messages', 'nav.notif': 'Notifications', 'nav.apps': 'Mini Apps',
     'nav.login': 'Log in', 'nav.signup': 'Sign up', 'nav.logout': 'Log out',
     'search.ph': 'Search posts…',
@@ -2226,9 +2287,58 @@ var I18N = {
     'settings.themeSaved': 'Theme switched', 'settings.saveFail': 'Save failed: ', 'settings.glassOnDone': 'Liquid glass enabled', 'settings.glassOffDone': 'Liquid glass disabled',
     'settings.glassColorDone': 'Glass color updated', 'settings.glassAlphaDone': 'Glass opacity updated', 'settings.langDone': 'Language switched',
     'welcome': 'Welcome back, ', 'signupOk': 'Signed up successfully. Welcome to HanBer Forum!', 'pleaseLogin': 'Please log in first', 'uploadFail': 'Upload failed', 'netErr': 'Request timed out',
-    'footer': 'HanBerOS 3.0'
+    'footer': 'HanBerOS 4.0',
+    'nav.notifClear': 'Clear Read',
+    'nav.notifCleared': 'Read notifications cleared',
+    'apps.login.ok1': '✅ Logged in via YunTan: ',
+    'apps.login.ok2': ' — games auto-attach your account',
+    'apps.login.no1': '🔒 Not logged in, ',
+    'apps.login.no2': ' for one-click game login (or play as guest)',
+    'apps.needlogin': 'This game requires YunTan one-click login. Please log in first.',
+    'apps.fs.on': '⛶ Exit Fullscreen',
+    'apps.fs.off': '⛶ Fullscreen',
+    'apps.name.bread': '面包杀 · 群雄争霸',
+    'apps.tag.bread': 'Co-produced · Disclaimer required',
+    'apps.desc.bread': 'Three Kingdoms-style card battle: match/ranked modes, hero skills, equipment & scheme cards. Co-produced by Han Ber & Bread Guard Team.',
+    'apps.name.gta': 'GTA · 上海像素城',
+    'apps.tag.gta': 'Offline Play',
+    'apps.desc.gta': '2D pixel open world: 12 districts, business, cargo/escort/racing missions, wanted chases. Local browser saves.',
+    'apps.name.tank': '铁甲战史 2D',
+    'apps.tag.tank': 'YunTan One-Click Login',
+    'apps.desc.tank': 'Four-campaign war game: armored tides, unit counters, front-line pushes. Command your armor.',
+    'apps.name.century': '世纪战争',
+    'apps.tag.century': 'YunTan One-Click Login',
+    'apps.desc.century': 'Four great campaigns across a century: from trenches to blitzkrieg, classic turn-based warfare.',
+    'apps.name.game': '博弈论 · 均衡实验室',
+    'apps.tag.game': 'YunTan One-Click Login',
+    'apps.desc.game': 'Classic game-theory duels: Prisoner\'s Dilemma, Nash Equilibrium, Boxed Pig. Play and learn.',
+    'apps.name.potato': '疯狂土豆',
+    'apps.tag.potato': 'YunTan One-Click Login',
+    'apps.desc.potato': 'Potato-smasher arcade: a reaction-speed challenge that gets addictive.',
+    'apps.name.puff': '鼓气河豚 Puff!',
+    'apps.tag.puff': 'YunTan One-Click Login',
+    'apps.desc.puff': 'Pufferfish arcade: puff, inflate, flip — hard to put down.',
+    'apps.name.mist': 'White Mist Requiem',
+    'apps.tag.mist': 'Standalone',
+    'apps.desc.mist': '2D pixel exploration: a foggy town, an amnesiac hero, uncover the truth.',
+    'apps.name.hanba': 'Hanba Legend',
+    'apps.tag.hanba': 'YunTan One-Click Login',
+    'apps.desc.hanba': 'Eastern myth adventure: tame the drought, conquer the land.',
+    'apps.name.croissant': 'Croissant Legend',
+    'apps.tag.croissant': 'YunTan One-Click Login',
+    'apps.desc.croissant': 'A pastry-world adventure, save Paris with flaky heroes.',
+    'apps.name.panglong': 'Fat Dragon Slimming Diary',
+    'apps.tag.panglong': 'YunTan One-Click Login',
+    'apps.desc.panglong': 'A greedy dragon\'s weight-loss battle: eat smart, move more.',
+    'apps.name.weiren': 'Weiren · Doppelganger Lab',
+    'apps.tag.weiren': 'Standalone',
+    'apps.desc.weiren': 'Observe, distinguish, simulate — choose between real and fake.',
+    'apps.name.star': 'Star Voyager',
+    'apps.tag.star': 'YunTan One-Click Login',
+    'apps.desc.star': 'Explore the starry universe, pilot your ship across galaxies.',
   },
   es: {
+
     'nav.home': 'Inicio', 'nav.new': 'Publicar', 'nav.chat': 'Mensajes', 'nav.notif': 'Notificaciones', 'nav.apps': 'Mini Apps',
     'nav.login': 'Entrar', 'nav.signup': 'Registrarse', 'nav.logout': 'Salir',
     'search.ph': 'Buscar publicaciones…',
@@ -2247,9 +2357,58 @@ var I18N = {
     'settings.themeSaved': 'Tema cambiado', 'settings.saveFail': 'Error al guardar: ', 'settings.glassOnDone': 'Vidrio líquido activado', 'settings.glassOffDone': 'Vidrio líquido desactivado',
     'settings.glassColorDone': 'Color del vidrio actualizado', 'settings.glassAlphaDone': 'Opacidad del vidrio actualizada', 'settings.langDone': 'Idioma cambiado',
     'welcome': 'Bienvenido de nuevo, ', 'signupOk': '¡Registro exitoso! Bienvenido al foro HanBer', 'pleaseLogin': 'Inicia sesión primero', 'uploadFail': 'Error de subida', 'netErr': 'Tiempo de espera agotado',
-    'footer': 'HanBerOS 3.0'
+    'footer': 'HanBerOS 4.0',
+    'nav.notifClear': 'Limpiar leídas',
+    'nav.notifCleared': 'Notificaciones leídas borradas',
+    'apps.login.ok1': '✅ Conectado vía YunTan: ',
+    'apps.login.ok2': ' — los juegos usan tu cuenta',
+    'apps.login.no1': '🔒 No has iniciado sesión, ',
+    'apps.login.no2': ' para entrar a los juegos con un clic (o prueba como invitado)',
+    'apps.needlogin': 'Este juego requiere el inicio de sesión de YunTan. Inicia sesión primero.',
+    'apps.fs.on': '⛶ Salir de Pantalla Completa',
+    'apps.fs.off': '⛶ Pantalla Completa',
+    'apps.name.bread': '面包杀 · 群雄争霸',
+    'apps.tag.bread': 'Coproducción · Requiere declaración',
+    'apps.desc.bread': 'Combate de cartas estilo Tres Reinos: emparejamiento/clasificación, habilidades, equipo y estratagemas. Coproducido por Han Ber & Bread Guard Team.',
+    'apps.name.gta': 'GTA · 上海像素城',
+    'apps.tag.gta': 'Juego sin conexión',
+    'apps.desc.gta': 'Mundo abierto pixelado 2D: 12 distritos, negocios, misiones de carga/escolta/carreras y persecuciones. Guardado local.',
+    'apps.name.tank': '铁甲战史 2D',
+    'apps.tag.tank': 'Inicio de sesión YunTan',
+    'apps.desc.tank': 'Guerra de cuatro campañas: mareas blindadas, contraataques y avances. Comanda tus blindados.',
+    'apps.name.century': '世纪战争',
+    'apps.tag.century': 'Inicio de sesión YunTan',
+    'apps.desc.century': 'Cuatro grandes campañas en un siglo: de las trincheras a la guerra relámpago.',
+    'apps.name.game': '博弈论 · 均衡实验室',
+    'apps.tag.game': 'Inicio de sesión YunTan',
+    'apps.desc.game': 'Duelos clásicos de teoría de juegos: dilema del prisionero, equilibrio de Nash, cerdo boxeador.',
+    'apps.name.potato': '疯狂土豆',
+    'apps.tag.potato': 'Inicio de sesión YunTan',
+    'apps.desc.potato': 'Arcade de papas: desafío de reflejos que engancha.',
+    'apps.name.puff': '鼓气河豚 Puff!',
+    'apps.tag.puff': 'Inicio de sesión YunTan',
+    'apps.desc.puff': 'Arcade de pez globo: infla, expande y voltea.',
+    'apps.name.mist': 'Réquiem de Niebla Blanca',
+    'apps.tag.mist': 'Independiente',
+    'apps.desc.mist': 'Exploración 2D pixel: pueblo en niebla, protagonista amnésico, descubre la verdad.',
+    'apps.name.hanba': 'Leyenda Hanba',
+    'apps.tag.hanba': 'Inicio de sesión YunTan',
+    'apps.desc.hanba': 'Aventura de mitos orientales: doma la sequía, conquista la tierra.',
+    'apps.name.croissant': 'Leyenda del Croissant',
+    'apps.tag.croissant': 'Inicio de sesión YunTan',
+    'apps.desc.croissant': 'Aventura en un mundo de repostería, salva París con héroes hojaldrados.',
+    'apps.name.panglong': 'Dieta del Dragón Gordo',
+    'apps.tag.panglong': 'Inicio de sesión YunTan',
+    'apps.desc.panglong': 'La batalla de un dragón glotón: come bien, muévete más.',
+    'apps.name.weiren': 'Weiren · Instituto de Simulación',
+    'apps.tag.weiren': 'Independiente',
+    'apps.desc.weiren': 'Observa, distingue, simula: elige entre lo real y lo falso.',
+    'apps.name.star': 'Viajero Estelar',
+    'apps.tag.star': 'Inicio de sesión YunTan',
+    'apps.desc.star': 'Explora el universo estrellado, pilota tu nave por las galaxias.',
   },
   ru: {
+
     'nav.home': 'Главная', 'nav.new': 'Создать', 'nav.chat': 'Сообщения', 'nav.notif': 'Уведомления', 'nav.apps': 'Мини-приложения',
     'nav.login': 'Войти', 'nav.signup': 'Регистрация', 'nav.logout': 'Выйти',
     'search.ph': 'Поиск записей…',
@@ -2268,9 +2427,58 @@ var I18N = {
     'settings.themeSaved': 'Тема изменена', 'settings.saveFail': 'Ошибка сохранения: ', 'settings.glassOnDone': 'Жидкое стекло включено', 'settings.glassOffDone': 'Жидкое стекло выключено',
     'settings.glassColorDone': 'Цвет стекла обновлён', 'settings.glassAlphaDone': 'Прозрачность обновлена', 'settings.langDone': 'Язык изменён',
     'welcome': 'С возвращением, ', 'signupOk': 'Регистрация успешна. Добро пожаловать на форум HanBer!', 'pleaseLogin': 'Сначала войдите', 'uploadFail': 'Ошибка загрузки', 'netErr': 'Тайм-аут запроса',
-    'footer': 'HanBerOS 3.0'
+    'footer': 'HanBerOS 4.0',
+    'nav.notifClear': 'Очистить прочитанные',
+    'nav.notifCleared': 'Прочитанные уведомления удалены',
+    'apps.login.ok1': '✅ Вход через YunTan: ',
+    'apps.login.ok2': ' — игры используют ваш аккаунт',
+    'apps.login.no1': '🔒 Вы не вошли, ',
+    'apps.login.no2': ' чтобы входить в игры в один клик (или играть как гость)',
+    'apps.needlogin': 'Эта игра требует входа через YunTan. Сначала войдите.',
+    'apps.fs.on': '⛶ Выйти из полноэкранного',
+    'apps.fs.off': '⛶ Полный экран',
+    'apps.name.bread': '面包杀 · 群雄争霸',
+    'apps.tag.bread': 'Совместное производство · Требуется заявление',
+    'apps.desc.bread': 'Карточные бои в стиле «Трёх королевств»: подбор/рейтинг, навыки героев, снаряжение. Совместно с Han Ber & Bread Guard Team.',
+    'apps.name.gta': 'GTA · 上海像素城',
+    'apps.tag.gta': 'Офлайн-игра',
+    'apps.desc.gta': '2D пиксельный открытый мир: 12 районов, бизнес, миссии, погони. Локальные сохранения.',
+    'apps.name.tank': '铁甲战史 2D',
+    'apps.tag.tank': 'Вход через YunTan',
+    'apps.desc.tank': 'Война из четырёх кампаний: броневые потоки, контр-ходы, наступления.',
+    'apps.name.century': '世纪战争',
+    'apps.tag.century': 'Вход через YunTan',
+    'apps.desc.century': 'Четыре великие кампании за век: от окопов до блицкрига.',
+    'apps.name.game': '博弈论 · 均衡实验室',
+    'apps.tag.game': 'Вход через YunTan',
+    'apps.desc.game': 'Классические дуэли теории игр: дилемма заключённого, равновесие Нэша.',
+    'apps.name.potato': '疯狂土豆',
+    'apps.tag.potato': 'Вход через YunTan',
+    'apps.desc.potato': 'Аркада с картошкой: испытание реакции.',
+    'apps.name.puff': '鼓气河豚 Puff!',
+    'apps.tag.puff': 'Вход через YunTan',
+    'apps.desc.puff': 'Аркада с рыбой-шаром: надувай и переворачивай.',
+    'apps.name.mist': 'Реквием Белого Тумана',
+    'apps.tag.mist': 'Офлайн',
+    'apps.desc.mist': '2D пиксель-исследование: туманный город, герой без памяти, найди правду.',
+    'apps.name.hanba': 'Легенда Ханьба',
+    'apps.tag.hanba': 'Вход через YunTan',
+    'apps.desc.hanba': 'Восточное мифическое приключение: укроти засуху, завоюй землю.',
+    'apps.name.croissant': 'Легенда Круассана',
+    'apps.tag.croissant': 'Вход через YunTan',
+    'apps.desc.croissant': 'Приключение в мире выпечки, спаси Париж слоёными героями.',
+    'apps.name.panglong': 'Дневник похудения Дракона',
+    'apps.tag.panglong': 'Вход через YunTan',
+    'apps.desc.panglong': 'Битва жадного дракона: ешь умно, двигайся больше.',
+    'apps.name.weiren': 'Вэйжэнь · Институт симуляции',
+    'apps.tag.weiren': 'Офлайн',
+    'apps.desc.weiren': 'Наблюдай, различай, имитируй — выбери между настоящим и подделкой.',
+    'apps.name.star': 'Звёздный Странник',
+    'apps.tag.star': 'Вход через YunTan',
+    'apps.desc.star': 'Исследуй звёздную вселенную, веди корабль по галактикам.',
   },
   ar: {
+
     'nav.home': 'الرئيسية', 'nav.new': 'نشر', 'nav.chat': 'الرسائل', 'nav.notif': 'التنبيهات', 'nav.apps': 'تطبيقات مصغرة',
     'nav.login': 'دخول', 'nav.signup': 'تسجيل', 'nav.logout': 'خروج',
     'search.ph': 'ابحث عن المشاركات…',
@@ -2289,9 +2497,58 @@ var I18N = {
     'settings.themeSaved': 'تم تغيير المظهر', 'settings.saveFail': 'فشل الحفظ: ', 'settings.glassOnDone': 'تم تفعيل الزجاج السائل', 'settings.glassOffDone': 'تم إيقاف الزجاج السائل',
     'settings.glassColorDone': 'تم تحديث لون الزجاج', 'settings.glassAlphaDone': 'تم تحديث الشفافية', 'settings.langDone': 'تم تغيير اللغة',
     'welcome': 'مرحباً بعودتك، ', 'signupOk': 'تم التسجيل بنجاح. مرحباً بك في منتدى HanBer!', 'pleaseLogin': 'يرجى تسجيل الدخول أولاً', 'uploadFail': 'فشل الرفع', 'netErr': 'انتهت مهلة الطلب',
-    'footer': 'HanBerOS 3.0'
+    'footer': 'HanBerOS 4.0',
+    'nav.notifClear': 'مسح المقروء',
+    'nav.notifCleared': 'تم مسح الإشعارات المقروءة',
+    'apps.login.ok1': '✅ تم تسجيل الدخول عبر YunTan: ',
+    'apps.login.ok2': ' — الألعاب تستخدم حسابك تلقائياً',
+    'apps.login.no1': '🔒 لم تسجل الدخول، ',
+    'apps.login.no2': ' لدخول الألعاب بنقرة واحدة (أو العب كضيف)',
+    'apps.needlogin': 'تتطلب هذه اللعبة تسجيل دخول YunTan. سجّل الدخول أولاً.',
+    'apps.fs.on': '⛶ الخروج من ملء الشاشة',
+    'apps.fs.off': '⛶ ملء الشاشة',
+    'apps.name.bread': '面包杀 · 群雄争霸',
+    'apps.tag.bread': 'إنتاج مشترك · يتطلب بياناً',
+    'apps.desc.bread': 'معارك بطاقات بأسلوب الممالك الثلاث: مواجهة/تصنيف، مهارات أبطال، معدات. إنتاج مشترك مع Han Ber & Bread Guard Team.',
+    'apps.name.gta': 'GTA · 上海像素城',
+    'apps.tag.gta': 'لعب دون اتصال',
+    'apps.desc.gta': 'عالم مفتوح بكسل 2D: 12 منطقة، أعمال، مهام، مطاردات. حفظ محلي.',
+    'apps.name.tank': '铁甲战史 2D',
+    'apps.tag.tank': 'تسجيل دخول YunTan',
+    'apps.desc.tank': 'حرب من أربع حملات: موجات مدرعة، تصدٍّ وتقدم. قُد مدرعاتك.',
+    'apps.name.century': '世纪战争',
+    'apps.tag.century': 'تسجيل دخول YunTan',
+    'apps.desc.century': 'أربع حملات كبرى عبر قرن: من الخنادق إلى الحرب الخاطفة.',
+    'apps.name.game': '博弈论 · 均衡实验室',
+    'apps.tag.game': 'تسجيل دخول YunTan',
+    'apps.desc.game': 'مبارزات نظرية الألعاب: معضلة السجين، توازن ناش.',
+    'apps.name.potato': '疯狂土豆',
+    'apps.tag.potato': 'تسجيل دخول YunTan',
+    'apps.desc.potato': 'لعبة بطاطس سريعة: تحدّي رد الفعل.',
+    'apps.name.puff': '鼓气河豚 Puff!',
+    'apps.tag.puff': 'تسجيل دخول YunTan',
+    'apps.desc.puff': 'لعبة سمكة منتفخة: نفخ وانقلاب.',
+    'apps.name.mist': 'قداس الضباب الأبيض',
+    'apps.tag.mist': 'مستقل',
+    'apps.desc.mist': 'استكشاف بكسل ثنائي الأبعاد: بلدة ضبابية، بطل فاقد الذاكرة، اكتشف الحقيقة.',
+    'apps.name.hanba': 'أسطورة هانبا',
+    'apps.tag.hanba': 'دخول YunTan',
+    'apps.desc.hanba': 'مغامرة أسطورية شرقية: سيطر على الجفاف وافتتح الأرض.',
+    'apps.name.croissant': 'أسطورة الكرواسون',
+    'apps.tag.croissant': 'دخول YunTan',
+    'apps.desc.croissant': 'مغامرة في عالم المخبوزات، أنقذ باريس بأبطال هشّين.',
+    'apps.name.panglong': 'مذكرات رجيم التنين السمين',
+    'apps.tag.panglong': 'دخول YunTan',
+    'apps.desc.panglong': 'معركة تنين شره: كل بحكمة وتحرك أكثر.',
+    'apps.name.weiren': 'ويرن · معهد المحاكاة',
+    'apps.tag.weiren': 'مستقل',
+    'apps.desc.weiren': 'راقب وميّز وحاكِ — اختر بين الحقيقي والمزيف.',
+    'apps.name.star': 'المسافر النجمي',
+    'apps.tag.star': 'دخول YunTan',
+    'apps.desc.star': 'استكشف الكون النجمي وقُد سفينتك عبر المجرات.',
   },
   fr: {
+
     'nav.home': 'Accueil', 'nav.new': 'Publier', 'nav.chat': 'Messages', 'nav.notif': 'Notifications', 'nav.apps': 'Mini-apps',
     'nav.login': 'Connexion', 'nav.signup': 'Inscription', 'nav.logout': 'Déconnexion',
     'search.ph': 'Rechercher des posts…',
@@ -2310,7 +2567,55 @@ var I18N = {
     'settings.themeSaved': 'Thème changé', 'settings.saveFail': 'Échec de l’enregistrement : ', 'settings.glassOnDone': 'Verre liquide activé', 'settings.glassOffDone': 'Verre liquide désactivé',
     'settings.glassColorDone': 'Couleur du verre mise à jour', 'settings.glassAlphaDone': 'Opacité du verre mise à jour', 'settings.langDone': 'Langue changée',
     'welcome': 'Bon retour, ', 'signupOk': 'Inscription réussie. Bienvenue sur le forum HanBer !', 'pleaseLogin': 'Veuillez d’abord vous connecter', 'uploadFail': 'Échec du téléversement', 'netErr': 'Délai de requête dépassé',
-    'footer': 'HanBerOS 3.0'
+    'footer': 'HanBerOS 4.0',
+    'nav.notifClear': 'Effacer les lues',
+    'nav.notifCleared': 'Notifications lues effacées',
+'apps.login.ok1': '✅ Connecté via YunTan : ',
+    'apps.login.ok2': ' — les jeux utilisent votre compte',
+    'apps.login.no1': '🔒 Non connecté, ',
+    'apps.login.no2': ' pour entrer dans les jeux en un clic (ou jouer en invité)',
+    'apps.needlogin': 'Ce jeu nécessite la connexion YunTan. Connectez-vous d\'abord.',
+    'apps.fs.on': '⛶ Quitter le Plein Écran',
+    'apps.fs.off': '⛶ Plein Écran',
+    'apps.name.bread': '面包杀 · 群雄争霸',
+    'apps.tag.bread': 'Co-production · Déclaration requise',
+    'apps.desc.bread': 'Combat de cartes façon Trois Royaumes : match/classement, compétences, équipements. Co-produit par Han Ber & Bread Guard Team.',
+    'apps.name.gta': 'GTA · 上海像素城',
+    'apps.tag.gta': 'Jeu hors ligne',
+    'apps.desc.gta': 'Monde ouvert 2D pixel : 12 districts, affaires, missions, poursuites. Sauvegarde locale.',
+    'apps.name.tank': '铁甲战史 2D',
+    'apps.tag.tank': 'Connexion YunTan',
+    'apps.desc.tank': 'Guerre de quatre campagnes : vagues blindées, contres et avancées. Commandez vos blindés.',
+    'apps.name.century': '世纪战争',
+    'apps.tag.century': 'Connexion YunTan',
+    'apps.desc.century': 'Quatre grandes campagnes sur un siècle : des tranchées au blitzkrieg.',
+    'apps.name.game': '博弈论 · 均衡实验室',
+    'apps.tag.game': 'Connexion YunTan',
+    'apps.desc.game': 'Duels classiques de théorie des jeux : dilemme du prisonnier, équilibre de Nash.',
+    'apps.name.potato': '疯狂土豆',
+    'apps.tag.potato': 'Connexion YunTan',
+    'apps.desc.potato': 'Arcade de pommes de terre : défi de réflexes addictif.',
+    'apps.name.puff': '鼓气河豚 Puff!',
+    'apps.tag.puff': 'Connexion YunTan',
+    'apps.desc.puff': 'Arcade de poisson-globe : gonfle, enfle, culbute.',
+    'apps.name.mist': 'Requiem de Brume Blanche',
+    'apps.tag.mist': 'Autonome',
+    'apps.desc.mist': 'Exploration 2D pixel : ville brumeuse, héros amnésique, découvrez la vérité.',
+    'apps.name.hanba': 'Légende Hanba',
+    'apps.tag.hanba': 'Connexion YunTan',
+    'apps.desc.hanba': 'Aventure mythique orientale : domptez la sécheresse, conquérez la terre.',
+    'apps.name.croissant': 'Légende du Croissant',
+    'apps.tag.croissant': 'Connexion YunTan',
+    'apps.desc.croissant': 'Aventure dans un monde de pâtisserie, sauvez Paris avec des héros feuilletés.',
+    'apps.name.panglong': 'Régime du Dragon Gros',
+    'apps.tag.panglong': 'Connexion YunTan',
+    'apps.desc.panglong': 'Le combat d\'un dragon gourmand : mangez malin, bougez plus.',
+    'apps.name.weiren': 'Weiren · Institut de Simulation',
+    'apps.tag.weiren': 'Autonome',
+    'apps.desc.weiren': 'Observez, distinguez, simulez — choisissez entre le réel et le faux.',
+    'apps.name.star': 'Voyageur Stellaire',
+    'apps.tag.star': 'Connexion YunTan',
+    'apps.desc.star': 'Explorez l\'univers étoilé, pilotez votre vaisseau à travers les galaxies.',
   }
 };
 var currentLang = localStorage.getItem('forum_lang') || 'zh';
@@ -2529,6 +2834,7 @@ var CloudStore = {
         }
         throw err;
       });
+
   },
   _h: function (extra) {
     var c = this._cfg();
@@ -2814,7 +3120,16 @@ var CloudStore = {
       method: 'PATCH',
       headers: { 'apikey': c.key, 'Authorization': 'Bearer ' + session.token, 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
-    }).then(function (res) { return res.json(); });
+    }).then(this._check);
+  },
+  /* 改名后同步旧帖子 / 旧评论的作者名 */
+  syncRename: function (newName) {
+    var c = this._cfg();
+    var h = { 'apikey': c.key, 'Authorization': 'Bearer ' + session.token, 'Content-Type': 'application/json' };
+    return Promise.all([
+      this._fetch(c.url + '/rest/v1/posts?user_id=eq.' + session.id, { method: 'PATCH', headers: h, body: JSON.stringify({ author_name: newName }) }).then(this._check),
+      this._fetch(c.url + '/rest/v1/comments?user_id=eq.' + session.id, { method: 'PATCH', headers: h, body: JSON.stringify({ author_name: newName }) }).then(this._check)
+    ]);
   },
 
   /* 帖子 */
@@ -3046,6 +3361,14 @@ var CloudStore = {
     return this._fetch(c.url + '/rest/v1/notifications?user_id=eq.' + session.id + '&is_read=eq.false', {
       method: 'PATCH', headers: this._h(),
       body: JSON.stringify({ is_read: true })
+    }).then(this._check);
+  },
+  /* 清除已读通知（保留未读） */
+  deleteReadNotifs: function () {
+    if (!session) return Promise.resolve();
+    var c = this._cfg();
+    return this._fetch(c.url + '/rest/v1/notifications?user_id=eq.' + session.id + '&is_read=eq.true', {
+      method: 'DELETE', headers: this._h()
     }).then(this._check);
   },
 
@@ -3329,34 +3652,52 @@ function renderApps() {
   var grid = $('#apps-grid');
   var line = $('#apps-user-line');
   if (session) {
-    line.innerHTML = '✅ 已通过云坛登录：<b>' + esc(session.username) + '</b> —— 进入游戏自动带账号';
+    line.innerHTML = t('apps.login.ok1') + '<b>' + esc(session.username) + '</b>' + t('apps.login.ok2');
   } else {
-    line.innerHTML = '🔒 未登录云坛，<a href="#/login" style="color:var(--brand-1)">点此登录</a>后进游戏可一键登录（不登录也能试玩）';
+    line.innerHTML = t('apps.login.no1') + '<a href="#/login" style="color:var(--brand-1)">' + t('nav.login') + '</a>' + t('apps.login.no2');
   }
   var wrap = $('#apps-frame-wrap');
   wrap.className = '';
   var apps = [
-    { key: 'bread', icon: '🀄', name: '面包杀 · 群雄争霸', tag: '合作出品 · 进入需阅声明',
-      desc: '三国杀风卡牌对战：匹配 / 排位、武将技能、装备锦囊全手牌。Han Ber & Bread Guard Team 联合出品。',
+    { key: 'bread', icon: '🀄', name: t('apps.name.bread'), tag: t('apps.tag.bread'),
+      desc: t('apps.desc.bread'),
       src: 'games/面包杀.html' },
-    { key: 'gta', icon: '🚗', name: 'GTA · 上海像素城', tag: '单机游玩',
-      desc: '2D 像素开放世界：12 个行政区、产业经营、货运/押运/竞速任务、通缉追捕，浏览器本地存档。',
+    { key: 'gta', icon: '🚗', name: t('apps.name.gta'), tag: t('apps.tag.gta'),
+      desc: t('apps.desc.gta'),
       src: 'gta-shanghai/index.html' },
-    { key: 'tank', icon: '🪖', name: '铁甲战史 2D', tag: '云坛一键登录',
-      desc: '四战役战争游戏：铁甲洪流、兵种克制、阵地推进，指挥你的装甲部队。',
+    { key: 'tank', icon: '🪖', name: t('apps.name.tank'), tag: t('apps.tag.tank'),
+      desc: t('apps.desc.tank'),
       src: 'games/铁甲战史.html', needYtLogin: true },
-    { key: 'century', icon: '🌍', name: '世纪战争', tag: '云坛一键登录',
-      desc: '四大战役横跨百年：从堑壕到闪电战，经典战史回合对决。',
+    { key: 'century', icon: '🌍', name: t('apps.name.century'), tag: t('apps.tag.century'),
+      desc: t('apps.desc.century'),
       src: 'games/世纪战争.html', needYtLogin: true },
-    { key: 'game', icon: '⚖️', name: '博弈论 · 均衡实验室', tag: '云坛一键登录',
-      desc: '经典博弈案例人机对战：囚徒困境、纳什均衡、智猪博弈，边玩边学。',
+    { key: 'game', icon: '⚖️', name: t('apps.name.game'), tag: t('apps.tag.game'),
+      desc: t('apps.desc.game'),
       src: 'games/博弈论.html', needYtLogin: true },
-    { key: 'potato', icon: '🥔', name: '疯狂土豆', tag: '云坛一键登录',
-      desc: '打土豆休闲小游戏：反应速度大挑战，越打越上头。',
+    { key: 'potato', icon: '🥔', name: t('apps.name.potato'), tag: t('apps.tag.potato'),
+      desc: t('apps.desc.potato'),
       src: 'games/疯狂土豆.html', needYtLogin: true },
-    { key: 'puff', icon: '🐡', name: '鼓气河豚 Puff!', tag: '云坛一键登录',
-      desc: '鼓气河豚休闲小游戏：吹气、膨胀、翻转，一玩就停不下来。',
-      src: 'games/鼓气河豚.html', needYtLogin: true }
+    { key: 'puff', icon: '🐡', name: t('apps.name.puff'), tag: t('apps.tag.puff'),
+      desc: t('apps.desc.puff'),
+      src: 'games/鼓气河豚.html', needYtLogin: true },
+    { key: 'mist', icon: '🌫️', name: t('apps.name.mist'), tag: t('apps.tag.mist'),
+      desc: t('apps.desc.mist'),
+      src: 'games/白雾安魂曲.html' },
+    { key: 'hanba', icon: '🔥', name: t('apps.name.hanba'), tag: t('apps.tag.hanba'),
+      desc: t('apps.desc.hanba'),
+      src: 'games/旱魃传奇.html', needYtLogin: true },
+    { key: 'croissant', icon: '🥐', name: t('apps.name.croissant'), tag: t('apps.tag.croissant'),
+      desc: t('apps.desc.croissant'),
+      src: 'games/可颂传奇.html', needYtLogin: true },
+    { key: 'panglong', icon: '🐉', name: t('apps.name.panglong'), tag: t('apps.tag.panglong'),
+      desc: t('apps.desc.panglong'),
+      src: 'games/胖龙减肥记.html', needYtLogin: true },
+    { key: 'weiren', icon: '🎭', name: t('apps.name.weiren'), tag: t('apps.tag.weiren'),
+      desc: t('apps.desc.weiren'),
+      src: 'games/煒人v10.html' },
+    { key: 'star', icon: '🚀', name: t('apps.name.star'), tag: t('apps.tag.star'),
+      desc: t('apps.desc.star'),
+      src: 'games/星旅者.html', needYtLogin: true }
   ];
   grid.innerHTML = apps.map(function (a) {
     return '<div class="app-card" data-src="' + a.src + '" data-name="' + esc(a.name) + '"' + (a.needYtLogin ? ' data-needlogin="1"' : '') + '>'
@@ -3367,7 +3708,7 @@ function renderApps() {
     card.addEventListener('click', function () {
       var needLogin = card.getAttribute('data-needlogin') === '1';
       if (needLogin && !session) {
-        toast('此游戏需云坛一键登录，请先登录云坛');
+        toast(t('apps.needlogin'));
         location.hash = '#/login';
         return;
       }
@@ -3378,6 +3719,9 @@ function renderApps() {
       var ytUser = (session && session.username) ? encodeURIComponent(session.username) : 'guest';
       $('#apps-frame').src = card.getAttribute('data-src') + '?yt_user=' + ytUser;
       $('#apps-frame-title').innerText = card.getAttribute('data-name');
+      /* 游戏全屏模式 */
+      wrap.classList.add('fullscreen');
+      document.body.classList.add('no-scroll');
     });
   });
   var back = $('#apps-back');
@@ -3388,7 +3732,17 @@ function renderApps() {
       $('#apps-frame').src = '';
       grid.style.display = 'grid';
       $('#apps-user-line').style.display = '';
+      document.body.classList.remove('no-scroll');
     });
+    var fsBtn = $('#apps-fs-btn');
+    if (fsBtn && !fsBtn._bound) {
+      fsBtn._bound = true;
+      fsBtn.addEventListener('click', function () {
+        var fs = wrap.classList.toggle('fullscreen');
+        document.body.classList.toggle('no-scroll', fs);
+        fsBtn.textContent = fs ? t('apps.fs.on') : t('apps.fs.off');
+      });
+    }
   }
 }
 
@@ -3840,6 +4194,21 @@ function renderUserProfile(userId) {
 function renderNotifications() {
   if (!requireLogin()) return;
   var box = $('#notif-list');
+  var clearBtn = $('#notif-clear-read');
+  if (clearBtn) {
+    clearBtn.style.display = 'none';
+    if (!clearBtn._b) {
+      clearBtn._b = true;
+      clearBtn.addEventListener('click', function () {
+        CloudStore.deleteReadNotifs()
+          .then(function () {
+            toast(t('nav.notifCleared'));
+            renderNotifications();
+          })
+          .catch(function (err) { toast(t('settings.saveFail') + err.message); });
+      });
+    }
+  }
   box.innerHTML = '<div class="empty">加载中…</div>';
 
   CloudStore.getNotifications().then(function (res) {
@@ -3848,6 +4217,7 @@ function renderNotifications() {
       box.innerHTML = '<div class="empty"><p class="empty-title">暂无消息</p><p>有人回复你的帖子、关注你、给你发私信时会出现在这里。</p></div>';
       return;
     }
+    if (clearBtn) clearBtn.style.display = '';
     var typeMap = {
       reply: { label: '回复', color: '#3B82F6' },
       like: { label: '点赞', color: '#EF4444' },
@@ -4460,12 +4830,15 @@ document.addEventListener('click', function (e) {
     saveBtn.disabled = true;
     saveBtn.textContent = '保存中…';
     CloudStore.updateProfile(session.id, { username: newName })
-      .then(function () { 
-        session.username = newName; 
-        toast('昵称已修改'); 
+      .then(function () {
+        session.username = newName;
+        return CloudStore.syncRename(newName);
+      })
+      .then(function () {
+        toast('昵称已修改，旧帖子和评论的作者名已同步');
         $('#name-edit').style.display = 'none';
-        renderProfile(); 
-        renderNav(); 
+        renderProfile();
+        renderNav();
       })
       .catch(function (err) {
         var msg = (err && err.message) || '';
@@ -4879,9 +5252,14 @@ document.addEventListener('click', function (e) {
   var isAdminUser2 = session && (session.role === 'admin' || session.role === 'super');
   if (item.hasAttribute('data-admin-only') && !isAdminUser2) { toast('此主题仅管理员可用'); return; }
   setTheme(themeId);
-  CloudStore.saveSettings({ theme: themeId })
-    .then(function () { toast(t('settings.themeSaved')); renderSettings(); })
-    .catch(function (err) { toast(t('settings.saveFail') + err.message); });
+  if (session && isCloud()) {
+    CloudStore.saveSettings({ theme: themeId })
+      .then(function () { toast(t('settings.themeSaved')); renderSettings(); })
+      .catch(function (err) { toast(t('settings.saveFail') + err.message); });
+  } else {
+    toast(t('settings.themeSaved'));
+    renderSettings();
+  }
 });
 
 /* 界面语言切换 */
@@ -5009,6 +5387,162 @@ window.addEventListener('hashchange', router);
       setInterval(function () { loadUnread(); }, 30000);
     }
   }).catch(function () { router(); });
+})();
+</script>
+
+<script>
+/* ============================================================
+ * 暗网 · 隐藏空间（连点 5 次页面最下方版本号进入）
+ * 结构：DARKNET_MAP = { 密钥: {title, files} }，不同密钥进不同界面
+ * 以后加文件/密钥：往 map 里加条目 + 文件放入 darknet/ 目录即可
+ * ============================================================ */
+var DARKNET_MAP = {
+  /* 密钥 ccc-mh130607（btoa 混淆存储）；以后新增密钥/文件在 map 里加条目 */
+  'Y2NjLW1oMTMwNjA3': {
+    title: '暗网 · 壹',
+    note: '隐藏空间 · 仅授权访问',
+    files: [
+      {type:'img',  src:'darknet/photo1.jpg',  name:'相片 1'},
+      {type:'img',  src:'darknet/photo2.jpg',  name:'相片 2'},
+      {type:'img',  src:'darknet/photo3.jpg',  name:'相片 3'},
+      {type:'img',  src:'darknet/photo4.jpg',  name:'相片 4'},
+      {type:'img',  src:'darknet/photo5.jpg',  name:'相片 5'},
+      {type:'img',  src:'darknet/photo6.jpg',  name:'相片 6'},
+      {type:'img',  src:'darknet/photo7.jpg',  name:'相片 7'},
+      {type:'video',src:'darknet/video1.mp4',  name:'视频 1'},
+      {type:'video',src:'darknet/video2.mp4',  name:'视频 2'},
+      {type:'video',src:'darknet/video3.mp4',  name:'视频 3'},
+      {type:'audio',src:'darknet/audio1.m4a',  name:'音频 1'},
+      {type:'doc',  src:'darknet/ip.docx',     name:'文档 IP'},
+      {type:'doc',  src:'darknet/ip_copy.docx',name:'文档 IP 副本'}
+    ]
+  }
+};
+
+(function(){
+  try{
+    /* ---- 连点检测：1.2 秒内连点 5 次版本号 ---- */
+    var _dc = 0, _dcT = 0;
+    var ver = document.getElementById('ver-stamp');
+    if(!ver) ver = document.querySelector('.footer span');
+    if(ver){
+      ver.addEventListener('click', function(){
+        var now = Date.now();
+        if(now - _dcT > 1200) _dc = 0;
+        _dc++; _dcT = now;
+        if(_dc >= 5){ _dc = 0; openDarknetPrompt(); }
+      });
+    }
+
+    /* ---- 密钥弹窗 ---- */
+    window.openDarknetPrompt = function(){
+      var ov = document.getElementById('darknet-prompt');
+      if(ov){ ov.style.display = 'flex'; return; }
+      ov = document.createElement('div');
+      ov.id = 'darknet-prompt';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:999997;background:rgba(5,8,18,.78);display:flex;align-items:center;justify-content:center;font-family:"PingFang SC","Microsoft YaHei",sans-serif';
+      ov.innerHTML =
+        '<div style="background:linear-gradient(160deg,#0c1220,#141d33);border:1px solid rgba(120,160,255,.3);border-radius:14px;padding:26px 30px;width:320px;max-width:88vw;color:#dfe8ff;box-shadow:0 10px 40px rgba(0,0,0,.6)">' +
+          '<div style="font-size:26px;margin-bottom:6px">🕸️</div>' +
+          '<div style="font-size:17px;font-weight:600;margin-bottom:4px">暗网 · 密钥验证</div>' +
+          '<div style="font-size:12px;color:#8fa3c8;margin-bottom:16px">输入密钥进入对应界面，输错请重试</div>' +
+          '<input id="darknet-key" type="password" placeholder="输入密钥" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid rgba(120,160,255,.35);border-radius:8px;background:#0b1120;color:#eaf2ff;font-size:14px;outline:none;margin-bottom:14px">' +
+          '<div style="display:flex;gap:10px">' +
+            '<button id="darknet-ok" style="flex:1;padding:9px 0;border:none;border-radius:8px;background:#2f6bff;color:#fff;font-size:14px;cursor:pointer">进入</button>' +
+            '<button id="darknet-cancel" style="flex:1;padding:9px 0;border:none;border-radius:8px;background:#26324d;color:#cfd9f0;font-size:14px;cursor:pointer">取消</button>' +
+          '</div>' +
+          '<div id="darknet-err" style="display:none;margin-top:10px;font-size:12px;color:#ff8080;text-align:center">密钥不正确</div>' +
+        '</div>';
+      document.body.appendChild(ov);
+      var inp = document.getElementById('darknet-key');
+      document.getElementById('darknet-ok').onclick = function(){ darknetTry(inp.value); };
+      document.getElementById('darknet-cancel').onclick = function(){ ov.style.display = 'none'; };
+      inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') darknetTry(inp.value); });
+      setTimeout(function(){ inp.focus(); }, 60);
+      ov.onclick = function(e){ if(e.target === ov) ov.style.display = 'none'; };
+    };
+
+    function darknetTry(key){
+      var enc = '';
+      try{ enc = btoa(String(key || '')); }catch(e){ enc = ''; }
+      var cfg = DARKNET_MAP[enc];
+      var err = document.getElementById('darknet-err');
+      if(!cfg){ if(err) err.style.display = 'block'; return; }
+      var ov = document.getElementById('darknet-prompt');
+      if(ov) ov.style.display = 'none';
+      openDarknetView(cfg);
+    }
+
+    /* ---- 暗网界面 ---- */
+    window.openDarknetView = function(cfg){
+      var view = document.getElementById('darknet-view');
+      if(view) view.remove();
+      view = document.createElement('div');
+      view.id = 'darknet-view';
+      view.style.cssText = 'position:fixed;inset:0;z-index:999998;background:#070b14;color:#dbe4ff;font-family:"PingFang SC","Microsoft YaHei",sans-serif;overflow:auto';
+      var head = document.createElement('div');
+      head.style.cssText = 'position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(7,11,20,.92);border-bottom:1px solid rgba(120,160,255,.18);backdrop-filter:blur(6px)';
+      var t = document.createElement('div');
+      t.innerHTML = '<div style="font-size:18px;font-weight:700">🕸️ ' + esc(cfg.title) + '</div><div style="font-size:11px;color:#7d90b8;margin-top:2px">' + esc(cfg.note || '') + '</div>';
+      var x = document.createElement('button');
+      x.textContent = '✕ 退出';
+      x.style.cssText = 'padding:6px 14px;border:none;border-radius:8px;background:#2a3652;color:#cfd9f0;font-size:13px;cursor:pointer';
+      x.onclick = function(){ view.remove(); };
+      head.appendChild(t); head.appendChild(x);
+      view.appendChild(head);
+
+      var grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:18px';
+      (cfg.files || []).forEach(function(f, idx){
+        var card = document.createElement('div');
+        card.style.cssText = 'background:#0d1322;border:1px solid rgba(120,160,255,.16);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px';
+        var body;
+        if(f.type === 'img'){
+          body = document.createElement('img');
+          body.src = f.src; body.alt = f.name;
+          body.style.cssText = 'width:100%;height:150px;object-fit:cover;border-radius:8px;cursor:zoom-in;background:#000';
+          body.onclick = function(){ darknetLightbox(f.src, f.name); };
+        } else if(f.type === 'video'){
+          body = document.createElement('video');
+          body.src = f.src; body.controls = true; body.preload = 'metadata';
+          body.style.cssText = 'width:100%;height:150px;object-fit:contain;border-radius:8px;background:#000';
+        } else if(f.type === 'audio'){
+          body = document.createElement('audio');
+          body.src = f.src; body.controls = true; body.preload = 'metadata';
+          body.style.cssText = 'width:100%;border-radius:8px';
+        } else {
+          body = document.createElement('a');
+          body.href = f.src; body.download = f.name;
+          body.textContent = '📄 ' + f.name + '（点击下载）';
+          body.style.cssText = 'display:block;height:150px;display:flex;align-items:center;justify-content:center;border:1px dashed rgba(120,160,255,.3);border-radius:8px;color:#8fb3ff;text-decoration:none;font-size:13px';
+        }
+        var cap = document.createElement('div');
+        cap.textContent = f.name;
+        cap.style.cssText = 'font-size:12px;color:#9fb2d8;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+        card.appendChild(body); card.appendChild(cap);
+        grid.appendChild(card);
+      });
+      view.appendChild(grid);
+      document.body.appendChild(view);
+    };
+
+    function darknetLightbox(src, name){
+      var lb = document.createElement('div');
+      lb.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;cursor:zoom-out;font-family:"PingFang SC","Microsoft YaHei",sans-serif';
+      var img = document.createElement('img');
+      img.src = src; img.alt = name;
+      img.style.cssText = 'max-width:92vw;max-height:88vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.7)';
+      lb.appendChild(img);
+      lb.onclick = function(){ lb.remove(); };
+      document.body.appendChild(lb);
+    }
+
+    function esc(s){
+      return String(s).replace(/[&<>"']/g, function(c){
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+      });
+    }
+  }catch(e){}
 })();
 </script>
 </body>
