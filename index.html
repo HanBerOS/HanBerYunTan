@@ -2767,6 +2767,29 @@ var EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 function isPhone(v) { return PHONE_RE.test(v); }
 function isEmail(v) { return EMAIL_RE.test(v); }
 function isAccountValid(v) { return isPhone(v) || isEmail(v); }
+/* 账号清洗：去首尾/内部空格，手机号去掉 +86 / 086 前缀（兼容同学输错格式） */
+function cleanAccount(v) {
+  v = String(v == null ? '' : v).trim().replace(/\s+/g, '');
+  if (/^\+?0?86\d{11}$/.test(v)) v = v.slice(-11);
+  return v;
+}
+/* 登录/注册错误信息本地化（Supabase 返回英文，转成用户看得懂的中文） */
+function friendlyAuthError(err) {
+  var m = String((err && err.message) || '');
+  var lower = m.toLowerCase();
+  if (lower.indexOf('invalid login credentials') >= 0 || lower.indexOf('invalid_credentials') >= 0) {
+    return '账号或密码错误：请确认账号已注册、密码正确（手机号注册请用手机号登录，邮箱注册请用邮箱登录）';
+  }
+  if (lower.indexOf('user already registered') >= 0) return '该账号已注册，请直接登录（忘记密码可稍后重置）';
+  if (lower.indexOf('email not confirmed') >= 0) return '该邮箱尚未确认，请查收确认邮件后再登录';
+  if (lower.indexOf('too many') >= 0) return '尝试次数过多，请稍后再试';
+  if (lower.indexOf('invalid email') >= 0) return '账号格式不正确，请输入 11 位手机号或有效邮箱';
+  if (lower.indexOf('rate limit') >= 0 || lower.indexOf('over_request_rate_limit') >= 0) return '请求过于频繁，请等一分钟再试';
+  if (lower.indexOf('weak_password') >= 0) return '密码太弱，至少 8 位且含字母和数字';
+  if (lower.indexOf('password should be') >= 0) return '密码太短，至少 8 位';
+  if (lower.indexOf('signups disabled') >= 0 || lower.indexOf('signup') >= 0 && lower.indexOf('disabled') >= 0) return '注册通道暂未开放';
+  return m || '操作失败，请重试';
+}
 
 /* ============================================================
  * Toast
@@ -2857,6 +2880,7 @@ var CloudStore = {
   signup: function (account, password, username) {
     var self = this;
     var c = this._cfg();
+    account = cleanAccount(account);
     var isPhoneAcc = isPhone(account);
     var email = isPhoneAcc ? account + '@phone.yuntan.local' : account;
     return this._fetch(c.url + '/auth/v1/signup', {
@@ -2898,6 +2922,7 @@ var CloudStore = {
   login: function (account, password) {
     var self = this;
     var c = this._cfg();
+    account = cleanAccount(account);
     var isPhoneAcc = isPhone(account);
     var email = isPhoneAcc ? account + '@phone.yuntan.local' : account;
     return this._fetch(c.url + '/auth/v1/token?grant_type=password', {
@@ -5096,7 +5121,7 @@ document.addEventListener('submit', function (e) {
         location.hash = '#/';
       });
     }).catch(function (err) {
-      toast(err.message);
+      toast(friendlyAuthError(err));
       if (authMode === 'login') {
         var mins = recordLoginFail();
         if (mins) toast('连续失败5次，账号已锁定 ' + mins + ' 分钟');
@@ -5417,30 +5442,38 @@ var DARKNET_MAP = {
       {type:'doc',  src:'darknet/ip_copy.docx',name:'文档 IP 副本'}
     ]
   },
-  /* 密钥 ccc-mh-ks's-rednote（btoa 混淆存储）：RedNote 特辑 */
-  'Y2NjLW1oLWtzJ3MtcmVkbm90ZQ==': {
-    title: '暗网 · 贰',
-    note: 'RedNote 特辑 · 仅授权访问',
+  /* 密钥 ccc-mh-galgame（btoa 混淆存储）→ 游戏厅：登录后点“获取”即可在游戏舱内直接游玩 */
+  'Y2NjLW1oLWdhbGdhbWU=': {
+    title: '暗网 · 游戏厅',
+    note: '密钥授权 · 登录后获取游戏',
     files: [
-      {type:'video', src:"darknet/KS'S-RDNT929.22.mp4", name:'RedNote 视频'}
+      { type:'game', src:'darknet/faceless.html', name:'没有脸的人 THE FACELESS', icon:'🎭',
+        tag:'反战像素', desc:'一部反战像素游戏。战争是地狱。',
+        needLogin:true, fullscreen:true }
     ]
   }
 };
 
 (function(){
   try{
-    /* ---- 连点检测：1.2 秒内连点 5 次版本号 ---- */
+    /* ---- 连点检测：1.2 秒内连点 5 次版本号（事件委托，兼容页脚渲染） ---- */
     var _dc = 0, _dcT = 0;
-    var ver = document.getElementById('ver-stamp');
-    if(!ver) ver = document.querySelector('.footer span');
-    if(ver){
-      ver.addEventListener('click', function(){
-        var now = Date.now();
-        if(now - _dcT > 1200) _dc = 0;
-        _dc++; _dcT = now;
-        if(_dc >= 5){ _dc = 0; openDarknetPrompt(); }
-      });
-    }
+    document.addEventListener('click', function(e){
+      var t = e.target;
+      if(!t || !t.closest) return;
+      var ft = t.closest('.footer');
+      var hit = false;
+      if(ft){ hit = true; }
+      else{
+        var txt = String(t.textContent || '');
+        if(/HanBerOS/.test(txt)) hit = true;
+      }
+      if(!hit) return;
+      var now = Date.now();
+      if(now - _dcT > 1200) _dc = 0;
+      _dc++; _dcT = now;
+      if(_dc >= 5){ _dc = 0; openDarknetPrompt(); }
+    });
 
     /* ---- 密钥弹窗 ---- */
     window.openDarknetPrompt = function(){
@@ -5518,6 +5551,32 @@ var DARKNET_MAP = {
           body = document.createElement('audio');
           body.src = f.src; body.controls = true; body.preload = 'metadata';
           body.style.cssText = 'width:100%;border-radius:8px';
+        } else if(f.type === 'game'){
+          /* 游戏卡：登录后点“获取”→ 游戏舱直接游玩 */
+          body = document.createElement('div');
+          body.style.cssText = 'height:150px;border-radius:8px;background:radial-gradient(120% 120% at 20% 15%,#1a2440,#0b1120 70%);border:1px solid rgba(140,175,255,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden';
+          var gIcon = document.createElement('div');
+          gIcon.textContent = f.icon || '🎮';
+          gIcon.style.cssText = 'font-size:44px;line-height:1;filter:drop-shadow(0 4px 14px rgba(60,110,255,.45))';
+          var gTag = document.createElement('div');
+          gTag.textContent = f.tag || 'GAME';
+          gTag.style.cssText = 'font-size:11px;letter-spacing:2px;color:#8fb3ff;border:1px solid rgba(120,160,255,.35);border-radius:20px;padding:3px 12px';
+          var gBtn = document.createElement('button');
+          var logged = !!(window.session && window.session.token);
+          if(f.needLogin && !logged){
+            gBtn.textContent = '🔒 登录后获取';
+            gBtn.style.cssText = 'padding:7px 18px;border:none;border-radius:8px;background:#26324d;color:#8fa3c8;font-size:13px;cursor:pointer';
+            gBtn.onclick = function(){
+              var v = document.getElementById('darknet-view');
+              if(v) v.remove();
+              location.hash = '#/login';
+            };
+          } else {
+            gBtn.textContent = '🎮 获取游戏';
+            gBtn.style.cssText = 'padding:7px 18px;border:none;border-radius:8px;background:#2f6bff;color:#fff;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(47,107,255,.4)';
+            gBtn.onclick = function(){ darknetPlay(f); };
+          }
+          body.appendChild(gIcon); body.appendChild(gTag); body.appendChild(gBtn);
         } else {
           body = document.createElement('a');
           body.href = f.src; body.download = f.name;
@@ -5544,6 +5603,47 @@ var DARKNET_MAP = {
       lb.onclick = function(){ lb.remove(); };
       document.body.appendChild(lb);
     }
+
+    /* ---- 游戏舱：全屏内嵌游戏，云坛一键登录传参 ---- */
+    window.darknetPlay = function(f){
+      var cab = document.getElementById('darknet-cab');
+      if(cab) cab.remove();
+      cab = document.createElement('div');
+      cab.id = 'darknet-cab';
+      cab.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#000;display:flex;flex-direction:column;font-family:"PingFang SC","Microsoft YaHei",sans-serif';
+      var bar = document.createElement('div');
+      bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#0c1220;border-bottom:1px solid rgba(120,160,255,.2);color:#dbe4ff;flex:none';
+      var ttl = document.createElement('div');
+      ttl.textContent = '🕸️ ' + (f.name || '游戏');
+      ttl.style.cssText = 'font-size:14px;font-weight:600';
+      var btns = document.createElement('div');
+      btns.style.cssText = 'display:flex;gap:8px;align-items:center';
+      var fs = document.createElement('button');
+      fs.textContent = '⛶ 全屏';
+      fs.style.cssText = 'padding:5px 12px;border:none;border-radius:7px;background:#26324d;color:#cfd9f0;font-size:12px;cursor:pointer';
+      fs.onclick = function(){
+        try{
+          var el = document.getElementById('darknet-cab-frame');
+          if(el.requestFullscreen) el.requestFullscreen();
+          else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        }catch(e){}
+      };
+      var cl = document.createElement('button');
+      cl.textContent = '✕ 退出游戏';
+      cl.style.cssText = 'padding:5px 12px;border:none;border-radius:7px;background:#2a3652;color:#cfd9f0;font-size:12px;cursor:pointer';
+      cl.onclick = function(){ cab.remove(); };
+      btns.appendChild(fs); btns.appendChild(cl);
+      bar.appendChild(ttl); bar.appendChild(btns);
+      cab.appendChild(bar);
+      var fr = document.createElement('iframe');
+      fr.id = 'darknet-cab-frame';
+      fr.allow = 'fullscreen';
+      fr.style.cssText = 'flex:1;width:100%;border:none;background:#000';
+      var ytUser = (window.session && window.session.username) ? encodeURIComponent(window.session.username) : 'guest';
+      fr.src = f.src + '?yt_user=' + ytUser;
+      cab.appendChild(fr);
+      document.body.appendChild(cab);
+    };
 
     function esc(s){
       return String(s).replace(/[&<>"']/g, function(c){
