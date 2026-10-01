@@ -439,6 +439,7 @@ var G={
       if(k==='e') self.press('interact');
       if(k==='i') UI.toggleInv();
       if(k==='m') Aud.mute();
+      if(k==='k'){ saveGame(); UI.toast('已存档 · 战争第 '+S.days+' 天',1800); }
       if(k==='1'||k==='2'||k==='3'||k==='4') self.press('num'+k);
       Aud.resume();
     });
@@ -463,8 +464,8 @@ var G={
     var sc=this.scenes[name];
     if(sc) sc.name=sc.name||name;
     this.cur=sc;
-    if(sc.enter) sc.enter(this.sceneData);
     UI.closeAll();
+    if(sc.enter) sc.enter(this.sceneData);
   },
   shake:function(a){ this.shakeAmt=Math.max(this.shakeAmt,a); },
   flash:function(col,a){ this.flashA=a; this.flashCol=col; var el=$('flash'); el.style.background=col; el.style.opacity=clamp(a,0,0.9); },
@@ -602,7 +603,7 @@ var UI=(function(){
     else if(S.kills>50) kv.textContent='你已数不清';
     else kv.textContent='你杀了 '+S.kills+' 个母亲的孩子';
     var kh=$('keyhint');
-    if(G.hint) kh.textContent=G.hint; else kh.textContent='移动 WASD/方向键 · 互动 空格/E · 行囊 I · 静音 M';
+    if(G.hint) kh.textContent=G.hint; else kh.textContent='移动 WASD/方向键 · 互动 空格/E · 行囊 I · 存档 K · 静音 M';
     $('hintval').textContent='';
   }
   /* 行囊 */
@@ -655,7 +656,7 @@ G.scenes.title={
   enter:function(){
     this.t=0; this.started=false;
     UI.show('title');
-    $('titletxt').innerHTML='2D 像素 · 单机 · 反战游戏<br>键盘 WASD/方向键 移动 · 空格 互动 · I 行囊 · M 静音';
+    $('titletxt').innerHTML='2D 像素 · 单机 · 反战游戏<br>键盘 WASD/方向键 移动 · 空格 互动 · I 行囊 · K 存档 · M 静音<br>存档自动覆盖 · 回到标题可继续游戏';
     var has=loadGame();
     $('titlecta').textContent=has? '点 击 继 续':'点 击 开 始';
     Aud.setWind(0.12); Aud.setRain(0.1);
@@ -727,7 +728,7 @@ G.scenes.intro={
     setTimeout(function(){ UI.say(self.lines,function(){ self.done=true; }); },900);
   },
   press:function(a){ if(a==='confirm'){ if(this.done){ this.next(); } } },
-  next:function(){ G.fade(1,function(){ G.fade(0); G.start('act0'); }); },
+  next:function(){ if(this._fading) return; this._fading=true; G.fade(1,function(){ G.fade(0); G.start('act0'); }); },
   update:function(dt){ this.t+=dt; },
   draw:function(c){
     c.fillStyle='#020204'; c.fillRect(0,0,480,270);
@@ -886,6 +887,7 @@ G.scenes.act0={
   },
   endRange:function(){
     if(this.phase!=='range') return;
+    this.phase='rangeEnd';
     var acc=this.score/20;
     var line;
     if(this.score===0) line='教官：你连鸡都没杀过。上了战场，是鸡先死，还是你先死？';
@@ -1889,8 +1891,7 @@ G.scenes.act5={
     Aud.rifle(); FX.spark(450,this.aimY,5,0);
     var hit=null,best=60;
     for(var i=0;i<this.enem.length;i++){ var e=this.enem[i]; if(e.dead) continue; var d=Math.abs(e.y-this.aimY); if(d<best){ best=d; hit=e; } }
-    if(hit){ hit.dead=true; S.kills++; FX.blood(420,hit.y,14,Math.PI); Aud.scream(); }
-    this.sq++;
+    if(hit){ hit.dead=true; S.kills++; this.sq++; FX.blood(420,hit.y,14,Math.PI); Aud.scream(); }
     if(this.sq>=3&&!this.aliangDead){ this.aliangScene(); }
   },
   spawnE:function(){
@@ -1898,7 +1899,7 @@ G.scenes.act5={
   },
   aliangScene:function(){
     var self=this;
-    this.lock=true; G.hint=null;
+    this.lock=true; this.aliangDead=true; G.hint=null;
     setTimeout(function(){
       UI.say([
         {w:'旁白',s:'第三个敌人倒下了。街道安静了一瞬。'},
