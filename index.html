@@ -2266,6 +2266,13 @@ var I18N = {
     'apps.name.star': '星旅者',
     'apps.tag.star': '云坛一键登录',
     'apps.desc.star': 'Star Voyager：星星宇宙探险，驾驶飞船穿越星海。',
+    'apps.name.lovezone': '恋之禁区',
+    'apps.tag.lovezone': '暗网限定 · 获取解锁',
+    'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE：一段暗网深处的禁忌叙事，你的选择决定结局。',
+    'apps.name.faceless': '没有脸的人',
+    'apps.tag.faceless': '反战像素',
+    'apps.desc.faceless': 'THE FACELESS：一部反战像素游戏。战争是地狱。',
+    'apps.lovezone.locked': '🔒 需先在暗网获取（连点页脚版本号 5 次）',
   },
   en: {
 
@@ -2336,6 +2343,13 @@ var I18N = {
     'apps.name.star': 'Star Voyager',
     'apps.tag.star': 'YunTan One-Click Login',
     'apps.desc.star': 'Explore the starry universe, pilot your ship across galaxies.',
+    'apps.name.lovezone': 'Forbidden Zone',
+    'apps.tag.lovezone': 'Darknet-exclusive · Unlock to play',
+    'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: a forbidden narrative from the depths of the darknet; your choices decide the ending.',
+    'apps.name.faceless': 'THE FACELESS',
+    'apps.tag.faceless': 'Anti-war Pixel',
+    'apps.desc.faceless': 'An anti-war pixel game. War is hell.',
+    'apps.lovezone.locked': '🔒 Unlock it first on the darknet (tap the footer version 5 times)',
   },
   es: {
 
@@ -2406,6 +2420,13 @@ var I18N = {
     'apps.name.star': 'Viajero Estelar',
     'apps.tag.star': 'Inicio de sesión YunTan',
     'apps.desc.star': 'Explora el universo estrellado, pilota tu nave por las galaxias.',
+    'apps.name.lovezone': 'Zona Prohibida',
+    'apps.tag.lovezone': 'Exclusivo de la red oscura · Desbloquear',
+    'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: una narrativa prohibida desde lo profundo de la red oscura; tus decisiones deciden el final.',
+    'apps.name.faceless': 'EL SIN ROSTRO',
+    'apps.tag.faceless': 'Píxel antibélico',
+    'apps.desc.faceless': 'Un juego de píxeles antibélico. La guerra es el infierno.',
+    'apps.lovezone.locked': '🔒 Desbloquéalo primero en la red oscura (toca la versión del pie 5 veces)',
   },
   ru: {
 
@@ -2476,6 +2497,13 @@ var I18N = {
     'apps.name.star': 'Звёздный Странник',
     'apps.tag.star': 'Вход через YunTan',
     'apps.desc.star': 'Исследуй звёздную вселенную, веди корабль по галактикам.',
+    'apps.name.lovezone': 'Запретная зона',
+    'apps.tag.lovezone': 'Только даркнет · Разблокировать',
+    'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: запретная история из глубин даркнета; твой выбор решает финал.',
+    'apps.name.faceless': 'БЕЗ ЛИЦА',
+    'apps.tag.faceless': 'Антивоенный пиксель',
+    'apps.desc.faceless': 'Антивоенная пиксельная игра. Война — это ад.',
+    'apps.lovezone.locked': '🔒 Сначала разблокируйте в даркнете (5 нажатий на версию в футере)',
   },
   ar: {
 
@@ -2546,6 +2574,13 @@ var I18N = {
     'apps.name.star': 'المسافر النجمي',
     'apps.tag.star': 'دخول YunTan',
     'apps.desc.star': 'استكشف الكون النجمي وقُد سفينتك عبر المجرات.',
+    'apps.name.lovezone': 'المنطقة المحرمة',
+    'apps.tag.lovezone': 'حصرية للدارك نت · افتح للعب',
+    'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: قصة محرمة من أعماق الدارك نت؛ خياراتك تحدد النهاية.',
+    'apps.name.faceless': 'بلا وجه',
+    'apps.tag.faceless': 'بكسل مناهض للحرب',
+    'apps.desc.faceless': 'لعبة بكسل مناهضة للحرب. الحرب جحيم.',
+    'apps.lovezone.locked': '🔒 افتحها أولاً في الدارك نت (اضغط إصدار التذييل 5 مرات)',
   },
   fr: {
 
@@ -2616,6 +2651,13 @@ var I18N = {
     'apps.name.star': 'Voyageur Stellaire',
     'apps.tag.star': 'Connexion YunTan',
     'apps.desc.star': 'Explorez l\'univers étoilé, pilotez votre vaisseau à travers les galaxies.',
+    'apps.name.lovezone': 'Zone Interdite',
+    'apps.tag.lovezone': 'Exclusif darknet · Débloquer',
+    'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: un récit interdit des profondeurs du darknet; vos choix décident de la fin.',
+    'apps.name.faceless': 'SANS VISAGE',
+    'apps.tag.faceless': 'Pixel antiguerre',
+    'apps.desc.faceless': 'Un jeu de pixel antiguerre. La guerre, c\'est l\'enfer.',
+    'apps.lovezone.locked': '🔒 Débloquez-le d\'abord sur le darknet (5 clics sur la version du pied de page)',
   }
 };
 var currentLang = localStorage.getItem('forum_lang') || 'zh';
@@ -3722,15 +3764,27 @@ function renderApps() {
       src: 'games/煒人v10.html' },
     { key: 'star', icon: '🚀', name: t('apps.name.star'), tag: t('apps.tag.star'),
       desc: t('apps.desc.star'),
-      src: 'games/星旅者.html', needYtLogin: true }
+      src: 'games/星旅者.html', needYtLogin: true },
+    { key: 'lovezone', icon: '🌹', name: t('apps.name.lovezone'), tag: t('apps.tag.lovezone'),
+      desc: t('apps.desc.lovezone'),
+      src: 'darknet/love_zone.html', unlockKey: 'yt_unlocked_lovezone' },
+    { key: 'faceless', icon: '🎭', name: t('apps.name.faceless'), tag: t('apps.tag.faceless'),
+      desc: t('apps.desc.faceless'),
+      src: 'games/faceless.html' }
   ];
   grid.innerHTML = apps.map(function (a) {
-    return '<div class="app-card" data-src="' + a.src + '" data-name="' + esc(a.name) + '"' + (a.needYtLogin ? ' data-needlogin="1"' : '') + '>'
-      + '<div class="app-icon">' + a.icon + '</div><h3>' + esc(a.name) + '</h3>'
+    var locked = false;
+    if(a.unlockKey){ try{ locked = !localStorage.getItem(a.unlockKey); }catch(e){ locked = true; } }
+    return '<div class="app-card" data-src="' + a.src + '" data-name="' + esc(a.name) + '"' + (a.needYtLogin ? ' data-needlogin="1"' : '') + (locked ? ' data-locked="1"' : '') + (locked ? ' style="opacity:.55;filter:grayscale(.45)"' : '') + '>'
+      + '<div class="app-icon">' + (locked ? '🔒' : a.icon) + '</div><h3>' + esc(a.name) + '</h3>'
       + '<p>' + esc(a.desc) + '</p><span class="app-tag">' + esc(a.tag) + '</span></div>';
   }).join('');
   grid.querySelectorAll('.app-card').forEach(function (card) {
     card.addEventListener('click', function () {
+      if(card.getAttribute('data-locked') === '1'){
+        toast(t('apps.lovezone.locked'));
+        return;
+      }
       var needLogin = card.getAttribute('data-needlogin') === '1';
       if (needLogin && !session) {
         toast(t('apps.needlogin'));
@@ -5442,14 +5496,14 @@ var DARKNET_MAP = {
       {type:'doc',  src:'darknet/ip_copy.docx',name:'文档 IP 副本'}
     ]
   },
-  /* 密钥 ccc-mh-galgame（btoa 混淆存储）→ 游戏厅：登录后点“获取”即可在游戏舱内直接游玩 */
+  /* 密钥 ccc-mh-galgame（btoa 混淆存储）→ 游戏厅：登录后点“获取”解锁，之后在小程序中心直接游玩 */
   'Y2NjLW1oLWdhbGdhbWU=': {
     title: '暗网 · 游戏厅',
     note: '密钥授权 · 登录后获取游戏',
     files: [
-      { type:'game', src:'darknet/faceless.html', name:'没有脸的人 THE FACELESS', icon:'🎭',
-        tag:'反战像素', desc:'一部反战像素游戏。战争是地狱。',
-        needLogin:true, fullscreen:true }
+      { type:'game', src:'darknet/love_zone.html', name:'恋之禁区 LOVE IN THE FORBIDDEN ZONE', icon:'🌹',
+        tag:'暗网叙事 · 获取解锁', desc:'一段暗网深处的禁忌叙事。',
+        needLogin:true, unlockKey:'yt_unlocked_lovezone' }
     ]
   }
 };
@@ -5552,7 +5606,7 @@ var DARKNET_MAP = {
           body.src = f.src; body.controls = true; body.preload = 'metadata';
           body.style.cssText = 'width:100%;border-radius:8px';
         } else if(f.type === 'game'){
-          /* 游戏卡：登录后点“获取”→ 游戏舱直接游玩 */
+          /* 游戏卡：登录后点“获取”→ 解锁游戏，之后在小程序中心直接游玩 */
           body = document.createElement('div');
           body.style.cssText = 'height:150px;border-radius:8px;background:radial-gradient(120% 120% at 20% 15%,#1a2440,#0b1120 70%);border:1px solid rgba(140,175,255,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden';
           var gIcon = document.createElement('div');
@@ -5563,7 +5617,9 @@ var DARKNET_MAP = {
           gTag.style.cssText = 'font-size:11px;letter-spacing:2px;color:#8fb3ff;border:1px solid rgba(120,160,255,.35);border-radius:20px;padding:3px 12px';
           var gBtn = document.createElement('button');
           var logged = !!(window.session && window.session.token);
-          if(f.needLogin && !logged){
+          var unlocked = false;
+          if(f.unlockKey){ try{ unlocked = !!localStorage.getItem(f.unlockKey); }catch(e){ unlocked = false; } }
+          if(!logged && f.needLogin){
             gBtn.textContent = '🔒 登录后获取';
             gBtn.style.cssText = 'padding:7px 18px;border:none;border-radius:8px;background:#26324d;color:#8fa3c8;font-size:13px;cursor:pointer';
             gBtn.onclick = function(){
@@ -5571,10 +5627,26 @@ var DARKNET_MAP = {
               if(v) v.remove();
               location.hash = '#/login';
             };
+          } else if(unlocked){
+            gBtn.textContent = '✅ 已获取 · 去小程序游玩';
+            gBtn.style.cssText = 'padding:7px 18px;border:none;border-radius:8px;background:#1f5c3a;color:#a9e6c4;font-size:13px;font-weight:600;cursor:pointer';
+            gBtn.onclick = function(){
+              var v = document.getElementById('darknet-view');
+              if(v) v.remove();
+              location.hash = '#/apps';
+            };
           } else {
             gBtn.textContent = '🎮 获取游戏';
             gBtn.style.cssText = 'padding:7px 18px;border:none;border-radius:8px;background:#2f6bff;color:#fff;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(47,107,255,.4)';
-            gBtn.onclick = function(){ darknetPlay(f); };
+            gBtn.onclick = function(){
+              try{ localStorage.setItem(f.unlockKey || 'yt_unlocked_lovezone', '1'); }catch(e){}
+              try{
+                var lz = document.getElementById('darknet-view');
+                if(lz) lz.remove();
+              }catch(e){}
+              toast('✅ 已获取《恋之禁区》！去「小程序中心」直接游玩');
+              location.hash = '#/apps';
+            };
           }
           body.appendChild(gIcon); body.appendChild(gTag); body.appendChild(gBtn);
         } else {
