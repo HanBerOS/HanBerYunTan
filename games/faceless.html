@@ -1,0 +1,2489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="description" content="没有脸的人 THE FACELESS — 一部反战像素游戏。战争是地狱。"/>
+<title>没有脸的人 THE FACELESS — 一部反战游戏</title>
+<style>
+html,body{margin:0;padding:0;height:100%;background:#000;overflow:hidden;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;color:#cfcfc6;user-select:none;-webkit-user-select:none;}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;}
+canvas#game{image-rendering:pixelated;image-rendering:crisp-edges;background:#000;}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10;overflow:hidden;}
+.layer{position:absolute;left:0;right:0;margin:auto;display:none;opacity:0;transition:opacity .35s;}
+.layer.show{display:block;opacity:1;}
+.layer.instant{transition:none;}
+/* 对话 */
+#dlg{bottom:0;width:min(92vw,900px);background:rgba(3,4,8,.88);border-top:2px solid #5c1414;padding:14px 18px 12px;box-shadow:0 -8px 40px rgba(0,0,0,.8);}
+#dlg .who{display:inline-block;font-size:14px;font-weight:700;letter-spacing:2px;color:#d8d8d0;border-bottom:1px solid rgba(255,255,255,.25);padding-bottom:2px;margin-bottom:6px;}
+#dlg .txt{font-size:16px;line-height:1.75;min-height:56px;color:#e8e6df;text-shadow:0 0 6px rgba(0,0,0,.9);}
+#dlg .next{position:absolute;right:22px;bottom:10px;font-size:12px;color:#8a8a80;animation:blink 1s infinite;}
+#dlg .mono{color:#b9b7ae;font-style:italic;}
+#dlg .mom{color:#e0b76a;}
+#dlg .officer{color:#d97a5a;}
+#dlg .inner{color:#9aa5b8;font-style:italic;}
+#dlg .red{color:#e04040;}
+#dlg .monster{color:#d8d8d0;letter-spacing:2px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+/* 选项 */
+#ask{top:38%;width:min(92vw,640px);pointer-events:auto;}
+#ask .askt{font-size:15px;color:#8a8a80;text-align:center;margin-bottom:12px;letter-spacing:2px;}
+#ask button{display:block;width:100%;margin:6px 0;padding:12px 16px;background:rgba(10,12,18,.92);border:1px solid #4a4a42;color:#e8e6df;font-size:16px;letter-spacing:3px;cursor:pointer;text-align:center;transition:all .15s;pointer-events:auto;}
+#ask button:hover,#ask button:focus{background:#3a1515;border-color:#a02020;}
+#ask button.hovered{background:#3a1515;border-color:#a02020;}
+/* 章节卡片 */
+#card{top:34%;width:min(90vw,700px);text-align:center;}
+#card .ct{font-size:34px;letter-spacing:10px;color:#e8e6df;text-shadow:0 0 20px rgba(160,32,32,.6);}
+#card .cs{font-size:14px;color:#8a8a80;letter-spacing:6px;margin-top:8px;}
+#card .ch{font-size:13px;color:#5c5c54;margin-top:14px;letter-spacing:2px;}
+#card .csub{font-size:15px;color:#d8d8d0;margin-top:10px;letter-spacing:2px;line-height:1.8;}
+/* HUD */
+#hud{top:0;padding:10px 16px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;}
+#hud .box{background:rgba(3,4,8,.72);border:1px solid #2a2a24;padding:7px 12px;font-size:12px;letter-spacing:2px;}
+#hud .lbl{color:#8a8a80;font-size:11px;}
+#hud .val{color:#e8e6df;font-size:14px;margin-top:2px;}
+#hud .bar{width:150px;height:8px;background:#15151a;margin-top:5px;border:1px solid #2a2a24;}
+#hud .bar i{display:block;height:100%;background:#8f6a3a;transition:width .5s, background .5s;}
+#hud .bar i.low{background:#a02020;}
+#hud .bar i.dead{background:#555;}
+#hud .right{text-align:right;}
+#hud .kills{color:#a02020;}
+#hud .keys{position:fixed;bottom:8px;right:14px;font-size:11px;color:#5c5c54;letter-spacing:1px;text-align:right;line-height:1.8;}
+/* 信件/物品 */
+#inv{top:12%;left:50%;transform:translateX(-50%);width:min(94vw,720px);background:rgba(4,5,9,.94);border:1px solid #3a3a34;padding:16px 18px;pointer-events:auto;max-height:76vh;overflow:auto;}
+#inv h2{margin:0 0 10px;font-size:16px;letter-spacing:4px;color:#e0b76a;}
+#inv .close{float:right;cursor:pointer;color:#8a8a80;font-size:14px;}
+#inv .cat{color:#8a8a80;font-size:12px;letter-spacing:3px;margin:12px 0 6px;border-top:1px solid #23231e;padding-top:8px;}
+#inv .item{display:block;width:100%;text-align:left;background:none;border:none;color:#cfcfc6;font-size:14px;padding:8px 6px;cursor:pointer;letter-spacing:1px;border-left:2px solid transparent;}
+#inv .item:hover{background:#14161e;border-left-color:#a02020;color:#fff;}
+#inv .item .tag{color:#5c5c54;font-size:11px;}
+#inv .body{margin-top:8px;font-size:13px;line-height:1.9;color:#b9b7ae;white-space:pre-wrap;border-top:1px solid #23231e;padding-top:10px;max-height:34vh;overflow:auto;}
+#inv .body .who{color:#e0b76a;}
+/* 死亡 */
+#death{top:0;width:100%;height:100%;background:rgba(0,0,0,.96);flex-direction:column;align-items:center;justify-content:center;pointer-events:auto;cursor:pointer;}
+#death.show{display:flex;}
+#death .d1{font-size:40px;letter-spacing:16px;color:#a02020;text-shadow:0 0 24px rgba(160,32,32,.5);}
+#death .d2{margin-top:22px;font-size:15px;line-height:2.2;color:#8a8a80;text-align:center;letter-spacing:2px;}
+#death .d3{margin-top:30px;font-size:12px;color:#4a4a42;letter-spacing:3px;animation:blink 1.2s infinite;}
+#death .d2 b{color:#cfcfc6;}
+/* toast */
+#toast{top:12%;font-size:13px;color:#d8d8d0;letter-spacing:2px;text-shadow:0 0 10px #000;text-align:center;width:100%;}
+/* 标题 */
+#title{top:0;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;background:transparent;}
+#title.show{display:flex;}
+#title .t1{font-size:52px;letter-spacing:18px;color:#e8e6df;text-shadow:0 0 30px rgba(160,32,32,.7);font-weight:700;}
+#title .t2{font-size:18px;letter-spacing:12px;color:#8a8a80;margin-top:10px;}
+#title .t3{margin-top:26px;font-size:13px;color:#5c5c54;letter-spacing:4px;line-height:2.2;text-align:center;}
+#title .t4{margin-top:40px;font-size:14px;color:#a02020;letter-spacing:6px;animation:blink 1.4s infinite;}
+#title .t5{position:absolute;bottom:26px;font-size:11px;color:#3a3a34;letter-spacing:2px;}
+#flash{position:absolute;inset:0;background:rgba(255,255,255,.0);pointer-events:none;transition:none;}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%);}
+#scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);opacity:.5;mix-blend-mode:multiply;}
+#blood{position:absolute;inset:0;pointer-events:none;opacity:0;}
+#touch{position:fixed;inset:0;pointer-events:none;z-index:9;display:none;}
+#touch .tb{position:absolute;background:rgba(20,22,30,.5);border:1px solid #3a3a34;color:#cfcfc6;font-size:18px;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:auto;touch-action:none;}
+#fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .9s;}
+#err{position:fixed;bottom:0;left:0;right:0;background:#500;color:#fff;font-size:12px;padding:6px;display:none;z-index:99;white-space:pre-wrap;pointer-events:auto;}
+::-webkit-scrollbar{width:8px;height:8px;}::-webkit-scrollbar-thumb{background:#2a2a24;}::-webkit-scrollbar-track{background:#0a0a0e;}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game" width="480" height="270"></canvas></div>
+<div id="ui">
+  <div id="fade"></div>
+  <div id="vig"></div>
+  <div id="scan"></div>
+  <div id="blood"></div>
+  <div id="flash"></div>
+  <div id="toast" class="layer"></div>
+  <div id="dlg" class="layer"><span class="who" id="dlgwho"></span><div class="txt" id="dlgtxt"></div><div class="next">▼ 空格 / 点击</div></div>
+  <div id="ask" class="layer"><div class="askt" id="askt"></div><div id="askb"></div></div>
+  <div id="card" class="layer"><div class="ct" id="cardt"></div><div class="cs" id="cards"></div><div class="csub" id="cardc"></div><div class="ch" id="cardh"></div></div>
+  <div id="hud">
+    <div class="box"><div class="lbl">人性 · 你还剩下什么</div><div class="bar"><i id="humbar"></i></div><div class="val" id="humval"></div></div>
+    <div class="box right"><div class="lbl" id="daylbl">战争第 1 天</div><div class="val" id="killsval"></div><div class="lbl" id="hintval" style="color:#e0b76a"></div></div>
+  </div>
+  <div class="keys" id="keyhint"></div>
+  <div id="inv" class="layer"><span class="close" id="invclose">✕ 关闭</span><h2>行囊 · 你还带着的东西</h2><div id="invbody"></div></div>
+  <div id="death" class="layer"><div class="d1">你死了</div><div class="d2" id="deathtxt"></div><div class="d3">— 点击 · 再冲一次 —</div></div>
+  <div id="title" class="layer"><div class="t1">没有脸的人</div><div class="t2">T H E &nbsp;F A C E L E S S</div><div class="t3" id="titletxt"></div><div class="t4" id="titlecta">点 击 开 始</div><div class="t5">谨记：战争是地狱。这是一部反战游戏。</div></div>
+</div>
+<div id="touch"></div>
+<div id="err"></div>
+<div id="dbg" style="position:fixed;top:0;right:0;background:#000;color:#0f0;font-size:11px;z-index:999;padding:2px 6px;font-family:monospace;">dbg</div>
+<script>
+'use strict';
+/* =====================================================================
+   没有脸的人 THE FACELESS
+   一部反战像素游戏 · 单文件 · 无任何外部依赖
+   —— 战争是地狱。所有被战争带走的名字，都曾是某个母亲的儿子。
+   ===================================================================== */
+var $=function(id){return document.getElementById(id);};
+var clamp=function(v,a,b){return v<a?a:(v>b?b:v);};
+var rand=function(a,b){return a+Math.random()*(b-a);};
+var randi=function(a,b){return Math.floor(rand(a,b+1));};
+var pick=function(a){return a[Math.floor(Math.random()*a.length)];};
+var TAU=Math.PI*2;
+var now=function(){return performance.now()/1000;};
+
+/* ============================= 状态 ============================= */
+var S={
+  chapter:0, name:'你', humanity:100, kills:0, deaths:0, days:0,
+  letters:[], lettersRead:[], items:[], dogtags:[], killed:[],
+  flags:{}, choices:{}, endings:{},
+  isNew:true
+};
+var SAVE_KEY='faceless_save_v1';
+function saveGame(){
+  try{
+    S.flags.savedAt=new Date().toISOString();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(S));
+  }catch(e){}
+}
+function loadGame(){
+  try{
+    var raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    var d=JSON.parse(raw);
+    for(var k in S){ if(d[k]!==undefined) S[k]=d[k]; }
+    return true;
+  }catch(e){ return false; }
+}
+function resetGame(){
+  var was=S.isNew; var obj={chapter:0,name:'你',humanity:100,kills:0,deaths:0,days:0,letters:[],lettersRead:[],items:[],dogtags:[],killed:[],flags:{},choices:{},endings:{},isNew:true};
+  for(var k in S){ delete S[k]; }
+  for(var k2 in obj){ S[k2]=obj[k2]; }
+  S.isNew=was;
+}
+function addLetter(l){ if(!S.letters.some(function(x){return x.id===l.id;})){ S.letters.push(l); UI.toast('获得：'+l.title); } }
+function addItem(l){ if(!S.items.some(function(x){return x.id===l.id;})){ S.items.push(l); } }
+function addDogtag(l){ S.dogtags.push(l); }
+
+/* ============================= 音频 ============================= */
+var Aud=(function(){
+  var ctx=null, master=null, muted=false, noiseBuf=null;
+  var music=null, humOsc=null, humGain=null, rainGain=null, windGain=null, heartTimer=0, heartOn=false;
+  function init(){
+    if(ctx) return;
+    try{
+      ctx=new (window.AudioContext||window.webkitAudioContext)();
+      master=ctx.createGain(); master.gain.value=0.55; master.connect(ctx.destination);
+      var len=ctx.sampleRate*2; noiseBuf=ctx.createBuffer(1,len,ctx.sampleRate);
+      var d=noiseBuf.getChannelData(0);
+      for(var i=0;i<len;i++) d[i]=Math.random()*2-1;
+    }catch(e){ ctx=null; }
+  }
+  function resume(){ if(ctx&&ctx.state==='suspended') ctx.resume(); }
+  function mute(){ muted=!muted; if(master) master.gain.value=muted?0:0.55; return muted; }
+  function env(g,t0,a,peak,d){ g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(peak,t0+a); g.gain.exponentialRampToValueAtTime(0.0001,t0+a+d); }
+  function noise(dur,filterFreq,peak,type){
+    if(!ctx) return;
+    var t=ctx.currentTime;
+    var src=ctx.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    var f=ctx.createBiquadFilter(); f.type=type||'lowpass'; f.frequency.value=filterFreq;
+    var g=ctx.createGain(); env(g,t,0.005,peak,dur);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t); src.stop(t+dur+0.1);
+  }
+  function tone(freq,dur,peak,type,slide){
+    if(!ctx) return;
+    var t=ctx.currentTime;
+    var o=ctx.createOscillator(); o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(20,slide),t+dur);
+    var g=ctx.createGain(); env(g,t,0.008,peak,dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t+dur+0.1);
+  }
+  return {
+    init:init, resume:resume, mute:mute,
+    gun:function(){ noise(0.12,2600,0.9,'bandpass'); tone(150,0.1,0.7,'square',40); },
+    rifle:function(){ noise(0.16,3000,0.7,'bandpass'); tone(110,0.12,0.5,'square',30); },
+    boom:function(big){
+      noise(big?1.6:0.8, big?300:500, big?1:0.8,'lowpass');
+      tone(big?55:70, big?1.4:0.7, big?1:0.7,'sine',25);
+      G.shake(big?1:0.5);
+    },
+    whistle:function(){ if(!ctx)return; var t=ctx.currentTime; var o=ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(1900,t); o.frequency.linearRampToValueAtTime(2400,t+0.15); o.frequency.linearRampToValueAtTime(1500,t+0.45); var g=ctx.createGain(); g.gain.setValueAtTime(0.35,t); g.gain.linearRampToValueAtTime(0.35,t+0.4); g.gain.linearRampToValueAtTime(0.0001,t+0.55); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.6); },
+    scream:function(){ if(!ctx)return; tone(900,0.5,0.25,'sawtooth',400); tone(1200,0.4,0.18,'sawtooth',600); },
+    clink:function(){ tone(3000,0.3,0.2,'triangle',600); noise(0.1,4000,0.12,'highpass'); },
+    splash:function(){ noise(0.35,900,0.35,'lowpass'); },
+    thunder:function(){ noise(2.2,180,0.55,'lowpass'); tone(40,2,0.4,'sine',25); },
+    drip:function(){ tone(1800,0.12,0.12,'sine',900); },
+    // 雨/风 循环
+    startRain:function(){ if(!ctx||rainGain)return; var src=ctx.createBufferSource(); src.buffer=noiseBuf; src.loop=true; var f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1500; f.Q.value=0.6; rainGain=ctx.createGain(); rainGain.gain.value=0.0; src.connect(f); f.connect(rainGain); rainGain.connect(master); src.start(); },
+    setRain:function(v){ if(rainGain) rainGain.gain.linearRampToValueAtTime(v, ctx.currentTime+1.5); },
+    startWind:function(){ if(!ctx||windGain)return; var src=ctx.createBufferSource(); src.buffer=noiseBuf; src.loop=true; var f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=320; windGain=ctx.createGain(); windGain.gain.value=0.0; src.connect(f); f.connect(windGain); windGain.connect(master); src.start(); },
+    setWind:function(v){ if(windGain) windGain.gain.linearRampToValueAtTime(v, ctx.currentTime+1.5); },
+    stopWeather:function(){ if(rainGain){rainGain.gain.linearRampToValueAtTime(0,ctx.currentTime+0.8); setTimeout(function(){try{rainGain.disconnect();}catch(e){}; rainGain=null;},900);} if(windGain){windGain.gain.linearRampToValueAtTime(0,ctx.currentTime+0.8); setTimeout(function(){try{windGain.disconnect();}catch(e){}; windGain=null;},900);} },
+    // 心跳
+    setHeart:function(on){ heartOn=on; heartTimer=0; },
+    tickHeart:function(dt){
+      if(!ctx||!heartOn) return;
+      heartTimer-=dt;
+      if(heartTimer<=0){
+        heartTimer=0.92; var t=ctx.currentTime;
+        tone(58,0.09,0.6,'sine',45); tone(52,0.12,0.45,'sine',40);
+      }
+    },
+    // 哼唱（摇篮曲）
+    hum:function(start){
+      if(!ctx) return;
+      if(start){
+        if(humOsc) return;
+        humOsc=ctx.createOscillator(); humOsc.type='sine'; humOsc.frequency.value=392;
+        var lfo=ctx.createOscillator(); lfo.frequency.value=5.2;
+        var lfoG=ctx.createGain(); lfoG.gain.value=5;
+        lfo.connect(lfoG); lfoG.connect(humOsc.frequency);
+        humGain=ctx.createGain(); humGain.gain.value=0.0001; humGain.gain.linearRampToValueAtTime(0.05,ctx.currentTime+1.2);
+        humOsc.connect(humGain); humGain.connect(master);
+        humOsc.start(); lfo.start();
+      }else{
+        if(humOsc){ try{humGain.gain.linearRampToValueAtTime(0.0001,ctx.currentTime+1);}catch(e){} var o=humOsc; humOsc=null; setTimeout(function(){try{o.stop();}catch(e){}},1400); }
+      }
+    },
+    /* 音乐序列器 */
+    playMusic:function(def){
+      if(!ctx) return;
+      music={notes:def.notes, bpm:def.bpm, inst:def.inst||'box', loop:def.loop!==false, vol:def.vol||0.2, idx:0, next:ctx.currentTime+0.1, stopped:false, done:def.done};
+    },
+    stopMusic:function(){ music=null; },
+    tickMusic:function(){
+      if(!ctx||!music) return;
+      var m=music;
+      while(m.next<ctx.currentTime+0.18){
+        var n=m.notes[m.idx];
+        if(n){
+          if(n[0]>0){
+            var beat=60/m.bpm;
+            if(m.inst==='box'){ var o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=n[0]; var o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=n[0]*2; var g=ctx.createGain(); var g2=ctx.createGain(); g.gain.setValueAtTime(0.0001,m.next); g.gain.linearRampToValueAtTime(m.vol,m.next+0.01); g.gain.exponentialRampToValueAtTime(0.0001,m.next+n[1]*beat*0.95); g2.gain.value=m.vol*0.25; o.connect(g); g.connect(master); o2.connect(g2); g2.connect(master); o.start(m.next); o.stop(m.next+n[1]*beat); o2.start(m.next); o2.stop(m.next+n[1]*beat); }
+            else if(m.inst==='drone'){ var o3=ctx.createOscillator(); o3.type='sine'; o3.frequency.value=n[0]; var g3=ctx.createGain(); g3.gain.setValueAtTime(0.0001,m.next); g3.gain.linearRampToValueAtTime(m.vol*0.6,m.next+1.2); g3.gain.linearRampToValueAtTime(0.0001,m.next+n[1]*beat); o3.connect(g3); g3.connect(master); o3.start(m.next); o3.stop(m.next+n[1]*beat+0.1); }
+            else if(m.inst==='horn'){ var o4=ctx.createOscillator(); o4.type='square'; o4.frequency.value=n[0]; var f4=ctx.createBiquadFilter(); f4.type='lowpass'; f4.frequency.value=900; var g4=ctx.createGain(); g4.gain.setValueAtTime(0.0001,m.next); g4.gain.linearRampToValueAtTime(m.vol*0.5,m.next+0.02); g4.gain.exponentialRampToValueAtTime(0.0001,m.next+n[1]*beat*0.92); o4.connect(f4); f4.connect(g4); g4.connect(master); o4.start(m.next); o4.stop(m.next+n[1]*beat); }
+            else if(m.inst==='snare'){ if(n[0]===1){ var s=ctx.createBufferSource(); s.buffer=noiseBuf; var f5=ctx.createBiquadFilter(); f5.type='bandpass'; f5.frequency.value=1800; var g5=ctx.createGain(); g5.gain.setValueAtTime(m.vol*0.5,m.next); g5.gain.exponentialRampToValueAtTime(0.0001,m.next+0.08); s.connect(f5); f5.connect(g5); g5.connect(master); s.start(m.next); s.stop(m.next+0.1); } }
+          }
+        }
+        m.idx++;
+        if(m.idx>=m.notes.length){
+          if(m.loop){ m.idx=0; }
+          else{ var mm=m; music=null; if(mm.done) setTimeout(mm.done,50); return; }
+        }
+        m.next+=60/m.bpm;
+      }
+    },
+    /* 摇篮曲 妈妈的主题 */
+    lullaby:function(){ this.playMusic({bpm:72, vol:0.16, inst:'box', notes:[
+      [659,1],[784,1],[880,1.5],[784,0.5],[659,1],[587,1],[523,2],
+      [440,1],[523,1],[659,1.5],[587,0.5],[523,1],[440,1],[392,2],
+      [440,1],[523,1],[587,1.5],[523,0.5],[440,1],[392,1],[349,2],
+      [392,1],[440,1],[523,1.5],[494,0.5],[440,1],[392,1],[349,2]
+    ]}); },
+    march:function(){ this.playMusic({bpm:126, vol:0.22, inst:'horn', notes:[
+      [293,0.5],[293,0.5],[349,0.5],[392,0.5],[392,1],[349,0.5],[329,0.5],[293,1],
+      [293,0.5],[293,0.5],[349,0.5],[392,0.5],[440,1],[392,0.5],[349,0.5],[293,1],
+      [0,0.5],[0,0.5],[440,0.5],[440,0.5],[523,0.5],[494,0.5],[440,0.5],[392,0.5],[349,1],[392,0.5],[440,0.5],[392,1.5]
+    ]}); },
+    dirge:function(){ this.playMusic({bpm:46, vol:0.18, inst:'drone', notes:[[98,2],[98,2],[92,3],[92,1],[82,3],[82,1],[73,4]]}); },
+    voidtone:function(){ this.playMusic({bpm:40, vol:0.12, inst:'drone', loop:true, notes:[[55,8],[58,8]]}); }
+  };
+})();
+
+/* ============================= 精灵 ============================= */
+var Spr=(function(){
+  function cv(w,h){ var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+  function C(c){ return c.getContext('2d'); }
+  /* 人形：uniform 制服色 / skin 肤色 / helmet 头盔类型 */
+  function person(o){
+    o=o||{};
+    var sc=o.sc||2, w=7*sc, h=12*sc;
+    var c=cv(w,h), x=C(c);
+    var uni=o.u||'#4a4632', skin=o.s||'#c9a985', boot='#171310', hair=o.hair||'#241a12';
+    var walk=o.walk||0, fire=o.fire||false;
+    x.fillStyle=o.dead?'#8a8a80':'#2e2a22'; // shadow base
+    // 腿
+    x.fillStyle=uni;
+    var ly=7*sc, lw=Math.round(1.6*sc);
+    x.fillRect(Math.round(1.4*sc)+Math.round(walk*0.8*sc), ly, lw, 3*sc);
+    x.fillRect(Math.round(4*sc)-Math.round(walk*0.8*sc), ly, lw, 3*sc);
+    x.fillStyle=boot;
+    x.fillRect(Math.round(1.4*sc)+Math.round(walk*0.8*sc), (ly+3*sc)-1, lw+1, 1*sc+1);
+    x.fillRect(Math.round(4*sc)-Math.round(walk*0.8*sc), (ly+3*sc)-1, lw+1, 1*sc+1);
+    // 躯干
+    x.fillStyle=uni;
+    x.fillRect(Math.round(1.2*sc), Math.round(3.4*sc), Math.round(4.6*sc), Math.round(4*sc));
+    x.fillStyle='#2a2218'; // 腰带
+    x.fillRect(Math.round(1.2*sc), Math.round(6.4*sc), Math.round(4.6*sc), 1);
+    // 手臂
+    x.fillStyle=uni;
+    x.fillRect(Math.round(0.6*sc), Math.round(3.6*sc), 1*sc, Math.round(3*sc));
+    x.fillRect(Math.round(5.4*sc), Math.round(3.6*sc), 1*sc, Math.round(3*sc));
+    if(fire){
+      x.save(); x.translate(Math.round(6.4*sc), Math.round(4*sc)); x.rotate(-0.6);
+      x.fillStyle='#2a2218'; x.fillRect(0,0,1*sc,Math.round(4.4*sc));
+      x.restore();
+    }
+    // 头
+    x.fillStyle=skin; x.fillRect(Math.round(1.8*sc), Math.round(0.8*sc), Math.round(3.4*sc), Math.round(2.8*sc));
+    if(o.faceless){ x.fillStyle='#d8d8d0'; x.fillRect(Math.round(1.8*sc), Math.round(0.8*sc), Math.round(3.4*sc), Math.round(2.8*sc)); }
+    else if(o.blank){ /* 无脸死兵 */ x.fillStyle='#6a6a64'; x.fillRect(Math.round(1.8*sc), Math.round(0.8*sc), Math.round(3.4*sc), Math.round(2.8*sc)); }
+    else{
+      x.fillStyle='#141418'; // 眼
+      x.fillRect(Math.round(2.2*sc), Math.round(1.6*sc), 1, 1);
+      x.fillRect(Math.round(3.8*sc), Math.round(1.6*sc), 1, 1);
+      if(o.beard){ x.fillStyle='#8a8a80'; x.fillRect(Math.round(2*sc), Math.round(2.6*sc), Math.round(3*sc), 1); }
+    }
+    // 头盔
+    if(o.helmet!==false){
+      if(o.helmet==='stahl'){ x.fillStyle='#434b3f'; x.fillRect(Math.round(1.2*sc), Math.round(0.4*sc), Math.round(4.6*sc), Math.round(1.2*sc)); x.fillRect(Math.round(1.6*sc), Math.round(1.4*sc), Math.round(3.8*sc), 1); }
+      else{ x.fillStyle=o.helmetColor||'#3f4a32'; x.fillRect(Math.round(1.2*sc), Math.round(0.4*sc), Math.round(4.6*sc), 1*sc); x.fillRect(Math.round(2*sc), Math.round(1.2*sc), Math.round(3*sc), 1); }
+    }else{
+      x.fillStyle=hair; x.fillRect(Math.round(1.8*sc), Math.round(0.4*sc), Math.round(3.4*sc), Math.round(1*sc));
+    }
+    return c;
+  }
+  /* 士兵（主角/战友） */
+  function soldier(kind, opts){
+    opts=opts||{};
+    if(kind==='enemy') return person({u:'#3c443a', helmet:'stahl', walk:opts.walk||0, fire:opts.fire, sc:2, s:'#c9a985'});
+    if(kind==='soviet') return person({u:'#4a5a3a', helmet:'round', walk:opts.walk||0, fire:opts.fire, sc:2, s:'#c9a985'});
+    if(kind==='us') return person({u:'#4a4632', helmet:'round', helmetColor:'#4a4f3c', walk:opts.walk||0, fire:opts.fire, sc:2, s:'#c9a985'});
+    return person({u:'#4a4632', helmet:'round', helmetColor:'#3f4a32', walk:opts.walk||0, fire:opts.fire, sc:2, s:'#c9a985'});
+  }
+  function civilian(o){ o=o||{}; return person({u:o.coat||'#5c4a36', helmet:false, hair:o.hair||'#241a12', s:o.s||'#c9a985', sc:o.sc||2, walk:o.walk||0, beard:o.beard}); }
+  function girl(){ var c=cv(9,13),x=C(c); x.fillStyle='#6a3a2e'; x.fillRect(1,8,2,3); x.fillRect(5,8,2,3); x.fillStyle='#7a4a3a'; x.fillRect(1,3,6,6); x.fillStyle='#3a2416'; x.fillRect(2,0,4,3); x.fillStyle='#c9a985'; x.fillRect(3,2,2,2); x.fillStyle='#141418'; x.fillRect(3,3,1,1); x.fillRect(5,3,1,1); x.fillStyle='#8a8a80'; x.fillRect(7,6,1,3); return c; }
+  function doll(){ var c=cv(5,7),x=C(c); x.fillStyle='#b9a67a'; x.fillRect(1,0,2,2); x.fillStyle='#5c1414'; x.fillRect(1,2,2,3); x.fillStyle='#8a8a80'; x.fillRect(2,5,1,2); return c; }
+  function rat(){ var c=cv(8,5),x=C(c); x.fillStyle='#3a3a36'; x.fillRect(1,2,5,2); x.fillRect(6,1,2,1); x.fillStyle='#2a2a26'; x.fillRect(0,3,2,1); x.fillRect(3,1,2,1); return c; }
+  function dogtags(){ var c=cv(6,6),x=C(c); x.fillStyle='#8a8a80'; x.fillRect(0,2,4,2); x.fillRect(4,3,2,1); x.fillStyle='#c9c9c0'; x.fillRect(1,3,2,1); return c; }
+  /* 没有脸的怪物 */
+  function faceless(size, opts){
+    opts=opts||{};
+    var h=size||26, w=Math.round(h*0.55), c=cv(w,h), x=C(c);
+    var g=x.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#e4e4dc'); g.addColorStop(1,'#9a9a90');
+    x.fillStyle=g;
+    // 头（无脸）
+    var hw=Math.round(w*0.62), hh=Math.round(h*0.22), hx=Math.round(w/2-hw/2), hy=0;
+    x.fillRect(hx,hy,hw,hh);
+    // 身体
+    var bw=Math.round(w*0.8), bh=Math.round(h*0.62), bx=Math.round(w/2-bw/2), by=hh+Math.round(h*0.02);
+    x.fillRect(bx,by,bw,bh);
+    // 长手臂
+    x.fillRect(Math.round(bx*0.2), by+2, Math.round(w*0.18), bh-4);
+    x.fillRect(w-Math.round(w*0.18)-Math.round(bx*0.2), by+2, Math.round(w*0.18), bh-4);
+    // 腿
+    x.fillRect(Math.round(w*0.3), by+bh-1, Math.round(w*0.2), h-by-bh);
+    x.fillRect(Math.round(w*0.5), by+bh-1, Math.round(w*0.2), h-by-bh);
+    // 脸上的阴影（没有眼睛的凹陷）
+    if(!opts.noShadow){ x.fillStyle='rgba(0,0,0,0.18)'; x.fillRect(hx+Math.round(hw*0.18), hy+Math.round(hh*0.4), Math.round(hw*0.24), Math.round(hh*0.2)); x.fillRect(hx+Math.round(hw*0.58), hy+Math.round(hh*0.4), Math.round(hw*0.24), Math.round(hh*0.2)); }
+    return c;
+  }
+  function poster(){ var c=cv(22,30),x=C(c); x.fillStyle='#3a1515'; x.fillRect(0,0,22,30); x.fillStyle='#d8d8d0'; x.font='5px monospace'; x.fillText('祖国',4,8); x.fillText('需要你',2,16); x.fillStyle='#c83838'; x.fillRect(9,19,4,5); x.fillRect(7,21,8,2); x.fillStyle='#e8e6df'; x.fillRect(9,20,1,3); return c; }
+  function treeBare(h){ var c=cv(8,h),x=C(c); x.fillStyle='#14100c'; x.fillRect(3,h-3,2,3); x.fillRect(3,Math.round(h*0.3),2,Math.round(h*0.7)); x.fillRect(1,Math.round(h*0.35),3,2); x.fillRect(4,Math.round(h*0.5),3,2); x.fillRect(2,Math.round(h*0.2),2,2); return c; }
+  function house(burn){ var c=cv(30,22),x=C(c); x.fillStyle=burn?'#3a2a22':'#4a3a2e'; x.fillRect(3,8,24,12); x.fillStyle=burn?'#2a1a14':'#3a2c22'; x.fillRect(5,3,20,6); x.fillStyle='#14100c'; x.fillRect(5,3,20,2); x.fillStyle=burn?'#ff7b1a':'#d9c14a'; x.fillRect(13,12,5,6); x.fillStyle='#1a140e'; x.fillRect(4,10,4,4); x.fillRect(22,10,4,4); if(burn){ x.fillStyle='#ff7b1a'; x.fillRect(8,4,3,3); x.fillStyle='#ffd23e'; x.fillRect(20,6,2,2); } return c; }
+  function grave(){ var c=cv(8,10),x=C(c); x.fillStyle='#5c5c54'; x.fillRect(2,2,4,6); x.fillRect(1,8,6,2); x.fillStyle='#8a8a80'; x.fillRect(3,3,2,2); return c; }
+  return { cv:cv, C:C, person:person, soldier:soldier, civilian:civilian, girl:girl, doll:doll, rat:rat, dogtags:dogtags, faceless:faceless, poster:poster, treeBare:treeBare, house:house, grave:grave };
+})();
+
+/* ============================= 特效 ============================= */
+var FX=(function(){
+  var parts=[], decals=[], weatherType='none', rainDrops=[], snowFlakes=[], ashBits=[];
+  function reset(){ parts=[]; decals=[]; rainDrops=[]; snowFlakes=[]; ashBits=[]; weatherType='none'; }
+  function setWeather(t,n){ weatherType=t; if(n){ for(var i=0;i<n;i++){ if(t==='rain') rainDrops.push({x:rand(0,G.w),y:rand(-300,0),s:rand(2,5),sp:rand(280,420)}); else if(t==='snow') snowFlakes.push({x:rand(0,G.w),y:rand(-270,0),s:rand(1,3),sp:rand(18,40),dr:rand(-20,20)}); else if(t==='ash') ashBits.push({x:rand(0,G.w),y:rand(-270,0),s:rand(1,2),sp:rand(30,70),dr:rand(-15,15)}); } } }
+  function spawn(o){ parts.push(o); }
+  function blood(x,y,n,dir){ dir=dir||0; for(var i=0;i<n;i++){ parts.push({x:x,y:y,vx:Math.cos(dir+rand(-0.9,0.9))*rand(20,90),vy:rand(-60,-10),life:rand(0.4,0.9),max:0.9,col:pick(['#a01f1f','#c83838','#7c1414']),grav:140,size:rand(1,2.2),type:'blood'}); }
+    for(var j=0;j<Math.floor(n/2);j++) decals.push({x:x+rand(-6,6),y:y+rand(-3,3),r:rand(1,3),col:pick(['#6e1010','#8f1d1d','#5c0f0f'])});
+  }
+  function spark(x,y,n,dir){ for(var i=0;i<n;i++){ parts.push({x:x,y:y,vx:Math.cos(dir+rand(-0.6,0.6))*rand(40,160),vy:rand(-120,-30),life:rand(0.2,0.5),max:0.5,col:pick(['#ffd23e','#ff7b1a','#fff']),grav:60,size:1,type:'spark'}); } }
+  function smoke(x,y,n,big){ for(var i=0;i<n;i++){ parts.push({x:x+rand(-4,4),y:y+rand(-3,3),vx:rand(-14,14),vy:rand(-40,-16),life:rand(1,2.4),max:2.4,col:big?'#2a2a2a':'#3a3a3a',size:rand(2,big?6:4),type:'smoke',grow:0.6}); } }
+  function ember(x,y,n){ for(var i=0;i<n;i++){ parts.push({x:x,y:y,vx:rand(-18,18),vy:rand(-90,-30),life:rand(0.7,1.6),max:1.6,col:pick(['#ff7b1a','#ffd23e','#ff3d00']),size:1,type:'ember',grav:-30}); } }
+  function mud(x,y,n){ for(var i=0;i<n;i++){ parts.push({x:x,y:y,vx:rand(-40,40),vy:rand(-90,-20),life:rand(0.3,0.7),max:0.7,col:'#3d3125',size:rand(1,2),type:'blood',grav:220}); } }
+  function splash(x,y,n){ for(var i=0;i<n;i++){ parts.push({x:x+rand(-8,8),y:y+rand(-2,2),vx:rand(-36,36),vy:rand(-110,-15),life:rand(0.4,0.8),max:0.8,col:pick(['#a8c8e8','#d8ecf8','#7a9ab8']),size:rand(1,2.2),type:'blood',grav:300}); } }
+  function update(dt){
+    for(var i=parts.length-1;i>=0;i--){ var p=parts[i]; p.life-=dt; if(p.life<=0){ parts.splice(i,1); continue; } p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.grav) p.vy+=p.grav*dt; if(p.type==='smoke'&&p.grow) p.size+=p.grow*dt; }
+    if(weatherType==='rain'){ for(var j=0;j<rainDrops.length;j++){ var r=rainDrops[j]; r.y+=r.sp*dt; r.x+=6*dt; if(r.y>G.h){ r.y=-5; r.x=rand(0,G.w); } } }
+    else if(weatherType==='snow'){ for(var k=0;k<snowFlakes.length;k++){ var s=snowFlakes[k]; s.y+=s.sp*dt; s.x+=Math.sin(now()*2+s.dr)*14*dt; if(s.y>G.h){ s.y=-5; s.x=rand(0,G.w); } } }
+    else if(weatherType==='ash'){ for(var m=0;m<ashBits.length;m++){ var a=ashBits[m]; a.y+=a.sp*dt; a.x+=Math.sin(now()*2.4+a.dr)*20*dt; if(a.y>G.h){ a.y=-5; a.x=rand(0,G.w); } } }
+  }
+  function draw(c){
+    // 血迹
+    for(var i=0;i<decals.length;i++){ var d=decals[i]; c.fillStyle=d.col; c.fillRect(d.x,d.y,d.r,d.r); }
+    for(var j=0;j<parts.length;j++){ var p=parts[j]; var a=clamp(p.life/p.max,0,1); c.globalAlpha=a; c.fillStyle=p.col; c.fillRect(p.x-p.size/2,p.y-p.size/2,p.size,p.size); }
+    c.globalAlpha=1;
+    // 天气
+    if(weatherType==='rain'){ c.strokeStyle='rgba(170,180,200,0.35)'; c.lineWidth=1; for(var k=0;k<rainDrops.length;k++){ var r=rainDrops[k]; c.beginPath(); c.moveTo(r.x,r.y); c.lineTo(r.x-3,r.y-8); c.stroke(); } }
+    else if(weatherType==='snow'){ c.fillStyle='rgba(230,230,230,0.8)'; for(var m2=0;m2<snowFlakes.length;m2++){ var s2=snowFlakes[m2]; c.fillRect(s2.x,s2.y,s2.s,s2.s); } }
+    else if(weatherType==='ash'){ c.fillStyle='rgba(60,60,58,0.8)'; for(var m3=0;m3<ashBits.length;m3++){ var a2=ashBits[m3]; c.fillRect(a2.x,a2.y,a2.s,a2.s); } }
+  }
+  function drawFire(c,x,y,s){ // 火苗
+    var f=Math.sin(now()*10+x)*0.3+0.7;
+    c.fillStyle='rgba(255,61,0,'+(0.5*f)+')'; c.fillRect(x-s/2,y-s,s,s*1.4);
+    c.fillStyle='rgba(255,123,26,'+(0.7*f)+')'; c.fillRect(x-s/4,y-s*1.2,s/2,s);
+    c.fillStyle='rgba(255,210,62,'+(0.9*f)+')'; c.fillRect(x-s/8,y-s*1.5,s/4,s/2);
+  }
+  return { reset:reset, setWeather:setWeather, spawn:spawn, blood:blood, spark:spark, smoke:smoke, ember:ember, mud:mud, splash:splash, update:update, draw:draw, drawFire:drawFire };
+})();
+
+/* ============================= 引擎 ============================= */
+var G={
+  w:480,h:270, c:null, ctx:null, scale:1,
+  keys:{}, mouse:{x:0,y:0,down:false}, inputLock:false,
+  scenes:{}, cur:null, sceneData:null, time:0, pause:false,
+  shakeAmt:0, flashA:0, flashCol:'#fff', fadeA:0,
+  hint:null,
+  init:function(){
+    this.c=$('game'); this.ctx=this.c.getContext('2d');
+    var self=this;
+    window.addEventListener('keydown',function(e){
+      var k=e.key.toLowerCase();
+      self.keys[k]=true;
+      if(['arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(k)>=0) e.preventDefault();
+      if(k===' '||k==='enter'){ if(!self.inputLock||$('dlg').classList.contains('show')) self.press('confirm'); }
+      if(k==='e') self.press('interact');
+      if(k==='i') UI.toggleInv();
+      if(k==='m') Aud.mute();
+      if(k==='1'||k==='2'||k==='3'||k==='4') self.press('num'+k);
+      Aud.resume();
+    });
+    window.addEventListener('keyup',function(e){ self.keys[e.key.toLowerCase()]=false; });
+    window.addEventListener('mousemove',function(e){ var r=self.c.getBoundingClientRect(); self.mouse.x=(e.clientX-r.left)*self.w/r.width; self.mouse.y=(e.clientY-r.top)*self.h/r.height; });
+    window.addEventListener('mousedown',function(e){ self.mouse.down=true; if(!self.inputLock||$('dlg').classList.contains('show')) self.press('confirm'); Aud.resume(); });
+    window.addEventListener('mouseup',function(){ self.mouse.down=false; });
+    window.addEventListener('resize',function(){ self.fit(); });
+    window.addEventListener('error',function(e){ var el=$('err'); el.style.display='block'; el.textContent='脚本错误: '+(e.message||e)+'\n'+(e.error&&e.error.stack?e.error.stack.split('\n').slice(0,4).join('\n'):''); });
+    this.fit(); this.loop();
+  },
+  fit:function(){
+    var vw=window.innerWidth, vh=window.innerHeight;
+    this.scale=Math.max(1,Math.min(Math.floor(vw/this.w),Math.floor(vh/this.h)));
+    if(this.scale<1) this.scale=1;
+    this.c.style.width=(this.w*this.scale)+'px'; this.c.style.height=(this.h*this.scale)+'px';
+  },
+  press:function(act){ if(this.cur&&this.cur.press) this.cur.press(act); },
+  start:function(name,data){
+    FX.reset(); Aud.stopWeather();
+    this.sceneData=data||{};
+    var sc=this.scenes[name];
+    if(sc) sc.name=sc.name||name;
+    this.cur=sc;
+    if(sc.enter) sc.enter(this.sceneData);
+    UI.closeAll();
+  },
+  shake:function(a){ this.shakeAmt=Math.max(this.shakeAmt,a); },
+  flash:function(col,a){ this.flashA=a; this.flashCol=col; var el=$('flash'); el.style.background=col; el.style.opacity=clamp(a,0,0.9); },
+  fade:function(to,cb){ var el=$('fade'); el.style.transition='opacity .9s'; el.style.opacity=to?1:0; var self=this; clearTimeout(this._ft); this._ft=setTimeout(function(){ if(cb) cb(); }, to?900:100); },
+  die:function(lines){
+    var el=$('death'); $('deathtxt').innerHTML=lines.join('<br>');
+    el.classList.add('show'); this.pause=true; this.inputLock=true;
+    S.deaths++;
+    var self=this;
+    $('death').onclick=function(){
+      el.classList.remove('show'); self.pause=false; self.inputLock=false;
+      if(self.cur&&self.cur.retry) self.cur.retry();
+      else self.start(self.cur.name);
+    };
+    $('death').style.pointerEvents='auto';
+  },
+  loop:function(){
+    var self=this;
+    var last=now();
+    function frame(){
+      var t=now(); var dt=Math.min(0.05,t-last); last=t;
+      self.time+=dt;
+      try{
+        Aud.tickMusic();
+        if(self.pause){ requestAnimationFrame(frame); return; }
+        if(self.cur&&self.cur.update) self.cur.update(dt);
+        FX.update(dt);
+        Aud.tickHeart(dt);
+        if(self.shakeAmt>0) self.shakeAmt=Math.max(0,self.shakeAmt-dt*2);
+        if(self.flashA>0){ self.flashA-=dt*2.4; if(self.flashA<=0){ self.flashA=0; $('flash').style.opacity=0; } }
+        self.render();
+        UI.updateHud();
+        var _d=$('dbg'); if(_d){ _d.textContent='scene:'+(self.cur?self.cur.name:'?')+' ch:'+S.chapter+' pause:'+(self.pause?1:0)+' t:'+self.time.toFixed(1); }
+      }catch(e){
+        var _d=$('dbg'); if(_d){ _d.textContent='FRAME ERR: '+e.message+' @ '+(self.cur?self.cur.name:'?'); }
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  },
+  render:function(){
+    var c=this.ctx, w=this.w, h=this.h;
+    c.save();
+    if(this.shakeAmt>0){ c.translate(rand(-1,1)*this.shakeAmt*4, rand(-1,1)*this.shakeAmt*4); }
+    c.fillStyle='#05060a'; c.fillRect(-4,-4,w+8,h+8);
+    if(this.cur&&this.cur.draw) this.cur.draw(c);
+    FX.draw(c);
+    c.restore();
+  }
+};
+
+/* ============================= UI ============================= */
+var UI=(function(){
+  var typing=false, queue=[], qidx=0, timer=null, typeIdx=0, dlgDone=null;
+  function show(id){ $(id).classList.add('show'); }
+  function hide(id){ $(id).classList.remove('show'); }
+  function closeAll(){ hide('dlg'); hide('ask'); hide('card'); hide('inv'); hide('death'); hide('title'); hide('toast'); }
+  function typewriter(el,text,speed,cb){
+    el.textContent=''; typeIdx=0; clearInterval(timer);
+    timer=setInterval(function(){
+      typeIdx+=2; if(typeIdx>=text.length){ typeIdx=text.length; clearInterval(timer); if(cb) cb(); }
+      el.textContent=text.slice(0,typeIdx);
+    }, speed||22);
+  }
+  function say(lines,done){
+    queue=lines.slice(); qidx=0; dlgDone=done; G.inputLock=true; typing=false;
+    show('dlg'); next();
+  }
+  function next(){
+    if(qidx>=queue.length){ hide('dlg'); G.inputLock=false; var d=dlgDone; dlgDone=null; if(d) d(); return; }
+    var L=queue[qidx];
+    var who=$('dlgwho'), txt=$('dlgtxt');
+    who.textContent=L.w||'';
+    who.style.color='#d8d8d0';
+    var cls='';
+    if(L.cls){ var map={mono:'mono',mom:'mom',officer:'officer',inner:'inner',red:'red',monster:'monster'}; cls=map[L.cls]||''; }
+    txt.className='txt '+cls;
+    typewriter(txt,L.s,20,function(){ typing=true; });
+    if(L.fx) runFx(L.fx);
+  }
+  function runFx(f){
+    if(f==='gun') Aud.gun();
+    else if(f==='boom') Aud.boom(false);
+    else if(f==='bigboom') Aud.boom(true);
+    else if(f==='whistle') Aud.whistle();
+    else if(f==='scream') Aud.scream();
+    else if(f==='thunder') Aud.thunder();
+    else if(f==='clink') Aud.clink();
+    else if(f==='splash') Aud.splash();
+  }
+  function advance(){
+    if(!queue.length&&!typing) return;
+    if(typing){ // 完成打字
+      clearInterval(timer); var L=queue[qidx]; $('dlgtxt').textContent=L.s; typing=false; return;
+    }
+    qidx++; next();
+  }
+  function ask(title,opts,done){
+    G.inputLock=true;
+    $('askt').textContent=title||'';
+    var b=$('askb'); b.innerHTML='';
+    opts.forEach(function(o,i){
+      var btn=document.createElement('button');
+      btn.textContent=o.k; btn.tabIndex=0;
+      btn.addEventListener('click',function(){ hide('ask'); G.inputLock=false; done(i+1); });
+      btn.addEventListener('mouseenter',function(){ btn.classList.add('hovered'); });
+      btn.addEventListener('mouseleave',function(){ btn.classList.remove('hovered'); });
+      b.appendChild(btn);
+    });
+    show('ask');
+  }
+  function card(title,sub,body,hint,done){
+    $('cardt').textContent=title; $('cards').textContent=sub||'';
+    $('cardc').textContent=body||''; $('cardh').textContent=hint||'';
+    show('card');
+    setTimeout(function(){ hide('card'); if(done) done(); }, (hint?2400:2100));
+  }
+  function toast(msg,ms){ $('toast').textContent=msg; show('toast'); clearTimeout(toast._t); toast._t=setTimeout(function(){ hide('toast'); }, ms||2200); }
+  /* HUD */
+  function updateHud(){
+    var hb=$('humbar');
+    hb.style.width=clamp(S.humanity,0,100)+'%';
+    hb.className='';
+    if(S.humanity<=10) hb.classList.add('dead');
+    else if(S.humanity<=35) hb.classList.add('low');
+    var hv=$('humval');
+    if(S.humanity>70) hv.textContent='你还算个人';
+    else if(S.humanity>45) hv.textContent='你在动摇';
+    else if(S.humanity>20) hv.textContent='你开始麻木';
+    else if(S.humanity>5) hv.textContent='行尸走肉';
+    else hv.textContent='你记不清自己是谁';
+    $('daylbl').textContent=S.days>0?('战争第 '+S.days+' 天'):'战争第 1 天';
+    var kv=$('killsval');
+    if(S.chapter<2) kv.textContent='';
+    else if(S.kills>50) kv.textContent='你已数不清';
+    else kv.textContent='你杀了 '+S.kills+' 个母亲的孩子';
+    var kh=$('keyhint');
+    if(G.hint) kh.textContent=G.hint; else kh.textContent='移动 WASD/方向键 · 互动 空格/E · 行囊 I · 静音 M';
+    $('hintval').textContent='';
+  }
+  /* 行囊 */
+  function toggleInv(){ if($('inv').classList.contains('show')) hide('inv'); else openInv(); }
+  function openInv(){
+    $('invclose').onclick=function(){ hide('inv'); };
+    var b=$('invbody'); b.innerHTML='';
+    var h='';
+    if(S.items.length){ h+='<div class="cat">随身之物</div>'; S.items.forEach(function(it){ h+='<button class="item" data-id="i-'+it.id+'"><span class="tag">[物]</span> '+it.name+'</button>'; }); }
+    if(S.letters.length){ h+='<div class="cat">信件 · 还没有寄到的字（'+S.letters.length+' 封）</div>'; S.letters.forEach(function(l){ h+='<button class="item" data-id="l-'+l.id+'"><span class="tag">[信]</span> '+l.title+'</button>'; }); }
+    if(S.dogtags.length){ h+='<div class="cat">狗牌 · 你带回来的名字（'+S.dogtags.length+' 枚）</div>'; S.dogtags.forEach(function(d){ h+='<button class="item" data-id="d-'+d.id+'"><span class="tag">[牌]</span> '+d.name+'</button>'; }); }
+    if(!h){ h='<div class="cat">空</div><div class="item">你什么都没带。</div>'; }
+    b.innerHTML=h;
+    var body=document.createElement('div'); body.className='body'; body.id='invbodytext';
+    b.appendChild(body);
+    b.querySelectorAll('button[data-id]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var id=btn.getAttribute('data-id'); var kind=id[0], rid=id.slice(2);
+        var txt='';
+        if(kind==='i'){ var it=S.items.find(function(x){return x.id===rid;}); if(it) txt=it.desc; }
+        else if(kind==='l'){ var l=S.letters.find(function(x){return x.id===rid;}); if(l){ if(S.lettersRead.indexOf(l.id)<0) S.lettersRead.push(l.id); txt='《'+l.title+'》\n\n'+l.text; } }
+        else if(kind==='d'){ var d=S.dogtags.find(function(x){return x.id===rid;}); if(d) txt=d.name+'  ·  '+d.date+'\n\n'+d.line; }
+        body.textContent=txt||'……字迹被雨水泡烂了，你认不出。';
+      });
+    });
+    show('inv');
+  }
+  return { say:say, advance:advance, ask:ask, card:card, toast:toast, openInv:toggleInv, toggleInv:toggleInv, closeAll:closeAll, updateHud:updateHud, show:show, hide:hide };
+})();
+
+/* 全局确认键绑定到 UI 对话推进 */
+(function(){
+  var origPress=G.press.bind(G);
+  G.press=function(act){
+    if(act==='confirm'){
+      if($('death').classList.contains('show')) return;
+      if($('ask').classList.contains('show')) return;
+      if($('dlg').classList.contains('show')){ UI.advance(); return; }
+    }
+    if(origPress) origPress(act);
+  };
+})();
+
+/* ============================= 场景注册 ============================= */
+G.scenes={};
+
+/* ============================= 标题 ============================= */
+G.scenes.title={
+  t:0, started:false,
+  enter:function(){
+    this.t=0; this.started=false;
+    UI.show('title');
+    $('titletxt').innerHTML='2D 像素 · 单机 · 反战游戏<br>键盘 WASD/方向键 移动 · 空格 互动 · I 行囊 · M 静音';
+    var has=loadGame();
+    $('titlecta').textContent=has? '点 击 继 续':'点 击 开 始';
+    Aud.setWind(0.12); Aud.setRain(0.1);
+    FX.setWeather('rain',40);
+    var self=this;
+    $('title').onclick=function(){
+      self.startGame();
+    };
+  },
+  press:function(a){
+    if(a==='confirm'){ this.startGame(); }
+  },
+  startGame:function(){
+    var self=this;
+    if(self.started) return;
+    self.started=true;
+    try{ Aud.init(); Aud.resume(); }catch(e){}
+    G.fade(1,function(){
+      G.fade(0);
+      var has2=loadGame();
+      if(has2&&S.chapter>0&&!S.flags.noContinue){ G.start('select',{fromTitle:true}); }
+      else{ S.isNew=true; resetGame(); G.start('intro'); }
+    });
+  },
+  update:function(dt){
+    this.t+=dt;
+    var c=$('title');
+    if(this.t%2<0.1){ c.style.opacity=0.92; } else { c.style.opacity=1; }
+    Aud.tickMusic();
+  },
+  draw:function(c){
+    // 黑夜里，远处燃烧的地平线
+    var g=c.createLinearGradient(0,0,0,270);
+    g.addColorStop(0,'#020204'); g.addColorStop(0.7,'#0a0808'); g.addColorStop(1,'#1a0d08');
+    c.fillStyle=g; c.fillRect(0,0,480,270);
+    // 地平线火光
+    for(var i=0;i<10;i++){ var x=i*52+rand(-6,6); var hgt=rand(30,80); var a=0.25+0.15*Math.sin(this.t*2+i*1.7); c.fillStyle='rgba(255,100,20,'+a+')'; c.fillRect(x,200-hgt,14,hgt); }
+    // 怪物剪影
+    var mono=Spr.faceless(70); c.globalAlpha=0.85; c.drawImage(mono,220,140,45,70); c.globalAlpha=1;
+    // 雨
+    FX.draw(c);
+  }
+};
+
+/* ============================= 序章：妈妈的故事 ============================= */
+G.scenes.intro={
+  i:0, t:0, lines:[], done:false,
+  enter:function(){
+    this.i=0; this.t=0; this.done=false;
+    this.lines=[
+      {w:'妈妈的声音',cls:'mom',s:'小时候，妈妈常给我讲一个故事。'},
+      {w:'妈妈的声音',cls:'mom',s:'关于一个没有脸的怪物。'},
+      {w:'妈妈的声音',cls:'mom',s:'它带走了父亲和儿子。'},
+      {w:'妈妈的声音',cls:'mom',s:'所有人都拿起枪，要杀死它。'},
+      {w:'妈妈的声音',cls:'mom',s:'可每开一枪，就有另一个母亲的儿子倒下。'},
+      {w:'妈妈的声音',cls:'mom',s:'怪物只会越来越强。'},
+      {w:'妈妈的声音',cls:'mom',s:'最后，整个世界都燃起了大火。'},
+      {w:'妈妈的声音',cls:'mom',s:'有一天，一个年轻的士兵在雨中停下，看了一眼水洼……'},
+      {w:'妈妈的声音',cls:'mom',s:'水中的怪物也看着他——用的是他自己的脸。'},
+      {w:'妈妈的声音',cls:'mom',s:'他扔下了枪，回家了。'},
+      {w:'妈妈的声音',cls:'mom',s:'每次讲到最后，妈妈都会哭着说：'},
+      {w:'妈妈',cls:'mom',s:'“那个士兵，就是你的爸爸。”'},
+      {w:'',s:'这是一部关于那把枪的游戏。',cls:'mono'},
+      {w:'',s:'战争是地狱。以下是它的样子。',cls:'red'},
+      {w:'',s:'（本游戏含暴力、血腥与令人不适的内容，用于反战表达。请谨慎游玩。）',cls:'mono'}
+    ];
+    Aud.stopWeather(); FX.setWeather('rain',30); Aud.setRain(0.14); Aud.setWind(0.08);
+    var self=this;
+    setTimeout(function(){ UI.say(self.lines,function(){ self.done=true; }); },900);
+  },
+  press:function(a){ if(a==='confirm'){ if(this.done){ this.next(); } } },
+  next:function(){ G.fade(1,function(){ G.fade(0); G.start('act0'); }); },
+  update:function(dt){ this.t+=dt; },
+  draw:function(c){
+    c.fillStyle='#020204'; c.fillRect(0,0,480,270);
+    // 黑色背景下，缓慢浮现的怪物
+    if(this.t>3){ var sz=40+Math.sin(this.t)*3; var mono=Spr.faceless(80); c.globalAlpha=clamp((this.t-3)/2,0,0.5); c.drawImage(mono,208,120,64,80); c.globalAlpha=1; }
+    FX.draw(c);
+  }
+};
+
+/* ============================= 章节选择 ============================= */
+G.scenes.select={
+  chapters:[
+    {n:'第一章 · 荣光',sub:'“为祖国而死，是光荣的。”'},
+    {n:'第二章 · 泥泞',sub:'“战壕里有老鼠、泥巴和尸体。”'},
+    {n:'第三章 · 村庄',sub:'“她说谢谢，然后倒下了。”'},
+    {n:'第四章 · 严冬',sub:'“你烧掉了妈妈的信，用来取暖。”'},
+    {n:'第五章 · 燃烧的城市',sub:'“他长得和你一模一样。”'},
+    {n:'第六章 · 水洼',sub:'“怪物，就是你。”'},
+    {n:'终章 · 回家',sub:'“那个士兵，就是你的爸爸。”'}
+  ],
+  enter:function(){
+    var self=this;
+    var lines=['你的战争档案：','你活过了 '+S.days+' 天。','你杀了 '+S.kills+' 个人。','你死过 '+S.deaths+' 次。','每次死亡，都有一个母亲在等。'];
+    setTimeout(function(){
+      UI.say(lines,function(){ self.showMenu(); });
+    },400);
+  },
+  showMenu:function(){
+    var self=this;
+    var opts=[{k:'继续上一章（第 '+Math.min(S.chapter+1,7)+' 章）'},{k:'从头开始新游戏'},{k:'第一章 · 荣光'},{k:'第二章 · 泥泞'},{k:'第三章 · 村庄'},{k:'第四章 · 严冬'},{k:'第五章 · 燃烧的城市'},{k:'第六章 · 水洼'},{k:'终章 · 回家'},{k:'回到标题'}];
+    UI.ask('选择你的位置',opts,function(r){
+      if(r===1){ G.start('act'+Math.min(S.chapter,6)); }
+      else if(r===2){ resetGame(); G.start('intro'); }
+      else if(r===3){ G.start('act0'); }
+      else if(r===4){ G.start('act1'); }
+      else if(r===5){ G.start('act2'); }
+      else if(r===6){ G.start('act3'); }
+      else if(r===7){ G.start('act4'); }
+      else if(r===8){ G.start('act5'); }
+      else if(r===9){ G.start('act6'); }
+      else { G.start('title'); }
+    });
+  },
+  press:function(){},
+  update:function(){},
+  draw:function(c){
+    c.fillStyle='#05060a'; c.fillRect(0,0,480,270);
+    FX.draw(c);
+  }
+};
+
+/* ============================= 第一章 · 荣光 ============================= */
+G.scenes.act0={
+  phase:'square', t:0, walk:0, chars:[], score:0, ammo:20, timeLeft:30,
+  aimX:240, aimY:150, targets:[], result:'', fired:false,
+  enter:function(){
+    S.chapter=0; S.days=0; saveGame();
+    this.phase='square'; this.t=0; this.score=0; this.ammo=20; this.timeLeft=30;
+    this.aimX=240; this.aimY=150; this.targets=[]; this.fired=false;
+    UI.show('hud');
+    Aud.stopMusic(); Aud.march();
+    Aud.setWind(0.05);
+    var self=this;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'1939 年夏。战争第一年。你的小镇从没有这么热闹过。'},
+        {w:'你',cls:'red',s:'战争！我等这一天，等了十八年！'},
+        {w:'阿良',s:'陈铭！快来看！征兵处！打一仗回来就是英雄！'},
+        {w:'老周',s:'打完这一仗，我就回家娶翠兰。你们都得来喝喜酒，一个都跑不掉！'},
+        {w:'你',cls:'red',s:'好！到时候我给你们一人带一个德国钢盔当酒杯！'},
+        {w:'旁白',s:'人群在欢呼。军乐队在吹奏。太阳很好，连空气都是香的。'},
+        {w:'阿良',s:'听说圣诞节前就能回家！我娘给我做了新棉袄，等我回去穿！'},
+        {w:'旁白',s:'人群边缘，一个老妇人没有笑。她看着你们，眼睛是红的。'},
+        {w:'你',s:'大娘，您为什么哭？我们要去打胜仗了，您该高兴啊！'},
+        {w:'老妇人',s:'我儿子……参军那天，也像你们这样笑。'},
+        {w:'老妇人',s:'睡吧，睡吧……我的孩子……',cls:'mom'},
+        {w:'阿良',s:'别理她，老糊涂了。走，签名去！'},
+        {w:'旁白',s:'她一直在哼一首歌。很轻。很好听。你没有回头。'}
+      ],function(){ self.phase='sign'; UI.toast('走到桌前，签下你的名字（按 空格）',4000); });
+    },500);
+    this.chars=[
+      {s:'soldier',x:120,y:196,walk:0,flip:true,who:'你'},
+      {s:'soldier',x:160,y:198,walk:0,flip:true,who:'阿良'},
+      {s:'soldier',x:200,y:200,walk:0,flip:true,who:'老周'},
+      {s:'civilian',x:400,y:200,walk:0,flip:false,who:'老妇人'}
+    ];
+  },
+  press:function(a){
+    if(this.phase==='sign'&&a==='confirm'){
+      this.phase='signing'; this.t=0;
+      Aud.gun(); FX.blood(240,236,6,Math.PI/2);
+      var self=this;
+      setTimeout(function(){
+        UI.say([
+          {w:'旁白',s:'你的名字落在那张纸上。像一滴血。'},
+          {w:'军官',cls:'officer',s:'好小子！祖国需要你！打起精神，你们是去光荣地赴死！'},
+          {w:'军官',cls:'officer',s:'不，不对——是去光荣地胜利！哈哈！'},
+          {w:'阿良',s:'光荣地胜利！'},
+          {w:'你',cls:'red',s:'光荣地胜利！！'}
+        ],function(){ self.trainScene(); });
+      },900);
+    }
+    if(this.phase==='range'&&(a==='confirm'||a==='interact')){
+      this.fire();
+    }
+  },
+  trainScene:function(){
+    var self=this;
+    this.phase='train0';
+    this.chars=[
+      {s:'civilian',x:180,y:200,walk:0,flip:true,who:'阿秀',dress:'#5a4a6a'},
+      {s:'soldier',x:240,y:200,walk:0,flip:true,who:'你'}
+    ];
+    Aud.whistle();
+    setTimeout(function(){
+      UI.say([
+        {w:'阿秀',s:'陈铭！陈铭！你答应过我——春天就回来！'},
+        {w:'你',cls:'red',s:'等我回来，娶你！'},
+        {w:'阿秀',s:'你保证！'},
+        {w:'你',cls:'red',s:'我保证！'},
+        {w:'旁白',s:'那是你最后一次说谎。',cls:'inner'},
+        {w:'旁白',s:'火车开了。人群追着跑。阿秀的辫子散开了，她没有停。'}
+      ],function(){
+        addLetter({id:'m1',title:'妈妈的信 · 一',from:'妈妈',text:'儿啊：\n你爸当年也是这么走的。他回来那天，一句话都没说，在门口坐了一夜。\n娘不要你当英雄。娘只要你回来。\n\n——娘'});
+        addLetter({id:'g1',title:'阿秀的信 · 一',from:'阿秀',text:'陈铭：\n我等你。\n春天，村口的桃花会开。你要回来，摘给我。\n\n——阿秀'});
+        UI.toast('获得两封信（按 I 阅读）',3000);
+        self.goRange();
+      });
+    },600);
+  },
+  goRange:function(){
+    this.phase='range'; this.t=0; this.score=0; this.ammo=20; this.timeLeft=30; this.targets=[]; this.fired=false;
+    var self=this;
+    setTimeout(function(){
+      UI.say([
+        {w:'教官',cls:'officer',s:'新兵！现在教你开枪！看到那些靶子没有？把他们全打死！'},
+        {w:'教官',cls:'officer',s:'记住：到了战场上，你多犹豫一秒，死的就是你！'},
+        {w:'旁白',s:'（方向键 / WASD 移动准星，空格开枪。20 发子弹。）',cls:'mono'}
+      ],function(){ G.hint='WASD 移动准星 · 空格 开枪 · '+self.ammo+' 发'; });
+    },400);
+  },
+  spawnTarget:function(){
+    this.targets.push({x:rand(50,430),y:rand(60,190),r:rand(8,12),life:2.4,max:2.4,grown:0});
+  },
+  fire:function(){
+    if(this.fired) return;
+    if(this.ammo<=0) return;
+    this.ammo--; this.fired=true;
+    Aud.rifle(); FX.spark(this.aimX,this.aimY,4,0);
+    var hit=null, best=1e9;
+    for(var i=0;i<this.targets.length;i++){ var tg=this.targets[i]; if(tg.life<=0||tg.grown<0.6) continue; var d=Math.hypot(tg.x-this.aimX,tg.y-this.aimY); if(d<best&&d<tg.r+7){ best=d; hit=tg; } }
+    if(hit){ hit.life=0; this.score++; FX.blood(hit.x,hit.y,10,Math.PI/2); FX.smoke(hit.x,hit.y,2); }
+    else{ FX.mud(this.aimX,this.aimY+2,5); }
+    var self=this;
+    setTimeout(function(){ self.fired=false; if(self.ammo<=0) self.endRange(); },180);
+  },
+  endRange:function(){
+    if(this.phase!=='range') return;
+    var acc=this.score/20;
+    var line;
+    if(this.score===0) line='教官：你连鸡都没杀过。上了战场，是鸡先死，还是你先死？';
+    else if(acc>=0.8) line='教官：天生的好枪手。你会成为英雄——或者，死人堆里最显眼的那一个。';
+    else line='教官：还行。记住，战场上别犹豫。犹豫的人，先死。';
+    this.result=line;
+    var self=this;
+    G.hint=null;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'命中 '+self.score+' / 20。'},
+        {w:'',s:self.result},
+        {w:'旁白',s:'你打得很准。教官说你是天生的士兵。你笑得很开心。'},
+        {w:'旁白',s:'你那时不知道，那靶子上的每一枪，都算数。',cls:'inner'},
+        {w:'旁白',s:'战争第 30 天。列车载着你们，驶向边境。',cls:'mono'}
+      ],function(){
+        G.fade(1,function(){ G.fade(0); G.start('act1'); });
+      });
+    },600);
+  },
+  update:function(dt){
+    this.t+=dt;
+    if(this.phase==='range'){
+      this.timeLeft-=dt;
+      if(rand(0,1)<dt*1.2) this.spawnTarget();
+      var sp=dt*140;
+      if(G.keys['a']||G.keys['arrowleft']) this.aimX-=sp;
+      if(G.keys['d']||G.keys['arrowright']) this.aimX+=sp;
+      if(G.keys['w']||G.keys['arrowup']) this.aimY-=sp*0.8;
+      if(G.keys['s']||G.keys['arrowdown']) this.aimY+=sp*0.8;
+      this.aimX=clamp(this.aimX,30,450); this.aimY=clamp(this.aimY,40,225);
+      for(var i=this.targets.length-1;i>=0;i--){ var tg=this.targets[i]; tg.life-=dt; if(tg.grown<1) tg.grown=Math.min(1,tg.grown+dt*2.5); if(tg.life<=0) this.targets.splice(i,1); }
+      if(this.timeLeft<=0&&!this.fired){ this.timeLeft=0; this.endRange(); }
+    }
+  },
+  draw:function(c){
+    // 小镇广场
+    var sky=c.createLinearGradient(0,0,0,130);
+    sky.addColorStop(0,'#7a8a9e'); sky.addColorStop(1,'#b8bfc4');
+    c.fillStyle=sky; c.fillRect(0,0,480,130);
+    c.fillStyle='#fff3c4'; c.beginPath(); c.arc(420,36,16,0,TAU); c.fill();
+    // 远景建筑
+    c.fillStyle='#5a5a56'; c.fillRect(20,60,60,70); c.fillRect(90,80,40,50); c.fillRect(340,70,70,60);
+    // 横幅
+    for(var i=0;i<3;i++){ var bx=40+i*160; c.fillStyle='#8a2020'; c.fillRect(bx,10,90,6); c.fillStyle='#c83838'; c.fillRect(bx+4,10,82,3+Math.sin(this.t*3+i)*1.2); }
+    // 地面
+    c.fillStyle='#6a5c4a'; c.fillRect(0,130,480,140);
+    c.fillStyle='#5c4f3e'; for(var j=0;j<40;j++){ c.fillRect((j*37)%480,135+((j*13)%130),6,4); }
+    // 人群（一排晃动的头）
+    for(var k=0;k<26;k++){ var cx=k*19+rand(-2,2); var bob=Math.sin(this.t*3+k*2.3)*0.6; c.fillStyle=k%2?'#2e2a22':'#332e26'; c.fillRect(cx,168+bob,8,9); c.fillStyle='#4a443a'; c.fillRect(cx,177+bob,8,14); }
+    // 旗杆/柱子
+    c.fillStyle='#3a3a34'; c.fillRect(30,10,3,120); c.fillRect(160,10,3,120); c.fillRect(290,10,3,120); c.fillRect(420,10,3,120);
+    // 海报
+    c.drawImage(Spr.poster(),36,88,22,30);
+    // 征兵桌
+    c.fillStyle='#4a3a2a'; c.fillRect(230,216,90,8); c.fillRect(240,224,6,14); c.fillRect(302,224,6,14);
+    c.fillStyle='#e8e6df'; c.fillRect(236,210,78,7);
+    if(this.phase==='sign'||this.phase==='signing'){ c.fillStyle='#141418'; c.fillRect(240,212,40,3); }
+    // 角色
+    for(var m=0;m<this.chars.length;m++){
+      var ch=this.chars[m];
+      var sp;
+      if(ch.who==='阿秀') sp=Spr.person({u:'#5a4a6a',helmet:false,hair:'#2a1a10',sc:2,s:'#c9a985'});
+      else if(ch.who==='老妇人') sp=Spr.person({u:'#4a3a36',helmet:false,hair:'#8a8a80',sc:2,s:'#b8a890',beard:true});
+      else sp=Spr.soldier('us');
+      c.save(); c.translate(ch.x,ch.y); if(ch.flip){ c.scale(-1,1); c.translate(-12,0); } c.drawImage(sp,0,0,14,24); c.restore();
+    }
+    // 训练场阶段
+    if(this.phase==='range'){
+      c.fillStyle='rgba(10,10,12,0.25)'; c.fillRect(0,0,480,270);
+      c.fillStyle='#4a3f30'; c.fillRect(0,180,480,10);
+      for(var n=0;n<this.targets.length;n++){ var t=this.targets[n]; if(t.life<=0) continue; var gh=t.r*3.2*t.grown; c.fillStyle='#141418'; c.fillRect(t.x-t.r,t.y-gh,t.r*2,gh); c.fillStyle='#3a3a34'; c.fillRect(t.x-t.r-1,t.y, t.r*2+2, 2); if(t.grown>=1){ c.fillStyle='#8a2020'; c.fillRect(t.x-t.r*0.5,t.y-gh*0.7,t.r,2); c.fillRect(t.x-t.r*0.5,t.y-gh*0.45,t.r,2); } }
+      // 准星
+      c.strokeStyle='#fff'; c.lineWidth=1;
+      c.beginPath(); c.moveTo(this.aimX-8,this.aimY); c.lineTo(this.aimX+8,this.aimY); c.moveTo(this.aimX,this.aimY-8); c.lineTo(this.aimX,this.aimY+8); c.stroke();
+      c.beginPath(); c.arc(this.aimX,this.aimY,3,0,TAU); c.stroke();
+      // 弹药
+      c.fillStyle='#e8e6df'; c.font='10px monospace'; c.fillText('子弹 '+this.ammo+'  ·  命中 '+this.score, 12, 24);
+      c.fillStyle='#a02020'; c.fillText('时间 '+Math.ceil(this.timeLeft), 420, 24);
+    }
+    // 签名阶段水渍
+    if(this.phase==='signing'&&this.t<1){ FX.blood(240,236,2,Math.PI/2); }
+  }
+};
+
+/* ============================= 第二章 · 列车 ============================= */
+G.scenes.act1={
+  phase:'train', t:0, scroll:0, day:0,
+  enter:function(){
+    S.chapter=1; saveGame(); this.phase='train'; this.t=0; this.scroll=0;
+    UI.show('hud');
+    Aud.stopMusic();
+    var self=this;
+    setTimeout(function(){
+      UI.card('第二章 · 列车','THE TRAIN TO THE FRONT','去向边境的列车。歌声，纸牌，和吹不散的笑声。','',function(){
+        UI.say([
+          {w:'旁白',s:'列车上。灯很暗。你们挤在车厢里，像一窝刚出窝的小兽。'},
+          {w:'阿良',s:'来来来，赌一把！赢了的人，回家请客！'},
+          {w:'老周',s:'赌什么？我浑身上下就剩这一块干粮了。'},
+          {w:'阿良',s:'赌命呗！谁先死，谁就输！'},
+          {w:'旁白',s:'大家都笑了。笑声撞在车厢顶上，又弹回来。',cls:'inner'},
+          {w:'你',cls:'red',s:'等打赢了，我要在柏林最高的楼上，插上我们的旗！'},
+          {w:'阿良',s:'到那时候，我娘的新棉袄，就能穿了！'},
+          {w:'老周',s:'我只要翠兰。翠兰比柏林强一百倍。'},
+          {w:'旁白',s:'车轮碾过铁轨。你们唱着歌，声音越来越大，像要把天掀翻。'},
+          {w:'旁白',s:'窗外，天黑了。远处有什么东西在烧。',cls:'mono'}
+        ],function(){ self.refugees(); });
+      });
+    },600);
+  },
+  refugees:function(){
+    var self=this;
+    this.phase='refugees';
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'火车慢了下来。窗外，一支难民队伍正沿着公路走。'},
+        {w:'阿良',s:'难民？我们不是去解放他们的吗？他们跑什么？'},
+        {w:'你',s:'也许……他们是去安全的地方。等我们打赢了，他们就能回家。'},
+        {w:'老周',s:'别看了。上面说，队伍里可能有间谍。'},
+        {w:'旁白',s:'队伍里有个很小的孩子，抱着一只鞋。只有一只。'},
+        {w:'旁白',s:'他的妈妈牵着他的手。他们走了很久很久，没有人停下来。',cls:'inner'},
+        {w:'你',s:'（那孩子……为什么只有一只鞋？）',cls:'inner'},
+        {w:'阿良',s:'喂，别看了！再看你就成石头了！来唱歌！'},
+        {w:'旁白',s:'你们又开始唱歌。这一次，声音小了很多。'}
+      ],function(){ self.arrive(); });
+    },500);
+  },
+  arrive:function(){
+    var self=this;
+    this.phase='arrive';
+    Aud.thunder();
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'深夜。列车停在了一片荒原上。'},
+        {w:'旁白',s:'远处传来闷响，一下，一下，像有什么巨兽在喘气。'},
+        {w:'你',s:'那是什么声音？'},
+        {w:'老周',s:'雷声。别怕。',cls:'mono'},
+        {w:'旁白',s:'那不是雷声。',cls:'red'},
+        {w:'旁白',s:'你们下了车，踩着泥往前走。有人踩到了什么软的东西。'},
+        {w:'旁白',s:'阿良低头看了一眼，然后吐了。'},
+        {w:'阿良',s:'脸……他的脸呢……！'},
+        {w:'旁白',s:'泥里躺着一个士兵。他的脸没了。炮弹、泥、老鼠，把脸吃掉了。'},
+        {w:'你',s:'（妈妈的故事里……那个没有脸的怪物……）',cls:'inner'},
+        {w:'老周',s:'别看了，走。这不是怪物，这是——这就是战争。'}
+      ],function(){ self.trench0(); });
+    },700);
+  },
+  trench0:function(){
+    var self=this;
+    this.phase='trench0';
+    Aud.stopMusic(); Aud.voidtone(); Aud.setWind(0.12);
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'你们被领进了一条战壕。泥土是湿的，空气是臭的。'},
+        {w:'旁白',s:'第 3 天。你在战壕里学会了不哭。'},
+        {w:'旁白',s:'第 9 天。你学会了闻炮声判断炮弹落点。'},
+        {w:'旁白',s:'第 21 天。你学会了一个月不洗澡，学会了跟老鼠分一块干粮。'},
+        {w:'旁白',s:'你开始在信里写“我很好”。其实你不好。你只是不敢说。',cls:'inner'},
+        {w:'旁白',s:'前方，两百米外，是敌人的战壕。它们安静得像坟。',cls:'mono'}
+      ],function(){
+        G.fade(1,function(){ G.fade(0); G.start('act2'); });
+      });
+    },600);
+  },
+  press:function(){},
+  update:function(dt){
+    this.t+=dt; this.scroll+=dt*40;
+    if(this.phase==='train'){ if(rand(0,1)<dt*0.3) Aud.tone(rand(300,500),0.12,0.04,'triangle'); }
+  },
+  draw:function(c){
+    if(this.phase==='train'){
+      // 车厢内
+      c.fillStyle='#241a12'; c.fillRect(0,0,480,270);
+      c.fillStyle='#3a2a1c'; c.fillRect(0,40,480,190);
+      // 窗户
+      c.fillStyle='#1a2030'; c.fillRect(50,60,120,90); c.fillRect(200,60,120,90); c.fillRect(350,60,120,90);
+      // 窗外掠过的田野
+      c.save(); c.beginPath(); c.rect(50,60,120,90); c.clip();
+      var off=this.scroll%200;
+      for(var i=-1;i<5;i++){ var gx=50+((i*80)-off); c.fillStyle=i%2?'#3a4a32':'#33422c'; c.fillRect(gx,60,80,90); }
+      c.fillStyle='#7a8a9e'; c.fillRect(50,60,120,26);
+      c.restore();
+      c.fillStyle='#2a2a24'; c.fillRect(48,58,124,4); c.fillRect(198,58,124,4); c.fillRect(348,58,124,4);
+      // 车厢壁木板
+      c.fillStyle='#4a3a28'; c.fillRect(0,40,14,190); c.fillRect(466,40,14,190);
+      // 座椅
+      c.fillStyle='#5c4a34'; c.fillRect(60,190,100,34); c.fillRect(210,190,100,34); c.fillRect(360,190,100,34);
+      // 兵们
+      c.drawImage(Spr.soldier('us'),70,160,14,24);
+      c.drawImage(Spr.soldier('us'),100,162,14,24);
+      c.drawImage(Spr.soldier('us'),130,164,14,24);
+      c.drawImage(Spr.soldier('us'),220,160,14,24);
+      c.drawImage(Spr.soldier('us'),250,163,14,24);
+      c.drawImage(Spr.soldier('us'),370,161,14,24);
+      // 灯
+      c.fillStyle='#ffd23e'; c.beginPath(); c.arc(240,50,4,0,TAU); c.fill();
+      c.fillStyle='rgba(255,210,62,0.08)'; c.beginPath(); c.arc(240,140,100,0,TAU); c.fill();
+    }else if(this.phase==='refugees'){
+      c.fillStyle='#1a1620'; c.fillRect(0,0,480,270);
+      c.fillStyle='#0f0c10'; c.fillRect(0,180,480,90);
+      // 远处火光
+      c.fillStyle='rgba(255,100,20,0.3)'; c.fillRect(380,120,60,60);
+      // 难民队伍
+      for(var j=0;j<7;j++){
+        var rx=40+j*55-((this.scroll*0.4)%55);
+        c.fillStyle='#3a332c'; c.fillRect(rx,180,8,20);
+        c.fillStyle='#2a241e'; c.fillRect(rx+2,170,6,9);
+      }
+      // 抱鞋的孩子
+      c.fillStyle='#4a4038'; c.fillRect(120,182,7,15); c.fillStyle='#2a241e'; c.fillRect(122,172,5,8);
+      c.fillStyle='#6a5a4a'; c.fillRect(124,190,4,3); // 鞋
+    }else if(this.phase==='arrive'||this.phase==='trench0'){
+      // 夜·荒原
+      c.fillStyle='#08070c'; c.fillRect(0,0,480,270);
+      c.fillStyle='#0f0e14'; c.fillRect(0,150,480,120);
+      c.fillStyle='rgba(255,60,20,0.12)'; c.fillRect(0,0,480,80);
+      // 电线杆剪影
+      c.fillStyle='#0a0a0e'; c.fillRect(60,90,3,90); c.fillRect(300,110,3,70);
+      // 尸体（无脸）
+      var dead=Spr.person({u:'#4a4632',helmet:'round',s:'#6a6a64',sc:2,dead:true});
+      c.save(); c.translate(240,218); c.rotate(-Math.PI/2+0.1); c.drawImage(dead,-12,-6,14,24); c.restore();
+      c.fillStyle='#141414'; c.beginPath(); c.ellipse(240,220,16,5,0,0,TAU); c.fill();
+      // 月光
+      c.fillStyle='rgba(200,210,230,0.1)'; c.beginPath(); c.arc(60,40,20,0,TAU); c.fill();
+      if(this.phase==='trench0'){
+        // 战壕
+        c.fillStyle='#241a12'; c.fillRect(0,230,480,40);
+        c.fillStyle='#3a2d22'; c.fillRect(0,226,480,6);
+        c.fillStyle='#2a2119'; for(var k=0;k<20;k++) c.fillRect(k*26,230,16,14);
+        c.drawImage(Spr.rat(),420,238); c.drawImage(Spr.rat(),100,244);
+      }
+    }
+  }
+};
+
+/* ============================= 第三章 · 泥泞（冲锋） ============================= */
+G.scenes.act2={
+  phase:'wait', t:0, hp:3, px:0, py:0, vy:0, cam:0, runT:0,
+  shells:[], tracers:[], wires:[], craters:[], corpses:[], storm:0,
+  gasT:0, gasO2:100, lock:false, seqDone:{}, boyChoice:null,
+  enter:function(){
+    S.chapter=2; S.days=47; saveGame();
+    this.phase='wait'; this.t=0; this.hp=3; this.px=0; this.py=0; this.vy=0; this.cam=0;
+    this.shells=[]; this.tracers=[]; this.wires=[]; this.craters=[]; this.corpses=[];
+    this.gasT=0; this.gasO2=100; this.lock=false; this.seqDone={}; this.boyChoice=null;
+    UI.show('hud');
+    Aud.stopMusic(); Aud.voidtone(); Aud.setWind(0.15);
+    FX.setWeather('ash',26);
+    // 预设铁丝网与弹坑
+    for(var i=1;i<=6;i++){ if(i%3) this.wires.push({x:i*260+120}); else this.craters.push({x:i*260+40,w:34}); }
+    for(var j=0;j<8;j++) this.corpses.push({x:rand(40,1600),y:222});
+    var self=this;
+    setTimeout(function(){
+      UI.card('第三章 · 泥泞','THE MUD','黎明。雾。冲锋号还没有响。','',function(){
+        self.waitDialogue();
+      });
+    },500);
+  },
+  waitDialogue:function(){
+    var self=this;
+    addLetter({id:'g2',title:'阿秀的信 · 二',from:'阿秀',text:'陈铭：\n听说你们要进攻了。\n别死。\n你说过，春天回来，摘桃花给我。\n\n——阿秀'});
+    UI.say([
+      {w:'旁白',s:'战争第 47 天。黎明前的战壕里，雾很重。'},
+      {w:'铁柱',s:'我……我有点害怕。我还没杀过人。',cls:'inner'},
+      {w:'老周',s:'谁杀过人？都是第一次。第一次之后就习惯了。'},
+      {w:'铁柱',s:'习惯……杀人的感觉，能习惯吗？'},
+      {w:'老周',s:'能。就像习惯泥巴，习惯老鼠，习惯死。'},
+      {w:'阿良',s:'别说了！说点吉利话！打完这仗我们就回家！'},
+      {w:'老周',s:'翠兰给我来信了。她说……她说等这场仗打完，就嫁给我。'},
+      {w:'旁白',s:'老周把信贴在胸口，笑了。信纸已经皱得像一团烂布。',cls:'inner'},
+      {w:'铁柱',s:'我想我妈了。',cls:'inner'},
+      {w:'旁白',s:'没有人接话。雾里，前方突然亮起一颗照明弹，惨白的光，把所有影子钉在地上。'},
+      {w:'旁白',s:'然后——哨声。',cls:'red'},
+      {w:'',s:'——冲锋号响了。',cls:'red'},
+      {w:'旁白',s:'（←→/AD 前进 · 空格 跳跃 · 躲开炮弹和机枪。铁柱会跟在你身边。）',cls:'mono'}
+    ],function(){
+      self.phase='run'; G.hint='←→ / AD 移动 · 空格 跳 · 躲炮弹';
+      self.seqDone.tiezhu=false; self.seqDone.gas=false; self.seqDone.laozhou=false; self.seqDone.end=false;
+    });
+  },
+  press:function(a){
+    if(this.phase==='run'&&(a==='confirm'||a==='interact')){
+      if(this.gasT>0){ this.gasO2=Math.min(100,this.gasO2+22); }
+    }
+  },
+  hurt:function(n,why){
+    if(this.phase!=='run') return;
+    this.hp-=n; FX.blood(140+this.px-this.cam+30,208,14,0);
+    Aud.boom(false);
+    var el=$('blood'); el.style.opacity='0.55'; setTimeout(function(){ el.style.opacity='0'; },300);
+    if(this.hp<=0){ this.hp=0; this.lock=true; var self=this;
+      G.die([pick(['你死了。','你死了。','你死了。','你死了。','你死了。','你死了。','你死了。','你死了。','你死了。','你死了。','你死了。','你死了。']),'你的母亲还在等你回家。','她不知道。','冲锋还在继续。','怪物，又大了一圈。'],function(){ self.retryRun(); });
+    }
+  },
+  retryRun:function(){
+    this.phase='run'; this.hp=3; this.px=0; this.py=0; this.vy=0; this.cam=0;
+    this.shells=[]; this.tracers=[]; this.gasT=0; this.gasO2=100; this.lock=false; this.runT=0;
+  },
+  explodeAt:function(x){
+    Aud.boom(true); FX.smoke(x-this.cam,180,10,true); FX.spark(x-this.cam,190,14,Math.PI/2); FX.ember(x-this.cam,190,10);
+  },
+  update:function(dt){
+    this.t+=dt;
+    if(this.phase==='wait'){ if(rand(0,1)<dt*0.6) Aud.boom(false); if(rand(0,1)<dt*0.4){ Aud.whistle(); } return; }
+    if(this.phase!=='run') return;
+    if(this.lock){ this.tickAmbient(dt); return; }
+    this.runT+=dt;
+    // 移动
+    var sp=110;
+    if(G.keys['a']||G.keys['arrowleft']) this.px-=sp*dt;
+    if(G.keys['d']||G.keys['arrowright']) this.px+=sp*dt;
+    if((G.keys[' ']||G.keys['w']||G.keys['arrowup'])&&this.py>=208){ this.vy=-150; FX.mud(this.px-this.cam+150,216,4); }
+    this.vy+=420*dt; this.py+=this.vy*dt;
+    if(this.py>=208){ this.py=208; this.vy=0; }
+    this.px=Math.max(this.px-20,this.px); this.px=Math.max(this.cam+20,this.px);
+    this.cam=this.px-140;
+    // 铁丝网碰撞
+    for(var i=0;i<this.wires.length;i++){ var w=this.wires[i]; if(Math.abs(this.px-w.x)<12&&this.py>196){ this.px=w.x-14; this.hurt(1,'wire'); } }
+    // 弹坑
+    for(var j=0;j<this.craters.length;j++){ var cr=this.craters[j]; if(Math.abs(this.px-cr.x)<cr.w/2&&this.py>=205){ this.px=cr.x-cr.w/2-2; } }
+    // 炮弹
+    if(rand(0,1)<dt*0.7){ this.shells.push({x:this.px+rand(-160,260),y:-20,sp:rand(220,320),target:this.px+rand(-60,100),warn:0}); }
+    var self2=this;
+    for(var k=this.shells.length-1;k>=0;k--){ var s=this.shells[k]; s.y+=s.sp*dt; s.x+=(s.target-s.x)*dt*0.5; if(s.y>150){ s.y=150; s.warn+=dt; if(s.warn>0.5){ self2.explodeAt(s.x); this.shells.splice(k,1); if(Math.abs(s.x-this.px)<24){ this.hurt(1,'shell'); } else if(Math.abs(s.x-this.px)<60){ Aud.boom(false); } } } }
+    // 曳光弹
+    if(rand(0,1)<dt*1.4){ this.tracers.push({x:this.cam+520,y:rand(30,230),sp:rand(700,900)}); }
+    for(var m=this.tracers.length-1;m>=0;m--){ var tr=this.tracers[m]; tr.x-=tr.sp*dt; if(tr.x<this.cam-10){ this.tracers.splice(m,1); continue; } if(Math.abs((tr.x-this.cam)-(150))<6&&Math.abs(tr.y-(this.py-10))<14){ this.tracers.splice(m,1); this.hurt(1,'tracer'); } }
+    // 毒气
+    if(this.px>430&&!this.seqDone.gas){ this.seqDone.gas=true; this.gasStart(); }
+    if(this.gasT>0){ this.gasT-=dt; this.gasO2-=dt*13; if(this.gasO2<0){ this.gasO2=0; this.hurt(1,'gas'); this.gasO2=40; } if(this.gasT<=0){ this.gasT=0; } }
+    // 事件触发
+    if(this.px>200&&!this.seqDone.tiezhu){ this.seqDone.tiezhu=true; this.scriptTiezhu(); }
+    if(this.px>1150&&!this.seqDone.laozhou){ this.seqDone.laozhou=true; this.scriptLaozhou(); }
+    if(this.px>1500&&!this.seqDone.end){ this.seqDone.end=true; this.scriptEnd(); }
+    this.tickAmbient(dt);
+  },
+  tickAmbient:function(dt){
+    if(rand(0,1)<dt*0.9){ var sx=this.cam+rand(-10,490); FX.smoke(sx,rand(150,200),1,false); }
+    if(rand(0,1)<dt*0.3){ FX.ember(this.cam+rand(0,480),rand(180,220),2); }
+  },
+  gasStart:function(){
+    var self=this;
+    this.lock=true; this.gasT=8; this.gasO2=100;
+    Aud.boom(false);
+    UI.say([
+      {w:'旁白',s:'前方忽然涌来一片黄绿色的雾。'},
+      {w:'老周',s:'毒气！快，屏住呼吸！换滤罐！！'},
+      {w:'旁白',s:'（快速按空格换气，氧气耗尽就会窒息。跑过这片雾！）',cls:'red'}
+    ],function(){ self.lock=false; });
+  },
+  scriptTiezhu:function(){
+    var self=this;
+    this.lock=true;
+    Aud.whistle();
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'铁柱跑在你前面三步。'},
+        {w:'旁白',s:'机枪响了。',cls:'red'},
+        {w:'旁白',s:'铁柱的胸口炸开一团红雾。他低头看了看自己，像没明白发生了什么。'},
+        {w:'铁柱',s:'妈……',cls:'red'},
+        {w:'旁白',s:'他跪在泥里，然后倒了下去。泥水盖住他的脸。'},
+        {w:'你',s:'铁柱！铁柱！！'},
+        {w:'老周',s:'别停！停下来的都死了！跑！！'},
+        {w:'旁白',s:'你从他身边跑过去。你没有停下来。你不敢停下来。',cls:'inner'}
+      ],function(){
+        addDogtag({id:'tz',name:'铁柱',date:'第 47 天',line:'他到最后都在喊妈。'}); UI.toast('你捡起了他的狗牌',2500);
+        self.lock=false;
+      });
+    },400);
+  },
+  scriptLaozhou:function(){
+    var self=this;
+    this.lock=true;
+    Aud.boom(true);
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'一发炮弹落在你脚边。你听见了，但已经来不及。'},
+        {w:'旁白',s:'有人把你撞开。是老周。'},
+        {w:'旁白',s:'爆炸声过后，你爬起来。老周躺在弹坑里，半截身体埋在土里。'},
+        {w:'老周',s:'……翠兰的信……帮我……给她……'},
+        {w:'老周',s:'就说……就说我……',cls:'red'},
+        {w:'旁白',s:'他没有说完。他的眼睛还睁着，看着雾蒙蒙的天。'},
+        {w:'你',s:'老周！老周！！你醒醒！！你还要回去娶翠兰啊！！'},
+        {w:'旁白',s:'你把他从土里挖出来。他的血和泥混在一起，分不清了。',cls:'inner'},
+        {w:'旁白',s:'你从他怀里摸出那封信。信上还带着体温。'}
+      ],function(){
+        addLetter({id:'cl1',title:'翠兰的信（老周的遗物）',from:'翠兰',text:'周哥：\n家里的地我种上了。\n等你回来，我们就成亲。\n你别死。你答应过我。\n\n——翠兰'});
+        addDogtag({id:'lz',name:'老周',date:'第 47 天',line:'他说他要回去娶翠兰。'}); UI.toast('你收好了他的信和狗牌',2500);
+        Aud.dirge();
+        self.lock=false;
+      });
+    },500);
+  },
+  scriptEnd:function(){
+    var self=this;
+    this.lock=true;
+    Aud.boom(true);
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'你跳进了敌人的战壕。里面没有人——或者说，人都已经死了。'},
+        {w:'旁白',s:'喊杀声从四面八方传来。你们赢了。你赢了。',cls:'inner'},
+        {w:'旁白',s:'战壕的角落里，蜷着一个人。他穿着敌人的军装，还是个孩子。'},
+        {w:'旁白',s:'他看见你，吓得举起双手。他的枪掉在泥里。'},
+        {w:'',s:'“Bitte……Bitte nicht schießen……Mutter……”',cls:'mono'},
+        {w:'旁白',s:'他一直在发抖。他从怀里摸出一张照片，举起来，像举起一面盾牌。'},
+        {w:'旁白',s:'照片上是一个女人，抱着两个孩子。她笑得很温柔。',cls:'inner'}
+      ],function(){
+        UI.ask('你举起枪。他的眼睛里有你倒影。',[{k:'开枪',r:1},{k:'放下枪，放过他',r:2}],function(r){
+          self.boyChoice=r; S.choices.boy=r;
+          if(r===1){
+            S.humanity=Math.max(0,S.humanity-25); S.kills++;
+            Aud.gun(); FX.blood(150,210,16,0);
+            FX.spark(150,200,6,0);
+            setTimeout(function(){
+              UI.say([
+                {w:'旁白',s:'枪响了。',cls:'red'},
+                {w:'旁白',s:'他向后倒进泥里。照片从他手里滑落，飘了半圈，落在泥水上。'},
+                {w:'旁白',s:'照片上的一家四口，现在只剩三个了。',cls:'inner'},
+                {w:'旁白',s:'你走过去，捡起照片。你的手在抖。你把它塞进怀里。'},
+                {w:'旁白',s:'那是你杀的第一个人。你记不清他长什么样了。',cls:'inner'},
+                {w:'旁白',s:'你只记得那张照片。'}
+              ],function(){ self.afterBoy(); });
+            },500);
+          }else{
+            S.humanity=Math.max(0,S.humanity-10);
+            Aud.clink();
+            setTimeout(function(){
+              UI.say([
+                {w:'旁白',s:'你放下了枪。他跪下来，拼命亲你的靴子，说着你听不懂的话。'},
+                {w:'旁白',s:'谢谢你。他说。谢谢你。',cls:'mono'},
+                {w:'旁白',s:'然后，一梭子子弹从他背后扫过。'},
+                {w:'旁白',s:'是你们的人。他们不抓俘虏。',cls:'red'},
+                {w:'旁白',s:'他倒在你脚边，眼睛还看着你，像在问为什么。'},
+                {w:'旁白',s:'你救不了他。你谁都救不了。',cls:'inner'},
+                {w:'旁白',s:'你从他的口袋里摸出那张照片，塞进怀里。'}
+              ],function(){ self.afterBoy(); });
+            },600);
+          }
+        });
+      });
+    },500);
+  },
+  afterBoy:function(){
+    var self=this;
+    addItem({id:'ephoto',name:'一张陌生母亲的照片',desc:'照片上有四个人。现在，照片上的男人再也回不去了。\n\n你不知道为什么把它收起来。也许你觉得，总得有人记得他。'});
+    UI.toast('行囊 + 陌生母亲的照片',2500);
+    this.phase='hero'; G.hint=null;
+    Aud.stopMusic();
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'打扫战场的时候，军官念了念立功名单。'},
+        {w:'军官',cls:'officer',s:'……陈铭！第一个冲进敌人战壕！好样的！你是英雄！'},
+        {w:'旁白',s:'你站起来，敬了个礼。'},
+        {w:'旁白',s:'然后你转身，吐了。',cls:'red'},
+        {w:'旁白',s:'英雄的名声在战壕里传开。你看见阿良在远处看着你，眼神很复杂。',cls:'inner'},
+        {w:'旁白',s:'夜里，你数了数死掉的人。铁柱，老周，还有战壕里那个喊妈妈的德国孩子。'},
+        {w:'旁白',s:'你数不清他们的脸。',cls:'inner'},
+        {w:'旁白',s:'第二天，你们接到命令：前进。前方有一个村庄。',cls:'mono'}
+      ],function(){
+        G.fade(1,function(){ G.fade(0); G.start('act3'); });
+      });
+    },700);
+  },
+  draw:function(c){
+    // 战壕等待
+    if(this.phase==='wait'){
+      c.fillStyle='#3a3a34'; c.fillRect(0,0,480,60);
+      c.fillStyle='#5c5c54'; c.fillRect(0,40,480,20);
+      var g=c.createLinearGradient(0,60,0,200); g.addColorStop(0,'#6a6254'); g.addColorStop(1,'#3a3226');
+      c.fillStyle=g; c.fillRect(0,60,480,140);
+      c.fillStyle='#2a2119'; c.fillRect(0,120,480,120);
+      c.fillStyle='#3a2d22'; c.fillRect(0,116,480,8);
+      // 沙袋
+      c.fillStyle='#4a443a'; for(var i=0;i<24;i++) c.fillRect(i*22,160,20,14);
+      c.fillStyle='#3d382e'; for(var j=0;j<24;j++) c.fillRect(j*22+10,170,20,12);
+      // 人
+      c.drawImage(Spr.soldier('us'),60,170,14,24);
+      c.drawImage(Spr.soldier('us'),100,172,14,24);
+      c.drawImage(Spr.soldier('us'),140,168,14,24);
+      c.drawImage(Spr.soldier('us'),180,174,14,24);
+      c.drawImage(Spr.rat(),300,182); c.drawImage(Spr.rat(),380,190);
+      // 照明弹
+      var fl=Math.sin(this.t*4)>0; if(fl){ c.fillStyle='rgba(230,235,240,0.22)'; c.fillRect(0,0,480,270); c.fillStyle='#f0f3f8'; c.beginPath(); c.arc(400,40,3,0,TAU); c.fill(); }
+      return;
+    }
+    if(this.phase!=='run'&&this.phase!=='hero') return;
+    // 无人区
+    var sky=c.createLinearGradient(0,0,0,120);
+    sky.addColorStop(0,'#4a4436'); sky.addColorStop(1,'#7a7260');
+    c.fillStyle=sky; c.fillRect(0,0,480,120);
+    // 烟雾地平线
+    c.fillStyle='#3a362c'; c.fillRect(0,80,480,40);
+    // 地面
+    c.fillStyle='#3a3126'; c.fillRect(0,200,480,70);
+    c.fillStyle='#2a241c'; c.fillRect(0,196,480,8);
+    for(var k=0;k<30;k++){ c.fillStyle='#332b20'; c.fillRect((k*37-this.cam*0.2)%600-60,206+((k*17)%40),10,5); }
+    // 尸体
+    for(var d=0;d<this.corpses.length;d++){ var cp=this.corpses[d]; var dx=cp.x-this.cam; if(dx<-20||dx>500) continue; var ds=Spr.person({u:Math.random()<0.5?'#4a4632':'#3c443a',helmet:Math.random()<0.5?'round':'stahl',s:'#6a6a64',sc:2,dead:true}); c.save(); c.translate(dx,cp.y); c.rotate(-Math.PI/2+0.1); c.drawImage(ds,-12,-6,14,24); c.restore(); }
+    // 铁丝网
+    for(var w2=0;w2<this.wires.length;w2++){ var wx=this.wires[w2].x-this.cam; if(wx<-30||wx>510) continue; c.fillStyle='#141414'; c.fillRect(wx-2,188,4,22); c.fillRect(wx-2,188,26,2); c.fillRect(wx+18,188,4,22); c.strokeStyle='#3a3a3a'; c.lineWidth=1; for(var s2=0;s2<6;s2++){ c.beginPath(); c.moveTo(wx,190); c.lineTo(wx+22,196+s2*2); c.stroke(); } }
+    // 弹坑
+    for(var cr2=0;cr2<this.craters.length;cr2++){ var cx2=this.craters[cr2].x-this.cam; if(cx2<-40||cx2>520) continue; c.fillStyle='#1e1912'; c.beginPath(); c.ellipse(cx2,212,this.craters[cr2].w/2,10,0,0,TAU); c.fill(); c.fillStyle='#2a241c'; c.beginPath(); c.ellipse(cx2,210,this.craters[cr2].w/2-4,7,0,0,TAU); c.fill(); }
+    // 炮击警告与落点
+    for(var sh=0;sh<this.shells.length;sh++){ var sl=this.shells[sh]; var sx=sl.x-this.cam; if(sl.warn>0){ c.strokeStyle='rgba(255,60,20,'+(0.5+0.5*Math.sin(this.t*20))+')'; c.lineWidth=2; c.beginPath(); c.ellipse(sx,196,16,6,0,0,TAU); c.stroke(); } else { c.fillStyle='#141418'; c.fillRect(sx,sl.y,3,3); } }
+    // 曳光弹
+    c.strokeStyle='rgba(255,230,120,0.85)'; c.lineWidth=1.5;
+    for(var tr2=0;tr2<this.tracers.length;tr2++){ var tx=this.tracers[tr2].x-this.cam, ty=this.tracers[tr2].y; c.beginPath(); c.moveTo(tx,ty); c.lineTo(tx-18,ty-2); c.stroke(); }
+    // 毒气
+    if(this.gasT>0){ c.fillStyle='rgba(150,190,90,'+(0.18+0.06*Math.sin(this.t*6))+')'; c.fillRect(0,0,480,270); c.fillStyle='rgba(160,200,100,0.5)'; for(var gg=0;gg<12;gg++){ var gx=(gg*47+this.t*12)%520-20; c.fillRect(gx,rand(60,230),30,4); } }
+    // 玩家
+    var plx=150, ply=this.py;
+    var ps=Spr.soldier('us',{walk:Math.sin(this.runT*10)*0.8,fire:false});
+    c.save(); c.translate(plx,ply); c.drawImage(ps,-7,-24,14,24); c.restore();
+    // 铁柱/老周（跟随）
+    if(!this.seqDone.tiezhu){ var tz=Spr.soldier('us',{walk:Math.sin(this.runT*10+1)*0.8}); c.drawImage(tz,124,ply-2-24+24,14,24); }
+    if(this.seqDone.tiezhu&&!this.seqDone.laozhou){ var lz2=Spr.soldier('us',{walk:Math.sin(this.runT*10+2)*0.8}); c.drawImage(lz2,170,ply-2,14,24); }
+    // HP
+    c.fillStyle='#8a8a80'; c.font='9px monospace'; c.fillText('生命', 12, 22);
+    for(var hh=0;hh<3;hh++){ c.fillStyle=hh<this.hp?'#a02020':'#2a2a24'; c.fillRect(40+hh*12,14,9,9); }
+    c.fillStyle='#e8e6df'; c.font='10px monospace';
+    c.fillText('进攻！', 420, 22);
+    if(this.gasT>0){ c.fillStyle='#c8d8a8'; c.fillRect(12,28,100,5); c.fillStyle='#8a9a6a'; c.fillRect(12,28,this.gasO2,5); c.fillText('氧气', 120, 36); }
+  }
+};
+
+/* ============================= 第四章 · 村庄 ============================= */
+G.scenes.act3={
+  phase:'march', t:0, _md:false, stateA:0, stateB:0, burning:false, fireT:0, girlDead:false,
+  enter:function(){
+    S.chapter=3; S.days=64; saveGame();
+    this.phase='march'; this.t=0; this._md=false; this.stateA=0; this.stateB=0; this.burning=false; this.fireT=0; this.girlDead=false;
+    UI.show('hud');
+    Aud.stopMusic(); Aud.setWind(0.1);
+    FX.setWeather('ash',10);
+    addItem({id:'photo',name:'阿秀的照片',desc:'阿秀。村口桃花树下的阿秀。\n现在她的脸已经有点模糊了——也许是雨水泡的，也许是你看不清了。'});
+    addItem({id:'choco',name:'一块巧克力',desc:'出发前，你从补给里偷藏了一块。\n你本来想留给阿秀的。'});
+    var self=this;
+    setTimeout(function(){
+      UI.card('第四章 · 村庄','THE VILLAGE','命令：搜索村庄，找出游击队。','',function(){
+        UI.say([
+          {w:'旁白',s:'战争第 64 天。你们占领了一个村庄。'},
+          {w:'军官',cls:'officer',s:'据情报，村里藏着游击队。挨家挨户搜！有反抗的，就地解决！'},
+          {w:'小马',s:'就地……解决？',cls:'inner'},
+          {w:'军官',cls:'officer',s:'对。战争不是请客吃饭。'},
+          {w:'阿良',s:'小马，别怕。就是搜个村子。搜完就走。'},
+          {w:'你',s:'……搜个村子。',cls:'inner'},
+          {w:'旁白',s:'你摸了摸怀里那封信。出发前，你答应过自己：不管发生什么，你都还是个人。',cls:'inner'},
+          {w:'旁白',s:'（点击房屋进行搜查。左边一间，右边一间。）',cls:'mono'}
+        ],function(){ self.phase='search'; UI.toast('点击房屋搜查',3000); });
+      });
+    },500);
+  },
+  click:function(x,y){
+    if(this.phase!=='search') return;
+    if(this.lock) return;
+    if(x>70&&x<210&&y>90&&y<210){ this.houseA(); }
+    else if(x>280&&x<420&&y>90&&y<210){ this.houseB(); }
+    else { UI.toast('空屋子。东西都被搬空了。',1200); }
+  },
+  houseA:function(){
+    var self=this;
+    if(this.stateA===1) return;
+    this.stateA=1; this.lock=true;
+    Aud.splash();
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'你踹开门。屋里很暗，一股霉味。'},
+        {w:'旁白',s:'墙角蹲着一个老人，怀里护着一个姑娘。'},
+        {w:'老人',s:'我们没有游击队！我们只有孩子！只有粮食和地！'},
+        {w:'旁白',s:'姑娘在发抖。她看着你的枪，眼睛瞪得很大。'},
+        {w:'你',s:'……走吧。这里没有。'},
+        {w:'旁白',s:'老人愣了一下，然后拼命磕头。你转身走了，没敢再看。',cls:'inner'},
+        {w:'旁白',s:'你不知道自己是在心软，还是不敢面对那姑娘的眼神。',cls:'inner'}
+      ],function(){ self.lock=false; });
+    },400);
+  },
+  houseB:function(){
+    var self=this;
+    if(this.stateB===1) return;
+    this.stateB=1; this.lock=true;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'第二间屋子。门开着。'},
+        {w:'旁白',s:'院子里坐着一个七八岁的小女孩，抱着一只布娃娃。'},
+        {w:'旁白',s:'她看见你的枪，没有跑。她歪着头看你。'},
+        {w:'女孩',s:'你是来帮我们的吗？',cls:'mono'},
+        {w:'旁白',s:'你没有说话。你忽然想起出发前偷藏的那块巧克力。',cls:'inner'}
+      ],function(){
+        UI.ask('你要把巧克力给她吗？',[{k:'给她',r:1},{k:'不给了，留着',r:2}],function(r){
+          if(r===1){
+            S.humanity=Math.min(100,S.humanity+10);
+            Aud.clink();
+            UI.say([
+              {w:'旁白',s:'你把巧克力掰了一半给她。'},
+              {w:'女孩',s:'好甜！谢谢你，士兵先生！你是好人！',cls:'mom'},
+              {w:'旁白',s:'她笑了。那是很久以来，你见过的第一个真心的笑。'},
+              {w:'旁白',s:'她忽然轻轻地哼起一支歌。',cls:'inner'},
+              {w:'旁白',s:'你愣住了。那是——妈妈在你参军那天，哼的那支歌。',cls:'inner'},
+              {w:'你',s:'（为什么……她会唱这支歌……）',cls:'inner'},
+              {w:'旁白',s:'她还在哼。小小的声音，在空荡荡的院子里飘。你没有打断她。'}
+            ],function(){ self.girlShot(); });
+          }else{
+            UI.say([
+              {w:'旁白',s:'你把巧克力收回口袋。也许……留着更有用。'},
+              {w:'女孩',s:'士兵先生，你是好人吗？',cls:'mono'},
+              {w:'你',s:'……我是。',cls:'inner'},
+              {w:'旁白',s:'你没有勇气看她。她轻轻哼起一支歌。'},
+              {w:'旁白',s:'那是妈妈在你参军那天，哼的那支歌。',cls:'inner'}
+            ],function(){ self.girlShot(); });
+          }
+        });
+      });
+    },500);
+  },
+  girlShot:function(){
+    var self=this;
+    this.lock=true;
+    this.girlDead=true;
+    setTimeout(function(){
+      Aud.gun();
+      G.flash('#fff',0.3);
+      setTimeout(function(){
+        FX.blood(340,150,14,0);
+        Aud.scream();
+        UI.say([
+          {w:'旁白',s:'枪声。',cls:'red'},
+          {w:'旁白',s:'很近。就在你身后。',cls:'red'},
+          {w:'旁白',s:'你回过头。小马站在门口，枪口还冒着烟。他的脸白得像纸。'},
+          {w:'小马',s:'她……她要去拿……拿那个……我以为那是手雷……',cls:'red'},
+          {w:'旁白',s:'小女孩倒在院子里。她的布娃娃滚出去老远，滚进了泥里。'},
+          {w:'旁白',s:'她手里攥着半块巧克力。另一半，还攥在你手里。',cls:'inner'},
+          {w:'旁白',s:'她的眼睛还睁着，看着天。她刚才还在哼那支歌。',cls:'inner'},
+          {w:'旁白',s:'一个女人的尖叫从屋里传出来，撕心裂肺。',cls:'red'},
+          {w:'小马',s:'我不是故意的……我不是故意的……我不是故意的……',cls:'red'}
+        ],function(){ self.afterShot(); });
+      },350);
+    },600);
+  },
+  afterShot:function(){
+    var self=this;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'小马瘫在地上，抱着头，抖得像筛糠。'},
+        {w:'旁白',s:'士兵们围了过来。没有人说话。'},
+        {w:'旁白',s:'军官走过来看了一眼，问：'},
+        {w:'军官',cls:'officer',s:'谁开的枪？'},
+        {w:'旁白',s:'小马抬起头，看着你。他的眼睛里全是恐惧和哀求。',cls:'inner'}
+      ],function(){
+        UI.ask('你要说什么？',[{k:'“是她……不，是狙击手打的。”',r:1},{k:'“是小马开的枪。他杀了一个孩子。”',r:2}],function(r){
+          if(r===1){
+            S.humanity=Math.max(0,S.humanity-15);
+            S.choices.xiaoma='cover';
+            UI.say([
+              {w:'你',s:'是……是狙击手。从村外打的。',cls:'inner'},
+              {w:'军官',cls:'officer',s:'嗯。敌人连孩子都不放过。记下来，敌人干的。'},
+              {w:'旁白',s:'小马看了你一眼。那一眼里没有感激。',cls:'inner'},
+              {w:'旁白',s:'那天晚上，小马蹲在墙角，一直没说话。'},
+              {w:'旁白',s:'第 3 天。小马用枪口抵住自己的下巴。',cls:'red'},
+              {w:'旁白',s:'没有人知道为什么。也许他自己也不知道。',cls:'inner'},
+              {w:'旁白',s:'你替他说了谎，却没能把他从那一枪里救出来。',cls:'inner'}
+            ],function(){ self.burnOrder(); });
+          }else{
+            S.humanity=Math.max(0,S.humanity-5);
+            S.choices.xiaoma='truth';
+            UI.say([
+              {w:'你',s:'是小马开的枪。他杀了一个孩子。',cls:'red'},
+              {w:'旁白',s:'军官看着你，像看一个傻子。'},
+              {w:'军官',cls:'officer',s:'战场上误伤平民——常有的事。把他带下去，关两天禁闭。'},
+              {w:'旁白',s:'两天后，小马回来了。他再也不跟任何人说话。',cls:'inner'},
+              {w:'旁白',s:'他看你的眼神，像看一个背叛者。'},
+              {w:'旁白',s:'你说了真话。什么也没改变。',cls:'inner'},
+              {w:'旁白',s:'那晚，你听见他在梦里一遍一遍地说：“她只是去捡布娃娃。”',cls:'inner'}
+            ],function(){ self.burnOrder(); });
+          }
+        });
+      });
+    },500);
+  },
+  burnOrder:function(){
+    var self=this;
+    this.lock=true;
+    setTimeout(function(){
+      UI.say([
+        {w:'军官',cls:'officer',s:'情报说，村里还藏着人。烧。全烧了。这是命令。'},
+        {w:'你',s:'可是——村子里还有老百姓！还有——',cls:'red'},
+        {w:'军官',cls:'officer',s:'战争。这就是战争。士兵，服从命令。'},
+        {w:'旁白',s:'火把扔了出去。第一间屋子烧起来了。',cls:'red'},
+        {w:'旁白',s:'火很快连成一片。哭声、喊声、燃烧声，混在一起。'},
+        {w:'旁白',s:'你站在火场边，像一棵枯树。',cls:'inner'},
+        {w:'旁白',s:'那支歌还在你耳朵里。小小的。轻轻的。',cls:'inner'},
+        {w:'旁白',s:'妈妈的故事里说：怪物只会越来越强。',cls:'inner'},
+        {w:'旁白',s:'你忽然明白了。',cls:'inner'}
+      ],function(){
+        self.burning=true; self.phase='burn'; self.lock=false;
+        FX.setWeather('ash',40); Aud.setWind(0.2);
+        setTimeout(function(){ self.cuilan(); },4000);
+      });
+    },600);
+  },
+  cuilan:function(){
+    var self=this;
+    this.lock=true;
+    UI.say([
+      {w:'旁白',s:'夜里。火还在烧。你坐在村口的树下，怀里是翠兰的信。'},
+      {w:'旁白',s:'老周死前说，帮他寄出去。信纸被你焐出了体温。'},
+      {w:'旁白',s:'信里说：等你回来，我们就成亲。',cls:'inner'}
+    ],function(){
+      UI.ask('你要怎么告诉翠兰？',[{k:'说实话：老周死了',r:1},{k:'说谎：老周很好，等她',r:2}],function(r){
+        if(r===1){
+          S.humanity=Math.max(0,S.humanity-5);
+          S.choices.cuilan='truth';
+          UI.say([
+            {w:'旁白',s:'你拿起笔，写了很久。最后只写了一句：'},
+            {w:'',s:'“翠兰，老周走了。他是为救我死的。对不起。”',cls:'red'},
+            {w:'旁白',s:'你把信折好。明天，会有人把它寄出去。'},
+            {w:'旁白',s:'你不知道翠兰收到信会怎样。你不敢想。',cls:'inner'}
+          ],function(){ self.leaveVillage(); });
+        }else{
+          S.humanity=Math.max(0,S.humanity-20);
+          S.choices.cuilan='lie';
+          UI.say([
+            {w:'旁白',s:'你写了很久。最后写的是：'},
+            {w:'',s:'“翠兰，老周很好。他想你。等打完仗，他就回去娶你。别担心。”',cls:'mono'},
+            {w:'旁白',s:'你把信折好，寄了出去。'},
+            {w:'旁白',s:'老周永远也回不去了。可翠兰会一直等。等到老，等到死。',cls:'inner'},
+            {w:'旁白',s:'你用一个谎言，让另一个女人在等待中慢慢老去。',cls:'inner'},
+            {w:'旁白',s:'这比实话更残忍。可你当时不懂。',cls:'inner'}
+          ],function(){ self.leaveVillage(); });
+        }
+      });
+    });
+  },
+  leaveVillage:function(){
+    var self=this;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'队伍开拔了。村庄在你们身后烧成一片灰烬。'},
+        {w:'旁白',s:'你回头看了一眼。布娃娃还在泥里。半块巧克力还攥在你的手心，已经化成了泥。',cls:'inner'},
+        {w:'旁白',s:'你把它扔了。'},
+        {w:'旁白',s:'前面是更远的战场。冬天快到了。',cls:'mono'}
+      ],function(){
+        G.fade(1,function(){ G.fade(0); G.start('act4'); });
+      });
+    },800);
+  },
+  press:function(a){},
+  update:function(dt){
+    this.t+=dt;
+    if(G.mouse.down&&!this._md){ this._md=true; this.click(G.mouse.x,G.mouse.y); }
+    if(!G.mouse.down) this._md=false;
+    if(this.burning){ this.fireT+=dt; if(rand(0,1)<dt*8){ FX.ember(rand(60,420),rand(140,200),6); } if(rand(0,1)<dt*3){ FX.smoke(rand(60,420),rand(120,170),3,true); } }
+  },
+  draw:function(c){
+    // 村庄
+    var sky=c.createLinearGradient(0,0,0,120);
+    sky.addColorStop(0,'#6a6a62'); sky.addColorStop(1,'#8a8578');
+    c.fillStyle=sky; c.fillRect(0,0,480,120);
+    c.fillStyle='#5a5a54'; c.fillRect(0,80,480,40);
+    // 教堂剪影
+    c.fillStyle='#4a4a46'; c.fillRect(420,50,26,60); c.fillRect(428,36,10,18);
+    // 地面
+    c.fillStyle='#6a5c48'; c.fillRect(0,140,480,130);
+    c.fillStyle='#5c4f3e'; for(var i=0;i<26;i++) c.fillRect(i*30+((i*7)%13),150+((i*17)%50),14,4);
+    // 树
+    c.drawImage(Spr.treeBare(50),30,100,12,50); c.drawImage(Spr.treeBare(60),240,92,12,60);
+    // 房屋
+    if(!this.burning){ c.drawImage(Spr.house(false),70,120,60,44); c.drawImage(Spr.house(false),290,118,60,44); }
+    else{
+      c.drawImage(Spr.house(true),70,120,60,44); c.drawImage(Spr.house(true),290,118,60,44);
+      FX.drawFire(c,100,118,10); FX.drawFire(c,320,116,12); FX.drawFire(c,360,120,8);
+    }
+    // 井
+    c.fillStyle='#4a443a'; c.fillRect(228,150,16,10); c.fillRect(222,148,28,4);
+    // 女孩（倒在院子里）
+    if(this.girlDead){
+      var gd=Spr.girl(); c.save(); c.translate(345,158); c.rotate(-Math.PI/2); c.drawImage(gd,-6,-4,9,13); c.restore();
+      c.drawImage(Spr.doll(),370,158);
+      c.fillStyle='#6e1010'; c.beginPath(); c.ellipse(345,160,12,4,0,0,TAU); c.fill();
+    }else{
+      c.drawImage(Spr.girl(),340,150);
+      c.drawImage(Spr.doll(),368,160);
+    }
+    // 人物
+    c.drawImage(Spr.soldier('us'),140,168,14,24);
+    c.drawImage(Spr.soldier('us'),180,170,14,24);
+    c.drawImage(Spr.civilian({coat:'#5c4a36',hair:'#8a8a80',sc:2,beard:true}),470,172,14,24);
+    if(this.phase==='search'||this.burning){ c.drawImage(Spr.soldier('us'),110,170,14,24); }
+    // 搜查提示
+    if(this.phase==='search'&&!this.stateB){ c.fillStyle='rgba(255,255,255,0.5)'; c.font='9px monospace'; c.fillText('← 空屋', 70, 90); c.fillText('院子 →', 380, 90); }
+  }
+};
+
+/* ============================= 第五章 · 严冬 ============================= */
+G.scenes.act4={
+  phase:'march', t:0, mercyDone:false, deserterDone:false, letterDone:false, forced:false,
+  enter:function(){
+    S.chapter=4; S.days=160; saveGame();
+    this.phase='march'; this.t=0; this.mercyDone=false; this.deserterDone=false; this.letterDone=false; this.forced=false;
+    UI.show('hud');
+    Aud.stopMusic(); Aud.setWind(0.25); Aud.voidtone();
+    FX.setWeather('snow',50);
+    var self=this;
+    setTimeout(function(){
+      UI.card('第五章 · 严冬','THE FROZEN RETREAT','撤退。没有粮食，没有棉衣，没有尽头。','',function(){
+        UI.say([
+          {w:'旁白',s:'战争第 160 天。冬天来了。你们在撤退。'},
+          {w:'旁白',s:'雪没过大腿。夜里零下二十度。你数不清自己冻掉了几个脚趾。'},
+          {w:'旁白',s:'粮食早就吃完了。你们开始吃老鼠。老鼠也快没了。',cls:'inner'},
+          {w:'老胡',s:'陈铭……过来……',cls:'red'},
+          {w:'旁白',s:'老胡躺在担架上。他的腿冻烂了，伤口流着黑色的脓水。'},
+          {w:'老胡',s:'兄弟……给我个痛快吧。',cls:'red'},
+          {w:'旁白',s:'军医说，没有药。他最多再撑两个晚上，然后会在高烧里活活疼死。',cls:'inner'}
+        ],function(){ self.mercy(); });
+      });
+    },500);
+  },
+  mercy:function(){
+    var self=this;
+    UI.ask('老胡用尽最后的力气，握住你的手：“兄弟，求你。”',[{k:'动手。让他走。',r:1},{k:'下不了手。',r:2}],function(r){
+      if(r===1){
+        S.humanity=Math.max(0,S.humanity-15);
+        S.choices.laohu='mercy';
+        Aud.gun(); FX.blood(200,150,10,0); G.flash('#fff',0.2);
+        setTimeout(function(){
+          UI.say([
+            {w:'旁白',s:'你举起了枪。老胡看着你，笑了。'},
+            {w:'老胡',s:'谢谢……告诉……告诉……',cls:'red'},
+            {w:'旁白',s:'枪响了。雪地上开出一朵暗红的花。',cls:'red'},
+            {w:'旁白',s:'他走得很安静。你是他这辈子，唯一想感谢的人。',cls:'inner'},
+            {w:'旁白',s:'你把他埋了。土冻得像铁。你用刺刀凿了两个小时。',cls:'inner'}
+          ],function(){
+            addDogtag({id:'lh1',name:'老胡',date:'第 160 天',line:'你亲手送他走的。他最后在笑。'});
+            self.deserter();
+          });
+        },400);
+      }else{
+        S.humanity=Math.max(0,S.humanity-10);
+        S.choices.laohu='agony';
+        setTimeout(function(){
+          UI.say([
+            {w:'旁白',s:'你放下枪。你做不到。'},
+            {w:'旁白',s:'那天夜里，老胡的惨叫声在雪地里传出去很远。'},
+            {w:'旁白',s:'他喊了一夜。喊他娘，喊他死去的媳妇，喊“疼”。',cls:'red'},
+            {w:'旁白',s:'第二天早上，他死了。眼睛睁着，嘴唇咬穿了。',cls:'inner'},
+            {w:'旁白',s:'你本该给他一个痛快。你心软了。心软，也是另一种残忍。',cls:'inner'}
+          ],function(){
+            addDogtag({id:'lh2',name:'老胡',date:'第 161 天',line:'他求了一夜。你没能给他一个痛快。'});
+            self.deserter();
+          });
+        },500);
+      }
+    });
+  },
+  deserter:function(){
+    var self=this;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'第 5 天。队伍抓到一个逃兵。'},
+        {w:'旁白',s:'他叫狗剩，才十八岁。他实在走不动了，想回家。'},
+        {w:'狗剩',s:'俺娘还在等俺……俺就想回家看看俺娘……',cls:'red'},
+        {w:'军官',cls:'officer',s:'临阵脱逃，按军法，枪毙。行刑队，集合！'},
+        {w:'旁白',s:'行刑队需要五个人。你被点名了。',cls:'red'},
+        {w:'旁白',s:'狗剩被绑在木桩上。雪落在他头发上，像孝布。',cls:'inner'}
+      ],function(){
+        UI.ask('你站在行刑队里。枪已经举起来了。',[{k:'开枪',r:1},{k:'放下枪，拒绝',r:2}],function(r){
+          S.choices.gousheng=r;
+          if(r===2){
+            UI.say([
+              {w:'你',s:'我不开枪。',cls:'red'},
+              {w:'军官',cls:'officer',s:'哦？那你也站过去，跟他并排。',cls:'red'},
+              {w:'旁白',s:'你站了过去。'},
+              {w:'旁白',s:'然后，你被一脚踹回了队列。'},
+              {w:'军官',cls:'officer',s:'吓唬吓唬你。行了，数到三。'},
+              {w:'旁白',s:'你最终还是举起了枪。因为你不举，死的就是你。',cls:'inner'},
+              {w:'旁白',s:'你哭着开的枪。',cls:'red'},
+              {w:'旁白',s:'狗剩没有喊痛。他只是看着你，说：',cls:'inner'}
+            ],function(){ self.deserterShot(); });
+          }else{
+            S.humanity=Math.max(0,S.humanity-20);
+            setTimeout(function(){
+              UI.say([
+                {w:'旁白',s:'你开了枪。手很稳。这是你在战场上学会的。',cls:'inner'},
+                {w:'旁白',s:'狗剩倒下了。雪地上开出一朵花，又被雪盖住。'},
+                {w:'旁白',s:'他到最后都没喊痛。他只是看着你，像要说什么。',cls:'inner'}
+              ],function(){ self.deserterShot(); });
+            },500);
+          }
+        });
+      });
+    },600);
+  },
+  deserterShot:function(){
+    var self=this;
+    this.deserterDone=true;
+    Aud.gun(); Aud.gun(); Aud.gun(); Aud.gun(); Aud.gun();
+    setTimeout(function(){
+      UI.say([
+        {w:'狗剩',s:'你……也会想回家的。',cls:'red'},
+        {w:'旁白',s:'这是他说过的唯一一句话。也是最后一句。',cls:'inner'},
+        {w:'旁白',s:'尸体在雪里冻成了冰。没人收。'},
+        {w:'旁白',s:'你路过他的时候，看了他一眼。他看起来很年轻。像你。',cls:'inner'}
+      ],function(){
+        addDogtag({id:'gs',name:'狗剩',date:'第 165 天',line:'他十八岁。他说：“你也会想回家的。”'});
+        self.motherLetter();
+      });
+    },600);
+  },
+  motherLetter:function(){
+    var self=this;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'撤退的第 12 天。补给队终于追上来了。'},
+        {w:'旁白',s:'他们带来一封信。是妈妈的。',cls:'inner'},
+        {w:'旁白',s:'信很短。'},
+        {w:'',s:'“儿啊：\n回家吧。战争和我们无关。\n娘在门口等你。\n——娘”',cls:'mom'},
+        {w:'旁白',s:'你看了很久。'},
+        {w:'旁白',s:'然后，你把它凑到火堆前，烧了。',cls:'red'},
+        {w:'旁白',s:'因为这里没有邮差。因为这封信永远寄不出去。',cls:'inner'},
+        {w:'旁白',s:'因为你需要那一点火，来暖一暖你冻僵的手指。',cls:'inner'},
+        {w:'旁白',s:'火光里，每一个字都亮了一瞬，然后变成灰。',cls:'inner'},
+        {w:'旁白',s:'你记住了每一个字。你一辈子都忘不掉。',cls:'inner'}
+      ],function(){ self.walkingDead(); });
+    },700);
+  },
+  walkingDead:function(){
+    var self=this;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'第 200 天。你不再数日子了。'},
+        {w:'旁白',s:'第 203 天。你不再害怕了。炮弹落下来，你眼皮都没眨。'},
+        {w:'旁白',s:'第 205 天。你看见死人都不会绕路了。'},
+        {w:'旁白',s:'老兵的意思，就是行尸走肉。',cls:'red'},
+        {w:'旁白',s:'你摸过口袋里的照片。阿秀的脸已经糊成一团。你不敢再看了。',cls:'inner'},
+        {w:'旁白',s:'你记不清自己开了多少枪。你只记得，枪越来越重。',cls:'inner'},
+        {w:'旁白',s:'春天没有来。来的是一座燃烧的城市。',cls:'mono'}
+      ],function(){
+        G.fade(1,function(){ G.fade(0); G.start('act5'); });
+      });
+    },800);
+  },
+  press:function(){},
+  update:function(dt){ this.t+=dt; },
+  draw:function(c){
+    // 雪原
+    var sky=c.createLinearGradient(0,0,0,120);
+    sky.addColorStop(0,'#8a8a86'); sky.addColorStop(1,'#b8b8b2');
+    c.fillStyle=sky; c.fillRect(0,0,480,120);
+    c.fillStyle='#6a6a66'; c.fillRect(0,80,480,40);
+    c.fillStyle='#d8d8d4'; c.fillRect(0,120,480,150);
+    // 雪中痕迹
+    c.fillStyle='#c4c4be'; for(var i=0;i<20;i++) c.fillRect(i*30,130+((i*11)%90),16,3);
+    // 枯树
+    c.drawImage(Spr.treeBare(60),60,90,12,60); c.drawImage(Spr.treeBare(48),360,100,10,48);
+    // 队伍
+    c.drawImage(Spr.soldier('us'),130,160,14,24);
+    c.drawImage(Spr.soldier('us'),160,164,14,24);
+    c.drawImage(Spr.soldier('us'),190,162,14,24);
+    c.drawImage(Spr.soldier('us'),220,166,14,24);
+    // 担架（老胡）
+    c.fillStyle='#8a7a5a'; c.fillRect(280,172,40,4);
+    var hh=Spr.soldier('us'); c.save(); c.translate(295,166); c.rotate(Math.PI/2); c.drawImage(hh,-7,-12,14,24); c.restore();
+    // 行刑桩（若已发生）
+    if(this.deserterDone){
+      c.fillStyle='#4a443a'; c.fillRect(120,140,4,60); c.fillRect(60,140,4,60);
+      // 冻尸
+      var body=Spr.person({u:'#4a4632',helmet:'round',s:'#b8b8b2',sc:2,dead:true});
+      c.save(); c.translate(122,196); c.rotate(-Math.PI/2); c.drawImage(body,-12,-6,14,24); c.restore();
+    }
+  }
+};
+
+/* ============================= 第六章 · 燃烧的城市 ============================= */
+G.scenes.act5={
+  phase:'city', t:0, hp:3, _md:false, aimY:120, enem:[], eT:0, sq:0,
+  duelChosen:false, lock:false,
+  enter:function(){
+    S.chapter=5; S.days=300; saveGame();
+    this.phase='city'; this.t=0; this.hp=3; this._md=false; this.aimY=120; this.enem=[]; this.eT=0; this.sq=0; this.duelChosen=false; this.lock=false;
+    UI.show('hud');
+    Aud.stopMusic(); Aud.voidtone(); Aud.setWind(0.2);
+    FX.setWeather('ash',50);
+    var self=this;
+    setTimeout(function(){
+      UI.card('第六章 · 燃烧的城市','THE BURNING CITY','战争第 300 天。城市在烧。世界在烧。','',function(){
+        UI.say([
+          {w:'旁白',s:'街道战。每一栋楼都在着火。'},
+          {w:'旁白',s:'你的连队只剩四个人了：你、阿良、还有两个刚补上来的新兵。'},
+          {w:'阿良',s:'陈铭……打完这一仗……我真的想回家。我娘还等我穿新棉袄……',cls:'inner'},
+          {w:'你',s:'会回去的。打完就回去。',cls:'inner'},
+          {w:'旁白',s:'你说了这句话。你说了很多次这句话。你已经不信了。',cls:'inner'},
+          {w:'旁白',s:'（W/S 上下移动瞄准 · 空格射击 · 消灭前面的敌人。三个。）',cls:'mono'}
+        ],function(){ G.hint='W/S 瞄准 · 空格 射击 · 消灭敌人'; });
+      });
+    },500);
+  },
+  press:function(a){
+    if(this.phase==='city'&&(a==='confirm'||a==='interact')) this.fire();
+  },
+  fire:function(){
+    if(this.lock||this.phase!=='city') return;
+    Aud.rifle(); FX.spark(450,this.aimY,5,0);
+    var hit=null,best=60;
+    for(var i=0;i<this.enem.length;i++){ var e=this.enem[i]; if(e.dead) continue; var d=Math.abs(e.y-this.aimY); if(d<best){ best=d; hit=e; } }
+    if(hit){ hit.dead=true; S.kills++; FX.blood(420,hit.y,14,Math.PI); Aud.scream(); }
+    this.sq++;
+    if(this.sq>=3&&!this.aliangDead){ this.aliangScene(); }
+  },
+  spawnE:function(){
+    this.enem.push({y:rand(40,200),dead:false,shown:true});
+  },
+  aliangScene:function(){
+    var self=this;
+    this.lock=true; G.hint=null;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'第三个敌人倒下了。街道安静了一瞬。'},
+        {w:'旁白',s:'然后，一声冷枪。',cls:'red'},
+        {w:'旁白',s:'阿良推了你一把。',cls:'red'},
+        {w:'旁白',s:'子弹打在他胸口。他低头看了看那个洞，又抬头看你。'},
+        {w:'阿良',s:'棉袄……我娘的……新棉袄……',cls:'red'},
+        {w:'旁白',s:'他倒在你怀里。血从嘴角流出来，流成一条小河。'},
+        {w:'阿良',s:'陈铭……你……你回家……替我……看看我娘……',cls:'red'},
+        {w:'旁白',s:'他的眼睛慢慢没有了光。你抱着他，在燃烧的街道中间，跪了很久。',cls:'inner'},
+        {w:'旁白',s:'你把他棉袄上的弹孔用手捂住，好像这样血就不会流干。',cls:'inner'},
+        {w:'旁白',s:'他娘做的棉袄，他一直没舍得穿。他说要回家再穿。',cls:'inner'}
+      ],function(){
+        addDogtag({id:'al',name:'阿良',date:'第 300 天',line:'他替你去死。他娘做的棉袄，他一直没舍得穿。'});
+        Aud.dirge();
+        self.duelStart();
+      });
+    },600);
+  },
+  duelStart:function(){
+    var self=this;
+    this.phase='duel';
+    FX.setWeather('ash',40);
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'你走进一栋半塌的房子。火光从窗外透进来。'},
+        {w:'旁白',s:'角落里坐着一个人。他穿着敌军的军装，浑身是伤。'},
+        {w:'旁白',s:'他抬起头，看见你。他也举起了枪。'},
+        {w:'旁白',s:'你们隔着三米，枪口对着枪口。'},
+        {w:'旁白',s:'火光把他的脸照得清清楚楚。',cls:'inner'},
+        {w:'旁白',s:'你愣住了。',cls:'red'},
+        {w:'旁白',s:'那张脸——跟你一模一样。',cls:'red'},
+        {w:'旁白',s:'一样年轻过，一样笑过，一样在信里写过“我很好”。',cls:'inner'}
+      ],function(){
+        self.duelChosen=false;
+        UI.ask('他举着枪，手在抖。你的手也在抖。',[{k:'开枪。',r:1},{k:'不开枪。',r:2}],function(r){
+          self.duelChosen=true; S.choices.duel=r;
+          if(r===1){
+            S.humanity=Math.max(0,S.humanity-10);
+            Aud.gun(); G.flash('#fff',0.35); FX.blood(210,150,16,0);
+            setTimeout(function(){
+              UI.say([
+                {w:'旁白',s:'枪响了。',cls:'red'},
+                {w:'旁白',s:'他向后倒去，手还伸着，够向地上的什么东西。'},
+                {w:'旁白',s:'是一张照片。照片上是一个女人。',cls:'inner'},
+                {w:'旁白',s:'他死了。眼睛还看着那张照片的方向。'}
+              ],function(){ self.duelAfter(true); });
+            },500);
+          }else{
+            Aud.gun(); G.flash('#fff',0.35);
+            setTimeout(function(){
+              FX.blood(150,150,16,0);
+              var el=$('blood'); el.style.opacity='0.6'; setTimeout(function(){ el.style.opacity='0'; },400);
+              UI.say([
+                {w:'旁白',s:'枪响了。',cls:'red'},
+                {w:'旁白',s:'子弹打在你肩上。你跪了下去。'},
+                {w:'旁白',s:'他也跟着倒下了——他本来就快死了，那最后一枪用尽了他所有的力气。'},
+                {w:'旁白',s:'你们隔着三米的血泊，都倒在地上。'},
+                {w:'旁白',s:'他朝你爬过来。不是来杀你的。',cls:'inner'},
+                {w:'旁白',s:'他把一张照片放进你手里，然后，闭上了眼睛。',cls:'inner'}
+              ],function(){ self.duelAfter(false); });
+            },500);
+          }
+        });
+      });
+    },700);
+  },
+  duelAfter:function(shotHim){
+    var self=this;
+    addItem({id:'enletter',name:'敌人的信（未寄出）',desc:'“妈妈，我很好。\n我很快就回家。\n这里的春天很美，和家里一样。”\n\n——你读了三遍。\n这封信，和你口袋里那封没寄出的，一字不差。'});
+    S.kills++;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'你从他怀里摸出一封信。信纸被血浸透了半边。'},
+        {w:'旁白',s:'“妈妈，我很好。我很快就回家。这里的春天很美，和家里一样。”',cls:'mono'},
+        {w:'旁白',s:'你读了三遍。',cls:'inner'},
+        {w:'旁白',s:'然后你摸出自己的口袋。那里也有一封没寄出去的信。',cls:'inner'},
+        {w:'旁白',s:'两封信，一字不差。',cls:'red'},
+        {w:'旁白',s:'你忽然明白了：他和你，是同一个故事。',cls:'inner'},
+        {w:'旁白',s:'只是故事里，一个叫“我们”，一个叫“敌人”。',cls:'inner'},
+        {w:'旁白',s:'窗外，整个城市都在烧。整个世界都在烧。',cls:'red'},
+        {w:'旁白',s:'妈妈的歌，在你耳朵里响起：',cls:'mom'},
+        {w:'妈妈的声音',cls:'mom',s:'怪物只会越来越强。'},
+        {w:'妈妈的声音',cls:'mom',s:'因为每一枪，都是你开的。'},
+        {w:'旁白',s:'你一个人站在火里。你的连队没了。你什么都没了。',cls:'inner'},
+        {w:'旁白',s:'你往城外走。你也不知道为什么要往城外走。',cls:'mono'}
+      ],function(){
+        G.fade(1,function(){ G.fade(0); G.start('act6'); });
+      });
+    },800);
+  },
+  update:function(dt){
+    this.t+=dt;
+    if(this.phase==='city'&&!this.lock){
+      this.eT-=dt;
+      if(this.eT<=0&&this.enem.length<3&&this.sq<3){ this.eT=2.2; this.spawnE(); }
+      for(var i=this.enem.length-1;i>=0;i--){ var e=this.enem[i]; if(e.dead){ e.deadT=(e.deadT||0)+dt; if(e.deadT>1.4) this.enem.splice(i,1); } }
+      if(G.keys['w']||G.keys['arrowup']) this.aimY-=dt*110;
+      if(G.keys['s']||G.keys['arrowdown']) this.aimY+=dt*110;
+      this.aimY=clamp(this.aimY,30,210);
+      // 敌方火力
+      if(rand(0,1)<dt*0.5&&this.enem.length){ var e2=this.enem[0]; if(!e2.dead&&rand(0,1)<0.5){ if(Math.abs(e2.y-this.aimY)<40){ this.hp--; var el=$('blood'); el.style.opacity='0.5'; setTimeout(function(){ el.style.opacity='0'; },250); FX.blood(150,this.aimY,10,0); Aud.boom(false); if(this.hp<=0){ this.hp=3; UI.toast('你中弹了。疼。',1200); } } } }
+      if(rand(0,1)<dt*4){ FX.ember(rand(0,480),rand(120,210),4); }
+    }
+    if(this.phase==='duel'&&rand(0,1)<dt*6){ FX.ember(rand(0,480),rand(80,200),4); FX.smoke(rand(0,480),rand(60,160),1,true); }
+  },
+  draw:function(c){
+    if(this.phase==='city'){
+      // 燃烧的街道
+      c.fillStyle='#1a0a06'; c.fillRect(0,0,480,270);
+      var g=c.createLinearGradient(0,0,0,270); g.addColorStop(0,'#2a1208'); g.addColorStop(1,'#0a0503');
+      c.fillStyle=g; c.fillRect(0,0,480,270);
+      // 残楼
+      c.fillStyle='#1e1410'; c.fillRect(0,60,90,200); c.fillRect(0,60,90,20);
+      c.fillStyle='#221813'; c.fillRect(360,40,120,210);
+      // 火光
+      FX.drawFire(c,60,60,14); FX.drawFire(c,420,50,18); FX.drawFire(c,150,70,10);
+      // 街道
+      c.fillStyle='#2a1a12'; c.fillRect(0,190,480,80);
+      c.fillStyle='#1e120c'; for(var i=0;i<20;i++) c.fillRect(i*26,196+((i*7)%26),12,5);
+      // 弹孔墙
+      c.fillStyle='#0f0a08'; for(var j=0;j<8;j++) c.fillRect(rand(0,480),rand(60,180),3,3);
+      // 敌人
+      for(var k=0;k<this.enem.length;k++){ var e=this.enem[k]; if(e.dead) continue; var es=Spr.soldier('enemy'); c.drawImage(es,396,e.y-12,14,24); }
+      // 阿良（跟随）
+      if(!this.aliangDead){ var al=Spr.soldier('us',{walk:Math.sin(this.t*6)*0.8}); c.drawImage(al,120,180,14,24); }
+      // 玩家（第一人称准星）
+      c.strokeStyle='#fff'; c.lineWidth=1;
+      c.beginPath(); c.moveTo(460,this.aimY-8); c.lineTo(460,this.aimY+8); c.moveTo(456,this.aimY); c.lineTo(464,this.aimY); c.stroke();
+      c.beginPath(); c.arc(460,this.aimY,3,0,TAU); c.stroke();
+      c.fillStyle='#e8e6df'; c.font='10px monospace'; c.fillText('剩敌 '+(3-this.sq), 12, 24);
+      return;
+    }
+    if(this.phase==='duel'){
+      // 残破的屋内
+      c.fillStyle='#0e0806'; c.fillRect(0,0,480,270);
+      // 破屋顶与光束
+      c.fillStyle='#1a1008'; c.fillRect(0,0,480,40);
+      c.fillStyle='rgba(255,140,40,0.14)'; c.beginPath(); c.moveTo(200,0); c.lineTo(300,0); c.lineTo(330,270); c.lineTo(140,270); c.closePath(); c.fill();
+      // 地板
+      c.fillStyle='#241812'; c.fillRect(0,220,480,50);
+      // 墙上的弹孔
+      c.fillStyle='#0a0604'; for(var m=0;m<10;m++) c.fillRect(rand(0,480),rand(50,210),3,3);
+      // 敌人（伤员，靠着墙）
+      var es2=Spr.soldier('enemy'); c.save(); c.translate(140,196); c.rotate(0.4); c.drawImage(es2,-7,-24,14,24); c.restore();
+      // 照片在地上
+      c.fillStyle='#8a8a80'; c.fillRect(120,216,8,10); c.fillStyle='#c9c9c0'; c.fillRect(122,218,4,5);
+      // 玩家的枪（第一人称）
+      c.fillStyle='#1a1410'; c.fillRect(300,190,60,8); c.fillRect(360,188,40,6);
+      c.fillStyle='#2a2218'; c.fillRect(330,196,22,10);
+      // 火
+      FX.drawFire(c,420,120,10); FX.drawFire(c,60,140,8);
+    }
+  }
+};
+
+/* ============================= 第七章 · 水洼 ============================= */
+G.scenes.act6={
+  phase:'walk', t:0, px:0, puddleX:300, looked:false, choiceLoop:0, walkingHome:false,
+  flashT:0, lines:[],
+  enter:function(){
+    S.chapter=6; S.days=316; saveGame();
+    this.phase='walk'; this.t=0; this.px=0; this.looked=false; this.choiceLoop=0; this.walkingHome=false; this.flashT=0;
+    UI.show('hud');
+    Aud.stopMusic(); Aud.setWind(0.3); Aud.setRain(0.35);
+    FX.setWeather('rain',60);
+    var self=this;
+    setTimeout(function(){
+      UI.card('第七章 · 水洼','THE PUDDLE','雨。路的尽头，有一个水洼。','',function(){
+        UI.say([
+          {w:'旁白',s:'你走出燃烧的城市，走进雨里。'},
+          {w:'旁白',s:'没有人追你。也没有人拦你。你只是走着。',cls:'inner'},
+          {w:'旁白',s:'雨水把你身上的血冲淡，混进泥里，什么也分不清。'},
+          {w:'旁白',s:'你不知道走了多久。脚在动，你已经感觉不到脚了。'},
+          {w:'旁白',s:'前面有一片水洼。积着雨。',cls:'mono'},
+          {w:'旁白',s:'（按 空格，在水洼前停下。）',cls:'mono'}
+        ],function(){ G.hint='按 空格 在水洼前停下'; });
+      });
+    },500);
+  },
+  press:function(a){
+    if(a==='confirm'){
+      if(this.phase==='walk'&&this.px>=this.puddleX-10){ this.kneel(); }
+      else if(this.phase==='walk'){ UI.toast('你还没走到水洼前。',900); }
+      else if(this.phase==='look'&&this.looked){ this.doChoice(); }
+      else if(this.phase==='loopback'){ this.looked=false; this.doChoice(); }
+    }
+  },
+  kneel:function(){
+    var self=this;
+    this.phase='look'; this.looked=false; G.hint=null;
+    Aud.splash();
+    this.t=0;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'你跪下来。膝盖陷进泥里。'},
+        {w:'旁白',s:'水洼里，映着天。映着雨。映着燃烧过后的世界。'},
+        {w:'旁白',s:'然后，映出一个影子。',cls:'red'},
+        {w:'旁白',s:'一个没有脸的影子。',cls:'red'},
+        {w:'旁白',s:'你盯着它。它也盯着你。'},
+        {w:'旁白',s:'雨滴落进去，影子碎了，又合上。',cls:'inner'},
+        {w:'旁白',s:'然后你看见——',cls:'red'},
+        {w:'旁白',s:'那张没有脸的脸，慢慢长出了你的脸。',cls:'red'},
+        {w:'旁白',s:'是你。',cls:'red'}
+      ],function(){ self.reflection(); });
+    },700);
+  },
+  reflection:function(){
+    var self=this;
+    var lines=[{w:'水洼里的你',cls:'monster',s:'你终于来了。'}];
+    lines.push({w:'水洼里的你',cls:'monster',s:'你数数看，你带走了多少人。'});
+    // 构建名单
+    var dts=S.dogtags.slice();
+    if(dts.length){
+      dts.forEach(function(d){
+        lines.push({w:'',cls:'red',s:'· '+d.line});
+      });
+    }
+    if(S.choices.boy===1){ lines.push({w:'',cls:'red',s:'· 那个德国男孩。十七岁。他口袋里有一张全家福。'}); }
+    else if(S.choices.boy===2){ lines.push({w:'',cls:'red',s:'· 那个德国男孩。你放过了他，你身后的人没有。'}); }
+    if(S.choices.xiaoma==='cover'){ lines.push({w:'',cls:'red',s:'· 小马。你替他说了谎，他把自己吊死了。'}); }
+    else if(S.choices.xiaoma==='truth'){ lines.push({w:'',cls:'red',s:'· 小马。你说了真话，什么也没改变。他活着，跟死了一样。'}); }
+    lines.push({w:'',cls:'red',s:'· 村庄里那个抱布娃娃的女孩。她还在哼那支歌。'});
+    lines.push({w:'',cls:'red',s:'· 狗剩。十八岁。他说：“你也会想回家的。”'});
+    lines.push({w:'',cls:'red',s:'· 那个和你长得一模一样的士兵。他也有一封没寄出去的家信。'});
+    if(S.kills>0){ lines.push({w:'',cls:'red',s:'· 还有那些你没有记住脸的，共 '+S.kills+' 个。'}); }
+    lines.push({w:'',cls:'red',s:'· 他们都是某个母亲的儿子。'});
+    lines.push({w:'',cls:'red',s:'· 包括你。'});
+    lines.push({w:'水洼里的你',cls:'monster',s:'每开一枪，就有另一个母亲的儿子倒下。'});
+    lines.push({w:'水洼里的你',cls:'monster',s:'怪物只会越来越强。'});
+    lines.push({w:'水洼里的你',cls:'monster',s:'因为怪物，就是你。'});
+    lines.push({w:'旁白',s:'水洼里，你的脸忽然裂开。没有五官，一片惨白。',cls:'inner'});
+    lines.push({w:'旁白',s:'你终于看清了那个怪物。',cls:'red'});
+    lines.push({w:'旁白',s:'从第一枪开始，它就住在你的眼睛里。',cls:'red'});
+    UI.say(lines,function(){ self.looked=true; self.doChoice(); });
+  },
+  doChoice:function(){
+    var self=this;
+    this.phase='look'; this.looked=true;
+    if(this.choiceLoop>=1){
+      UI.ask('枪没有救你。它也救不了你。',[{k:'放下枪',r:1}],function(){ self.dropGun(); });
+      return;
+    }
+    UI.ask('你低头，看着手里的枪。',[{k:'继续握着它',r:1},{k:'放下它',r:2}],function(r){
+      if(r===1){
+        self.choiceLoop++;
+        Aud.gun();
+        setTimeout(function(){
+          UI.say([
+            {w:'旁白',s:'你握紧了枪。'},
+            {w:'旁白',s:'你继续走。前面的战争没有尽头。'},
+            {w:'旁白',s:'第 500 天。你忘了自己的名字。',cls:'inner'},
+            {w:'旁白',s:'第 700 天。你看见谁都会先举枪。',cls:'inner'},
+            {w:'旁白',s:'第 900 天。你照镜子，镜子里没有脸。',cls:'red'},
+            {w:'旁白',s:'你成了故事里那个怪物。你终于成了它。',cls:'red'},
+            {w:'旁白',s:'可是——这不是故事的结局。妈妈的故事里，士兵放下了枪。',cls:'mom'},
+            {w:'旁白',s:'（你还有一次机会。真正的机会只有一次。）',cls:'mono'}
+          ],function(){ self.phase='loopback'; self.looked=false; });
+        },600);
+      }else{
+        self.dropGun();
+      }
+    });
+  },
+  dropGun:function(){
+    var self=this;
+    this.phase='drop';
+    Aud.clink(); FX.splash();
+    S.endings.drop=true; S.humanity=Math.max(S.humanity,60); saveGame();
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'枪掉进水洼里。',cls:'red'},
+        {w:'旁白',s:'咚。'},
+        {w:'旁白',s:'水花溅起来，又落下。'},
+        {w:'旁白',s:'你的手空了。',cls:'inner'},
+        {w:'旁白',s:'你跪在那里，很久很久。雨一直下。'},
+        {w:'旁白',s:'然后，你站起来，往家的方向走。',cls:'inner'},
+        {w:'旁白',s:'妈妈的故事里说：他扔下了枪，回家了。',cls:'mom'}
+      ],function(){ self.walkHome(); });
+    },700);
+  },
+  walkHome:function(){
+    this.phase='walkhome'; this.px=0; this.t=0; this.walkingHome=true;
+    Aud.stopMusic(); Aud.setRain(0.1); Aud.lullaby();
+    G.hint=null;
+    var self=this;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'你走了一天，一夜，又一个白天。'},
+        {w:'旁白',s:'路过的村庄在烧。你没有停下来。',cls:'inner'},
+        {w:'旁白',s:'路过的尸体在腐烂。你没有停下来。',cls:'inner'},
+        {w:'旁白',s:'你见过一个孩子抱着他死去的妈妈。你没有停下来。',cls:'inner'},
+        {w:'旁白',s:'你不能再看了。再多看一眼，你就走不回去了。',cls:'inner'},
+        {w:'旁白',s:'（你只是走。一直走。）',cls:'mono'}
+      ],function(){ self.walkT=0; });
+    },800);
+  },
+  update:function(dt){
+    this.t+=dt;
+    if(this.phase==='walk'){
+      var sp=dt*90;
+      if(G.keys['d']||G.keys['arrowright']||G.keys['a']||G.keys['arrowleft']){ this.px+=sp; }
+      else { this.px+=dt*22; }
+      this.px=Math.min(this.px,380);
+      if(this.px>=this.puddleX-8&&this.phase==='walk'){ G.hint='按 空格 在水洼前停下'; }
+    }
+    if(this.phase==='walkhome'){ this.px+=dt*40; this.walkT=(this.walkT||0)+dt; if(this.walkT>12){ this.walkT=999; var s2=this; G.fade(1,function(){ G.fade(0); G.start('epilogue'); }); } }
+    if(this.phase==='look'){ this.t+=dt; }
+  },
+  draw:function(c){
+    // 雨后的废墟路
+    var g=c.createLinearGradient(0,0,0,120);
+    g.addColorStop(0,'#1a1c26'); g.addColorStop(1,'#2e3140');
+    c.fillStyle=g; c.fillRect(0,0,480,120);
+    // 废墟
+    c.fillStyle='#10121a'; c.fillRect(0,60,60,120); c.fillRect(120,80,40,100); c.fillRect(360,50,90,130); c.fillRect(420,100,40,80);
+    // 地面
+    c.fillStyle='#241a16'; c.fillRect(0,180,480,90);
+    c.fillStyle='#1a120e'; for(var i=0;i<24;i++) c.fillRect(i*22,188+((i*9)%40),10,5);
+    // 水洼
+    c.fillStyle='#101822'; c.beginPath(); c.ellipse(300,206,60,8,0,0,TAU); c.fill();
+    c.fillStyle='rgba(120,150,190,0.35)'; c.beginPath(); c.ellipse(300,205,52,6,0,0,TAU); c.fill();
+    if(this.phase==='look'||this.phase==='loopback'||this.phase==='drop'){
+      // 水中的怪物/自己
+      var m=this.t;
+      var ref=Spr.faceless(36); c.globalAlpha=0.85; c.drawImage(ref,282,186,28,36); c.globalAlpha=1;
+      if(this.looked){ var me=Spr.person({u:'#4a4632',helmet:'round',s:'#c9a985',sc:2}); c.drawImage(me,284,192,14,24); }
+    }
+    // 玩家
+    if(this.phase==='walk'||this.phase==='look'){
+      var pl=Spr.soldier('us',{walk:Math.sin(this.t*6)*0.8});
+      c.drawImage(pl,80+this.px*0.5,180,14,24);
+    }
+    if(this.phase==='walkhome'){
+      // 缓慢移动的归途：废墟→田野→雪→春
+      var off=(this.px*0.6)%480;
+      var stage=Math.floor(this.px/3200);
+      if(stage>=4) stage=4;
+      if(stage===0){ /*废墟*/ }
+      else if(stage===1){ c.fillStyle='#2a2a26'; c.fillRect(0,150,480,120); for(var t2=0;t2<10;t2++) c.fillRect(t2*60-((this.px*0.2)%60),130,40,4); }
+      else if(stage===2){ c.fillStyle='#c8c8c2'; c.fillRect(0,120,480,150); }
+      else if(stage>=3){ c.fillStyle='#5a7a4a'; c.fillRect(0,140,480,130); c.fillStyle='#6a8a58'; c.fillRect(0,130,480,10); }
+      // 归人
+      var home=Spr.civilian({coat:'#4a4632',hair:'#241a12',sc:2});
+      c.drawImage(home,110,180,14,24);
+      // 字幕提示
+      if(this.walkT>6&&this.walkT<9){ c.fillStyle='rgba(230,230,220,0.8)'; c.font='10px monospace'; c.textAlign='center'; c.fillText('……家……',240,120); c.textAlign='left'; }
+    }
+  }
+};
+
+/* ============================= 终章 · 回家 ============================= */
+G.scenes.epilogue={
+  phase:'door', t:0, walk:0, storyStep:0,
+  enter:function(){
+    S.chapter=7; S.days=330; saveGame();
+    this.phase='door'; this.t=0; this.storyStep=0;
+    UI.show('hud');
+    Aud.stopMusic(); Aud.stopWeather(); FX.setWeather('none');
+    Aud.lullaby();
+    var self=this;
+    setTimeout(function(){
+      UI.card('终章 · 回家','GOING HOME','“他扔下了枪，回家了。”','',function(){
+        UI.say([
+          {w:'旁白',s:'你走了很远很远。鞋子磨穿了，脚底全是血泡和冻疮。'},
+          {w:'旁白',s:'你翻过山，趟过河，绕开所有还在响炮的地方。'},
+          {w:'旁白',s:'村子比记忆里小了很多。也老了。',cls:'inner'},
+          {w:'旁白',s:'你在村口站了很久，不敢进去。',cls:'inner'},
+          {w:'旁白',s:'你怕。你也不知道自己在怕什么。',cls:'inner'},
+          {w:'旁白',s:'然后，门开了。',cls:'red'}
+        ],function(){ self.mother(); });
+      });
+    },500);
+  },
+  mother:function(){
+    var self=this;
+    this.phase='mother';
+    Aud.hum(true);
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'门口站着一个女人。她老了。头发白了，腰弯了。'},
+        {w:'旁白',s:'她看见你，手里的盆子掉在地上。'},
+        {w:'妈妈',cls:'mom',s:'……儿？'},
+        {w:'旁白',s:'你张开嘴，却发不出声音。你忘了怎么说话。',cls:'inner'},
+        {w:'妈妈',cls:'mom',s:'回来就好……回来就好……'},
+        {w:'旁白',s:'她抱着你。你比她高出一个头，可你哭得像三岁。',cls:'inner'},
+        {w:'旁白',s:'你跪在门口，把头埋在她怀里。你杀过多少人，就在那里跪了多久。',cls:'inner'},
+        {w:'旁白',s:'她没有问你在战场上发生了什么。她只是摸你的头，一遍一遍。'}
+      ],function(){ Aud.hum(false); self.inside(); });
+    },600);
+  },
+  inside:function(){
+    var self=this;
+    this.phase='inside';
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'屋里很暖。灯是黄的。桌上有饭。'},
+        {w:'旁白',s:'墙角坐着一个小孩，七八岁，睁大眼睛看着你。'},
+        {w:'小孩',s:'妈，这就是我爹？',cls:'mono'},
+        {w:'妈妈',cls:'mom',s:'是你爹。快叫爹。'},
+        {w:'小孩',s:'爹，你打过仗吗？你杀过坏人吗？',cls:'mono'},
+        {w:'旁白',s:'你愣住了。你想起自己像他这么大的时候，也问过一模一样的问题。',cls:'inner'},
+        {w:'你',s:'……爹没打过仗。爹……只是回家了。',cls:'inner'},
+        {w:'旁白',s:'那晚，妈妈把你小时候听过的那个故事，又讲了一遍。'},
+        {w:'旁白',s:'讲给她的孙子听。',cls:'inner'}
+      ],function(){ self.story(); });
+    },700);
+  },
+  story:function(){
+    var self=this;
+    this.phase='story';
+    var lines=[
+      {w:'妈妈',cls:'mom',s:'很久很久以前，世界上有一个没有脸的怪物。'},
+      {w:'妈妈',cls:'mom',s:'它带走了父亲和儿子。'},
+      {w:'妈妈',cls:'mom',s:'所有人都拿起枪，要杀死它。'},
+      {w:'妈妈',cls:'mom',s:'可每开一枪，就有另一个母亲的儿子倒下。'},
+      {w:'妈妈',cls:'mom',s:'怪物只会越来越强。'},
+      {w:'妈妈',cls:'mom',s:'最后，整个世界都燃起了大火。'},
+      {w:'妈妈',cls:'mom',s:'有一天，一个年轻的士兵在雨中停下，看了一眼水洼……'},
+      {w:'妈妈',cls:'mom',s:'水中的怪物也看着他——用的是他自己的脸。'},
+      {w:'妈妈',cls:'mom',s:'他扔下了枪，回家了。'},
+      {w:'妈妈',cls:'mom',s:'每次讲到最后，妈妈都会哭着说：'},
+      {w:'妈妈',cls:'mom',s:'“那个士兵，就是你的爸爸。”'},
+      {w:'旁白',s:'小孩听完，想了想，问：'},
+      {w:'小孩',s:'那……爷爷的枪呢？',cls:'mono'},
+      {w:'旁白',s:'你没有说话。你起身，走到院子角落。'},
+      {w:'旁白',s:'那里有一个木箱子。落满了灰。',cls:'inner'}
+    ];
+    setTimeout(function(){
+      UI.say(lines,function(){ self.theGun(); });
+    },800);
+  },
+  theGun:function(){
+    var self=this;
+    this.phase='gun';
+    Aud.clink();
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'你打开箱子。里面是那支枪。'},
+        {w:'旁白',s:'你带回来的。你发誓要扔掉的，可你没有扔。',cls:'inner'},
+        {w:'旁白',s:'你把它擦干净，锁回箱子。你告诉自己：这支枪，永远不会再响。',cls:'inner'},
+        {w:'旁白',s:'可是你心里有一个声音，很小，很小：',cls:'inner'},
+        {w:'旁白',s:'战争不会因为一支枪锁在箱子里就结束。',cls:'red'},
+        {w:'旁白',s:'它只是等。',cls:'red'}
+      ],function(){ self.grow(); });
+    },700);
+  },
+  grow:function(){
+    var self=this;
+    this.phase='grow'; this.t=0;
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'日子一天天过去。你种地，挑水，修屋顶。'},
+        {w:'旁白',s:'你不再提战场上的事。你夜里不睡，盯着天花板。',cls:'inner'},
+        {w:'旁白',s:'儿子长大了。他开始学你走路，学你沉默，学你望着远方发呆。',cls:'inner'},
+        {w:'旁白',s:'有一天，你听见他在院子里，跟邻家的孩子玩打仗。'},
+        {w:'小孩',s:'砰！砰！我打中敌人了！我是英雄！我是英雄！',cls:'mono'},
+        {w:'旁白',s:'你手里的碗掉在地上，碎了。',cls:'red'},
+        {w:'旁白',s:'你冲出去，一把抢过他的木枪，折断，扔进火里。'},
+        {w:'小孩',s:'爹！你干什么！那是我的枪！',cls:'red'},
+        {w:'旁白',s:'你蹲下来，捧着他的脸。你看着他的眼睛——',cls:'inner'},
+        {w:'你',s:'那不是枪。那不是游戏。那是……',cls:'red'},
+        {w:'旁白',s:'你说不下去了。因为你在他眼里，看到了十七岁的自己。',cls:'red'},
+        {w:'旁白',s:'那个在广场上笑着签名，喊着“光荣地胜利”的自己。',cls:'red'}
+      ],function(){ self.cycle(); });
+    },800);
+  },
+  cycle:function(){
+    var self=this;
+    this.phase='cycle';
+    Aud.stopMusic(); Aud.setRain(0.3); FX.setWeather('rain',50);
+    setTimeout(function(){
+      UI.say([
+        {w:'旁白',s:'几年后，一个雨天。'},
+        {w:'旁白',s:'你坐在门口。雨下了一整天。'},
+        {w:'旁白',s:'院子里，儿子蹲在一个水洼边，看着自己的倒影。'},
+        {w:'旁白',s:'他忽然抬头，问：'},
+        {w:'儿子',s:'爹，水里的那个人，是谁？',cls:'mono'},
+        {w:'旁白',s:'你张了张嘴。'},
+        {w:'旁白',s:'很多年前，一个年轻的士兵也这样问过自己。'},
+        {w:'旁白',s:'他在水洼里，看见了一张没有脸的脸。',cls:'inner'},
+        {w:'旁白',s:'后来，那张脸长出了他自己的脸。',cls:'inner'},
+        {w:'旁白',s:'然后，他扔下枪，回家了。',cls:'inner'},
+        {w:'旁白',s:'你看着儿子的倒影。水面慢慢平静。',cls:'inner'},
+        {w:'旁白',s:'水里的那张脸，和你一模一样。',cls:'red'},
+        {w:'妈妈的声音',cls:'mom',s:'那个士兵，就是你的爸爸。'},
+        {w:'旁白',s:'而那个士兵的儿子，也终有一天，会成为下一个士兵。',cls:'red'},
+        {w:'旁白',s:'除非有人把枪，扔进水里。',cls:'mom'}
+      ],function(){ self.endCard(); });
+    },900);
+  },
+  endCard:function(){
+    var self=this;
+    Aud.stopMusic(); Aud.stopWeather(); FX.setWeather('none');
+    var endLines=[
+      {w:'',s:'战争没有结束。',cls:'red'},
+      {w:'',s:'它只是换了一个人，继续。',cls:'red'},
+      {w:'',s:'——',cls:'mono'},
+      {w:'',s:'你活过了 '+S.days+' 天。',cls:'mono'},
+      {w:'',s:'你杀了 '+S.kills+' 个母亲的孩子。',cls:'mono'},
+      {w:'',s:'你死过 '+S.deaths+' 次。每一次死亡，都有一个母亲在等。',cls:'mono'},
+      {w:'',s:'这些名字，你没有忘：',cls:'mono'}
+    ];
+    if(S.dogtags.length){ endLines.push({w:'',s:S.dogtags.map(function(d){return d.name;}).join('、'),cls:'inner'}); }
+    endLines.push({w:'',s:'还有那个抱布娃娃的女孩。还有那个十七岁的德国男孩。还有那个和你长得一模一样的人。',cls:'inner'});
+    endLines.push({w:'',s:'——',cls:'mono'});
+    endLines.push({w:'',s:'谨以此作，献给所有被战争带走的名字。',cls:'red'});
+    endLines.push({w:'',s:'战争是地狱。它从不认输，从不道歉，从不放过任何人。',cls:'mono'});
+    endLines.push({w:'',s:'如果你正被战争的阴影笼罩，请记住：',cls:'mom'});
+    endLines.push({w:'',s:'你永远可以选择，放下那把枪。',cls:'mom'});
+    endLines.push({w:'',s:'—— 完 ——',cls:'mono'});
+    endLines.push({w:'',s:'（本作纯属虚构。反战。愿世界和平。）',cls:'mono'});
+    setTimeout(function(){
+      UI.say(endLines,function(){
+        setTimeout(function(){ G.fade(1,function(){ G.fade(0); G.start('title'); }); },600);
+      });
+    },1000);
+  },
+  press:function(){},
+  update:function(dt){ this.t+=dt; },
+  draw:function(c){
+    var ph=this.phase;
+    // 黄昏的村庄（温暖）
+    var g=c.createLinearGradient(0,0,0,120);
+    g.addColorStop(0,'#d98a4a'); g.addColorStop(1,'#f0c896');
+    c.fillStyle=g; c.fillRect(0,0,480,120);
+    c.fillStyle='#f8d8a8'; c.beginPath(); c.arc(420,60,18,0,TAU); c.fill();
+    // 远山
+    c.fillStyle='#7a6a52'; c.fillRect(0,80,480,40);
+    // 地面
+    c.fillStyle='#8a6a4a'; c.fillRect(0,140,480,130);
+    c.fillStyle='#7a5c40'; for(var i=0;i<22;i++) c.fillRect(i*26+3,150+((i*13)%46),12,4);
+    // 房子
+    c.drawImage(Spr.house(false),180,96,90,66);
+    // 灯笼
+    c.fillStyle='#ffd23e'; c.beginPath(); c.arc(225,120,3,0,TAU); c.fill();
+    c.fillStyle='rgba(255,210,62,0.15)'; c.beginPath(); c.arc(225,130,30,0,TAU); c.fill();
+    // 树
+    c.drawImage(Spr.treeBare(70),60,80,14,70);
+    // 妈妈
+    var mom=Spr.person({u:'#5a4a56',helmet:false,hair:'#8a8a80',sc:2,s:'#c9a985'});
+    c.drawImage(mom,200,168,14,24);
+    // 儿子（小孩）
+    if(this.phase==='inside'||this.phase==='story'||this.phase==='gun'||this.phase==='grow'||this.phase==='cycle'){
+      c.fillStyle='#c9a985'; c.fillRect(240,190,5,4);
+      c.fillStyle='#241a12'; c.fillRect(239,186,7,4);
+      c.fillStyle='#4a4632'; c.fillRect(239,194,7,7);
+      c.fillStyle='#3a3628'; c.fillRect(240,201,2,4); c.fillRect(243,201,2,4);
+    }
+    // 归人（站在村口）
+    if(this.phase==='door'||this.phase==='mother'){
+      var pl=Spr.soldier('us');
+      c.drawImage(pl,120,168,14,24);
+    }
+    // 木箱与枪
+    if(this.phase==='gun'||this.phase==='grow'){
+      c.fillStyle='#4a3a28'; c.fillRect(330,180,36,20);
+      c.fillStyle='#2a2218'; c.fillRect(336,184,24,4);
+      c.fillStyle='#141414'; c.fillRect(340,184,10,3);
+    }
+    // 水洼与儿子倒影
+    if(this.phase==='cycle'){
+      c.fillStyle='#101822'; c.beginPath(); c.ellipse(310,206,46,6,0,0,TAU); c.fill();
+      c.fillStyle='rgba(120,150,190,0.4)'; c.beginPath(); c.ellipse(310,205,40,4.5,0,0,TAU); c.fill();
+      c.fillStyle='#c9a985'; c.fillRect(306,198,5,4); c.fillStyle='#241a12'; c.fillRect(305,194,7,4);
+      // 倒影中的脸（与他一样）
+      c.fillStyle='rgba(0,0,0,0.25)'; c.fillRect(305,200,8,4);
+    }
+  }
+};
+
+/* ============================= 启动 ============================= */
+function bootGame(){
+  try{
+    G.init();
+    G.start('title');
+  }catch(e){
+    var _d=$('dbg'); if(_d) _d.textContent='BOOT ERR: '+e.message;
+    var _el=$('err'); _el.style.display='block'; _el.textContent='启动异常: '+e.message+'\n'+(e.stack?e.stack.split('\n').slice(0,5).join('\n'):'');
+  }
+}
+if(document.readyState==='loading'){ window.addEventListener('DOMContentLoaded',bootGame); }
+else{ bootGame(); }
+
+/* __APPEND__ */
+</script>
+</body>
+</html>
