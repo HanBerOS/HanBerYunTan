@@ -2227,22 +2227,22 @@ body[data-theme="tno"] .auth-tab.active { background: #3a1a14; color: #ffe9b0; }
 
   <!-- 消息通知 -->
   <section class="route" id="route-notifications">
-    <h2 class="section-title">消息通知</h2>
-    <p class="section-sub">谁回复了你、关注了你、给你发了私信。</p>
+    <h2 class="section-title" data-i18n="notif.title">消息通知</h2>
+    <p class="section-sub" data-i18n="notif.desc">谁回复了你、关注了你、给你发了私信。</p>
     <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-ghost btn-sm" id="notif-clear-read" data-i18n="nav.notifClear" style="display:none">清除已读</button></div>
     <div class="card" id="notif-list"></div>
   </section>
 
   <!-- 私信列表 -->
   <section class="route" id="route-messages">
-    <h2 class="section-title">私信</h2>
-    <p class="section-sub">互相关注的好友才能私聊。</p>
+    <h2 class="section-title" data-i18n="chat.dmTitle">私信</h2>
+    <p class="section-sub" data-i18n="chat.dmDesc">互相关注的好友才能私聊。</p>
     <div class="card" id="chat-list"></div>
   </section>
 
   <!-- 私信对话 -->
   <section class="route" id="route-chat">
-    <a class="back-link" href="#/messages" style="display:inline-block;margin-bottom:14px;color:var(--ink-2);font-size:14px">← 返回私信列表</a>
+    <a class="back-link" href="#/messages" style="display:inline-block;margin-bottom:14px;color:var(--ink-2);font-size:14px">← <span data-i18n="chat.backList">返回私信列表</span></a>
     <div class="card" id="chat-window" style="overflow:hidden"></div>
   </section>
 
@@ -2254,12 +2254,12 @@ body[data-theme="tno"] .auth-tab.active { background: #3a1a14; color: #ffe9b0; }
     <div class="settings-layout">
       <!-- 左侧设置导航栏 -->
       <div class="settings-sidebar">
-        <button class="settings-nav active" data-settings-panel="art">🎨 美术优化</button>
-        <button class="settings-nav" data-settings-panel="sound">🎵 背景音</button>
-        <button class="settings-nav" data-settings-panel="lang">🌐 界面语言</button>
-        <button class="settings-nav" data-settings-panel="notif">🔔 通知</button>
-        <button class="settings-nav" data-settings-panel="account">🔒 账号安全</button>
-        <button class="settings-nav" data-settings-panel="export">📤 数据导出</button>
+        <button class="settings-nav active" data-settings-panel="art">🎨 <span data-i18n="settings.nav.style">美术优化</span></button>
+        <button class="settings-nav" data-settings-panel="sound">🎵 <span data-i18n="settings.sound">背景音</span></button>
+        <button class="settings-nav" data-settings-panel="lang">🌐 <span data-i18n="settings.nav.lang">界面语言</span></button>
+        <button class="settings-nav" data-settings-panel="notif">🔔 <span data-i18n="settings.nav.notify">通知</span></button>
+        <button class="settings-nav" data-settings-panel="account">🔒 <span data-i18n="settings.nav.security">账号安全</span></button>
+        <button class="settings-nav" data-settings-panel="export">📤 <span data-i18n="settings.nav.export">数据导出</span></button>
       </div>
 
       <!-- 右侧设置内容 -->
@@ -2306,37 +2306,37 @@ body[data-theme="tno"] .auth-tab.active { background: #3a1a14; color: #ffe9b0; }
 
         <div class="settings-panel" id="panel-notif" style="display:none">
           <div class="card pad">
-            <h3 style="margin:0 0 6px;font-size:16px">浏览器通知</h3>
-            <p style="font-size:12px;color:var(--ink-3);margin:0 0 14px">帖子被回复、被点赞、收到私信时，即使没打开网页，浏览器也会弹出系统通知（需允许通知权限）</p>
+            <h3 style="margin:0 0 6px;font-size:16px" data-i18n="push.title">浏览器通知</h3>
+            <p style="font-size:12px;color:var(--ink-3);margin:0 0 14px" data-i18n="push.desc">帖子被回复、被点赞、收到私信时，即使没打开网页，浏览器也会弹出系统通知（需允许通知权限）</p>
             <div id="push-panel"><div class="loading-panel" style="padding:18px 0" aria-label="加载中"><div class="lp-logo" style="width:40px;height:40px"><span class="lp-ring"></span><span class="lp-ring r2"></span><span class="lp-dot" style="width:16px;height:16px;margin:-8px 0 0 -8px"></span></div><div class="lp-bar" style="width:80px"><i></i></div></div></div>
           </div>
         </div>
 
         <div class="settings-panel" id="panel-export" style="display:none">
           <div class="card pad">
-            <h3 style="margin:0 0 14px;font-size:16px">数据导出</h3>
-            <p style="font-size:13px;color:var(--ink-3);margin:0 0 12px">导出你在云坛的全部数据（帖子、回帖、私信、通知、签到），JSON 格式，仅自己可看。</p>
-            <button class="btn btn-primary btn-sm" data-action="export-my-data">导出我的全部数据</button>
+            <h3 style="margin:0 0 14px;font-size:16px" data-i18n="export.title">数据导出</h3>
+            <p style="font-size:13px;color:var(--ink-3);margin:0 0 12px" data-i18n="export.desc">导出你在云坛的全部数据（帖子、回帖、私信、通知、签到），JSON 格式，仅自己可看。</p>
+            <button class="btn btn-primary btn-sm" data-action="export-my-data" data-i18n="export.btn">导出我的全部数据</button>
           </div>
         </div>
 
         <div class="settings-panel" id="panel-account" style="display:none">
           <div class="card pad">
-            <h3 style="margin:0 0 14px;font-size:16px">修改密码</h3>
+            <h3 style="margin:0 0 14px;font-size:16px" data-i18n="security.title">修改密码</h3>
             <form id="change-pwd-form">
               <div class="form-row">
-                <label class="form-label">当前密码</label>
-                <input class="input" id="old-pwd" type="password" placeholder="输入当前密码以验证身份" required>
+                <label class="form-label" data-i18n="security.current">当前密码</label>
+                <input class="input" id="old-pwd" type="password" placeholder="输入当前密码以验证身份" data-i18n-ph="security.currentHint" required>
               </div>
               <div class="form-row">
-                <label class="form-label">新密码</label>
-                <input class="input" id="new-pwd" type="password" minlength="8" placeholder="至少8位，含字母和数字" required>
+                <label class="form-label" data-i18n="security.new">新密码</label>
+                <input class="input" id="new-pwd" type="password" minlength="8" placeholder="至少8位，含字母和数字" data-i18n-ph="security.pwdHint" required>
               </div>
               <div class="form-row">
-                <label class="form-label">确认新密码</label>
-                <input class="input" id="new-pwd2" type="password" minlength="8" placeholder="至少8位，含字母和数字" required>
+                <label class="form-label" data-i18n="security.confirm">确认新密码</label>
+                <input class="input" id="new-pwd2" type="password" minlength="8" placeholder="至少8位，含字母和数字" data-i18n-ph="security.pwdHint" required>
               </div>
-              <button class="btn btn-primary btn-sm" type="submit">修改密码</button>
+              <button class="btn btn-primary btn-sm" type="submit" data-i18n="security.title">修改密码</button>
             </form>
           </div>
         </div>
@@ -2417,6 +2417,82 @@ var LANGS = [
 ];
 var I18N = {
   zh: {
+    'time.justNow': '刚刚',
+    'push.enable': '开启浏览器通知',
+    'push.off': '未开启',
+    'chat.backList': '返回私信列表',
+    'settings.nav.style': '美术优化',
+    'settings.nav.lang': '界面语言',
+    'settings.nav.notify': '通知',
+    'settings.nav.security': '账号安全',
+    'settings.nav.export': '数据导出',
+    'chat.dmTitle': '私信',
+    'chat.dmDesc': '互相关注的好友才能私聊。',
+    'chat.noPrivate': '没有私信',
+    'chat.noPrivateDesc': '互相关注后才能开始聊天。',
+    'notif.title': '消息通知',
+    'notif.desc': '谁回复了你、关注了你、给你发了私信。',
+    'push.title': '浏览器通知',
+    'push.desc': '帖子被回复、被点赞、收到私信时，即使没打开网页，浏览器也会弹出系统通知（需允许通知权限）',
+    'push.enabled': '已开启：即使不打开网页也能收到通知',
+    'push.disable': '关闭通知',
+    'security.title': '修改密码',
+    'security.current': '当前密码',
+    'security.new': '新密码',
+    'security.confirm': '确认新密码',
+    'security.currentHint': '输入当前密码以验证身份',
+    'security.pwdHint': '至少8位，含字母和数字',
+    'export.title': '数据导出',
+    'export.desc': '导出你在云坛的全部数据（帖子、回帖、私信、通知、签到），JSON格式，仅自己可看。',
+    'export.btn': '导出我的全部数据',
+    'theme.official': '夜景',
+    'theme.official-forest': '森语',
+    'theme.official-maple': '枫光',
+    'theme.official-city': '街巷',
+    'theme.official-sakura': '樱雨',
+    'theme.official-bridge': '桥夜',
+    'theme.official-sunset': '落日余晖',
+    'theme.official-grassland': '草原',
+    'theme.official-shanghai': '申城暮色',
+    'theme.red': '红',
+    'theme.orange': '橙',
+    'theme.yellow': '黄',
+    'theme.green': '绿',
+    'theme.cyan': '青',
+    'theme.blue': '蓝',
+    'theme.purple': '紫',
+    'theme.red-orange': '红橙',
+    'theme.orange-yellow': '橙黄',
+    'theme.yellow-green': '黄绿',
+    'theme.green-cyan': '绿青',
+    'theme.cyan-blue': '青蓝',
+    'theme.blue-purple': '蓝紫',
+    'theme.purple-pink': '紫粉',
+    'theme.british': '英式',
+    'theme.french': '法式',
+    'theme.german': '德式',
+    'theme.chinese': '中式',
+    'theme.japanese': '日式',
+    'theme.egyptian': '埃及',
+    'theme.mayan': '玛雅',
+    'theme.viking': '维京',
+    'theme.greek': '希腊',
+    'theme.arab': '阿拉伯',
+    'theme.ottoman': '奥斯曼',
+    'theme.roman': '古罗马',
+    'theme.korean': '韩式',
+    'theme.gaudi': '西班牙高迪',
+    'theme.byzantine': '拜占庭',
+    'theme.tno': 'TNO · 新秩序',
+    'time.minAgo': '{0}分钟前',
+    'time.hrAgo': '{0}小时前',
+    'time.dayAgo': '{0}天前',
+    'time.monthDay': '{0}月{1}日',
+    'empty.posts': '这里还没有帖子，来发第一帖吧',
+    'post.notFound': '帖子不存在或已删除',
+    'post.retry': '重试',
+    'notif.empty': '暂无消息',
+    'toast.alreadySigned': '今天已签到过了',
 
     'nav.home': '首页', 'nav.new': '发帖', 'nav.chat': '私信', 'nav.notif': '通知', 'nav.apps': '小程序',
     'nav.login': '登录', 'nav.signup': '注册', 'nav.logout': '退出登录',
@@ -2494,6 +2570,82 @@ var I18N = {
     'apps.lovezone.locked': '🔒 需先在暗网获取（连点页脚版本号 5 次）',
     'settings.sound': '背景音', 'settings.soundHint': '选择一段白噪音/环境声，不间断循环播放，专注或休息都合适', 'settings.soundOn': '开启背景音', 'settings.volume': '音量', 'sound.balance': '平衡噪声', 'sound.bright': '亮噪声', 'sound.dark': '暗噪声', 'sound.rain': '雨声', 'sound.ocean': '海洋', 'sound.stream': '溪流', 'sound.night': '夜晚', 'sound.fire': '火苗', 'sound.steam': '蒸汽', 'sound.fan': '风扇', 'sound.white': '白噪音', 'chat.empty': '还没有消息，打个招呼吧。', 'chat.copy': '复制', 'chat.translate': '翻译', 'chat.recall': '撤回', 'chat.delete': '删除', 'chat.recalled': '该消息已撤回', 'chat.recalledByOther': '对方撤回了一条消息', 'chat.copied': '已复制', 'chat.recallOk': '已撤回', 'chat.deleteOk': '已删除（仅自己不可见）', 'chat.recallTimeout': '超过2分钟只能删除（仅自己不可见）', 'chat.translating': '翻译中…', 'chat.you': '我', },
   en: {
+    'time.justNow': 'Just now',
+    'push.enable': 'Enable browser notifications',
+    'push.off': 'Off',
+    'chat.backList': 'Back to messages',
+    'settings.nav.style': 'Art & Style',
+    'settings.nav.lang': 'Language',
+    'settings.nav.notify': 'Notifications',
+    'settings.nav.security': 'Account Security',
+    'settings.nav.export': 'Data Export',
+    'chat.dmTitle': 'Direct Messages',
+    'chat.dmDesc': 'Only mutual follows can chat privately.',
+    'chat.noPrivate': 'No messages',
+    'chat.noPrivateDesc': 'Start chatting after following each other.',
+    'notif.title': 'Notifications',
+    'notif.desc': 'See replies, follows and direct messages.',
+    'push.title': 'Browser Notifications',
+    'push.desc': 'When your posts are replied, liked or you get a DM, the browser shows system notifications even if the page is closed (permission required)',
+    'push.enabled': 'Enabled: notifications arrive even when the page is closed',
+    'push.disable': 'Disable notifications',
+    'security.title': 'Change Password',
+    'security.current': 'Current password',
+    'security.new': 'New password',
+    'security.confirm': 'Confirm new password',
+    'security.currentHint': 'Enter your current password to verify',
+    'security.pwdHint': 'At least 8 characters with letters and numbers',
+    'export.title': 'Data Export',
+    'export.desc': 'Export all your data (posts, comments, DMs, notifications, check-ins) as JSON, only you can view it.',
+    'export.btn': 'Export all my data',
+    'theme.official': 'Night Scene',
+    'theme.official-forest': 'Forest',
+    'theme.official-maple': 'Maple Light',
+    'theme.official-city': 'Streets',
+    'theme.official-sakura': 'Cherry Rain',
+    'theme.official-bridge': 'Bridge Night',
+    'theme.official-sunset': 'Sunset Glow',
+    'theme.official-grassland': 'Grassland',
+    'theme.official-shanghai': 'Shanghai Dusk',
+    'theme.red': 'Red',
+    'theme.orange': 'Orange',
+    'theme.yellow': 'Yellow',
+    'theme.green': 'Green',
+    'theme.cyan': 'Cyan',
+    'theme.blue': 'Blue',
+    'theme.purple': 'Purple',
+    'theme.red-orange': 'Red-Orange',
+    'theme.orange-yellow': 'Orange-Yellow',
+    'theme.yellow-green': 'Yellow-Green',
+    'theme.green-cyan': 'Green-Cyan',
+    'theme.cyan-blue': 'Cyan-Blue',
+    'theme.blue-purple': 'Blue-Purple',
+    'theme.purple-pink': 'Purple-Pink',
+    'theme.british': 'British',
+    'theme.french': 'French',
+    'theme.german': 'German',
+    'theme.chinese': 'Chinese',
+    'theme.japanese': 'Japanese',
+    'theme.egyptian': 'Egyptian',
+    'theme.mayan': 'Mayan',
+    'theme.viking': 'Viking',
+    'theme.greek': 'Greek',
+    'theme.arab': 'Arabian',
+    'theme.ottoman': 'Ottoman',
+    'theme.roman': 'Roman',
+    'theme.korean': 'Korean',
+    'theme.gaudi': 'Spanish Gaudí',
+    'theme.byzantine': 'Byzantine',
+    'theme.tno': 'TNO · New Order',
+    'time.minAgo': '{0} min ago',
+    'time.hrAgo': '{0} h ago',
+    'time.dayAgo': '{0} d ago',
+    'time.monthDay': '{1}/{0}',
+    'empty.posts': 'No posts yet. Be the first to post!',
+    'post.notFound': 'Post not found or deleted',
+    'post.retry': 'Retry',
+    'notif.empty': 'No notifications',
+    'toast.alreadySigned': 'Already checked in today',
 
     'nav.home': 'Home', 'nav.new': 'New Post', 'nav.chat': 'Messages', 'nav.notif': 'Notifications', 'nav.apps': 'Mini Apps',
     'nav.login': 'Log in', 'nav.signup': 'Sign up', 'nav.logout': 'Log out',
@@ -2571,6 +2723,82 @@ var I18N = {
     'apps.lovezone.locked': '🔒 Unlock it first on the darknet (tap the footer version 5 times)',
     'settings.sound': 'Background Sound', 'settings.soundHint': 'Pick a white noise or ambient sound to loop continuously', 'settings.soundOn': 'Enable background sound', 'settings.volume': 'Volume', 'sound.balance': 'Balanced Noise', 'sound.bright': 'Bright Noise', 'sound.dark': 'Dark Noise', 'sound.rain': 'Rain', 'sound.ocean': 'Ocean', 'sound.stream': 'Stream', 'sound.night': 'Night', 'sound.fire': 'Fire', 'sound.steam': 'Steam', 'sound.fan': 'Fan', 'sound.white': 'White Noise', 'chat.empty': 'No messages yet. Say hi!', 'chat.copy': 'Copy', 'chat.translate': 'Translate', 'chat.recall': 'Recall', 'chat.delete': 'Delete', 'chat.recalled': 'Message recalled', 'chat.recalledByOther': 'The other party recalled a message', 'chat.copied': 'Copied', 'chat.recallOk': 'Recalled', 'chat.deleteOk': 'Deleted (hidden only for you)', 'chat.recallTimeout': 'After 2 minutes you can only delete', 'chat.translating': 'Translating…', 'chat.you': 'Me', },
   es: {
+    'time.justNow': 'Justo ahora',
+    'push.enable': 'Activar notificaciones del navegador',
+    'push.off': 'Desactivado',
+    'chat.backList': 'Volver a mensajes',
+    'settings.nav.style': 'Optimización visual',
+    'settings.nav.lang': 'Idioma',
+    'settings.nav.notify': 'Notificaciones',
+    'settings.nav.security': 'Seguridad de cuenta',
+    'settings.nav.export': 'Exportar datos',
+    'chat.dmTitle': 'Mensajes privados',
+    'chat.dmDesc': 'Solo los seguidores mutuos pueden chatear.',
+    'chat.noPrivate': 'Sin mensajes',
+    'chat.noPrivateDesc': 'Empieza a chatear después de seguiros mutuamente.',
+    'notif.title': 'Notificaciones',
+    'notif.desc': 'Mira respuestas, seguidores y mensajes privados.',
+    'push.title': 'Notificaciones del navegador',
+    'push.desc': 'Cuando respondan o den me gusta a tus posts, o recibas un mensaje privado, el navegador mostrará notificaciones del sistema aunque la página esté cerrada (se requiere permiso)',
+    'push.enabled': 'Activado: recibes notificaciones aunque la página esté cerrada',
+    'push.disable': 'Desactivar notificaciones',
+    'security.title': 'Cambiar contraseña',
+    'security.current': 'Contraseña actual',
+    'security.new': 'Nueva contraseña',
+    'security.confirm': 'Confirmar nueva contraseña',
+    'security.currentHint': 'Introduce tu contraseña actual para verificar',
+    'security.pwdHint': 'Mínimo 8 caracteres con letras y números',
+    'export.title': 'Exportar datos',
+    'export.desc': 'Exporta todos tus datos (posts, comentarios, mensajes privados, notificaciones, registros) en JSON, solo tú puedes verlo.',
+    'export.btn': 'Exportar todos mis datos',
+    'theme.official': 'Noche',
+    'theme.official-forest': 'Bosque',
+    'theme.official-maple': 'Luz de arce',
+    'theme.official-city': 'Calles',
+    'theme.official-sakura': 'Lluvia de cerezos',
+    'theme.official-bridge': 'Noche de puente',
+    'theme.official-sunset': 'Resplandor del atardecer',
+    'theme.official-grassland': 'Pradera',
+    'theme.official-shanghai': 'Crepúsculo de Shanghái',
+    'theme.red': 'Rojo',
+    'theme.orange': 'Naranja',
+    'theme.yellow': 'Amarillo',
+    'theme.green': 'Verde',
+    'theme.cyan': 'Cian',
+    'theme.blue': 'Azul',
+    'theme.purple': 'Púrpura',
+    'theme.red-orange': 'Rojo-naranja',
+    'theme.orange-yellow': 'Naranja-amarillo',
+    'theme.yellow-green': 'Amarillo-verde',
+    'theme.green-cyan': 'Verde-cian',
+    'theme.cyan-blue': 'Cian-azul',
+    'theme.blue-purple': 'Azul-púrpura',
+    'theme.purple-pink': 'Púrpura-rosa',
+    'theme.british': 'Británico',
+    'theme.french': 'Francés',
+    'theme.german': 'Alemán',
+    'theme.chinese': 'Chino',
+    'theme.japanese': 'Japonés',
+    'theme.egyptian': 'Egipcio',
+    'theme.mayan': 'Maya',
+    'theme.viking': 'Vikingo',
+    'theme.greek': 'Griego',
+    'theme.arab': 'Árabe',
+    'theme.ottoman': 'Otomano',
+    'theme.roman': 'Romano',
+    'theme.korean': 'Coreano',
+    'theme.gaudi': 'Gaudí español',
+    'theme.byzantine': 'Bizantino',
+    'theme.tno': 'TNO · Nuevo Orden',
+    'time.minAgo': 'hace {0} min',
+    'time.hrAgo': 'hace {0} h',
+    'time.dayAgo': 'hace {0} d',
+    'time.monthDay': '{1}/{0}',
+    'empty.posts': 'Aún no hay publicaciones. ¡Sé el primero!',
+    'post.notFound': 'Publicación no encontrada o eliminada',
+    'post.retry': 'Reintentar',
+    'notif.empty': 'Sin notificaciones',
+    'toast.alreadySigned': 'Ya te registraste hoy',
 
     'nav.home': 'Inicio', 'nav.new': 'Publicar', 'nav.chat': 'Mensajes', 'nav.notif': 'Notificaciones', 'nav.apps': 'Mini Apps',
     'nav.login': 'Entrar', 'nav.signup': 'Registrarse', 'nav.logout': 'Salir',
@@ -2648,6 +2876,82 @@ var I18N = {
     'apps.lovezone.locked': '🔒 Desbloquéalo primero en la red oscura (toca la versión del pie 5 veces)',
     'settings.sound': 'Sonido de fondo', 'settings.soundHint': 'Elige un ruido blanco o sonido ambiente para reproducir en bucle sin parar', 'settings.soundOn': 'Activar sonido de fondo', 'settings.volume': 'Volumen', 'sound.balance': 'Ruido equilibrado', 'sound.bright': 'Ruido brillante', 'sound.dark': 'Ruido oscuro', 'sound.rain': 'Lluvia', 'sound.ocean': 'Océano', 'sound.stream': 'Arroyo', 'sound.night': 'Noche', 'sound.fire': 'Fuego', 'sound.steam': 'Vapor', 'sound.fan': 'Ventilador', 'sound.white': 'Ruido blanco', 'chat.empty': 'Aún no hay mensajes. ¡Saluda!', 'chat.copy': 'Copiar', 'chat.translate': 'Traducir', 'chat.recall': 'Retirar', 'chat.delete': 'Eliminar', 'chat.recalled': 'Mensaje retirado', 'chat.recalledByOther': 'La otra persona retiró un mensaje', 'chat.copied': 'Copiado', 'chat.recallOk': 'Retirado', 'chat.deleteOk': 'Eliminado (oculto solo para ti)', 'chat.recallTimeout': 'Tras 2 minutos solo se puede eliminar', 'chat.translating': 'Traduciendo…', 'chat.you': 'Yo', },
   ru: {
+    'time.justNow': 'Только что',
+    'push.enable': 'Включить уведомления браузера',
+    'push.off': 'Выключено',
+    'chat.backList': 'Назад к сообщениям',
+    'settings.nav.style': 'Оформление',
+    'settings.nav.lang': 'Язык',
+    'settings.nav.notify': 'Уведомления',
+    'settings.nav.security': 'Безопасность аккаунта',
+    'settings.nav.export': 'Экспорт данных',
+    'chat.dmTitle': 'Личные сообщения',
+    'chat.dmDesc': 'Общаться могут только те, кто подписан друг на друга.',
+    'chat.noPrivate': 'Нет сообщений',
+    'chat.noPrivateDesc': 'Начните общение после взаимной подписки.',
+    'notif.title': 'Уведомления',
+    'notif.desc': 'Ответы, подписки и личные сообщения.',
+    'push.title': 'Уведомления браузера',
+    'push.desc': 'Когда отвечают или ставят лайк на ваши посты, или приходит ЛС, браузер покажет системные уведомления, даже если страница закрыта (нужно разрешение)',
+    'push.enabled': 'Включено: уведомления приходят, даже если страница закрыта',
+    'push.disable': 'Отключить уведомления',
+    'security.title': 'Сменить пароль',
+    'security.current': 'Текущий пароль',
+    'security.new': 'Новый пароль',
+    'security.confirm': 'Подтвердите новый пароль',
+    'security.currentHint': 'Введите текущий пароль для проверки',
+    'security.pwdHint': 'Не менее 8 символов с буквами и цифрами',
+    'export.title': 'Экспорт данных',
+    'export.desc': 'Экспортируйте все свои данные (посты, комментарии, ЛС, уведомления, отметки) в JSON — видите их только вы.',
+    'export.btn': 'Экспортировать мои данные',
+    'theme.official': 'Ночь',
+    'theme.official-forest': 'Лес',
+    'theme.official-maple': 'Кленовый свет',
+    'theme.official-city': 'Переулки',
+    'theme.official-sakura': 'Вишнёвый дождь',
+    'theme.official-bridge': 'Мостовая ночь',
+    'theme.official-sunset': 'Закатное сияние',
+    'theme.official-grassland': 'Степь',
+    'theme.official-shanghai': 'Шанхайские сумерки',
+    'theme.red': 'Красный',
+    'theme.orange': 'Оранжевый',
+    'theme.yellow': 'Жёлтый',
+    'theme.green': 'Зелёный',
+    'theme.cyan': 'Голубой',
+    'theme.blue': 'Синий',
+    'theme.purple': 'Фиолетовый',
+    'theme.red-orange': 'Красно-оранжевый',
+    'theme.orange-yellow': 'Оранжево-жёлтый',
+    'theme.yellow-green': 'Жёлто-зелёный',
+    'theme.green-cyan': 'Зелёно-голубой',
+    'theme.cyan-blue': 'Голубо-синий',
+    'theme.blue-purple': 'Сине-фиолетовый',
+    'theme.purple-pink': 'Фиолетово-розовый',
+    'theme.british': 'Британский',
+    'theme.french': 'Французский',
+    'theme.german': 'Немецкий',
+    'theme.chinese': 'Китайский',
+    'theme.japanese': 'Японский',
+    'theme.egyptian': 'Египетский',
+    'theme.mayan': 'Майя',
+    'theme.viking': 'Викинг',
+    'theme.greek': 'Греческий',
+    'theme.arab': 'Арабский',
+    'theme.ottoman': 'Османский',
+    'theme.roman': 'Римский',
+    'theme.korean': 'Корейский',
+    'theme.gaudi': 'Испанский Гауди',
+    'theme.byzantine': 'Византийский',
+    'theme.tno': 'TNO · Новый порядок',
+    'time.minAgo': '{0} мин назад',
+    'time.hrAgo': '{0} ч назад',
+    'time.dayAgo': '{0} дн назад',
+    'time.monthDay': '{1}.{0}',
+    'empty.posts': 'Пока нет постов. Будьте первым!',
+    'post.notFound': 'Пост не найден или удалён',
+    'post.retry': 'Повторить',
+    'notif.empty': 'Нет уведомлений',
+    'toast.alreadySigned': 'Сегодня уже отмечались',
 
     'nav.home': 'Главная', 'nav.new': 'Создать', 'nav.chat': 'Сообщения', 'nav.notif': 'Уведомления', 'nav.apps': 'Мини-приложения',
     'nav.login': 'Войти', 'nav.signup': 'Регистрация', 'nav.logout': 'Выйти',
@@ -2725,16 +3029,472 @@ var I18N = {
     'apps.lovezone.locked': '🔒 Сначала разблокируйте в даркнете (5 нажатий на версию в футере)',
     'settings.sound': 'Фоновый звук', 'settings.soundHint': 'Выберите белый шум или звук природы для непрерывного цикла', 'settings.soundOn': 'Включить фоновый звук', 'settings.volume': 'Громкость', 'sound.balance': 'Сбалансированный шум', 'sound.bright': 'Яркий шум', 'sound.dark': 'Тёмный шум', 'sound.rain': 'Дождь', 'sound.ocean': 'Океан', 'sound.stream': 'Ручей', 'sound.night': 'Ночь', 'sound.fire': 'Огонь', 'sound.steam': 'Пар', 'sound.fan': 'Вентилятор', 'sound.white': 'Белый шум', 'chat.empty': 'Сообщений пока нет. Поздоровайтесь!', 'chat.copy': 'Копировать', 'chat.translate': 'Перевести', 'chat.recall': 'Отозвать', 'chat.delete': 'Удалить', 'chat.recalled': 'Сообщение отозвано', 'chat.recalledByOther': 'Собеседник отозвал сообщение', 'chat.copied': 'Скопировано', 'chat.recallOk': 'Отозвано', 'chat.deleteOk': 'Удалено (скрыто только для вас)', 'chat.recallTimeout': 'Через 2 минуты можно только удалить', 'chat.translating': 'Перевод…', 'chat.you': 'Я', },
   ja: {
+    'time.justNow': 'たった今',
+    'push.enable': 'ブラウザ通知を有効化',
+    'push.off': 'オフ',
+    'chat.backList': 'メッセージに戻る',
+    'settings.nav.style': '美術スタイル',
+    'settings.nav.lang': '言語',
+    'settings.nav.notify': '通知',
+    'settings.nav.security': 'アカウント安全',
+    'settings.nav.export': 'データ出力',
+    'chat.dmTitle': 'ダイレクトメッセージ',
+    'chat.dmDesc': '相互フォローのみチャットできます。',
+    'chat.noPrivate': 'メッセージなし',
+    'chat.noPrivateDesc': '相互フォロー後にチャットできます。',
+    'notif.title': '通知',
+    'notif.desc': '返信・フォロー・DMが表示されます。',
+    'push.title': 'ブラウザ通知',
+    'push.desc': '投稿への返信・いいね・DMがあると、ページを閉じていてもブラウザがシステム通知を表示します（通知許可が必要）',
+    'push.enabled': '有効：ページを閉じていても通知を受け取れます',
+    'push.disable': '通知をオフ',
+    'security.title': 'パスワード変更',
+    'security.current': '現在のパスワード',
+    'security.new': '新しいパスワード',
+    'security.confirm': '新しいパスワードを確認',
+    'security.currentHint': '本人確認のため現在のパスワードを入力',
+    'security.pwdHint': '8文字以上、英数字を含む',
+    'export.title': 'データ出力',
+    'export.desc': '雲壇の全データ（投稿・コメント・DM・通知・チェックイン）をJSONで出力します。閲覧できるのは自分のみです。',
+    'export.btn': '自分の全データを出力',
+    'theme.official': '夜景',
+    'theme.official-forest': '森語',
+    'theme.official-maple': '楓光',
+    'theme.official-city': '街巷',
+    'theme.official-sakura': '桜雨',
+    'theme.official-bridge': '橋夜',
+    'theme.official-sunset': '夕焼け',
+    'theme.official-grassland': '草原',
+    'theme.official-shanghai': '上海のたそがれ',
+    'theme.red': '赤',
+    'theme.orange': 'オレンジ',
+    'theme.yellow': '黄',
+    'theme.green': '緑',
+    'theme.cyan': 'シアン',
+    'theme.blue': '青',
+    'theme.purple': '紫',
+    'theme.red-orange': '赤橙',
+    'theme.orange-yellow': '橙黄',
+    'theme.yellow-green': '黄緑',
+    'theme.green-cyan': '緑青',
+    'theme.cyan-blue': '青藍',
+    'theme.blue-purple': '藍紫',
+    'theme.purple-pink': '紫粉',
+    'theme.british': '英国風',
+    'theme.french': 'フランス風',
+    'theme.german': 'ドイツ風',
+    'theme.chinese': '中国風',
+    'theme.japanese': '日本風',
+    'theme.egyptian': 'エジプト風',
+    'theme.mayan': 'マヤ風',
+    'theme.viking': 'ヴァイキング',
+    'theme.greek': 'ギリシャ風',
+    'theme.arab': 'アラビア風',
+    'theme.ottoman': 'オスマン風',
+    'theme.roman': 'ローマ風',
+    'theme.korean': '韓国風',
+    'theme.gaudi': 'スペイン・ガウディ',
+    'theme.byzantine': 'ビザンチン風',
+    'theme.tno': 'TNO · 新秩序',
+    'time.minAgo': '{0}分前',
+    'time.hrAgo': '{0}時間前',
+    'time.dayAgo': '{0}日前',
+    'time.monthDay': '{1}月{0}日',
+    'empty.posts': 'まだ投稿がありません。最初の投稿をしましょう！',
+    'post.notFound': '投稿が見つからないか、削除されました',
+    'post.retry': '再試行',
+    'notif.empty': '通知はありません',
+    'toast.alreadySigned': '今日はすでにチェックインしました',
     'nav.home': 'ホーム', 'nav.new': '投稿', 'nav.chat': 'メッセージ', 'nav.notif': '通知', 'nav.apps': 'ミニアプリ', 'nav.login': 'ログイン', 'nav.signup': '登録', 'nav.logout': 'ログアウト', 'search.ph': '投稿を検索…', 'cat.all': 'すべて', 'cat.chat': '雑談', 'cat.study': '勉強', 'cat.game': 'ゲーム', 'cat.tech': '技術', 'cat.announce': 'お知らせ', 'login.title': '雲壇に参加', 'login.sub': '1つのアカウントですべての端末で使えます。', 'login.account': '電話番号またはメール', 'login.password': 'パスワード', 'login.captcha': '答えを入力', 'login.submit': 'ログイン', 'login.noAcc': 'アカウントがありませんか？', 'login.gotoSignup': '登録へ', 'login.haveAcc': 'アカウントをお持ちですか？', 'login.gotoLogin': 'ログインへ', 'signup.title': 'アカウント作成', 'signup.sub': '専用アカウントを登録します。', 'signup.username': 'ユーザー名', 'signup.submit': '登録', 'new.title': '新規投稿', 'new.sub': '話したいテーマを、一目でわかるタイトルで書こう。', 'new.t': 'タイトル', 'new.cat': 'カテゴリ', 'new.body': '内容', 'new.file': '添付（任意）', 'new.filePick': 'クリックしてファイルを選択', 'new.submit': '投稿する', 'new.phTitle': 'テーマを一言で', 'new.phBody': '詳しく書く…（改行対応）', 'post.back': '← ホームに戻る', 'post.reply': '返信', 'post.replies': '件の返信', 'settings.theme': 'テーマ', 'settings.themeHint': '好きな画面スタイルを選ぼう', 'settings.official': '公式', 'settings.solid': '単色', 'settings.gradient': 'グラデーション', 'settings.culture': 'カルチャー', 'settings.default': 'デフォルト', 'settings.glass': 'リキッドガラス', 'settings.glassHint': '「単色」「グラデーション」テーマ限定。ガラス質感＋色と透明度を設定できます', 'settings.glassOn': 'リキッドガラスモードを有効化', 'settings.glassColor': 'ガラスの色', 'settings.opacity': '透明度', 'settings.lang': '表示言語', 'settings.langHint': '画面表示言語を切り替え', 'settings.pwd': 'パスワード変更', 'settings.save': '保存して接続', 'settings.clear': '設定を消去', 'settings.themeSaved': 'テーマを変更しました', 'settings.saveFail': '保存失敗：', 'settings.glassOnDone': 'リキッドガラスを有効にしました', 'settings.glassOffDone': 'リキッドガラスを無効にしました', 'settings.glassColorDone': 'ガラスの色を更新しました', 'settings.glassAlphaDone': 'ガラスの透明度を更新しました', 'settings.langDone': '言語を変更しました', 'welcome': 'おかえりなさい、', 'signupOk': '登録完了。HanBer雲壇へようこそ', 'pleaseLogin': '先にログインしてください', 'uploadFail': 'アップロード失敗', 'netErr': 'リクエストがタイムアウトしました', 'footer': 'HanBerOS 5.5', 'nav.signin': 'チェックイン', 'report.title': '通報', 'report.reason': '理由（必須）', 'report.detail': '補足（任意）', 'report.ok': '通報を送信しました。管理者が確認します', 'pin.admin': 'ピン留め', 'pin.adminOff': 'ピン外し', 'admin.reports': '通報管理', 'admin.handle': '処理', 'admin.ignore': '無視', 'admin.actionPh': '対応（例：削除 / 7日BAN）', 'admin.signins': 'チェックイン記録', 'admin.audit': '操作ログ', 'admin.export': 'ユーザーデータ出力', 'admin.exportPh': 'ユーザー名かID', 'export.title': 'データ出力', 'export.mine': '自分の全データを出力', 'export.admin': 'このユーザーを出力', 'export.need': '雲壇の全データ（投稿・返信・メッセージ・通知・チェックイン）をJSONで出力。自分にしか見えません。', 'nav.notifClear': '既読をクリア', 'nav.notifCleared': '既読通知をクリアしました', 'apps.login.ok1': '✅ 雲壇でログイン済み：', 'apps.login.ok2': '—— ゲームに自動でアカウントが入ります', 'apps.login.no1': '🔒 雲壇に未ログイン、', 'apps.login.no2': 'ゲーム内でワンタップログインできます（ログインなしでも試遊OK）', 'apps.needlogin': 'このゲームは雲壇ログインが必要です。先にログインしてください', 'apps.fs.on': '⛶ 全画面を終了', 'apps.fs.off': '⛶ 全画面', 'apps.name.bread': 'パンキル・群雄争覇', 'apps.tag.bread': '共同制作・プレイ前に宣言あり', 'apps.desc.bread': '三国志系カードバトル：マッチング/ランク、武将スキル、装備・計略フル手札。Han Ber & Bread Guard Team 共同制作。', 'apps.name.gta': 'GTA・上海ピクセルシティ', 'apps.tag.gta': 'オフライン遊び', 'apps.desc.gta': '2Dピクセルオープンワールド：12行政区、産業経営、貨物/護送/レース任務、手配・追跡。ブラウザにローカル保存。', 'apps.name.tank': '鉄甲戦史2D', 'apps.tag.tank': '雲壇ワンタップログイン', 'apps.desc.tank': '4つの戦役の戦争ゲーム：鉄甲の奔流、兵種相性、陣地進撃。装甲部隊を指揮しよう。', 'apps.name.century': '世紀戦争', 'apps.tag.century': '雲壇ワンタップログイン', 'apps.desc.century': '100年をまたぐ4大戦役：塹壕から電撃戦まで、名戦史のターン制対決。', 'apps.name.game': 'ゲーム理論・均衡ラボ', 'apps.tag.game': '雲壇ワンタップログイン', 'apps.desc.game': '名作ゲーム理論を人機対戦で：囚人のジレンマ、ナッシュ均衡、チキンゲーム。遊びながら学べる。', 'apps.name.potato': 'クレイジーポテト', 'apps.tag.potato': '雲壇ワンタップログイン', 'apps.desc.potato': 'ジャガイモ叩きのカジュアルゲーム：反射神経チャレンジ、やめられない。', 'apps.name.puff': 'フグふくらみPuff!', 'apps.tag.puff': '雲壇ワンタップログイン', 'apps.desc.puff': 'フグのカジュアルゲーム：ふくらませて、転がして、止まらない。', 'apps.name.mist': '白霧レクイエム', 'apps.tag.mist': 'オフライン', 'apps.desc.mist': '2Dピクセル探索：霧の町、記憶を失った主人公。白い霧を払い真実を見つけよう。', 'apps.name.hanba': '旱魃伝奇', 'apps.tag.hanba': '雲壇ワンタップログイン', 'apps.desc.hanba': 'HANBA LEGEND：東洋伝説の冒険。旱魃を退け、中原を駆けろ。', 'apps.name.croissant': 'クロワッサン伝説', 'apps.tag.croissant': '雲壇ワンタップログイン', 'apps.desc.croissant': 'Croissant Legend：パン屋の世界の冒険物語。サクサクのヒーローがパリを救う。', 'apps.name.panglong': 'ぷにぷにダイエット', 'apps.tag.panglong': '雲壇ワンタップログイン', 'apps.desc.panglong': '食べすぎ小竜のスリム大作戦。食事をコントロールして動こう！', 'apps.name.weiren': '偽人・偽人シミュレーション研究所', 'apps.tag.weiren': 'オフライン', 'apps.desc.weiren': '観察し、見分け、模倣する。真実と偽りの間で選択を。', 'apps.name.star': '星の旅人', 'apps.tag.star': '雲壇ワンタップログイン', 'apps.desc.star': 'Star Voyager：星と宇宙の探検。宇宙船で星の海を渡ろう。', 'apps.name.lovezone': '恋の禁区', 'apps.tag.lovezone': 'ダークウェブ限定・解除で解放', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE：ダークウェブの奥の禁断の物語。あなたの選択が結末を決める。', 'apps.name.faceless': '顔のない人', 'apps.tag.faceless': '反戦ピクセル', 'apps.desc.faceless': 'THE FACELESS：反戦ピクセルゲーム。戦争は地獄だ。', 'apps.lovezone.locked': '🔒 まずダークウェブで取得してください（ページ下部のバージョン番号を5回連打）', 'settings.sound': '背景音', 'settings.soundHint': 'ホワイトノイズや環境音を選んで、途切れなくループ再生します', 'settings.soundOn': '背景音を有効にする', 'settings.volume': '音量', 'sound.balance': 'バランスノイズ', 'sound.bright': 'ブライトノイズ', 'sound.dark': 'ダークノイズ', 'sound.rain': '雨音', 'sound.ocean': '海の波音', 'sound.stream': 'せせらぎ', 'sound.night': '夜の静けさ', 'sound.fire': '焚き火', 'sound.steam': '蒸気', 'sound.fan': '扇風機', 'sound.white': 'ホワイトノイズ', 'chat.empty': 'まだメッセージはありません。あいさつしてみましょう', 'chat.copy': 'コピー', 'chat.translate': '翻訳', 'chat.recall': '撤回', 'chat.delete': '削除', 'chat.recalled': 'メッセージは撤回されました', 'chat.recalledByOther': '相手がメッセージを撤回しました', 'chat.copied': 'コピーしました', 'chat.recallOk': '撤回しました', 'chat.deleteOk': '削除しました（自分にのみ非表示）', 'chat.recallTimeout': '2分を過ぎると削除のみ可能です', 'chat.translating': '翻訳中…', 'chat.you': '私', },
   ko: {
+    'time.justNow': '방금',
+    'push.enable': '브라우저 알림 켜기',
+    'push.off': '꺼짐',
+    'chat.backList': '쪽지 목록으로',
+    'settings.nav.style': '미술 최적화',
+    'settings.nav.lang': '언어',
+    'settings.nav.notify': '알림',
+    'settings.nav.security': '계정 보안',
+    'settings.nav.export': '데이터 내보내기',
+    'chat.dmTitle': '쪽지',
+    'chat.dmDesc': '서로 팔로우한 사용자만 대화할 수 있습니다.',
+    'chat.noPrivate': '메시지 없음',
+    'chat.noPrivateDesc': '서로 팔로우하면 대화할 수 있습니다.',
+    'notif.title': '알림',
+    'notif.desc': '답글·팔로우·쪽지를 확인하세요.',
+    'push.title': '브라우저 알림',
+    'push.desc': '게시글에 답글이나 좋아요, 쪽지가 오면 페이지를 닫아도 브라우저가 시스템 알림을 표시합니다 (알림 권한 필요)',
+    'push.enabled': '활성화: 페이지를 닫아도 알림을 받습니다',
+    'push.disable': '알림 끄기',
+    'security.title': '비밀번호 변경',
+    'security.current': '현재 비밀번호',
+    'security.new': '새 비밀번호',
+    'security.confirm': '새 비밀번호 확인',
+    'security.currentHint': '본인 확인을 위해 현재 비밀번호 입력',
+    'security.pwdHint': '8자 이상, 영문과 숫자 포함',
+    'export.title': '데이터 내보내기',
+    'export.desc': '클라우드 포럼의 모든 데이터(게시글·댓글·쪽지·알림·출석)를 JSON으로 내보냅니다. 나만 볼 수 있습니다.',
+    'export.btn': '내 전체 데이터 내보내기',
+    'theme.official': '야경',
+    'theme.official-forest': '숲',
+    'theme.official-maple': '단풍빛',
+    'theme.official-city': '골목',
+    'theme.official-sakura': '벚꽃비',
+    'theme.official-bridge': '다리 밤',
+    'theme.official-sunset': '노을',
+    'theme.official-grassland': '초원',
+    'theme.official-shanghai': '상하이 황혼',
+    'theme.red': '빨강',
+    'theme.orange': '주황',
+    'theme.yellow': '노랑',
+    'theme.green': '초록',
+    'theme.cyan': '청록',
+    'theme.blue': '파랑',
+    'theme.purple': '보라',
+    'theme.red-orange': '빨주',
+    'theme.orange-yellow': '주황노랑',
+    'theme.yellow-green': '노랑초록',
+    'theme.green-cyan': '초록청록',
+    'theme.cyan-blue': '청록파랑',
+    'theme.blue-purple': '파랑보라',
+    'theme.purple-pink': '보라분홍',
+    'theme.british': '영국식',
+    'theme.french': '프랑스식',
+    'theme.german': '독일식',
+    'theme.chinese': '중국식',
+    'theme.japanese': '일본식',
+    'theme.egyptian': '이집트식',
+    'theme.mayan': '마야',
+    'theme.viking': '바이킹',
+    'theme.greek': '그리스식',
+    'theme.arab': '아랍식',
+    'theme.ottoman': '오스만식',
+    'theme.roman': '로마식',
+    'theme.korean': '한국식',
+    'theme.gaudi': '스페인 가우디',
+    'theme.byzantine': '비잔틴',
+    'theme.tno': 'TNO · 새 질서',
+    'time.minAgo': '{0}분 전',
+    'time.hrAgo': '{0}시간 전',
+    'time.dayAgo': '{0}일 전',
+    'time.monthDay': '{1}월 {0}일',
+    'empty.posts': '아직 게시글이 없습니다. 첫 게시글을 올려보세요!',
+    'post.notFound': '게시글을 찾을 수 없거나 삭제되었습니다',
+    'post.retry': '다시 시도',
+    'notif.empty': '알림 없음',
+    'toast.alreadySigned': '오늘 이미 출석했습니다',
     'nav.home': '홈', 'nav.new': '글쓰기', 'nav.chat': '쪽지', 'nav.notif': '알림', 'nav.apps': '미니앱', 'nav.login': '로그인', 'nav.signup': '가입', 'nav.logout': '로그아웃', 'search.ph': '게시글 검색…', 'cat.all': '전체', 'cat.chat': '잡담', 'cat.study': '공부', 'cat.game': '게임', 'cat.tech': '기술', 'cat.announce': '공지', 'login.title': '운단에 가입', 'login.sub': '하나의 계정으로 모든 기기에서 사용 가능합니다.', 'login.account': '휴대폰 번호 또는 이메일', 'login.password': '비밀번호', 'login.captcha': '답 입력', 'login.submit': '로그인', 'login.noAcc': '계정이 없으신가요?', 'login.gotoSignup': '가입하기', 'login.haveAcc': '계정이 있으신가요?', 'login.gotoLogin': '로그인하기', 'signup.title': '계정 만들기', 'signup.sub': '전용 계정을 등록합니다.', 'signup.username': '사용자 이름', 'signup.submit': '가입', 'new.title': '새 글', 'new.sub': '한눈에 알아볼 수 있는 제목으로 이야기를 시작하세요.', 'new.t': '제목', 'new.cat': '분류', 'new.body': '내용', 'new.file': '첨부(선택)', 'new.filePick': '클릭하여 파일 선택', 'new.submit': '게시', 'new.phTitle': '주제를 한 줄로', 'new.phBody': '자세히…(줄바꿈 지원)', 'post.back': '← 홈으로', 'post.reply': '답글', 'post.replies': '개의 답글', 'settings.theme': '테마', 'settings.themeHint': '마음에 드는 화면 스타일을 선택하세요', 'settings.official': '공식', 'settings.solid': '단색', 'settings.gradient': '그라데이션', 'settings.culture': '문화', 'settings.default': '기본', 'settings.glass': '리퀴드 글라스', 'settings.glassHint': '「단색」「그라데이션」테마에서만 사용 가능. 유리 질감 + 색상·투명도 설정', 'settings.glassOn': '리퀴드 글라스 모드 켜기', 'settings.glassColor': '유리 색상', 'settings.opacity': '투명도', 'settings.lang': '표시 언어', 'settings.langHint': '화면 표시 언어 전환', 'settings.pwd': '비밀번호 변경', 'settings.save': '저장 후 연결', 'settings.clear': '설정 지우기', 'settings.themeSaved': '테마를 변경했습니다', 'settings.saveFail': '저장 실패:', 'settings.glassOnDone': '리퀴드 글라스 켜짐', 'settings.glassOffDone': '리퀴드 글라스 꺼짐', 'settings.glassColorDone': '유리 색상을 업데이트했습니다', 'settings.glassAlphaDone': '유리 투명도를 업데이트했습니다', 'settings.langDone': '언어를 변경했습니다', 'welcome': '환영합니다,', 'signupOk': '가입 완료. HanBer 운단에 오신 것을 환영합니다', 'pleaseLogin': '먼저 로그인하세요', 'uploadFail': '업로드 실패', 'netErr': '요청 시간 초과', 'footer': 'HanBerOS 5.5', 'nav.signin': '출석', 'report.title': '신고', 'report.reason': '신고 사유(필수)', 'report.detail': '상세(선택)', 'report.ok': '신고가 접수되었습니다. 관리자가 확인합니다', 'pin.admin': '고정', 'pin.adminOff': '고정 해제', 'admin.reports': '신고 관리', 'admin.handle': '처리', 'admin.ignore': '무시', 'admin.actionPh': '조치(예: 삭제 / 7일 정지)', 'admin.signins': '출석 기록', 'admin.audit': '조작 로그', 'admin.export': '사용자 데이터 내보내기', 'admin.exportPh': '이름 또는 ID 입력', 'export.title': '데이터 내보내기', 'export.mine': '내 전체 데이터 내보내기', 'export.admin': '이 사용자 내보내기', 'export.need': '운단의 모든 데이터(게시글·댓글·쪽지·알림·출석)를 JSON으로 내보냅니다. 나만 볼 수 있습니다.', 'nav.notifClear': '읽음 지우기', 'nav.notifCleared': '읽은 알림을 지웠습니다', 'apps.login.ok1': '✅ 운단으로 로그인됨:', 'apps.login.ok2': '—— 게임에 자동으로 계정이 들어갑니다', 'apps.login.no1': '🔒 운단에 로그인하지 않음,', 'apps.login.no2': '게임에서 원탭 로그인 가능(로그인 없이도 체험 가능)', 'apps.needlogin': '이 게임은 운단 로그인이 필요합니다. 먼저 로그인하세요', 'apps.fs.on': '⛶ 전체 화면 종료', 'apps.fs.off': '⛶ 전체 화면', 'apps.name.bread': '빵킬·군웅쟁패', 'apps.tag.bread': '공동 제작 · 플레이 전 선언 필요', 'apps.desc.bread': '삼국지풍 카드 배틀: 매칭/랭크, 장수 스킬, 장비·계략 풀패. Han Ber & Bread Guard Team 공동 제작.', 'apps.name.gta': 'GTA·상하이 픽셀 시티', 'apps.tag.gta': '오프라인 플레이', 'apps.desc.gta': '2D 픽셀 오픈월드: 12개 행정구, 산업 경영, 화물/호송/레이스 임무, 지명 수배, 브라우저 로컬 저장.', 'apps.name.tank': '철갑전사 2D', 'apps.tag.tank': '운단 원탭 로그인', 'apps.desc.tank': '4개 전역의 전쟁 게임: 철갑의 파도, 병종 상성, 진지 전진. 기갑 부대를 지휘하세요.', 'apps.name.century': '세기 전쟁', 'apps.tag.century': '운단 원탭 로그인', 'apps.desc.century': '100년을 아우르는 4대 전역: 참호전에서 전격전까지, 명장면 턴제 대결.', 'apps.name.game': '게임이론·균형 연구소', 'apps.tag.game': '운단 원탭 로그인', 'apps.desc.game': '고전 게임이론 인공지능 대전: 죄수의 딜레마, 내시 균형, 돼지 게임. 배우며 즐기세요.', 'apps.name.potato': '크레이지 감자', 'apps.tag.potato': '운단 원탭 로그인', 'apps.desc.potato': '감자 치기 캐주얼 게임: 반사 신경 도전, 멈출 수 없음.', 'apps.name.puff': '부풀복어 Puff!', 'apps.tag.puff': '운단 원탭 로그인', 'apps.desc.puff': '복어 캐주얼 게임: 부풀고, 뒤집고, 멈출 수 없음.', 'apps.name.mist': '백무 진혼곡', 'apps.tag.mist': '오프라인', 'apps.desc.mist': '2D 픽셀 탐험: 안개 마을, 기억을 잃은 주인공. 흰 안개를 헤치고 진실을 찾아라.', 'apps.name.hanba': '한발 전설', 'apps.tag.hanba': '운단 원탭 로그인', 'apps.desc.hanba': 'HANBA LEGEND: 동방 전설 모험. 가뭄을 물리치고 중원을 누비라.', 'apps.name.croissant': '크루아상 전설', 'apps.tag.croissant': '운단 원탭 로그인', 'apps.desc.croissant': 'Croissant Legend: 제과 세계의 모험담. 바삭한 영웅이 파리를 구한다.', 'apps.name.panglong': '뚱보용 다이어트', 'apps.tag.panglong': '운단 원탭 로그인', 'apps.desc.panglong': '먹보 작은용의 다이어트 대작전. 식이조절하고 움직여라!', 'apps.name.weiren': '위인·위인 시뮬레이션 연구소', 'apps.tag.weiren': '오프라인', 'apps.desc.weiren': '관찰하고, 구별하고, 모방하라. 진짜와 가짜 사이에서 선택하라.', 'apps.name.star': '별의 여행자', 'apps.tag.star': '운단 원탭 로그인', 'apps.desc.star': 'Star Voyager: 별과 우주 탐험. 우주선을 타고 별바다를 건너세요.', 'apps.name.lovezone': '사랑의 금지구역', 'apps.tag.lovezone': '다크웹 한정 · 해금 필요', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: 다크웹 깊은 곳의 금기 서사. 당신의 선택이 결말을 정합니다.', 'apps.name.faceless': '얼굴 없는 사람', 'apps.tag.faceless': '반전 픽셀', 'apps.desc.faceless': 'THE FACELESS: 반전 픽셀 게임. 전쟁은 지옥이다.', 'apps.lovezone.locked': '🔒 먼저 다크웹에서 획득해야 함(페이지 하단 버전 번호 5번 연타)', 'settings.sound': '배경음', 'settings.soundHint': '화이트 노이즈나 환경음을 선택해 끊김 없이 반복 재생합니다', 'settings.soundOn': '배경음 켜기', 'settings.volume': '볼륨', 'sound.balance': '균형 노이즈', 'sound.bright': '밝은 노이즈', 'sound.dark': '어두운 노이즈', 'sound.rain': '빗소리', 'sound.ocean': '파도 소리', 'sound.stream': '시냇물', 'sound.night': '밤의 고요', 'sound.fire': '모닥불', 'sound.steam': '증기', 'sound.fan': '선풍기', 'sound.white': '화이트 노이즈', 'chat.empty': '아직 메시지가 없습니다. 인사해 보세요', 'chat.copy': '복사', 'chat.translate': '번역', 'chat.recall': '회수', 'chat.delete': '삭제', 'chat.recalled': '메시지가 회수되었습니다', 'chat.recalledByOther': '상대방이 메시지를 회수했습니다', 'chat.copied': '복사되었습니다', 'chat.recallOk': '회수되었습니다', 'chat.deleteOk': '삭제되었습니다(나만 안 보임)', 'chat.recallTimeout': '2분이 지나면 삭제만 가능합니다', 'chat.translating': '번역 중…', 'chat.you': '나', },
   pt: {
+    'time.justNow': 'Agora mesmo',
+    'push.enable': 'Ativar notificações do navegador',
+    'push.off': 'Desativado',
+    'chat.backList': 'Voltar às mensagens',
+    'settings.nav.style': 'Otimização visual',
+    'settings.nav.lang': 'Idioma',
+    'settings.nav.notify': 'Notificações',
+    'settings.nav.security': 'Segurança da conta',
+    'settings.nav.export': 'Exportar dados',
+    'chat.dmTitle': 'Mensagens privadas',
+    'chat.dmDesc': 'Apenas seguidores mútuos podem conversar.',
+    'chat.noPrivate': 'Sem mensagens',
+    'chat.noPrivateDesc': 'Comece a conversar após se seguirem.',
+    'notif.title': 'Notificações',
+    'notif.desc': 'Veja respostas, seguidores e mensagens.',
+    'push.title': 'Notificações do navegador',
+    'push.desc': 'Quando responderem ou curtirem seus posts, ou você receber uma mensagem, o navegador mostrará notificações do sistema mesmo com a página fechada (é preciso permissão)',
+    'push.enabled': 'Ativado: você recebe notificações mesmo com a página fechada',
+    'push.disable': 'Desativar notificações',
+    'security.title': 'Alterar senha',
+    'security.current': 'Senha atual',
+    'security.new': 'Nova senha',
+    'security.confirm': 'Confirme a nova senha',
+    'security.currentHint': 'Insira a senha atual para verificar',
+    'security.pwdHint': 'Mínimo 8 caracteres com letras e números',
+    'export.title': 'Exportar dados',
+    'export.desc': 'Exporte todos os seus dados (posts, comentários, mensagens, notificações, check-ins) em JSON, apenas você pode ver.',
+    'export.btn': 'Exportar todos os meus dados',
+    'theme.official': 'Noite',
+    'theme.official-forest': 'Floresta',
+    'theme.official-maple': 'Luz de bordo',
+    'theme.official-city': 'Ruas',
+    'theme.official-sakura': 'Chuva de cerejeira',
+    'theme.official-bridge': 'Noite de ponte',
+    'theme.official-sunset': 'Brilho do pôr do sol',
+    'theme.official-grassland': 'Pradaria',
+    'theme.official-shanghai': 'Crepúsculo de Xangai',
+    'theme.red': 'Vermelho',
+    'theme.orange': 'Laranja',
+    'theme.yellow': 'Amarelo',
+    'theme.green': 'Verde',
+    'theme.cyan': 'Ciano',
+    'theme.blue': 'Azul',
+    'theme.purple': 'Roxo',
+    'theme.red-orange': 'Vermelho-laranja',
+    'theme.orange-yellow': 'Laranja-amarelo',
+    'theme.yellow-green': 'Amarelo-verde',
+    'theme.green-cyan': 'Verde-ciano',
+    'theme.cyan-blue': 'Ciano-azul',
+    'theme.blue-purple': 'Azul-roxo',
+    'theme.purple-pink': 'Roxo-rosa',
+    'theme.british': 'Britânico',
+    'theme.french': 'Francês',
+    'theme.german': 'Alemão',
+    'theme.chinese': 'Chinês',
+    'theme.japanese': 'Japonês',
+    'theme.egyptian': 'Egípcio',
+    'theme.mayan': 'Maia',
+    'theme.viking': 'Viking',
+    'theme.greek': 'Grego',
+    'theme.arab': 'Árabe',
+    'theme.ottoman': 'Otomano',
+    'theme.roman': 'Romano',
+    'theme.korean': 'Coreano',
+    'theme.gaudi': 'Gaudí espanhol',
+    'theme.byzantine': 'Bizantino',
+    'theme.tno': 'TNO · Nova Ordem',
+    'time.minAgo': 'há {0} min',
+    'time.hrAgo': 'há {0} h',
+    'time.dayAgo': 'há {0} d',
+    'time.monthDay': '{1}/{0}',
+    'empty.posts': 'Ainda não há posts. Seja o primeiro!',
+    'post.notFound': 'Post não encontrado ou eliminado',
+    'post.retry': 'Tentar novamente',
+    'notif.empty': 'Sem notificações',
+    'toast.alreadySigned': 'Já fez check-in hoje',
     'nav.home': 'Início', 'nav.new': 'Publicar', 'nav.chat': 'Mensagens', 'nav.notif': 'Notificações', 'nav.apps': 'Mini Apps', 'nav.login': 'Entrar', 'nav.signup': 'Cadastrar', 'nav.logout': 'Sair', 'search.ph': 'Pesquisar posts…', 'cat.all': 'Tudo', 'cat.chat': 'Papo', 'cat.study': 'Estudos', 'cat.game': 'Jogos', 'cat.tech': 'Tecnologia', 'cat.announce': 'Notícias', 'login.title': 'Entre no Fórum', 'login.sub': 'Uma conta para todos os dispositivos.', 'login.account': 'Telefone ou e-mail', 'login.password': 'Senha', 'login.captcha': 'Digite a resposta', 'login.submit': 'Entrar', 'login.noAcc': 'Sem conta?', 'login.gotoSignup': 'Cadastre-se', 'login.haveAcc': 'Já tem conta?', 'login.gotoLogin': 'Entrar', 'signup.title': 'Criar Conta', 'signup.sub': 'Registre uma conta exclusiva.', 'signup.username': 'Nome de usuário', 'signup.submit': 'Cadastrar', 'new.title': 'Novo Post', 'new.sub': 'Escreva um tema que dê para entender de primeira.', 'new.t': 'Título', 'new.cat': 'Categoria', 'new.body': 'Conteúdo', 'new.file': 'Anexo (opcional)', 'new.filePick': 'Clique para escolher arquivos', 'new.submit': 'Publicar', 'new.phTitle': 'Resuma o tema em uma frase', 'new.phBody': 'Detalhes… (quebras de linha suportadas)', 'post.back': '← Voltar ao início', 'post.reply': 'Responder', 'post.replies': ' respostas', 'settings.theme': 'Aparência do tema', 'settings.themeHint': 'Escolha seu estilo de interface', 'settings.official': 'Oficial', 'settings.solid': 'Sólido', 'settings.gradient': 'Gradiente', 'settings.culture': 'Cultural', 'settings.default': 'Padrão', 'settings.glass': 'Vidro líquido', 'settings.glassHint': 'Disponível apenas nos temas "Sólido" e "Gradiente". Visual de vidro + cor e opacidade opcionais', 'settings.glassOn': 'Ativar modo vidro líquido', 'settings.glassColor': 'Cor do vidro', 'settings.opacity': 'Opacidade', 'settings.lang': 'Idioma da interface', 'settings.langHint': 'Alterar o idioma da interface', 'settings.pwd': 'Alterar senha', 'settings.save': 'Salvar e conectar', 'settings.clear': 'Limpar configuração', 'settings.themeSaved': 'Tema alterado', 'settings.saveFail': 'Falha ao salvar:', 'settings.glassOnDone': 'Vidro líquido ativado', 'settings.glassOffDone': 'Vidro líquido desativado', 'settings.glassColorDone': 'Cor do vidro atualizada', 'settings.glassAlphaDone': 'Opacidade do vidro atualizada', 'settings.langDone': 'Idioma alterado', 'welcome': 'Bem-vindo de volta,', 'signupOk': 'Cadastro concluído. Bem-vindo ao HanBer Fórum', 'pleaseLogin': 'Faça login primeiro', 'uploadFail': 'Falha no upload', 'netErr': 'Tempo de solicitação esgotado', 'footer': 'HanBerOS 5.5', 'nav.signin': 'Check-in', 'report.title': 'Denunciar', 'report.reason': 'Motivo (obrigatório)', 'report.detail': 'Detalhes (opcional)', 'report.ok': 'Denúncia enviada, os admins vão analisar', 'pin.admin': 'Fixar', 'pin.adminOff': 'Desafixar', 'admin.reports': 'Gestão de Denúncias', 'admin.handle': 'Processar', 'admin.ignore': 'Ignorar', 'admin.actionPh': 'Ação (ex. apagar / ban 7d)', 'admin.signins': 'Registos de Check-in', 'admin.audit': 'Registo de Operações', 'admin.export': 'Exportar Dados', 'admin.exportPh': 'Insira nome ou ID', 'export.title': 'Exportação de Dados', 'export.mine': 'Exportar Todos os Meus Dados', 'export.admin': 'Exportar Este Utilizador', 'export.need': 'Exporta todos os teus dados (posts, respostas, mensagens, notificações, check-ins) em JSON. Só tu podes ver.', 'nav.notifClear': 'Limpar lidas', 'nav.notifCleared': 'Notificações lidas limpas', 'apps.login.ok1': '✅ Conectado pelo Fórum:', 'apps.login.ok2': '—— o jogo entra com sua conta automaticamente', 'apps.login.no1': '🔒 Não conectado ao Fórum,', 'apps.login.no2': 'faça login em um toque no jogo (dá para jogar sem login)', 'apps.needlogin': 'Este jogo precisa do login do Fórum. Entre primeiro', 'apps.fs.on': '⛶ Sair da tela cheia', 'apps.fs.off': '⛶ Tela cheia', 'apps.name.bread': 'Pão Mortal · Batalha dos Heróis', 'apps.tag.bread': 'Produção conjunta · leia o aviso antes de entrar', 'apps.desc.bread': 'Batalha de cartas estilo Três Reinos: match/ranqueada, habilidades de generais, equipamentos e estratagemas. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Cidade Pixel de Xangai', 'apps.tag.gta': 'Jogo offline', 'apps.desc.gta': 'Mundo aberto 2D pixel: 12 distritos, gestão de negócios, missões de carga/escolta/corrida, perseguição. Salvo no navegador.', 'apps.name.tank': 'História Blindada 2D', 'apps.tag.tank': 'Login em um toque', 'apps.desc.tank': 'Jogo de guerra com 4 campanhas: onda blindada, contração entre tropas, avanço de posição. Comande suas forças blindadas.', 'apps.name.century': 'Guerra dos Séculos', 'apps.tag.century': 'Login em um toque', 'apps.desc.century': 'Quatro grandes batalhas por cem anos: das trincheiras à guerra-relâmpago, confrontos de turnos.', 'apps.name.game': 'Teoria dos Jogos · Lab de Equilíbrio', 'apps.tag.game': 'Login em um toque', 'apps.desc.game': 'Casos clássicos contra a IA: dilema do prisioneiro, equilíbrio de Nash, jogo do porco. Aprenda jogando.', 'apps.name.potato': 'Batata Maluca', 'apps.tag.potato': 'Login em um toque', 'apps.desc.potato': 'Jogo casual de bater na batata: desafio de reflexos, vicia.', 'apps.name.puff': 'Baiacu Puff!', 'apps.tag.puff': 'Login em um toque', 'apps.desc.puff': 'Jogo casual do baiacu: sopre, infle, vire. Não consegue parar.', 'apps.name.mist': 'Réquiem na Névoa', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Exploração 2D pixel: cidade enevoada, protagonista sem memória. Descubra a verdade na névoa.', 'apps.name.hanba': 'Lenda de Hanba', 'apps.tag.hanba': 'Login em um toque', 'apps.desc.hanba': 'HANBA LEGEND: aventura de lendas orientais. Domine a seca e conquiste a planície central.', 'apps.name.croissant': 'Lenda do Croissant', 'apps.tag.croissant': 'Login em um toque', 'apps.desc.croissant': 'Croissant Legend: aventura no mundo da confeitaria. Um herói crocante salva Paris.', 'apps.name.panglong': 'Dieta do Dragão Gordo', 'apps.tag.panglong': 'Login em um toque', 'apps.desc.panglong': 'A grande batalha de emagrecimento de um pequeno dragão guloso. Cuide da dieta e mexa-se!', 'apps.name.weiren': 'Wei Ren · Instituto de Simulação', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Observe, distinga, simule. Escolha entre o real e o falso.', 'apps.name.star': 'Viajante das Estrelas', 'apps.tag.star': 'Login em um toque', 'apps.desc.star': 'Star Voyager: exploração de estrelas e espaço. Pilote sua nave pelo mar de estrelas.', 'apps.name.lovezone': 'Zona Proibida do Amor', 'apps.tag.lovezone': 'Limitado à deep web · desbloqueio', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: uma narrativa proibida nas profundezas da deep web. Sua escolha define o fim.', 'apps.name.faceless': 'O Homem Sem Rosto', 'apps.tag.faceless': 'Pixel antiguerra', 'apps.desc.faceless': 'THE FACELESS: um jogo pixel antiguerra. A guerra é o inferno.', 'apps.lovezone.locked': '🔒 É preciso obter na deep web (toque 5 vezes no número de versão no rodapé)', 'settings.sound': 'Som de fundo', 'settings.soundHint': 'Escolha um ruído branco ou som ambiente para tocar em loop sem parar', 'settings.soundOn': 'Ativar som de fundo', 'settings.volume': 'Volume', 'sound.balance': 'Ruído balanceado', 'sound.bright': 'Ruído brilhante', 'sound.dark': 'Ruído escuro', 'sound.rain': 'Chuva', 'sound.ocean': 'Oceano', 'sound.stream': 'Riacho', 'sound.night': 'Noite', 'sound.fire': 'Fogueira', 'sound.steam': 'Vapor', 'sound.fan': 'Ventilador', 'sound.white': 'Ruído branco', 'chat.empty': 'Ainda não há mensagens. Diga olá!', 'chat.copy': 'Copiar', 'chat.translate': 'Traduzir', 'chat.recall': 'Retirar', 'chat.delete': 'Excluir', 'chat.recalled': 'Mensagem retirada', 'chat.recalledByOther': 'A outra pessoa retirou uma mensagem', 'chat.copied': 'Copiado', 'chat.recallOk': 'Retirada', 'chat.deleteOk': 'Excluída (oculta só para você)', 'chat.recallTimeout': 'Após 2 minutos só dá para excluir', 'chat.translating': 'Traduzindo…', 'chat.you': 'Eu', },
   de: {
+    'time.justNow': 'Gerade eben',
+    'push.enable': 'Browser-Benachrichtigungen aktivieren',
+    'push.off': 'Aus',
+    'chat.backList': 'Zurück zu Nachrichten',
+    'settings.nav.style': 'Design & Optik',
+    'settings.nav.lang': 'Sprache',
+    'settings.nav.notify': 'Benachrichtigungen',
+    'settings.nav.security': 'Kontosicherheit',
+    'settings.nav.export': 'Datenexport',
+    'chat.dmTitle': 'Direktnachrichten',
+    'chat.dmDesc': 'Nur gegenseitige Follower können chatten.',
+    'chat.noPrivate': 'Keine Nachrichten',
+    'chat.noPrivateDesc': 'Chatten nach gegenseitigem Folgen.',
+    'notif.title': 'Benachrichtigungen',
+    'notif.desc': 'Antworten, Follower und Nachrichten.',
+    'push.title': 'Browser-Benachrichtigungen',
+    'push.desc': 'Bei Antworten, Likes oder Nachrichten zeigt der Browser Systembenachrichtigungen, auch wenn die Seite geschlossen ist (Berechtigung erforderlich)',
+    'push.enabled': 'Aktiviert: Benachrichtigungen auch bei geschlossener Seite',
+    'push.disable': 'Benachrichtigungen deaktivieren',
+    'security.title': 'Passwort ändern',
+    'security.current': 'Aktuelles Passwort',
+    'security.new': 'Neues Passwort',
+    'security.confirm': 'Neues Passwort bestätigen',
+    'security.currentHint': 'Aktuelles Passwort zur Bestätigung eingeben',
+    'security.pwdHint': 'Mindestens 8 Zeichen mit Buchstaben und Zahlen',
+    'export.title': 'Datenexport',
+    'export.desc': 'Exportieren Sie alle Ihre Daten (Beiträge, Kommentare, Nachrichten, Benachrichtigungen, Check-ins) als JSON, nur Sie können sie sehen.',
+    'export.btn': 'Alle meine Daten exportieren',
+    'theme.official': 'Nacht',
+    'theme.official-forest': 'Wald',
+    'theme.official-maple': 'Ahornlicht',
+    'theme.official-city': 'Gassen',
+    'theme.official-sakura': 'Kirschblütenregen',
+    'theme.official-bridge': 'Brückennacht',
+    'theme.official-sunset': 'Abendglut',
+    'theme.official-grassland': 'Steppe',
+    'theme.official-shanghai': 'Schanghai-Dämmerung',
+    'theme.red': 'Rot',
+    'theme.orange': 'Orange',
+    'theme.yellow': 'Gelb',
+    'theme.green': 'Grün',
+    'theme.cyan': 'Cyan',
+    'theme.blue': 'Blau',
+    'theme.purple': 'Violett',
+    'theme.red-orange': 'Rot-Orange',
+    'theme.orange-yellow': 'Orange-Gelb',
+    'theme.yellow-green': 'Gelb-Grün',
+    'theme.green-cyan': 'Grün-Cyan',
+    'theme.cyan-blue': 'Cyan-Blau',
+    'theme.blue-purple': 'Blau-Violett',
+    'theme.purple-pink': 'Violett-Pink',
+    'theme.british': 'Britisch',
+    'theme.french': 'Französisch',
+    'theme.german': 'Deutsch',
+    'theme.chinese': 'Chinesisch',
+    'theme.japanese': 'Japanisch',
+    'theme.egyptian': 'Ägyptisch',
+    'theme.mayan': 'Maya',
+    'theme.viking': 'Wikinger',
+    'theme.greek': 'Griechisch',
+    'theme.arab': 'Arabisch',
+    'theme.ottoman': 'Osmanisch',
+    'theme.roman': 'Römisch',
+    'theme.korean': 'Koreanisch',
+    'theme.gaudi': 'Spanisch Gaudí',
+    'theme.byzantine': 'Byzantinisch',
+    'theme.tno': 'TNO · Neue Ordnung',
+    'time.minAgo': 'vor {0} Min.',
+    'time.hrAgo': 'vor {0} Std.',
+    'time.dayAgo': 'vor {0} Tagen',
+    'time.monthDay': '{1}.{0}.',
+    'empty.posts': 'Noch keine Beiträge. Sei der Erste!',
+    'post.notFound': 'Beitrag nicht gefunden oder gelöscht',
+    'post.retry': 'Erneut versuchen',
+    'notif.empty': 'Keine Benachrichtigungen',
+    'toast.alreadySigned': 'Heute bereits eingecheckt',
     'nav.home': 'Startseite', 'nav.new': 'Neuer Beitrag', 'nav.chat': 'Nachrichten', 'nav.notif': 'Benachrichtigungen', 'nav.apps': 'Mini-Apps', 'nav.login': 'Anmelden', 'nav.signup': 'Registrieren', 'nav.logout': 'Abmelden', 'search.ph': 'Beiträge suchen…', 'cat.all': 'Alle', 'cat.chat': 'Plaudern', 'cat.study': 'Lernen', 'cat.game': 'Spiele', 'cat.tech': 'Technik', 'cat.announce': 'Ankündigungen', 'login.title': 'Dem Forum beitreten', 'login.sub': 'Ein Konto für alle Geräte.', 'login.account': 'Telefon oder E-Mail', 'login.password': 'Passwort', 'login.captcha': 'Antwort eingeben', 'login.submit': 'Anmelden', 'login.noAcc': 'Kein Konto?', 'login.gotoSignup': 'Registrieren', 'login.haveAcc': 'Schon ein Konto?', 'login.gotoLogin': 'Anmelden', 'signup.title': 'Konto erstellen', 'signup.sub': 'Registriere ein eigenes Konto.', 'signup.username': 'Benutzername', 'signup.submit': 'Registrieren', 'new.title': 'Neuer Beitrag', 'new.sub': 'Schreibe ein Thema, dessen Titel sofort klar ist.', 'new.t': 'Titel', 'new.cat': 'Kategorie', 'new.body': 'Inhalt', 'new.file': 'Anhang (optional)', 'new.filePick': 'Klicken zum Auswählen', 'new.submit': 'Veröffentlichen', 'new.phTitle': 'Thema in einem Satz', 'new.phBody': 'Details… (Zeilenumbrüche möglich)', 'post.back': '← Zurück zur Startseite', 'post.reply': 'Antworten', 'post.replies': ' Antworten', 'settings.theme': 'Design', 'settings.themeHint': 'Wähle deinen Lieblingsstil', 'settings.official': 'Offiziell', 'settings.solid': 'Einfarbig', 'settings.gradient': 'Verlauf', 'settings.culture': 'Kulturell', 'settings.default': 'Standard', 'settings.glass': 'Flüssigglas', 'settings.glassHint': 'Nur für „Einfarbig“ und „Verlauf“ verfügbar. Glas-Optik + wählbare Farbe und Transparenz', 'settings.glassOn': 'Flüssigglas-Modus aktivieren', 'settings.glassColor': 'Glasfarbe', 'settings.opacity': 'Transparenz', 'settings.lang': 'Sprache', 'settings.langHint': 'Sprache der Oberfläche wechseln', 'settings.pwd': 'Passwort ändern', 'settings.save': 'Speichern & verbinden', 'settings.clear': 'Konfiguration löschen', 'settings.themeSaved': 'Design gewechselt', 'settings.saveFail': 'Speichern fehlgeschlagen:', 'settings.glassOnDone': 'Flüssigglas aktiviert', 'settings.glassOffDone': 'Flüssigglas deaktiviert', 'settings.glassColorDone': 'Glasfarbe aktualisiert', 'settings.glassAlphaDone': 'Transparenz aktualisiert', 'settings.langDone': 'Sprache gewechselt', 'welcome': 'Willkommen zurück,', 'signupOk': 'Registrierung erfolgreich. Willkommen im HanBer Forum', 'pleaseLogin': 'Bitte zuerst anmelden', 'uploadFail': 'Upload fehlgeschlagen', 'netErr': 'Zeitüberschreitung', 'footer': 'HanBerOS 5.5', 'nav.signin': 'Check-in', 'report.title': 'Melden', 'report.reason': 'Grund (Pflicht)', 'report.detail': 'Details (optional)', 'report.ok': 'Meldung gesendet, Admins prüfen bald', 'pin.admin': 'Anheften', 'pin.adminOff': 'Lösen', 'admin.reports': 'Report-Verwaltung', 'admin.handle': 'Bearbeiten', 'admin.ignore': 'Ignorieren', 'admin.actionPh': 'Maßnahme (z.B. löschen / 7d Bann)', 'admin.signins': 'Check-in-Protokoll', 'admin.audit': 'Operationsprotokoll', 'admin.export': 'Daten exportieren', 'admin.exportPh': 'Benutzername oder ID', 'export.title': 'Datenexport', 'export.mine': 'Alle meine Daten exportieren', 'export.admin': 'Diesen Nutzer exportieren', 'export.need': 'Exportiere alle deine Forum-Daten (Beiträge, Antworten, Nachrichten, Benachrichtigungen, Check-ins) als JSON. Nur du kannst sie sehen.', 'nav.notifClear': 'Gelesene löschen', 'nav.notifCleared': 'Gelesene Benachrichtigungen gelöscht', 'apps.login.ok1': '✅ Über das Forum angemeldet:', 'apps.login.ok2': '—— das Spiel übernimmt dein Konto automatisch', 'apps.login.no1': '🔒 Nicht im Forum angemeldet,', 'apps.login.no2': 'im Spiel mit einem Klick anmelden (auch ohne Anmeldung spielbar)', 'apps.needlogin': 'Dieses Spiel erfordert die Forum-Anmeldung. Bitte zuerst anmelden', 'apps.fs.on': '⛶ Vollbild beenden', 'apps.fs.off': '⛶ Vollbild', 'apps.name.bread': 'Brot-Killer · Kampf der Helden', 'apps.tag.bread': 'Gemeinschaftsproduktion · Hinweis vor dem Spiel lesen', 'apps.desc.bread': 'Kartenschlacht im Stil der Drei Reiche: Match/Platzierung, Generalsfähigkeiten, Ausrüstung und Strategien. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Offline spielen', 'apps.desc.gta': '2D-Pixel-Open-World: 12 Bezirke, Industrie-Management, Fracht/Eskorte/Rennmissionen, Fahndung. Lokal im Browser gespeichert.', 'apps.name.tank': 'Panzergeschichte 2D', 'apps.tag.tank': '1-Klick-Anmeldung', 'apps.desc.tank': 'Kriegsspiel mit 4 Kampagnen: Panzerwelle, Einheiten-Counter, Stellungsvorstoß. Führe deine Panzertruppen.', 'apps.name.century': 'Jahrhundert-Krieg', 'apps.tag.century': '1-Klick-Anmeldung', 'apps.desc.century': 'Vier Schlachten über hundert Jahre: vom Grabenkrieg zum Blitzkrieg, klassische Runden-Duelle.', 'apps.name.game': 'Spieltheorie · Gleichgewichtslabor', 'apps.tag.game': '1-Klick-Anmeldung', 'apps.desc.game': 'Klassische Spieltheorie gegen die KI: Gefangenendilemma, Nash-Gleichgewicht, Schwein-Spiel. Spielend lernen.', 'apps.name.potato': 'Verrückte Kartoffel', 'apps.tag.potato': '1-Klick-Anmeldung', 'apps.desc.potato': 'Lässiges Kartoffel-Hämmern: Reaktions-Challenge, macht süchtig.', 'apps.name.puff': 'Kugelfisch Puff!', 'apps.tag.puff': '1-Klick-Anmeldung', 'apps.desc.puff': 'Lässiges Kugelfisch-Spiel: pusten, aufblähen, drehen. Unaufhörlich.', 'apps.name.mist': 'Requiem im Nebel', 'apps.tag.mist': 'Offline', 'apps.desc.mist': '2D-Pixel-Erkundung: Nebelstadt, Protagonist mit Amnesie. Finde die Wahrheit im weißen Nebel.', 'apps.name.hanba': 'Hanba-Legende', 'apps.tag.hanba': '1-Klick-Anmeldung', 'apps.desc.hanba': 'HANBA LEGEND: Abenteuer der östlichen Legenden. Bezwinge die Dürre, erobere das Kernland.', 'apps.name.croissant': 'Croissant-Legende', 'apps.tag.croissant': '1-Klick-Anmeldung', 'apps.desc.croissant': 'Croissant Legend: Abenteuer in der Backwelt. Ein knuspriger Held rettet Paris.', 'apps.name.panglong': 'Dicker-Drachen-Diät', 'apps.tag.panglong': '1-Klick-Anmeldung', 'apps.desc.panglong': 'Die Schlankheits-Operation eines gefräßigen Drachens. Kontrolliere die Ernährung, beweg dich!', 'apps.name.weiren': 'Wei Ren · Institut für Simulation', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Beobachte, unterscheide, simuliere. Wähle zwischen echt und falsch.', 'apps.name.star': 'Sternenreisender', 'apps.tag.star': '1-Klick-Anmeldung', 'apps.desc.star': 'Star Voyager: Stern- und Weltraum-Erkundung. Fliege dein Raumschiff durch das Sternenmeer.', 'apps.name.lovezone': 'Verbotene Liebeszone', 'apps.tag.lovezone': 'Darknet-exklusiv · Freischaltung', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: eine verbotene Erzählung in den Tiefen des Darknets. Deine Wahl bestimmt das Ende.', 'apps.name.faceless': 'Der Mann ohne Gesicht', 'apps.tag.faceless': 'Antikriegs-Pixel', 'apps.desc.faceless': 'THE FACELESS: ein Antikriegs-Pixelspiel. Krieg ist die Hölle.', 'apps.lovezone.locked': '🔒 Erst im Darknet holen (5-mal auf die Versionsnummer im Fußbereich tippen)', 'settings.sound': 'Hintergrundgeräusch', 'settings.soundHint': 'Wähle ein Rauschen oder Ambiente für durchgehende Schleife', 'settings.soundOn': 'Hintergrundgeräusch aktivieren', 'settings.volume': 'Lautstärke', 'sound.balance': 'Ausgewogenes Rauschen', 'sound.bright': 'Helles Rauschen', 'sound.dark': 'Dunkles Rauschen', 'sound.rain': 'Regen', 'sound.ocean': 'Ozean', 'sound.stream': 'Bach', 'sound.night': 'Nacht', 'sound.fire': 'Feuer', 'sound.steam': 'Dampf', 'sound.fan': 'Ventilator', 'sound.white': 'Weißes Rauschen', 'chat.empty': 'Noch keine Nachrichten. Sag hallo!', 'chat.copy': 'Kopieren', 'chat.translate': 'Übersetzen', 'chat.recall': 'Zurückziehen', 'chat.delete': 'Löschen', 'chat.recalled': 'Nachricht zurückgezogen', 'chat.recalledByOther': 'Die andere Person hat eine Nachricht zurückgezogen', 'chat.copied': 'Kopiert', 'chat.recallOk': 'Zurückgezogen', 'chat.deleteOk': 'Gelöscht (nur für dich unsichtbar)', 'chat.recallTimeout': 'Nach 2 Minuten ist nur Löschen möglich', 'chat.translating': 'Übersetzen…', 'chat.you': 'Ich', },
   it: {
+    'time.justNow': 'Adesso',
+    'push.enable': 'Attiva notifiche del browser',
+    'push.off': 'Spento',
+    'chat.backList': 'Torna ai messaggi',
+    'settings.nav.style': 'Ottimizzazione grafica',
+    'settings.nav.lang': 'Lingua',
+    'settings.nav.notify': 'Notifiche',
+    'settings.nav.security': 'Sicurezza account',
+    'settings.nav.export': 'Esporta dati',
+    'chat.dmTitle': 'Messaggi privati',
+    'chat.dmDesc': 'Solo i follow reciproci possono chattare.',
+    'chat.noPrivate': 'Nessun messaggio',
+    'chat.noPrivateDesc': 'Inizia a chattare dopo il follow reciproco.',
+    'notif.title': 'Notifiche',
+    'notif.desc': 'Vedi risposte, follow e messaggi.',
+    'push.title': 'Notifiche del browser',
+    'push.desc': 'Quando rispondono o mettono mi piace ai tuoi post, o ricevi un messaggio, il browser mostra notifiche di sistema anche a pagina chiusa (serve permesso)',
+    'push.enabled': 'Attivato: ricevi notifiche anche a pagina chiusa',
+    'push.disable': 'Disattiva notifiche',
+    'security.title': 'Cambia password',
+    'security.current': 'Password attuale',
+    'security.new': 'Nuova password',
+    'security.confirm': 'Conferma nuova password',
+    'security.currentHint': 'Inserisci la password attuale per verifica',
+    'security.pwdHint': 'Almeno 8 caratteri con lettere e numeri',
+    'export.title': 'Esporta dati',
+    'export.desc': 'Esporta tutti i tuoi dati (post, commenti, messaggi, notifiche, check-in) in JSON, solo tu puoi vederli.',
+    'export.btn': 'Esporta tutti i miei dati',
+    'theme.official': 'Notte',
+    'theme.official-forest': 'Foresta',
+    'theme.official-maple': 'Luce d\'acero',
+    'theme.official-city': 'Vicoli',
+    'theme.official-sakura': 'Pioggia di ciliegi',
+    'theme.official-bridge': 'Notte sul ponte',
+    'theme.official-sunset': 'Bagliore del tramonto',
+    'theme.official-grassland': 'Prateria',
+    'theme.official-shanghai': 'Crepuscolo di Shanghai',
+    'theme.red': 'Rosso',
+    'theme.orange': 'Arancione',
+    'theme.yellow': 'Giallo',
+    'theme.green': 'Verde',
+    'theme.cyan': 'Ciano',
+    'theme.blue': 'Blu',
+    'theme.purple': 'Viola',
+    'theme.red-orange': 'Rosso-arancio',
+    'theme.orange-yellow': 'Arancio-giallo',
+    'theme.yellow-green': 'Giallo-verde',
+    'theme.green-cyan': 'Verde-ciano',
+    'theme.cyan-blue': 'Ciano-blu',
+    'theme.blue-purple': 'Blu-viola',
+    'theme.purple-pink': 'Viola-rosa',
+    'theme.british': 'Britannico',
+    'theme.french': 'Francese',
+    'theme.german': 'Tedesco',
+    'theme.chinese': 'Cinese',
+    'theme.japanese': 'Giapponese',
+    'theme.egyptian': 'Egiziano',
+    'theme.mayan': 'Maya',
+    'theme.viking': 'Vichingo',
+    'theme.greek': 'Greco',
+    'theme.arab': 'Arabo',
+    'theme.ottoman': 'Ottomano',
+    'theme.roman': 'Romano',
+    'theme.korean': 'Coreano',
+    'theme.gaudi': 'Gaudí spagnolo',
+    'theme.byzantine': 'Bizantino',
+    'theme.tno': 'TNO · Nuovo Ordine',
+    'time.minAgo': '{0} min fa',
+    'time.hrAgo': '{0} h fa',
+    'time.dayAgo': '{0} g fa',
+    'time.monthDay': '{1}/{0}',
+    'empty.posts': 'Ancora nessun post. Sii il primo!',
+    'post.notFound': 'Post non trovato o eliminato',
+    'post.retry': 'Riprova',
+    'notif.empty': 'Nessuna notifica',
+    'toast.alreadySigned': 'Check-in già fatto oggi',
     'nav.home': 'Home', 'nav.new': 'Nuovo Post', 'nav.chat': 'Messaggi', 'nav.notif': 'Notifiche', 'nav.apps': 'Mini App', 'nav.login': 'Accedi', 'nav.signup': 'Registrati', 'nav.logout': 'Esci', 'search.ph': 'Cerca post…', 'cat.all': 'Tutto', 'cat.chat': 'Chiacchiere', 'cat.study': 'Studio', 'cat.game': 'Giochi', 'cat.tech': 'Tech', 'cat.announce': 'Notizie', 'login.title': 'Entra nel Forum', 'login.sub': 'Un account per tutti i dispositivi.', 'login.account': 'Telefono o email', 'login.password': 'Password', 'login.captcha': 'Inserisci la risposta', 'login.submit': 'Accedi', 'login.noAcc': 'Nessun account?', 'login.gotoSignup': 'Registrati', 'login.haveAcc': 'Hai già un account?', 'login.gotoLogin': 'Accedi', 'signup.title': 'Crea Account', 'signup.sub': 'Registra un account personale.', 'signup.username': 'Nome utente', 'signup.submit': 'Registrati', 'new.title': 'Nuovo Post', 'new.sub': 'Scrivi un argomento con un titolo chiaro.', 'new.t': 'Titolo', 'new.cat': 'Categoria', 'new.body': 'Contenuto', 'new.file': 'Allegato (facoltativo)', 'new.filePick': 'Clicca per scegliere i file', 'new.submit': 'Pubblica', 'new.phTitle': 'Riassumi il tema in una frase', 'new.phBody': 'Dettagli… (supporta a capo)', 'post.back': '← Torna alla home', 'post.reply': 'Rispondi', 'post.replies': ' risposte', 'settings.theme': 'Aspetto', 'settings.themeHint': 'Scegli lo stile che preferisci', 'settings.official': 'Ufficiale', 'settings.solid': 'Tinta unita', 'settings.gradient': 'Gradiente', 'settings.culture': 'Culturale', 'settings.default': 'Predefinito', 'settings.glass': 'Vetro liquido', 'settings.glassHint': 'Solo per i temi "Tinta unita" e "Gradiente". Effetto vetro + colore e trasparenza opzionali', 'settings.glassOn': 'Attiva modalità vetro liquido', 'settings.glassColor': 'Colore del vetro', 'settings.opacity': 'Trasparenza', 'settings.lang': 'Lingua dell\'interfaccia', 'settings.langHint': 'Cambia la lingua dell\'interfaccia', 'settings.pwd': 'Cambia password', 'settings.save': 'Salva e connetti', 'settings.clear': 'Svuota configurazione', 'settings.themeSaved': 'Tema cambiato', 'settings.saveFail': 'Salvataggio fallito:', 'settings.glassOnDone': 'Vetro liquido attivato', 'settings.glassOffDone': 'Vetro liquido disattivato', 'settings.glassColorDone': 'Colore del vetro aggiornato', 'settings.glassAlphaDone': 'Trasparenza del vetro aggiornata', 'settings.langDone': 'Lingua cambiata', 'welcome': 'Bentornato,', 'signupOk': 'Registrazione completata. Benvenuto nel Forum HanBer', 'pleaseLogin': 'Accedi prima', 'uploadFail': 'Upload fallito', 'netErr': 'Richiesta scaduta', 'footer': 'HanBerOS 5.5', 'nav.signin': 'Check-in', 'report.title': 'Segnala', 'report.reason': 'Motivo (obbligatorio)', 'report.detail': 'Dettagli (facoltativi)', 'report.ok': 'Segnalazione inviata, gli admin la esamineranno', 'pin.admin': 'In alto', 'pin.adminOff': 'Togli in alto', 'admin.reports': 'Gestione Segnalazioni', 'admin.handle': 'Gestisci', 'admin.ignore': 'Ignora', 'admin.actionPh': 'Azione (es. elimina / ban 7g)', 'admin.signins': 'Registri Check-in', 'admin.audit': 'Registro Operazioni', 'admin.export': 'Esporta Dati', 'admin.exportPh': 'Inserisci nome o ID', 'export.title': 'Esportazione Dati', 'export.mine': 'Esporta Tutti i Miei Dati', 'export.admin': 'Esporta Questo Utente', 'export.need': 'Esporta tutti i tuoi dati (post, risposte, messaggi, notifiche, check-in) in JSON. Solo tu puoi vederli.', 'nav.notifClear': 'Pulisci lette', 'nav.notifCleared': 'Notifiche lette cancellate', 'apps.login.ok1': '✅ Connesso tramite il Forum:', 'apps.login.ok2': '—— il gioco usa automaticamente il tuo account', 'apps.login.no1': '🔒 Non connesso al Forum,', 'apps.login.no2': 'accedi in un tocco nel gioco (si può provare anche senza)', 'apps.needlogin': 'Questo gioco richiede l\'accesso al Forum. Accedi prima', 'apps.fs.on': '⛶ Esci da schermo intero', 'apps.fs.off': '⛶ Schermo intero', 'apps.name.bread': 'Pane Mortale · Battaglia degli Eroi', 'apps.tag.bread': 'Produzione congiunta · leggi l\'avviso prima di entrare', 'apps.desc.bread': 'Battaglia di carte stile Tre Regni: match/ranked, abilità dei generali, equipaggiamento e strategie. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Gioco offline', 'apps.desc.gta': 'Mondo aperto 2D pixel: 12 distretti, gestione industriale, missioni cargo/scorta/gara, caccia. Salvato nel browser.', 'apps.name.tank': 'Storia Corazzata 2D', 'apps.tag.tank': 'Accesso in un tocco', 'apps.desc.tank': 'Gioco di guerra con 4 campagne: ondata corazzata, contro delle unità, avanzata su posizione. Guida le tue truppe corazzate.', 'apps.name.century': 'Guerra dei Secoli', 'apps.tag.century': 'Accesso in un tocco', 'apps.desc.century': 'Quattro battaglie su cento anni: dalle trincee alla guerra lampo, duelli a turni.', 'apps.name.game': 'Teoria dei Giochi · Lab dell\'Equilibrio', 'apps.tag.game': 'Accesso in un tocco', 'apps.desc.game': 'Casi classici contro l\'IA: dilemma del prigioniero, equilibrio di Nash, gioco del maiale. Impara giocando.', 'apps.name.potato': 'Patata Pazza', 'apps.tag.potato': 'Accesso in un tocco', 'apps.desc.potato': 'Gioco casuale di schiacciare patate: sfida di riflessi, non smetti più.', 'apps.name.puff': 'Pesce palla Puff!', 'apps.tag.puff': 'Accesso in un tocco', 'apps.desc.puff': 'Gioco casuale del pesce palla: soffia, gonfia, rigira. Non riesci a smettere.', 'apps.name.mist': 'Requiem nella Nebbia', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Esplorazione 2D pixel: città nebbiosa, protagonista senza memoria. Scopri la verità nella nebbia.', 'apps.name.hanba': 'Leggenda di Hanba', 'apps.tag.hanba': 'Accesso in un tocco', 'apps.desc.hanba': 'HANBA LEGEND: avventura delle leggende orientali. Sconfiggi la siccità, conquista la pianura.', 'apps.name.croissant': 'Leggenda del Croissant', 'apps.tag.croissant': 'Accesso in un tocco', 'apps.desc.croissant': 'Croissant Legend: avventura nel mondo della pasticceria. Un eroe croccante salva Parigi.', 'apps.name.panglong': 'Dieta del Dragone Ciccione', 'apps.tag.panglong': 'Accesso in un tocco', 'apps.desc.panglong': 'La grande sfida dimagrante di un draghetto goloso. Controlla la dieta e muoviti!', 'apps.name.weiren': 'Wei Ren · Istituto di Simulazione', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Osserva, distingui, simula. Scegli tra vero e falso.', 'apps.name.star': 'Viaggiatore delle Stelle', 'apps.tag.star': 'Accesso in un tocco', 'apps.desc.star': 'Star Voyager: esplorazione di stelle e spazio. Pilota la tua nave nel mare di stelle.', 'apps.name.lovezone': 'Zona Proibita dell\'Amore', 'apps.tag.lovezone': 'Solo dark web · sblocco', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: una narrazione proibita nelle profondità del dark web. La tua scelta decide il finale.', 'apps.name.faceless': 'L\'Uomo Senza Volto', 'apps.tag.faceless': 'Pixel contro la guerra', 'apps.desc.faceless': 'THE FACELESS: un gioco pixel contro la guerra. La guerra è l\'inferno.', 'apps.lovezone.locked': '🔒 Da ottenere prima nel dark web (tocca 5 volte il numero di versione nel piè di pagina)', 'settings.sound': 'Suono di sottofondo', 'settings.soundHint': 'Scegli un rumore bianco o un suono ambientale da riprodurre in loop senza interruzioni', 'settings.soundOn': 'Attiva il suono di sottofondo', 'settings.volume': 'Volume', 'sound.balance': 'Rumore bilanciato', 'sound.bright': 'Rumore brillante', 'sound.dark': 'Rumore scuro', 'sound.rain': 'Pioggia', 'sound.ocean': 'Oceano', 'sound.stream': 'Ruscello', 'sound.night': 'Notte', 'sound.fire': 'Fuoco', 'sound.steam': 'Vapore', 'sound.fan': 'Ventilatore', 'sound.white': 'Rumore bianco', 'chat.empty': 'Non ci sono ancora messaggi. Saluta!', 'chat.copy': 'Copia', 'chat.translate': 'Traduci', 'chat.recall': 'Ritira', 'chat.delete': 'Elimina', 'chat.recalled': 'Messaggio ritirato', 'chat.recalledByOther': 'L’altra persona ha ritirato un messaggio', 'chat.copied': 'Copiato', 'chat.recallOk': 'Ritirato', 'chat.deleteOk': 'Eliminato (invisibile solo per te)', 'chat.recallTimeout': 'Dopo 2 minuti puoi solo eliminare', 'chat.translating': 'Traduzione…', 'chat.you': 'Io', },
   fr: {
+    'time.justNow': 'À l’instant',
+    'push.enable': 'Activer les notifications navigateur',
+    'push.off': 'Désactivé',
+    'chat.backList': 'Retour aux messages',
+    'settings.nav.style': 'Style & graphisme',
+    'settings.nav.lang': 'Langue',
+    'settings.nav.notify': 'Notifications',
+    'settings.nav.security': 'Sécurité du compte',
+    'settings.nav.export': 'Export de données',
+    'chat.dmTitle': 'Messages privés',
+    'chat.dmDesc': 'Seuls les abonnés mutuels peuvent discuter.',
+    'chat.noPrivate': 'Aucun message',
+    'chat.noPrivateDesc': 'Discutez après vous être suivis mutuellement.',
+    'notif.title': 'Notifications',
+    'notif.desc': 'Réponses, abonnements et messages.',
+    'push.title': 'Notifications navigateur',
+    'push.desc': 'Quand on répond ou aime vos posts, ou que vous recevez un message, le navigateur affiche des notifications système même page fermée (autorisation requise)',
+    'push.enabled': 'Activé : vous recevez les notifications même page fermée',
+    'push.disable': 'Désactiver les notifications',
+    'security.title': 'Changer le mot de passe',
+    'security.current': 'Mot de passe actuel',
+    'security.new': 'Nouveau mot de passe',
+    'security.confirm': 'Confirmer le nouveau mot de passe',
+    'security.currentHint': 'Saisissez votre mot de passe actuel pour vérifier',
+    'security.pwdHint': 'Au moins 8 caractères, lettres et chiffres',
+    'export.title': 'Export de données',
+    'export.desc': 'Exportez toutes vos données (posts, commentaires, messages, notifications, présences) en JSON, vous seul pouvez les voir.',
+    'export.btn': 'Exporter toutes mes données',
+    'theme.official': 'Nuit',
+    'theme.official-forest': 'Forêt',
+    'theme.official-maple': 'Lumière d\'érable',
+    'theme.official-city': 'Ruelles',
+    'theme.official-sakura': 'Pluie de cerisiers',
+    'theme.official-bridge': 'Nuit du pont',
+    'theme.official-sunset': 'Lueur du couchant',
+    'theme.official-grassland': 'Prairie',
+    'theme.official-shanghai': 'Crépuscule de Shanghai',
+    'theme.red': 'Rouge',
+    'theme.orange': 'Orange',
+    'theme.yellow': 'Jaune',
+    'theme.green': 'Vert',
+    'theme.cyan': 'Cyan',
+    'theme.blue': 'Bleu',
+    'theme.purple': 'Violet',
+    'theme.red-orange': 'Rouge-orange',
+    'theme.orange-yellow': 'Orange-jaune',
+    'theme.yellow-green': 'Jaune-vert',
+    'theme.green-cyan': 'Vert-cyan',
+    'theme.cyan-blue': 'Cyan-bleu',
+    'theme.blue-purple': 'Bleu-violet',
+    'theme.purple-pink': 'Violet-rose',
+    'theme.british': 'Britannique',
+    'theme.french': 'Français',
+    'theme.german': 'Allemand',
+    'theme.chinese': 'Chinois',
+    'theme.japanese': 'Japonais',
+    'theme.egyptian': 'Égyptien',
+    'theme.mayan': 'Maya',
+    'theme.viking': 'Viking',
+    'theme.greek': 'Grec',
+    'theme.arab': 'Arabe',
+    'theme.ottoman': 'Ottoman',
+    'theme.roman': 'Romain',
+    'theme.korean': 'Coréen',
+    'theme.gaudi': 'Gaudí espagnol',
+    'theme.byzantine': 'Byzantin',
+    'theme.tno': 'TNO · Nouvel Ordre',
+    'time.minAgo': 'il y a {0} min',
+    'time.hrAgo': 'il y a {0} h',
+    'time.dayAgo': 'il y a {0} j',
+    'time.monthDay': '{1}/{0}',
+    'empty.posts': 'Aucun post pour l’instant. Soyez le premier !',
+    'post.notFound': 'Post introuvable ou supprimé',
+    'post.retry': 'Réessayer',
+    'notif.empty': 'Aucune notification',
+    'toast.alreadySigned': 'Déjà connecté aujourd’hui',
 
     'nav.home': 'Accueil', 'nav.new': 'Publier', 'nav.chat': 'Messages', 'nav.notif': 'Notifications', 'nav.apps': 'Mini-apps',
     'nav.login': 'Connexion', 'nav.signup': 'Inscription', 'nav.logout': 'Déconnexion',
@@ -2813,7 +3573,11 @@ var I18N = {
     'settings.sound': 'Son d’arrière-plan', 'settings.soundHint': 'Choisissez un bruit blanc ou un son d’ambiance en boucle continue', 'settings.soundOn': 'Activer le son d’arrière-plan', 'settings.volume': 'Volume', 'sound.balance': 'Bruit équilibré', 'sound.bright': 'Bruit lumineux', 'sound.dark': 'Bruit sombre', 'sound.rain': 'Pluie', 'sound.ocean': 'Océan', 'sound.stream': 'Ruisseau', 'sound.night': 'Nuit', 'sound.fire': 'Feu', 'sound.steam': 'Vapeur', 'sound.fan': 'Ventilateur', 'sound.white': 'Bruit blanc', 'chat.empty': 'Pas encore de messages. Dites bonjour !', 'chat.copy': 'Copier', 'chat.translate': 'Traduire', 'chat.recall': 'Retirer', 'chat.delete': 'Supprimer', 'chat.recalled': 'Message retiré', 'chat.recalledByOther': 'L’autre personne a retiré un message', 'chat.copied': 'Copié', 'chat.recallOk': 'Retiré', 'chat.deleteOk': 'Supprimé (masqué seulement pour vous)', 'chat.recallTimeout': 'Après 2 minutes, suppression uniquement', 'chat.translating': 'Traduction…', 'chat.you': 'Moi', }
 };
 var currentLang = localStorage.getItem('forum_lang') || 'zh';
-function t(k) { return (I18N[currentLang] && I18N[currentLang][k]) || I18N.zh[k] || k; }
+function t(k) {
+  var v = (I18N[currentLang] && I18N[currentLang][k]) || I18N.zh[k] || k;
+  for (var i = 1; i < arguments.length; i++) v = v.replace('{' + (i - 1) + '}', arguments[i]);
+  return v;
+}
 function setLang(id) {
   currentLang = id;
   try { localStorage.setItem('forum_lang', id); } catch (e) {}
@@ -2863,12 +3627,12 @@ function uid() {
 function fmtTime(iso) {
   if (!iso) return '—';
   var d = new Date(iso), now = new Date(), diff = (now - d) / 1000;
-  if (diff < 60) return '刚刚';
-  if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
-  if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
-  if (diff < 86400 * 7) return Math.floor(diff / 86400) + '天前';
+  if (diff < 60) return t('time.justNow');
+  if (diff < 3600) return t('time.minAgo', Math.floor(diff / 60));
+  if (diff < 86400) return t('time.hrAgo', Math.floor(diff / 3600));
+  if (diff < 86400 * 7) return t('time.dayAgo', Math.floor(diff / 86400));
   var p = function (n) { return n < 10 ? '0' + n : '' + n; };
-  return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+  return t('time.monthDay', d.getMonth() + 1, d.getDate());
 }
 function avatarColor(name) {
   var colors = ['#D9402E', '#3B82F6', '#16A34A', '#7C3AED', '#D97706', '#0891B2', '#DB2777', '#4B5563'];
@@ -3868,6 +4632,15 @@ var CloudStore = {
     }).then(this._check);
   },
 
+  /* 超级管理员：按手机号/邮箱将已有普通用户提升为管理员（RPC 校验 super） */
+  promoteAdmin: function (account) {
+    var c = this._cfg();
+    return this._fetch(c.url + '/rest/v1/rpc/promote_to_admin', {
+      method: 'POST', headers: this._h(),
+      body: JSON.stringify({ p_account: account })
+    }).then(function (res) { return res.json(); });
+  },
+
   /* 超级管理员：创建管理员账号
      注意：signup 时数据库触发器会自动建好 profile（role='user'），
      所以不能再 POST 新 profile（会主键冲突 23505），
@@ -4245,7 +5018,7 @@ function renderHomeData(posts, counts, likes, commentedPosts, list) {
     return new Date(b.created_at) - new Date(a.created_at);
   });
   if (!filtered.length) {
-    list.innerHTML = '<div class="empty"><p class="empty-title">这里还没有帖子</p><p>登录后发第一帖吧。</p></div>';
+    list.innerHTML = '<div class="empty"><p class="empty-title">' + t('empty.posts') + '</p></div>';
     return;
   }
   list.innerHTML = filtered.map(function (p) { return postCardHtml(p, counts, likes, commentedPosts); }).join('');
@@ -4308,7 +5081,7 @@ function renderPost(id) {
   .then(function (res) {
     var p = res[0], comments = res[1] || [], likes = res[2] || {};
     window._postData = p;
-    if (!p) { box.innerHTML = '<div class="empty"><p class="empty-title">帖子不存在或已删除</p></div>'; return; }
+    if (!p) { box.innerHTML = '<div class="empty"><p class="empty-title">' + t('post.notFound') + '</p></div>'; return; }
     /* 批量获取回帖作者头像（评论表不含头像，按 user_id 查公开资料） */
     var commentUids = [];
     comments.forEach(function (c) { if (commentUids.indexOf(c.user_id) < 0) commentUids.push(c.user_id); });
@@ -4624,7 +5397,7 @@ function renderNotifications() {
   CloudStore.getNotifications().then(function (res) {
     var list = res.list || [];
     if (!list.length) {
-      box.innerHTML = '<div class="empty"><p class="empty-title">暂无消息</p><p>有人回复你的帖子、关注你、给你发私信时会出现在这里。</p></div>';
+      box.innerHTML = '<div class="empty"><p class="empty-title">' + t('notif.empty') + '</p></div>';
       return;
     }
     /* 批量获取动作发起人头像 */
@@ -4678,7 +5451,7 @@ function renderMessages() {
 
   CloudStore.getChatList().then(function (chats) {
     if (!chats.length) {
-      box.innerHTML = '<div class="empty"><p class="empty-title">没有私信</p><p>互相关注后才能发起私信。</p></div>';
+      box.innerHTML = '<div class="empty"><p class="empty-title">' + t('chat.noPrivate') + '</p><p>' + t('chat.noPrivateDesc') + '</p></div>';
       return;
     }
     /* 批量获取用户名 */
@@ -4701,6 +5474,11 @@ function renderMessages() {
   }).catch(function (e) {
     box.innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
   });
+}
+
+function themeLabel(th) {
+  var v = (I18N[currentLang] && I18N[currentLang]['theme.' + th.id]) || I18N.zh['theme.' + th.id];
+  return v || th.label;
 }
 
 function loadingHtml() {
@@ -4731,7 +5509,7 @@ function fmtChatTime(iso) {
   var now = new Date();
   var sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
   if (sameDay) return p(d.getHours()) + ':' + p(d.getMinutes());
-  return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  return t('time.monthDay', d.getMonth() + 1, d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
 
 function renderChat(otherId) {
@@ -4957,11 +5735,11 @@ function renderPushPanel() {
     pushStatus.subscribed = subscribed;
     var html = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">';
     if (subscribed) {
-      html += '<button class="btn btn-ghost btn-sm" data-action="push-disable">关闭通知</button>'
-        + '<span style="font-size:13px;color:#16A34A">已开启：即使不打开网页也能收到通知</span>';
+      html += '<button class="btn btn-ghost btn-sm" data-action="push-disable">' + t('push.disable') + '</button>'
+        + '<span style="font-size:13px;color:#16A34A">' + t('push.enabled') + '</span>';
     } else {
-      html += '<button class="btn btn-primary btn-sm" data-action="push-enable">开启浏览器通知</button>'
-        + '<span style="font-size:13px;color:var(--ink-3)">未开启</span>';
+      html += '<button class="btn btn-primary btn-sm" data-action="push-enable">' + t('push.enable') + '</button>'
+        + '<span style="font-size:13px;color:var(--ink-3)">' + t('push.off') + '</span>';
     }
     html += '</div>';
     box.innerHTML = html;
@@ -5050,7 +5828,7 @@ function renderSettings() {
       group.themes.forEach(function (t) {
         if (t.adminOnly && !canAdminTheme) return;
         html += '<div class="theme-item' + (currentTheme === t.id ? ' active' : '') + '" data-theme-id="' + t.id + '"' + (t.adminOnly ? ' data-admin-only="1"' : '') + '>'
-          + '<div class="theme-swatch" style="background:' + t.swatch + '"></div>' + t.label + (t.adminOnly ? ' <span style="font-size:10px;color:#d9a03f">👑 管理员</span>' : '') + '</div>';
+          + '<div class="theme-swatch" style="background:' + t.swatch + '"></div>' + themeLabel(t) + (t.adminOnly ? ' <span style="font-size:10px;color:#d9a03f">👑 管理员</span>' : '') + '</div>';
       });
       html += '</div></div>';
     });
@@ -5120,7 +5898,9 @@ function renderAdmin() {
       if (isSuper) {
         var admins = users.filter(function (u) { return u.role === 'admin' || u.role === 'super'; });
         html += '<div class="admin-section card pad"><h3>管理员管理（' + admins.length + '）</h3>';
-        html += '<div style="margin-bottom:14px"><button class="btn btn-primary btn-sm" data-action="admin-create">+ 创建管理员</button></div>';
+        html += '<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+          + '<input class="input" id="admin-promote-acc" placeholder="输入手机号或邮箱，把已有普通用户提升为管理员" style="flex:1;min-width:220px">'
+          + '<button class="btn btn-primary btn-sm" data-action="admin-promote">提升为管理员</button></div>';
         html += '<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>管理员</th><th>账号</th><th>状态</th><th>操作</th></tr></thead><tbody>';
         admins.forEach(function (u) {
           var status = u.role === 'super' ? '<span style="color:#D9402E;font-weight:700">超级管理员</span>'
@@ -5367,7 +6147,7 @@ document.addEventListener('click', function (e) {
     if (!isAdminUser()) { toast(t('pleaseLogin')); return; }
     CloudStore.signIn()
       .then(function (res) {
-        if (res === 'already') { toast('今天已签到过了'); return; }
+        if (res === 'already') { toast(t('toast.alreadySigned')); return; }
         toast('签到成功');
         var sbtn = document.getElementById('signin-btn');
         if (sbtn) { sbtn.innerHTML = '✅ 已签到'; sbtn.classList.add('btn-ghost'); sbtn.classList.remove('btn-primary'); sbtn.disabled = true; }
@@ -5593,17 +6373,22 @@ document.addEventListener('click', function (e) {
     return;
   }
 
-  /* 超级管理员：创建管理员 */
-  if (act === 'admin-create') {
+  /* 超级管理员：将已有普通用户提升为管理员 */
+  if (act === 'admin-promote') {
     e.preventDefault();
-    var acc = prompt('管理员账号（手机号或邮箱）：', '');
-    if (!acc) return;
-    var pwd = prompt('管理员初始密码（至少8位，含字母和数字）：', 'admin123456');
-    if (!isStrongPassword(pwd)) { toast('密码至少8位且需包含字母和数字'); return; }
-    var name = prompt('管理员昵称：', '');
-    CloudStore.superCreateAdmin(acc, pwd, name)
-      .then(function () { toast('管理员创建成功'); CloudStore.logAdmin('create_admin', acc, '昵称:' + (name || '')); renderAdmin(); })
-      .catch(function (err) { toast('创建失败：' + err.message); });
+    var accInput = document.getElementById('admin-promote-acc');
+    var acc = accInput ? accInput.value.trim() : '';
+    if (!acc) { toast('请输入手机号或邮箱'); return; }
+    if (!confirm('确认将用户「' + acc + '」提升为管理员？')) return;
+    CloudStore.promoteAdmin(acc)
+      .then(function (res) {
+        if (res && res.error) throw new Error(res.message || '提升失败');
+        toast('已提升 ' + (res.username || acc) + ' 为管理员');
+        if (accInput) accInput.value = '';
+        CloudStore.logAdmin('promote_admin', res.user_id || acc, '账号:' + acc).catch(function () {});
+        renderAdmin();
+      })
+      .catch(function (err) { toast('提升失败：' + err.message); });
     return;
   }
 
