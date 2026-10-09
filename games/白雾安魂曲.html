@@ -905,7 +905,8 @@ function towerChoices(){
   });
 }
 function requiemEnding(){
-  GS.mode='ending';
+  /* 不能在这里设 GS.mode='ending'：primaryPress 在 ending 模式会直接 return，
+     导致结局对话无法推进、结局A卡死。mode 由 endingScreen 统一设置。 */
   FOG_TARGET=0;
   startDialog([
     ['剑魔·荒','……七个。凑齐了。'],
