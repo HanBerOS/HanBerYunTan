@@ -1,0 +1,72 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<iframe id="f" src="index.html" style="width:1200px;height:700px"></iframe>
+<pre id="res">(运行中…)</pre>
+<script>
+var res = [];
+function log(s){ res.push(s); document.getElementById('res').textContent = res.join('\n'); }
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    var w = document.getElementById('f').contentWindow;
+    var d = w.document;
+    try {
+      // ---- 音频 ----
+      var AC = w.AudioContext || w.webkitAudioContext;
+      log('AudioContext支持: ' + !!AC);
+      log('SoundEngine存在: ' + !!(w.SoundEngine));
+      if (w.SoundEngine) {
+        // 持久化清理，从头测
+        w.localStorage.removeItem('forum_sound');
+        w.SoundEngine.state.enabled = false; w.SoundEngine.stop();
+        var ok1 = w.SoundEngine.start('rain');
+        log('播放雨声 start返回: ' + ok1);
+        log('  isPlaying(rain): ' + w.SoundEngine.isPlaying('rain'));
+        log('  soundId: ' + w.SoundEngine.state.soundId + ' / enabled: ' + w.SoundEngine.state.enabled);
+        var ctx = w.SoundEngine.getCurrentId && w.SoundEngine.state;
+        log('  getCurrentId: ' + w.SoundEngine.getCurrentId());
+        // 切换
+        var ok2 = w.SoundEngine.start('ocean');
+        log('切到海洋: ' + ok2 + ' / isPlaying(ocean): ' + w.SoundEngine.isPlaying('ocean'));
+        // 音量
+        w.SoundEngine.setVolume(0.3);
+        log('音量: ' + w.SoundEngine.state.volume);
+        // 停止
+        w.SoundEngine.stop();
+        log('停止后 enabled: ' + w.SoundEngine.state.enabled + ' / isPlaying: ' + w.SoundEngine.isPlaying('ocean'));
+        // 恢复（持久化）
+        w.SoundEngine.start('night');
+        log('持久化存储: ' + (w.localStorage.getItem('forum_sound') || '(空)').slice(0, 80));
+      }
+      // ---- 主题背景 ----
+      w.eval('setTheme("official");');
+      log('主题official body[data-theme]: ' + d.body.getAttribute('data-theme'));
+      var cs = w.getComputedStyle(d.body, '::before');
+      log('body::before background: ' + cs.backgroundImage.slice(0, 90));
+      log('body::before filter: ' + cs.filter);
+      // 浅色主题
+      w.eval('setTheme("french");');
+      log('主题french body[data-theme]: ' + d.body.getAttribute('data-theme'));
+      // 玻璃主题
+      w.eval('setTheme("red"); document.body.setAttribute("data-glass","red");');
+      log('玻璃主题red data-glass: ' + d.body.getAttribute('data-glass'));
+      w.eval('setTheme("default");');
+      log('恢复默认 data-theme: ' + d.body.getAttribute('data-theme') + '(null=默认)');
+      // 背景图真实加载
+      var imgs = ['official-night.jpg','official-forest.jpg','official-maple.jpg','official-city.jpg','official-sakura.jpg','official-bridge.jpg','official-sunset.jpg','official-grassland.jpg'];
+      var loaded = [], failed = [];
+      var pending = imgs.length;
+      imgs.forEach(function(name){
+        var img = new w.Image();
+        img.onload = function(){ loaded.push(name); done(); };
+        img.onerror = function(){ failed.push(name); done(); };
+        img.src = 'themes/' + name;
+      });
+      function done(){ if(--pending === 0){
+        log('主题图加载成功: ' + loaded.length + '/8');
+        if (failed.length) log('加载失败: ' + failed.join(','));
+        log('========= 测试完成 =========');
+      }}
+    } catch(e){ log('异常: ' + e.message); }
+  }, 4000);
+});
+</script>
+</body></html>
