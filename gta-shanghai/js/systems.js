@@ -346,8 +346,8 @@ const UI = {
       <button class="back" onclick="UI.close()">关闭</button>`);
   },
 
-  /* ---- 进入地图 ---- */
-  enterMap(mapId) {
+  /* ---- 进入地图（dest 可选：边界传送落点，用于跨区无缝衔接） ---- */
+  enterMap(mapId, dest) {
     if (!MAPS[mapId] && mapId !== 'city') return;
     // 保留金钱；通缉跨区减一星（换了城区，风头小了些，避免落地即被贴脸追捕）
     const old = gameWorld;
@@ -359,6 +359,13 @@ const UI = {
     gameWorld = new World(mapId);
     gameWorld.player.money = keepMoney;
     gameWorld.player.wanted = keepWanted;
+    // 边界传送落点：矫正到可走格（防落到水上/界外）
+    if (dest) {
+      const f = MapGen.findWalkableNotRoad(gameWorld.map, dest.x, dest.y) || dest;
+      gameWorld.player.x = f.x; gameWorld.player.y = f.y;
+      gameWorld.player.px = f.x * P() + P() / 2;
+      gameWorld.player.py = f.y * P() + P() / 2;
+    }
     restoreOwnership(gameWorld);
     restoreHomes(gameWorld);
     worldSave();

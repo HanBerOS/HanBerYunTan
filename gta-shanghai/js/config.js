@@ -136,11 +136,12 @@ const MAPS = {
   yangpu: {
     id: 'yangpu', name: '杨浦', intro: '大学云集 · 五角场商圈',
     road: { main: 56, sub: 28, off: 8 },
-    shape: [[0.05,0.05],[0.60,0.03],[0.80,0.10],[0.90,0.25],[0.94,0.55],[0.98,0.80],[0.97,0.97],[0.80,0.99],[0.50,0.97],[0.30,0.92],[0.10,0.65],[0.04,0.35]],
+    shape: [[0.12,0.05],[0.62,0.04],[0.85,0.12],[0.95,0.30],[0.98,0.60],[0.99,0.80],[0.98,0.97],[0.85,0.99],[0.55,0.98],[0.28,0.95],[0.15,0.88],[0.05,0.45]],
     water: [
       { x: 0, y: 378, w: 346, h: 22 },                                             // 南侧黄浦江（复兴岛以西）
       { x: 346, y: 300, w: 54, h: 100,                                            // 复兴岛运河+东侧江
-        island: { x: 368, y: 320, w: 22, h: 74 } }                                // 江中陆地：复兴岛
+        island: { x: 368, y: 320, w: 22, h: 74 },                                 // 江中陆地：复兴岛
+        bridgeY: [344] }                                                          // 显式桥：定海桥（y344 主路横穿运河）
     ],
     landmarks: [
       { name: '五角场', x: 200, y: 170, color: '#e67e22' },
@@ -169,13 +170,14 @@ const MAPS = {
     ],
     police: [ { x: 120, y: 360 } ],
     transfer: [ { x: 100, y: 370, label: '地铁 · 杨浦站' } ],
+    borders: { west: { to: 'hongkou', x: 50, dest: { x: 300, y: 250 } } },
     spawn: { x: 200, y: 170 }
   },
 
   hongkou: {
     id: 'hongkou', name: '虹口', intro: '北外滩 · 老城记忆',
     road: { main: 56, sub: 28, off: 16 },
-    shape: [[0.20,0.28],[0.55,0.22],[0.72,0.30],[0.78,0.50],[0.75,0.75],[0.65,0.95],[0.40,0.97],[0.22,0.75],[0.16,0.50]],
+    shape: [[0.20,0.22],[0.58,0.18],[0.78,0.26],[0.82,0.45],[0.80,0.75],[0.68,0.95],[0.40,0.97],[0.22,0.78],[0.12,0.50]],
     water: [ { x: 0, y: 378, w: 400, h: 24 } ],
     landmarks: [
       { name: '北外滩', x: 280, y: 310, color: '#d35400' },
@@ -185,19 +187,20 @@ const MAPS = {
       { name: '多伦路', x: 160, y: 220, color: '#8e44ad' }
     ],
     businesses: [
-      { id: 'hk1', type: 'shop', x: 320, y: 300 },
+      { id: 'hk1', type: 'shop', x: 300, y: 300 },
       { id: 'hk2', type: 'club', x: 240, y: 340 },
       { id: 'hk3', type: 'gym', x: 60, y: 160 }
     ],
     tasks: [
       { type: 'delivery', x: 300, y: 120 },
-      { type: 'escort', x: 100, y: 330 }
+      { type: 'escort', x: 110, y: 320 }
     ],
     homes: [
       { id: 'hk_h', name: '北外滩滨江公寓', type: 'apartment', price: 18000, rent: 12, x: 262, y: 302 }
     ],
-    police: [ { x: 300, y: 360 } ],
-    transfer: [ { x: 310, y: 368, label: '地铁 · 虹口站' } ],
+    police: [ { x: 270, y: 340 } ],
+    transfer: [ { x: 250, y: 360, label: '地铁 · 虹口站' } ],
+    borders: { north: { to: 'yangpu', y: 76, dest: { x: 100, y: 250 } }, west: { to: 'jingan', x: 54, dest: { x: 250, y: 200 } }, south: { to: 'huangpu', y: 376, dest: { x: 150, y: 200 } } },
     spawn: { x: 150, y: 250 }
   },
 
@@ -205,8 +208,8 @@ const MAPS = {
   huangpu: {
     id: 'huangpu', name: '黄浦', intro: '外滩万国 · 南京东路',
     road: { main: 56, sub: 28, off: 20 },
-    shape: [[0.35,0.55],[0.55,0.50],[0.75,0.55],[0.95,0.68],[0.98,0.82],[0.85,0.95],[0.45,0.97],[0.35,0.88],[0.32,0.72]],
-    water: [ { x: 372, y: 0, w: 28, h: 400 } ],   // 东侧黄浦江
+    shape: [[0.30,0.36],[0.62,0.34],[1.0,0.36],[1.0,0.55],[1.0,0.78],[0.90,0.96],[0.55,0.98],[0.32,0.92],[0.28,0.70]],
+    water: [ { x: 376, y: 0, w: 24, h: 400 } ],   // 东侧黄浦江
     landmarks: [
       { name: '外滩', x: 355, y: 190, color: '#d35400' },
       { name: '南京东路', x: 300, y: 180, color: '#c0392b' },
@@ -217,32 +220,34 @@ const MAPS = {
     ],
     businesses: [
       { id: 'hp1', type: 'shop', x: 250, y: 180 },
-      { id: 'hp2', type: 'gas', x: 110, y: 260 },
+      { id: 'hp2', type: 'gas', x: 130, y: 260 },
       { id: 'hp3', type: 'club', x: 200, y: 300 },
       { id: 'hp4', type: 'gym', x: 320, y: 240 }
     ],
     tasks: [
       { type: 'delivery', x: 140, y: 170 },
       { type: 'escort', x: 280, y: 320 },
-      { type: 'race', x: 70, y: 120 },
+      { type: 'race', x: 120, y: 170 },
       { type: 'taxi', x: 250, y: 235 },
       { type: 'thief', x: 180, y: 250 },
     ],
     homes: [
       { id: 'hp_h', name: '外滩花园洋房', type: 'house', price: 30000, rent: 20, x: 350, y: 176 }
     ],
-    police: [ { x: 120, y: 300 } ],
-    transfer: [ { x: 60, y: 360, label: '地铁 · 人民广场' } ],
+    police: [ { x: 140, y: 300 } ],
+    transfer: [ { x: 240, y: 250, label: '地铁 · 人民广场' } ],
+    borders: { north: { to: 'hongkou', y: 140, dest: { x: 150, y: 150 } }, west: { to: 'jingan', x: 116, dest: { x: 150, y: 300 } }, south: { to: 'xuhui', y: 372, dest: { x: 150, y: 300 } } },
     spawn: { x: 250, y: 226 }
   },
 
   xuhui: {
     id: 'xuhui', name: '徐汇', intro: '徐家汇源 · 衡山路',
     road: { main: 56, sub: 28, off: 4 },
-    shape: [[0.08,0.45],[0.40,0.42],[0.62,0.50],[0.68,0.62],[0.62,0.85],[0.45,0.98],[0.20,0.95],[0.05,0.80],[0.02,0.60]],
+    shape: [[0.08,0.42],[0.42,0.40],[0.70,0.40],[1.0,0.48],[1.0,0.88],[0.95,0.98],[0.50,0.98],[0.22,0.95],[0.06,0.80],[0.03,0.60]],
     water: [
       { x: 0, y: 385, w: 400, h: 15 },           // 南侧黄浦江
-      { x: 330, y: 330, w: 26, h: 30 }           // 植物园水塘
+      { x: 330, y: 330, w: 26, h: 30 },           // 植物园水塘
+      { x: 368, y: 220, w: 32, h: 180 }           // 东侧黄浦江（徐汇滨江）
     ],
     landmarks: [
       { name: '徐家汇', x: 200, y: 200, color: '#e67e22' },
@@ -253,12 +258,12 @@ const MAPS = {
     ],
     businesses: [
       { id: 'xh1', type: 'shop', x: 280, y: 170 },
-      { id: 'xh2', type: 'freight', x: 100, y: 120 },
+      { id: 'xh2', type: 'freight', x: 100, y: 200 },
       { id: 'xh3', type: 'garage', x: 60, y: 260 },
       { id: 'xh4', type: 'gym', x: 300, y: 280 }
     ],
     tasks: [
-      { type: 'delivery', x: 320, y: 100 },
+      { type: 'delivery', x: 290, y: 170 },
       { type: 'race', x: 60, y: 320 },
       { type: 'taxi', x: 200, y: 200 },
       { type: 'thief', x: 150, y: 250 }
@@ -268,13 +273,14 @@ const MAPS = {
     ],
     police: [ { x: 250, y: 340 } ],
     transfer: [ { x: 340, y: 376, label: '地铁 · 上海南站' } ],
+    borders: { north: { to: 'jingan', y: 164, dest: { x: 120, y: 300 } } },
     spawn: { x: 200, y: 200 }
   },
 
   jingan: {
     id: 'jingan', name: '静安', intro: '南京西路 · 时尚商圈',
     road: { main: 56, sub: 28, off: 12 },
-    shape: [[0.30,0.42],[0.55,0.38],[0.68,0.48],[0.65,0.68],[0.45,0.75],[0.28,0.68],[0.24,0.55]],
+    shape: [[0.30,0.10],[0.55,0.09],[0.78,0.12],[0.92,0.50],[0.95,0.68],[0.88,0.85],[0.62,0.95],[0.38,0.93],[0.28,0.80],[0.25,0.60]],
     water: [ { x: 80, y: 20, w: 240, h: 18 } ],  // 北侧苏州河
     landmarks: [
       { name: '静安寺', x: 150, y: 200, color: '#d35400' },
@@ -285,7 +291,7 @@ const MAPS = {
     businesses: [
       { id: 'ja1', type: 'shop', x: 150, y: 200 },
       { id: 'ja2', type: 'club', x: 190, y: 240 },
-      { id: 'ja3', type: 'gym', x: 280, y: 140 }
+      { id: 'ja3', type: 'gym', x: 280, y: 165 }
     ],
     tasks: [
       { type: 'escort', x: 120, y: 300 },
@@ -296,14 +302,15 @@ const MAPS = {
       { id: 'ja_h', name: '静安公寓', type: 'apartment', price: 28000, rent: 18, x: 136, y: 196 }
     ],
     police: [ { x: 260, y: 340 } ],
-    transfer: [ { x: 340, y: 370, label: '地铁 · 静安寺' } ],
+    transfer: [ { x: 290, y: 350, label: '地铁 · 静安寺' } ],
+    borders: { north: { to: 'putuo', y: 44, dest: { x: 150, y: 250 } }, east: { to: 'hongkou', x: 354, dest: { x: 100, y: 300 } }, west: { to: 'changning', x: 104, dest: { x: 150, y: 250 } }, south: { to: 'huangpu', y: 376, dest: { x: 150, y: 150 } } },
     spawn: { x: 150, y: 200 }
   },
 
   putuo: {
     id: 'putuo', name: '普陀', intro: '环球港 · 苏州河畔',
     road: { main: 56, sub: 28, off: 24 },
-    shape: [[0.08,0.30],[0.45,0.25],[0.62,0.35],[0.60,0.60],[0.45,0.75],[0.20,0.78],[0.06,0.60],[0.02,0.42]],
+    shape: [[0.06,0.25],[0.40,0.22],[0.62,0.30],[0.78,0.42],[0.85,0.55],[0.88,0.70],[0.80,0.85],[0.55,0.93],[0.25,0.92],[0.06,0.80],[0.02,0.45]],
     water: [ { x: 0, y: 285, w: 400, h: 16 } ],  // 苏州河横穿
     landmarks: [
       { name: '环球港', x: 260, y: 170, color: '#e67e22' },
@@ -313,10 +320,10 @@ const MAPS = {
     businesses: [
       { id: 'pt1', type: 'shop', x: 260, y: 170 },
       { id: 'pt2', type: 'gas', x: 90, y: 230 },
-      { id: 'pt3', type: 'freight', x: 330, y: 100 }
+      { id: 'pt3', type: 'freight', x: 310, y: 180 }
     ],
     tasks: [
-      { type: 'delivery', x: 200, y: 90 },
+      { type: 'delivery', x: 200, y: 120 },
       { type: 'race', x: 60, y: 340 },
       { type: 'taxi', x: 260, y: 170 }
     ],
@@ -325,17 +332,18 @@ const MAPS = {
     ],
     police: [ { x: 300, y: 330 } ],
     transfer: [ { x: 100, y: 360, label: '地铁 · 曹杨路' } ],
+    borders: { east: { to: 'jingan', x: 318, dest: { x: 250, y: 200 } }, south: { to: 'changning', y: 368, dest: { x: 100, y: 200 } } },
     spawn: { x: 260, y: 170 }
   },
 
   changning: {
     id: 'changning', name: '长宁', intro: '中山公园 · 虹桥商圈',
     road: { main: 56, sub: 28, off: 30 },
-    shape: [[0.05,0.45],[0.35,0.42],[0.48,0.55],[0.45,0.80],[0.30,0.92],[0.08,0.85],[0.02,0.65]],
+    shape: [[0.05,0.10],[0.35,0.09],[0.48,0.45],[0.45,0.70],[0.35,0.88],[0.15,0.95],[0.03,0.80],[0.02,0.55]],
     water: [ { x: 0, y: 24, w: 320, h: 16 } ],   // 北侧苏州河
     landmarks: [
-      { name: '中山公园', x: 190, y: 230, color: '#2ecc71' },
-      { name: '虹桥开发区', x: 150, y: 120, color: '#2980b9' },
+      { name: '中山公园', x: 180, y: 230, color: '#2ecc71' },
+      { name: '虹桥开发区', x: 170, y: 150, color: '#2980b9' },
       { name: '天山商圈', x: 130, y: 280, color: '#e67e22' }
     ],
     businesses: [
@@ -345,21 +353,22 @@ const MAPS = {
     ],
     tasks: [
       { type: 'escort', x: 80, y: 300 },
-      { type: 'delivery', x: 120, y: 70 }
+      { type: 'delivery', x: 120, y: 150 }
     ],
     homes: [
-      { id: 'cn_h', name: '虹桥涉外公寓', type: 'apartment', price: 15000, rent: 10, x: 136, y: 116 }
+      { id: 'cn_h', name: '虹桥涉外公寓', type: 'apartment', price: 15000, rent: 10, x: 160, y: 160 }
     ],
     police: [ { x: 120, y: 340 } ],
-    transfer: [ { x: 90, y: 366, label: '地铁 · 中山公园' } ],
-    spawn: { x: 185, y: 230 }
+    transfer: [ { x: 120, y: 340, label: '地铁 · 中山公园' } ],
+    borders: { north: { to: 'putuo', y: 44, dest: { x: 150, y: 150 } }, east: { to: 'jingan', x: 186, dest: { x: 250, y: 200 } }, south: { to: 'xuhui', y: 372, dest: { x: 150, y: 300 } } },
+    spawn: { x: 178, y: 230 }
   },
 
   /* ---------- 浦东 ---------- */
   lujiazui: {
     id: 'lujiazui', name: '陆家嘴', intro: '摩天三件套 · 金融中心',
     road: { main: 56, sub: 28, off: 6 },
-    shape: [[0.08,0.30],[0.78,0.25],[0.92,0.35],[0.97,0.55],[0.90,0.70],[0.70,0.72],[0.58,0.58],[0.55,0.45]],
+    shape: [[0.05,0.28],[0.55,0.22],[0.78,0.25],[0.93,0.35],[0.97,0.55],[0.92,0.75],[0.78,0.90],[0.55,0.93],[0.40,0.85],[0.30,0.60]],
     water: [ { x: 0, y: 0, w: 26, h: 400 } ],    // 西侧黄浦江
     landmarks: [
       { name: '上海中心', x: 270, y: 165, color: '#2980b9' },
@@ -371,11 +380,11 @@ const MAPS = {
     businesses: [
       { id: 'lj1', type: 'shop', x: 200, y: 180 },
       { id: 'lj2', type: 'club', x: 275, y: 245 },
-      { id: 'lj3', type: 'gas', x: 110, y: 320 },
-      { id: 'lj4', type: 'garage', x: 330, y: 80 }
+      { id: 'lj3', type: 'gas', x: 160, y: 320 },
+      { id: 'lj4', type: 'garage', x: 310, y: 110 }
     ],
     tasks: [
-      { type: 'escort', x: 60, y: 100 },
+      { type: 'escort', x: 120, y: 130 },
       { type: 'race', x: 300, y: 320 },
       { type: 'taxi', x: 200, y: 180 },
       { type: 'thief', x: 250, y: 250 }
@@ -383,15 +392,15 @@ const MAPS = {
     homes: [
       { id: 'lj_h', name: '滨江大平层', type: 'mansion', price: 60000, rent: 40, x: 258, y: 172 }
     ],
-    police: [ { x: 150, y: 340 } ],
-    transfer: [ { x: 30, y: 360, label: '地铁 · 陆家嘴' } ],
+    police: [ { x: 170, y: 340 } ],
+    transfer: [ { x: 200, y: 350, label: '地铁 · 陆家嘴' } ],
     spawn: { x: 200, y: 180 }
   },
 
   expo: {
     id: 'expo', name: '世博', intro: '中华艺术宫 · 世博源',
     road: { main: 56, sub: 28, off: 10 },
-    shape: [[0.55,0.06],[0.75,0.06],[0.88,0.10],[0.95,0.80],[0.85,0.90],[0.65,0.88],[0.55,0.78]],
+    shape: [[0.45,0.08],[0.70,0.06],[0.90,0.10],[0.96,0.55],[0.90,0.80],[0.75,0.90],[0.55,0.92],[0.45,0.85],[0.42,0.40]],
     water: [ { x: 0, y: 0, w: 400, h: 24 } ],    // 北侧黄浦江
     landmarks: [
       { name: '中华艺术宫', x: 290, y: 270, color: '#c0392b' },
@@ -411,14 +420,15 @@ const MAPS = {
       { id: 'ex_h', name: '世博滨江公寓', type: 'apartment', price: 16000, rent: 11, x: 272, y: 256 }
     ],
     police: [ { x: 280, y: 350 } ],
-    transfer: [ { x: 250, y: 370, label: '地铁 · 世博园' } ],
+    transfer: [ { x: 250, y: 350, label: '地铁 · 世博园' } ],
+    borders: { east: { to: 'qiantan', x: 366, dest: { x: 300, y: 200 } } },
     spawn: { x: 280, y: 300 }
   },
 
   qiantan: {
     id: 'qiantan', name: '前滩', intro: '前滩太古里 · 滨江新贵',
     road: { main: 56, sub: 28, off: 18 },
-    shape: [[0.15,0.04],[0.55,0.04],[0.85,0.08],[0.95,0.55],[0.90,0.85],[0.50,0.95],[0.15,0.85],[0.05,0.50]],
+    shape: [[0.35,0.06],[0.70,0.05],[0.92,0.10],[0.97,0.45],[0.95,0.80],[0.80,0.93],[0.55,0.95],[0.40,0.90],[0.33,0.60]],
     water: [ { x: 0, y: 0, w: 400, h: 24 } ],    // 北侧黄浦江
     landmarks: [
       { name: '前滩太古里', x: 300, y: 340, color: '#e67e22' },
@@ -438,8 +448,9 @@ const MAPS = {
     homes: [
       { id: 'qt_h', name: '前滩高端公寓', type: 'apartment', price: 32000, rent: 21, x: 288, y: 330 }
     ],
-    police: [ { x: 300, y: 360 } ],
+    police: [ { x: 270, y: 340 } ],
     transfer: [ { x: 270, y: 370, label: '地铁 · 东方体育中心' } ],
+    borders: { west: { to: 'expo', x: 140, dest: { x: 250, y: 200 } } },
     spawn: { x: 300, y: 340 }
   },
 
@@ -480,7 +491,7 @@ const MAPS = {
   lingang: {
     id: 'lingang', name: '临港', intro: '滴水湖畔 · 未来之城',
     road: { main: 56, sub: 28, off: 14 },
-    shape: [[0.65,0.78],[0.85,0.75],[0.96,0.82],[0.97,0.95],[0.85,1.0],[0.65,0.98],[0.60,0.88]],
+    shape: [[0.58,0.60],[0.80,0.55],[0.93,0.62],[0.97,0.80],[0.98,0.93],[0.92,0.99],[0.70,0.98],[0.58,0.92],[0.55,0.75]],
     water: [
       { x: 302, y: 310, w: 40, h: 40, round: true },  // 滴水湖(避开主路)
       { x: 0, y: 374, w: 400, h: 26 },                // 南侧杭州湾（沿海）
@@ -505,7 +516,7 @@ const MAPS = {
       { id: 'lg_h', name: '滴水湖湖景公寓', type: 'apartment', price: 11000, rent: 8, x: 282, y: 348 }
     ],
     police: [ { x: 320, y: 340 } ],
-    transfer: [ { x: 255, y: 390, label: '地铁 · 滴水湖站' } ],
+    transfer: [ { x: 300, y: 368, label: '地铁 · 滴水湖站' } ],
     spawn: { x: 310, y: 350 }
   },
 

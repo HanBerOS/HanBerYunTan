@@ -779,6 +779,31 @@ class World {
     });
   }
 
+  /* 边界跨区传送：走到行政区边界（按住对应方向键）→ 进入相邻行政区。
+     判定：玩家站立格在区界内，朝向的方向邻格已出区界（几何外）且非水/桥 → 传送。
+     水域边界（江/海/运河）不会触发：水格在区界内或为不可走格，玩家走不到。 */
+  checkBorderTravel(p) {
+    const cfg = MAPS[this.mapId];
+    if (!cfg || !cfg.borders) return;
+    const tx = Math.floor(p.px / P()), ty = Math.floor(p.py / P());
+    const B = cfg.borders;
+    const ax = Input.axis();
+    if (!ax.x && !ax.y) return;                       // 没按方向键不传送（防止贴边卡住误传）
+    const m = this.map;
+    const out = (x, y) => !MapGen.pointInShape(x / m.w, y / m.h, cfg.shape);
+    const nx = tx + (ax.x > 0 ? 1 : ax.x < 0 ? -1 : 0);
+    const ny = ty + (ax.y > 0 ? 1 : ax.y < 0 ? -1 : 0);
+    let go = null;
+    if (ax.x < 0 && B.west && out(nx, ty)) go = B.west;
+    else if (ax.x > 0 && B.east && out(nx, ty)) go = B.east;
+    else if (ax.y < 0 && B.north && out(tx, ny)) go = B.north;
+    else if (ax.y > 0 && B.south && out(tx, ny)) go = B.south;
+    if (!go) return;
+    const t = MapGen.tileAt(this.map, nx, ny);
+    if (t === CONFIG.TILES.WATER || t === CONFIG.TILES.BRIDGE) return;   // 水上不传送（防几何外水）
+    UI.enterMap(go.to, go.dest);
+  }
+
   /* 主更新循环 */
   update(dt) {
     const p = this.player;
@@ -797,6 +822,8 @@ class World {
     const px0 = p.px, py0 = p.py;
     p.update(dt, this);
     STATS.distance += (Math.abs(p.px - px0) + Math.abs(p.py - py0)) / P();
+    // 边界跨区传送：走到行政区边界（按住对应方向键）→ 进入相邻行政区
+    this.checkBorderTravel(p);
     this.npcs.forEach(n => n.update(dt, this));
     this.cars.forEach(c => {
       if (c.occupied) return;            // 玩家驾驶的由 player 更新

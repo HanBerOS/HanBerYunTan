@@ -28,8 +28,8 @@ const MapGen = {
     // 1.5) 公园绿地（矩形/圆形/椭圆）
     (cfg.greens || []).forEach(r => this.fillGreens(tiles, w, h, r));
 
-    // 2) 道路网格（遇水自动成桥）
-    this.genRoads(tiles, roadGrid, w, h, cfg.road);
+    // 2) 道路网格（水上不自动升路，桥由 water.bridgeY 显式指定）
+    this.genRoads(tiles, roadGrid, w, h, cfg.road, cfg.water);
 
     // 3) 建筑街区填充
     const density = id === 'chongming' ? 0.45 : id === 'lingang' ? 0.60 :
@@ -192,9 +192,17 @@ const MapGen = {
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       if (this.pointInShape(x / w, y / h, shape)) continue;
       const i = y * w + x;
-      if (tiles[i] === T.WATER || tiles[i] === T.OUTSKIRT) continue;
+      if (tiles[i] === T.WATER || tiles[i] === T.BRIDGE || tiles[i] === T.OUTSKIRT) continue;
       tiles[i] = T.OUTSKIRT;
       roadGrid[i] = 0;
+    }
+    // 边界通行带：区界内缘紧贴区外的建筑清成空地，保证能沿区界走（边界跨区传送可达）
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      if (tiles[i] !== T.BUILDING) continue;
+      if (tiles[i - 1] === T.OUTSKIRT || tiles[i + 1] === T.OUTSKIRT ||
+          tiles[i - w] === T.OUTSKIRT || tiles[i + w] === T.OUTSKIRT)
+        tiles[i] = T.GROUND;
     }
   },
   pointInShape(px, py, poly) {
@@ -272,12 +280,13 @@ const MapGen = {
     }
   },
 
-  /* ---- 道路网格（主路宽3、次路宽2，遇水域为桥） ---- */
-  genRoads(tiles, roadGrid, w, h, road) {
+  /* ---- 道路网格（主路宽3、次路宽2；水上不再自动架桥，桥仅由 water.bridgeY 显式指定） ---- */
+  genRoads(tiles, roadGrid, w, h, road, waters) {
     const put = (x, y) => {
       if (x < 0 || y < 0 || x >= w || y >= h) return;
       const i = y * w + x;
-      tiles[i] = (tiles[i] === T.WATER) ? T.BRIDGE : T.ROAD;
+      if (tiles[i] === T.WATER) return;   // 水上不自动升路
+      tiles[i] = T.ROAD;
       roadGrid[i] = 1;
     };
     const { main, sub, off } = road;
@@ -288,6 +297,17 @@ const MapGen = {
     const subOff = off + Math.floor(main / 2);
     for (let y = subOff; y < h; y += sub) for (let x = 0; x < w; x++) put(x, y), put(x, y + 1);
     for (let x = subOff; x < w; x += sub) for (let y = 0; y < h; y++) put(x, y), put(x + 1, y);
+    // 显式桥：water 条目可配 bridgeY:[y,...]，把该行对应水段架成桥
+    if (waters) for (const wt of waters) {
+      if (!wt.bridgeY) continue;
+      for (const by of wt.bridgeY) {
+        for (let x = wt.x; x < Math.min(wt.x + wt.w, w); x++) {
+          if (by < 0 || by >= h) continue;
+          const i = by * w + x;
+          if (tiles[i] === T.WATER) { tiles[i] = T.BRIDGE; roadGrid[i] = 1; }
+        }
+      }
+    }
   },
 
   /* ---- 建筑街区：4x4 块为单位填充 ---- */
