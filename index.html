@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>☁️</text></svg>">
-<meta name="referrer" content="no-referrer">
-<title>云坛 v6.1 · HanBerOS 6.4</title>
+<meta name="referrer" content="no-referrer"> <meta name="theme-color" content="#3b82f6"> <meta name="mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <meta name="apple-mobile-web-app-title" content="云坛"> <link rel="manifest" href="manifest.json"> <link rel="apple-touch-icon" href="icon-192.png">
+<title>云坛 v6.4.6 · HanBerOS 6.4.6</title>
 <script>
 /* 点击劫持防护：禁止本页被 iframe 嵌入 */
 if (window.top !== window.self) { window.top.location = window.self.location; }
@@ -2284,6 +2284,33 @@ body[data-glass] .modal-mask {
 .dp-idle  .dp-inner { animation:dpIdleA 1.5s ease-in-out infinite; }
 .dp-flip  { transform:scaleX(-1); }
 
+/* ============ v6.4.2 桌宠等级动作 + 拖拽挣扎 ============ */
+@keyframes dpStruggleA { 0%,100%{transform:translateX(0) rotate(0)} 15%{transform:translateX(-5px) rotate(-14deg)} 30%{transform:translateX(5px) rotate(12deg)} 45%{transform:translateX(-4px) rotate(-10deg)} 60%{transform:translateX(6px) rotate(14deg)} 75%{transform:translateX(-3px) rotate(-8deg)} }
+.dp-struggle .dp-inner { animation: dpStruggleA .28s ease-in-out infinite; }
+@keyframes dpRollA { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+.dp-roll .dp-inner { animation: dpRollA .7s ease-in-out 1; }
+@keyframes dpDanceA { 0%,100%{transform:translateY(0) rotate(-7deg)} 25%{transform:translateY(-7px) rotate(9deg)} 50%{transform:translateY(-3px) rotate(-9deg)} 75%{transform:translateY(-7px) rotate(7deg)} }
+.dp-dance .dp-inner { animation: dpDanceA .5s ease-in-out infinite; }
+@keyframes dpWiggleA { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-16deg)} 75%{transform:rotate(16deg)} }
+.dp-wiggle .dp-inner { animation: dpWiggleA .38s ease-in-out infinite; }
+@keyframes dpBounceA { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px) rotate(-4deg)} }
+.dp-bounce .dp-inner { animation: dpBounceA .5s ease-in-out infinite; }
+@keyframes dpFloatA { 0%,100%{transform:translateY(0) rotate(-4deg)} 50%{transform:translateY(-12px) rotate(4deg)} }
+.dp-float .dp-inner { animation: dpFloatA 2.2s ease-in-out infinite; }
+@keyframes dpPartyA { 0%{transform:rotate(0) scale(1)} 25%{transform:rotate(90deg) scale(1.12)} 50%{transform:rotate(180deg) scale(1)} 75%{transform:rotate(270deg) scale(1.12)} 100%{transform:rotate(360deg) scale(1)} }
+.dp-party .dp-inner { animation: dpPartyA .9s ease-in-out infinite; }
+
+/* ============ v6.4.3 桌宠 AI 对话面板 ============ */
+.pet-chat-body::-webkit-scrollbar { width:5px; }
+.pet-chat-body::-webkit-scrollbar-thumb { background:#d0d3da; border-radius:3px; }
+.pet-msg { max-width:82%; padding:7px 10px; border-radius:12px; margin:0 0 8px; line-height:1.45; word-break:break-word; }
+.pet-msg.u { background:#4d7cfe; color:#fff; margin-left:auto; border-bottom-right-radius:3px; }
+.pet-msg.p { background:#fff; color:#222; border:1px solid #e6e8ee; border-bottom-left-radius:3px; }
+.pet-msg.sys { background:transparent; color:#9aa0ac; text-align:center; font-size:11px; margin:2px 0 10px; }
+#desk-pet-chat-btn { display:inline-block; margin-left:6px; padding:2px 8px; font-size:11px; background:#4d7cfe; color:#fff; border:none; border-radius:10px; cursor:pointer; vertical-align:middle; }
+#desk-pet-chat-btn:hover { background:#3a67e6; }
+.pet-typing { color:#8b90a0; font-size:12px; padding:4px 2px; }
+
 /* ============ v6.4.1 头像裁剪 ============ */
 .crop-box { position:relative; width:256px; height:256px; margin:0 auto; border-radius:14px; overflow:hidden; background:var(--bg-2,#e8e8e8); touch-action:none; user-select:none; cursor:move; }
 .crop-box img { position:absolute; left:0; top:0; max-width:none; display:block; }
@@ -2351,6 +2378,18 @@ body[data-glass] .modal-mask {
         <label class="form-label" data-i18n="new.t">标题</label>
         <input class="input" id="np-title" maxlength="60" placeholder="一句话说清主题" data-i18n-ph="new.phTitle" required>
       </div>
+      <div class="form-row" style="padding:10px 12px;border:1px dashed var(--accent-soft);border-radius:12px;background:var(--accent-soft);">
+        <label class="form-label" style="margin:0 0 6px">✨ AI 发帖助手</label>
+        <div id="np-ai-tips" style="font-size:12px;color:var(--ink-3);margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-ghost btn-sm" data-ai="title">🎯 生成标题</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-ai="deaif">🧼 去AI味</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-ai="live">😆 活泼改写</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-ai="formal">📋 正式改写</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-ai="short">✂️ 精简改写</button>
+        </div>
+        <div id="np-ai-out" style="font-size:12px;color:var(--ink-3);margin-top:8px;min-height:14px"></div>
+      </div>
       <div class="form-row">
         <label class="form-label" data-i18n="new.cat">分类</label>
         <div class="chips" id="np-cats"></div>
@@ -2367,6 +2406,14 @@ body[data-glass] .modal-mask {
           <span class="fd-hint">支持图片、视频、音频、文档</span>
         </label>
         <div class="file-preview" id="np-preview"></div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">⏰ 定时发布（选填 · 不支持附件）</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="datetime-local" id="np-sched-at" class="input" style="flex:1;min-width:200px">
+          <button type="button" class="btn btn-ghost btn-sm" id="np-sched-clear">清空</button>
+        </div>
+        <div id="np-sched-list" style="font-size:12px;color:var(--ink-3);margin-top:8px"></div>
       </div>
       <div class="form-row">
         <button type="button" class="btn btn-ghost btn-sm" id="np-poll-toggle" style="width:100%">🗳️ <span data-i18n="poll.toggle">添加投票（选填）</span></button>
@@ -2613,9 +2660,14 @@ body[data-glass] .modal-mask {
     <p class="section-sub" data-i18n="admin.sub">用户管理、内容审核、功能封禁。</p>
     <div id="admin-panel"></div>
   </section>
+   <!-- 精选 / 社区知识库 -->
+   <section class="route" id="route-featured">
+     <div class="toolbar"><h2 class="section-title" style="margin:0;flex:1">⭐ 精选内容 · 社区知识库</h2></div>
+     <div id="featured-list" class="feed"></div>
+   </section>
 </main>
 
-<div class="footer">HanBer云坛 · <span id="ver-stamp" style="opacity:.6;cursor:default">HanBerOS 6.4</span></div>
+<div class="footer">HanBer云坛 · <span id="ver-stamp" style="opacity:.6;cursor:default">HanBerOS 6.4.6</span></div>
 
 <!-- 管理员登录弹窗已移除 -->
 
@@ -2692,7 +2744,7 @@ var I18N = {
     'task.pending': '未完成',
     'task.spin': '签到幸运转盘',
     'task.spinHint': '每天一次，转动赢取金币（同时完成今日签到）',
-    'task.spinDone': '今日已抽：+%d 金币',
+    'task.spinDone': '今日已抽：+{0} 金币',
     'task.spinGo': '开始转动',
     'task.spinGot': '金币到手！',
     'task.done': '完成',
@@ -2824,7 +2876,7 @@ var I18N = {
     'settings.themeSaved': '主题已切换', 'settings.saveFail': '保存失败：', 'settings.glassOnDone': '液态玻璃已开启', 'settings.glassOffDone': '液态玻璃已关闭',
     'settings.glassColorDone': '玻璃颜色已更新', 'settings.glassAlphaDone': '玻璃透明度已更新', 'settings.langDone': '语言已切换',
     'welcome': '欢迎回来，', 'signupOk': '注册成功，欢迎加入HanBer云坛', 'pleaseLogin': '请先登录', 'uploadFail': '上传失败', 'netErr': '请求超时',
-    'footer': 'HanBerOS 6.4', 'nav.signin': '签到', 'report.title': '举报', 'report.reason': '举报理由（必填）', 'report.detail': '补充说明（选填）', 'report.ok': '举报已提交，管理员会尽快处理', 'pin.admin': '置顶', 'pin.adminOff': '取消置顶', 'admin.reports': '举报管理', 'admin.handle': '处理', 'admin.ignore': '忽略', 'admin.actionPh': '处理方式（如：删除帖子/封禁7天）', 'admin.signins': '签到记录', 'admin.audit': '操作日志', 'admin.export': '导出用户数据', 'admin.exportPh': '输入用户名或ID', 'export.title': '数据导出', 'export.mine': '导出我的全部数据', 'export.admin': '导出该用户数据', 'export.need': '导出你在云坛的全部数据（帖子、回帖、私信、通知、签到），JSON 格式，仅自己可看。',
+    'footer': 'HanBerOS 6.4.6', 'nav.signin': '签到', 'report.title': '举报', 'report.reason': '举报理由（必填）', 'report.detail': '补充说明（选填）', 'report.ok': '举报已提交，管理员会尽快处理', 'pin.admin': '置顶', 'pin.adminOff': '取消置顶', 'admin.reports': '举报管理', 'admin.handle': '处理', 'admin.ignore': '忽略', 'admin.actionPh': '处理方式（如：删除帖子/封禁7天）', 'admin.signins': '签到记录', 'admin.audit': '操作日志', 'admin.export': '导出用户数据', 'admin.exportPh': '输入用户名或ID', 'export.title': '数据导出', 'export.mine': '导出我的全部数据', 'export.admin': '导出该用户数据', 'export.need': '导出你在云坛的全部数据（帖子、回帖、私信、通知、签到），JSON 格式，仅自己可看。',
     'nav.notifClear': '清除已读',
     'nav.notifCleared': '已清除已读通知',
     'apps.login.ok1': '✅ 已通过云坛登录：',
@@ -3057,6 +3109,7 @@ var I18N = {
     'block.postTitle': '帖子标题',
     'block.title': '屏蔽管理',
     'circles.create': '创建圈子',
+    'circle.unknown': '圈子',
     'circles.del': '删除圈子',
     'circles.desc': '圈子简介',
     'circles.edit': '编辑圈子',
@@ -3224,7 +3277,7 @@ var I18N = {
     'settings.themeSaved': 'Theme switched', 'settings.saveFail': 'Save failed: ', 'settings.glassOnDone': 'Liquid glass enabled', 'settings.glassOffDone': 'Liquid glass disabled',
     'settings.glassColorDone': 'Glass color updated', 'settings.glassAlphaDone': 'Glass opacity updated', 'settings.langDone': 'Language switched',
     'welcome': 'Welcome back, ', 'signupOk': 'Signed up successfully. Welcome to HanBer Forum!', 'pleaseLogin': 'Please log in first', 'uploadFail': 'Upload failed', 'netErr': 'Request timed out',
-    'footer': 'HanBerOS 6.4', 'nav.signin': 'Check-in', 'report.title': 'Report', 'report.reason': 'Reason (required)', 'report.detail': 'Details (optional)', 'report.ok': 'Report submitted, admins will review soon', 'pin.admin': 'Pin', 'pin.adminOff': 'Unpin', 'admin.reports': 'Report Management', 'admin.handle': 'Handle', 'admin.ignore': 'Ignore', 'admin.actionPh': 'Action (e.g. delete post / ban 7d)', 'admin.signins': 'Check-in Records', 'admin.audit': 'Operation Log', 'admin.export': 'Export User Data', 'admin.exportPh': 'Enter username or ID', 'export.title': 'Data Export', 'export.mine': 'Export All My Data', 'export.admin': 'Export This User', 'export.need': 'Export all your forum data (posts, replies, messages, notifications, check-ins) as JSON. Only you can see it.',
+    'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Report', 'report.reason': 'Reason (required)', 'report.detail': 'Details (optional)', 'report.ok': 'Report submitted, admins will review soon', 'pin.admin': 'Pin', 'pin.adminOff': 'Unpin', 'admin.reports': 'Report Management', 'admin.handle': 'Handle', 'admin.ignore': 'Ignore', 'admin.actionPh': 'Action (e.g. delete post / ban 7d)', 'admin.signins': 'Check-in Records', 'admin.audit': 'Operation Log', 'admin.export': 'Export User Data', 'admin.exportPh': 'Enter username or ID', 'export.title': 'Data Export', 'export.mine': 'Export All My Data', 'export.admin': 'Export This User', 'export.need': 'Export all your forum data (posts, replies, messages, notifications, check-ins) as JSON. Only you can see it.',
     'nav.notifClear': 'Clear Read',
     'nav.notifCleared': 'Read notifications cleared',
     'apps.login.ok1': '✅ Logged in via YunTan: ',
@@ -3624,7 +3677,7 @@ var I18N = {
     'settings.themeSaved': 'Tema cambiado', 'settings.saveFail': 'Error al guardar: ', 'settings.glassOnDone': 'Vidrio líquido activado', 'settings.glassOffDone': 'Vidrio líquido desactivado',
     'settings.glassColorDone': 'Color del vidrio actualizado', 'settings.glassAlphaDone': 'Opacidad del vidrio actualizada', 'settings.langDone': 'Idioma cambiado',
     'welcome': 'Bienvenido de nuevo, ', 'signupOk': '¡Registro exitoso! Bienvenido al foro HanBer', 'pleaseLogin': 'Inicia sesión primero', 'uploadFail': 'Error de subida', 'netErr': 'Tiempo de espera agotado',
-    'footer': 'HanBerOS 6.4', 'nav.signin': 'Registro diario', 'report.title': 'Reportar', 'report.reason': 'Motivo (obligatorio)', 'report.detail': 'Detalles (opcional)', 'report.ok': 'Reporte enviado, los admins lo revisarán', 'pin.admin': 'Fijar', 'pin.adminOff': 'Desfijar', 'admin.reports': 'Gestión de Reportes', 'admin.handle': 'Procesar', 'admin.ignore': 'Ignorar', 'admin.actionPh': 'Acción (ej. borrar / ban 7d)', 'admin.signins': 'Registros de Firma', 'admin.audit': 'Registro de Operaciones', 'admin.export': 'Exportar Datos', 'admin.exportPh': 'Ingrese nombre o ID', 'export.title': 'Exportación de Datos', 'export.mine': 'Exportar Mis Datos', 'export.admin': 'Exportar Este Usuario', 'export.need': 'Exporta todos tus datos (publicaciones, respuestas, mensajes, notificaciones, registros) en JSON. Solo tú puedes verlo.',
+    'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Registro diario', 'report.title': 'Reportar', 'report.reason': 'Motivo (obligatorio)', 'report.detail': 'Detalles (opcional)', 'report.ok': 'Reporte enviado, los admins lo revisarán', 'pin.admin': 'Fijar', 'pin.adminOff': 'Desfijar', 'admin.reports': 'Gestión de Reportes', 'admin.handle': 'Procesar', 'admin.ignore': 'Ignorar', 'admin.actionPh': 'Acción (ej. borrar / ban 7d)', 'admin.signins': 'Registros de Firma', 'admin.audit': 'Registro de Operaciones', 'admin.export': 'Exportar Datos', 'admin.exportPh': 'Ingrese nombre o ID', 'export.title': 'Exportación de Datos', 'export.mine': 'Exportar Mis Datos', 'export.admin': 'Exportar Este Usuario', 'export.need': 'Exporta todos tus datos (publicaciones, respuestas, mensajes, notificaciones, registros) en JSON. Solo tú puedes verlo.',
     'nav.notifClear': 'Limpiar leídas',
     'nav.notifCleared': 'Notificaciones leídas borradas',
     'apps.login.ok1': '✅ Conectado vía YunTan: ',
@@ -4024,7 +4077,7 @@ var I18N = {
     'settings.themeSaved': 'Тема изменена', 'settings.saveFail': 'Ошибка сохранения: ', 'settings.glassOnDone': 'Жидкое стекло включено', 'settings.glassOffDone': 'Жидкое стекло выключено',
     'settings.glassColorDone': 'Цвет стекла обновлён', 'settings.glassAlphaDone': 'Прозрачность обновлена', 'settings.langDone': 'Язык изменён',
     'welcome': 'С возвращением, ', 'signupOk': 'Регистрация успешна. Добро пожаловать на форум HanBer!', 'pleaseLogin': 'Сначала войдите', 'uploadFail': 'Ошибка загрузки', 'netErr': 'Тайм-аут запроса',
-    'footer': 'HanBerOS 6.4', 'nav.signin': 'Отметка', 'report.title': 'Пожаловаться', 'report.reason': 'Причина (обязательно)', 'report.detail': 'Подробности (необязательно)', 'report.ok': 'Жалоба отправлена, админы проверят', 'pin.admin': 'Закрепить', 'pin.adminOff': 'Открепить', 'admin.reports': 'Управление жалобами', 'admin.handle': 'Обработать', 'admin.ignore': 'Игнорировать', 'admin.actionPh': 'Действие (напр. удалить / бан 7д)', 'admin.signins': 'Журнал отметок', 'admin.audit': 'Журнал операций', 'admin.export': 'Экспорт данных', 'admin.exportPh': 'Введите имя или ID', 'export.title': 'Экспорт данных', 'export.mine': 'Экспортировать мои данные', 'export.admin': 'Экспорт пользователя', 'export.need': 'Экспорт всех ваших данных (посты, ответы, сообщения, уведомления, отметки) в JSON. Виден только вам.',
+    'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Отметка', 'report.title': 'Пожаловаться', 'report.reason': 'Причина (обязательно)', 'report.detail': 'Подробности (необязательно)', 'report.ok': 'Жалоба отправлена, админы проверят', 'pin.admin': 'Закрепить', 'pin.adminOff': 'Открепить', 'admin.reports': 'Управление жалобами', 'admin.handle': 'Обработать', 'admin.ignore': 'Игнорировать', 'admin.actionPh': 'Действие (напр. удалить / бан 7д)', 'admin.signins': 'Журнал отметок', 'admin.audit': 'Журнал операций', 'admin.export': 'Экспорт данных', 'admin.exportPh': 'Введите имя или ID', 'export.title': 'Экспорт данных', 'export.mine': 'Экспортировать мои данные', 'export.admin': 'Экспорт пользователя', 'export.need': 'Экспорт всех ваших данных (посты, ответы, сообщения, уведомления, отметки) в JSON. Виден только вам.',
     'nav.notifClear': 'Очистить прочитанные',
     'nav.notifCleared': 'Прочитанные уведомления удалены',
     'apps.login.ok1': '✅ Вход через YunTan: ',
@@ -4405,7 +4458,7 @@ var I18N = {
     'post.retry': '再試行',
     'notif.empty': '通知はありません',
     'toast.alreadySigned': '今日はすでにチェックインしました',
-    'nav.home': 'ホーム', 'nav.new': '投稿', 'nav.chat': 'メッセージ', 'nav.notif': '通知', 'nav.apps': 'ミニアプリ', 'nav.login': 'ログイン', 'nav.signup': '登録', 'nav.logout': 'ログアウト', 'search.ph': '投稿を検索…', 'cat.all': 'すべて', 'cat.chat': '雑談', 'cat.study': '勉強', 'cat.game': 'ゲーム', 'cat.tech': '技術', 'cat.announce': 'お知らせ','cat.life': '生活', 'cat.emotion': '感情', 'cat.resource': '資源共有', 'cat.music': '音楽', 'cat.movie': '映画・ドラマ', 'cat.anime': '二次元', 'cat.campus': '学園', 'cat.career': '仕事', 'cat.digital': 'デジタル', 'cat.local': '地元', 'cat.pet': 'ペット', 'cat.food': 'グルメ', 'cat.travel': '旅行', 'cat.sports': 'スポーツ', 'cat.photo': '写真', 'cat.reading': '読書',  'login.title': '雲壇に参加', 'login.sub': '1つのアカウントですべての端末で使えます。', 'login.account': '電話番号またはメール', 'login.password': 'パスワード', 'login.captcha': '答えを入力', 'login.submit': 'ログイン', 'login.noAcc': 'アカウントがありませんか？', 'login.gotoSignup': '登録へ', 'login.haveAcc': 'アカウントをお持ちですか？', 'login.gotoLogin': 'ログインへ', 'signup.title': 'アカウント作成', 'signup.sub': '専用アカウントを登録します。', 'signup.username': 'ユーザー名', 'signup.submit': '登録', 'new.title': '新規投稿', 'new.sub': '話したいテーマを、一目でわかるタイトルで書こう。', 'new.t': 'タイトル', 'new.cat': 'カテゴリ', 'new.body': '内容', 'new.file': '添付（任意）', 'new.filePick': 'クリックしてファイルを選択', 'new.submit': '投稿する', 'new.phTitle': 'テーマを一言で', 'new.phBody': '詳しく書く…（改行対応）', 'post.back': '← ホームに戻る', 'post.reply': '返信', 'post.replies': '件の返信', 'post.confirmDelete': 'この投稿を削除しますか？元に戻せません。', 'post.deleted': '投稿を削除しました', 'post.confirmDelComment': 'この返信を削除しますか？元に戻せません。', 'post.commentDeleted': '返信を削除しました', 'settings.theme': 'テーマ', 'settings.themeHint': '好きな画面スタイルを選ぼう', 'settings.official': '公式', 'settings.solid': '単色', 'settings.gradient': 'グラデーション', 'settings.culture': 'カルチャー', 'settings.default': 'デフォルト', 'settings.glass': 'リキッドガラス', 'settings.glassHint': '「単色」「グラデーション」テーマ限定。ガラス質感＋色と透明度を設定できます', 'settings.glassOn': 'リキッドガラスモードを有効化', 'settings.glassColor': 'ガラスの色', 'settings.opacity': '透明度', 'settings.lang': '表示言語', 'settings.langHint': '画面表示言語を切り替え', 'settings.pwd': 'パスワード変更', 'settings.save': '保存して接続', 'settings.clear': '設定を消去', 'settings.themeSaved': 'テーマを変更しました', 'settings.saveFail': '保存失敗：', 'settings.glassOnDone': 'リキッドガラスを有効にしました', 'settings.glassOffDone': 'リキッドガラスを無効にしました', 'settings.glassColorDone': 'ガラスの色を更新しました', 'settings.glassAlphaDone': 'ガラスの透明度を更新しました', 'settings.langDone': '言語を変更しました', 'welcome': 'おかえりなさい、', 'signupOk': '登録完了。HanBer雲壇へようこそ', 'pleaseLogin': '先にログインしてください', 'uploadFail': 'アップロード失敗', 'netErr': 'リクエストがタイムアウトしました', 'footer': 'HanBerOS 6.4', 'nav.signin': 'チェックイン', 'report.title': '通報', 'report.reason': '理由（必須）', 'report.detail': '補足（任意）', 'report.ok': '通報を送信しました。管理者が確認します', 'pin.admin': 'ピン留め', 'pin.adminOff': 'ピン外し', 'admin.reports': '通報管理', 'admin.handle': '処理', 'admin.ignore': '無視', 'admin.actionPh': '対応（例：削除 / 7日BAN）', 'admin.signins': 'チェックイン記録', 'admin.audit': '操作ログ', 'admin.export': 'ユーザーデータ出力', 'admin.exportPh': 'ユーザー名かID', 'export.title': 'データ出力', 'export.mine': '自分の全データを出力', 'export.admin': 'このユーザーを出力', 'export.need': '雲壇の全データ（投稿・返信・メッセージ・通知・チェックイン）をJSONで出力。自分にしか見えません。', 'nav.notifClear': '既読をクリア', 'nav.notifCleared': '既読通知をクリアしました', 'apps.login.ok1': '✅ 雲壇でログイン済み：', 'apps.login.ok2': '—— ゲームに自動でアカウントが入ります', 'apps.login.no1': '🔒 雲壇に未ログイン、', 'apps.login.no2': 'ゲーム内でワンタップログインできます（ログインなしでも試遊OK）', 'apps.needlogin': 'このゲームは雲壇ログインが必要です。先にログインしてください', 'apps.fs.on': '⛶ 全画面を終了', 'apps.fs.off': '⛶ 全画面', 'apps.name.bread': 'パンキル・群雄争覇', 'apps.tag.bread': '共同制作・プレイ前に宣言あり', 'apps.desc.bread': '三国志系カードバトル：マッチング/ランク、武将スキル、装備・計略フル手札。Han Ber & Bread Guard Team 共同制作。', 'apps.name.gta': 'GTA・上海ピクセルシティ', 'apps.tag.gta': 'オフライン遊び', 'apps.desc.gta': '2Dピクセルオープンワールド：12行政区、産業経営、貨物/護送/レース任務、手配・追跡。ブラウザにローカル保存。', 'apps.name.tank': '鉄甲戦史2D', 'apps.tag.tank': '雲壇ワンタップログイン', 'apps.desc.tank': '4つの戦役の戦争ゲーム：鉄甲の奔流、兵種相性、陣地進撃。装甲部隊を指揮しよう。', 'apps.name.century': '世紀戦争', 'apps.tag.century': '雲壇ワンタップログイン', 'apps.desc.century': '100年をまたぐ4大戦役：塹壕から電撃戦まで、名戦史のターン制対決。', 'apps.name.game': 'ゲーム理論・均衡ラボ', 'apps.tag.game': '雲壇ワンタップログイン', 'apps.desc.game': '名作ゲーム理論を人機対戦で：囚人のジレンマ、ナッシュ均衡、チキンゲーム。遊びながら学べる。', 'apps.name.potato': 'クレイジーポテト', 'apps.tag.potato': '雲壇ワンタップログイン', 'apps.desc.potato': 'ジャガイモ叩きのカジュアルゲーム：反射神経チャレンジ、やめられない。', 'apps.name.puff': 'フグふくらみPuff!', 'apps.tag.puff': '雲壇ワンタップログイン', 'apps.desc.puff': 'フグのカジュアルゲーム：ふくらませて、転がして、止まらない。', 'apps.name.mist': '白霧レクイエム', 'apps.tag.mist': 'オフライン', 'apps.desc.mist': '2Dピクセル探索：霧の町、記憶を失った主人公。白い霧を払い真実を見つけよう。', 'apps.name.hanba': '旱魃伝奇', 'apps.tag.hanba': '雲壇ワンタップログイン', 'apps.desc.hanba': 'HANBA LEGEND：東洋伝説の冒険。旱魃を退け、中原を駆けろ。', 'apps.name.croissant': 'クロワッサン伝説', 'apps.tag.croissant': '雲壇ワンタップログイン', 'apps.desc.croissant': 'Croissant Legend：パン屋の世界の冒険物語。サクサクのヒーローがパリを救う。', 'apps.name.panglong': 'ぷにぷにダイエット', 'apps.tag.panglong': '雲壇ワンタップログイン', 'apps.desc.panglong': '食べすぎ小竜のスリム大作戦。食事をコントロールして動こう！', 'apps.name.weiren': '偽人・偽人シミュレーション研究所', 'apps.tag.weiren': 'オフライン', 'apps.desc.weiren': '観察し、見分け、模倣する。真実と偽りの間で選択を。', 'apps.name.star': '星の旅人', 'apps.tag.star': '雲壇ワンタップログイン', 'apps.desc.star': 'Star Voyager：星と宇宙の探検。宇宙船で星の海を渡ろう。', 'apps.name.lovezone': '恋の禁区', 'apps.tag.lovezone': 'ダークウェブ限定・解除で解放', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE：ダークウェブの奥の禁断の物語。あなたの選択が結末を決める。', 'apps.name.faceless': '顔のない人', 'apps.tag.faceless': '反戦ピクセル', 'apps.desc.faceless': 'THE FACELESS：反戦ピクセルゲーム。戦争は地獄だ。', 'apps.lovezone.locked': '🔒 まずダークウェブで取得してください（ページ下部のバージョン番号を5回連打）', 'settings.sound': '背景音', 'settings.soundHint': 'ホワイトノイズや環境音を選んで、途切れなくループ再生します', 'settings.soundOn': '背景音を有効にする', 'settings.volume': '音量', 'sound.balance': 'バランスノイズ', 'sound.bright': 'ブライトノイズ', 'sound.dark': 'ダークノイズ', 'sound.rain': '雨音', 'sound.ocean': '海の波音', 'sound.stream': 'せせらぎ', 'sound.night': '夜の静けさ', 'sound.fire': '焚き火', 'sound.steam': '蒸気', 'sound.fan': '扇風機', 'sound.white': 'ホワイトノイズ', 'chat.empty': 'まだメッセージはありません。あいさつしてみましょう', 'chat.copy': 'コピー', 'chat.translate': '翻訳', 'chat.recall': '撤回', 'chat.delete': '削除', 'chat.recalled': 'メッセージは撤回されました', 'chat.recalledByOther': '相手がメッセージを撤回しました', 'chat.copied': 'コピーしました', 'chat.recallOk': '撤回しました', 'chat.deleteOk': '削除しました（自分にのみ非表示）', 'chat.recallTimeout': '2分を過ぎると削除のみ可能です', 'chat.translating': '翻訳中…', 'chat.you': '私', 'profile.follow': 'フォロー', 'profile.following': 'フォロー中', 'profile.followed': 'フォローしました', 'profile.unfollowed': 'フォロー解除', 'profile.sendMsg': 'メッセージ', 'profile.block': 'ブロック', 'profile.unblock': 'ブロック解除', 'profile.unblocked': 'ブロックを解除しました', 'profile.confirmBlock': 'このユーザーをブロックしますか？ブロック後、相手の内容は表示されなくなります。', 'profile.blocked': 'ブロックしました', 'profile.mutual': '相互フォロー中 · メッセージ可', 'profile.joinedAt': '参加日', 'profile.noBio': 'このユーザーはまだプロフィールを書いていません。', 'admin.confirmRemove': 'この管理者を一般ユーザーに降格しますか？', 'admin.removeDone': '一般ユーザーに降格しました', 'admin.confirmDisable': 'この管理者を無効にしますか？直ちに管理権限が失効します。', 'admin.confirmEnable': 'この管理者を有効にしますか？', 'admin.disableDone': '無効にしました', 'expandAll': 'すべて表示（{0}）', 'admin.enableDone': '有効にしました',      'settings.title': '設定',
+    'nav.home': 'ホーム', 'nav.new': '投稿', 'nav.chat': 'メッセージ', 'nav.notif': '通知', 'nav.apps': 'ミニアプリ', 'nav.login': 'ログイン', 'nav.signup': '登録', 'nav.logout': 'ログアウト', 'search.ph': '投稿を検索…', 'cat.all': 'すべて', 'cat.chat': '雑談', 'cat.study': '勉強', 'cat.game': 'ゲーム', 'cat.tech': '技術', 'cat.announce': 'お知らせ','cat.life': '生活', 'cat.emotion': '感情', 'cat.resource': '資源共有', 'cat.music': '音楽', 'cat.movie': '映画・ドラマ', 'cat.anime': '二次元', 'cat.campus': '学園', 'cat.career': '仕事', 'cat.digital': 'デジタル', 'cat.local': '地元', 'cat.pet': 'ペット', 'cat.food': 'グルメ', 'cat.travel': '旅行', 'cat.sports': 'スポーツ', 'cat.photo': '写真', 'cat.reading': '読書',  'login.title': '雲壇に参加', 'login.sub': '1つのアカウントですべての端末で使えます。', 'login.account': '電話番号またはメール', 'login.password': 'パスワード', 'login.captcha': '答えを入力', 'login.submit': 'ログイン', 'login.noAcc': 'アカウントがありませんか？', 'login.gotoSignup': '登録へ', 'login.haveAcc': 'アカウントをお持ちですか？', 'login.gotoLogin': 'ログインへ', 'signup.title': 'アカウント作成', 'signup.sub': '専用アカウントを登録します。', 'signup.username': 'ユーザー名', 'signup.submit': '登録', 'new.title': '新規投稿', 'new.sub': '話したいテーマを、一目でわかるタイトルで書こう。', 'new.t': 'タイトル', 'new.cat': 'カテゴリ', 'new.body': '内容', 'new.file': '添付（任意）', 'new.filePick': 'クリックしてファイルを選択', 'new.submit': '投稿する', 'new.phTitle': 'テーマを一言で', 'new.phBody': '詳しく書く…（改行対応）', 'post.back': '← ホームに戻る', 'post.reply': '返信', 'post.replies': '件の返信', 'post.confirmDelete': 'この投稿を削除しますか？元に戻せません。', 'post.deleted': '投稿を削除しました', 'post.confirmDelComment': 'この返信を削除しますか？元に戻せません。', 'post.commentDeleted': '返信を削除しました', 'settings.theme': 'テーマ', 'settings.themeHint': '好きな画面スタイルを選ぼう', 'settings.official': '公式', 'settings.solid': '単色', 'settings.gradient': 'グラデーション', 'settings.culture': 'カルチャー', 'settings.default': 'デフォルト', 'settings.glass': 'リキッドガラス', 'settings.glassHint': '「単色」「グラデーション」テーマ限定。ガラス質感＋色と透明度を設定できます', 'settings.glassOn': 'リキッドガラスモードを有効化', 'settings.glassColor': 'ガラスの色', 'settings.opacity': '透明度', 'settings.lang': '表示言語', 'settings.langHint': '画面表示言語を切り替え', 'settings.pwd': 'パスワード変更', 'settings.save': '保存して接続', 'settings.clear': '設定を消去', 'settings.themeSaved': 'テーマを変更しました', 'settings.saveFail': '保存失敗：', 'settings.glassOnDone': 'リキッドガラスを有効にしました', 'settings.glassOffDone': 'リキッドガラスを無効にしました', 'settings.glassColorDone': 'ガラスの色を更新しました', 'settings.glassAlphaDone': 'ガラスの透明度を更新しました', 'settings.langDone': '言語を変更しました', 'welcome': 'おかえりなさい、', 'signupOk': '登録完了。HanBer雲壇へようこそ', 'pleaseLogin': '先にログインしてください', 'uploadFail': 'アップロード失敗', 'netErr': 'リクエストがタイムアウトしました', 'footer': 'HanBerOS 6.4.6', 'nav.signin': 'チェックイン', 'report.title': '通報', 'report.reason': '理由（必須）', 'report.detail': '補足（任意）', 'report.ok': '通報を送信しました。管理者が確認します', 'pin.admin': 'ピン留め', 'pin.adminOff': 'ピン外し', 'admin.reports': '通報管理', 'admin.handle': '処理', 'admin.ignore': '無視', 'admin.actionPh': '対応（例：削除 / 7日BAN）', 'admin.signins': 'チェックイン記録', 'admin.audit': '操作ログ', 'admin.export': 'ユーザーデータ出力', 'admin.exportPh': 'ユーザー名かID', 'export.title': 'データ出力', 'export.mine': '自分の全データを出力', 'export.admin': 'このユーザーを出力', 'export.need': '雲壇の全データ（投稿・返信・メッセージ・通知・チェックイン）をJSONで出力。自分にしか見えません。', 'nav.notifClear': '既読をクリア', 'nav.notifCleared': '既読通知をクリアしました', 'apps.login.ok1': '✅ 雲壇でログイン済み：', 'apps.login.ok2': '—— ゲームに自動でアカウントが入ります', 'apps.login.no1': '🔒 雲壇に未ログイン、', 'apps.login.no2': 'ゲーム内でワンタップログインできます（ログインなしでも試遊OK）', 'apps.needlogin': 'このゲームは雲壇ログインが必要です。先にログインしてください', 'apps.fs.on': '⛶ 全画面を終了', 'apps.fs.off': '⛶ 全画面', 'apps.name.bread': 'パンキル・群雄争覇', 'apps.tag.bread': '共同制作・プレイ前に宣言あり', 'apps.desc.bread': '三国志系カードバトル：マッチング/ランク、武将スキル、装備・計略フル手札。Han Ber & Bread Guard Team 共同制作。', 'apps.name.gta': 'GTA・上海ピクセルシティ', 'apps.tag.gta': 'オフライン遊び', 'apps.desc.gta': '2Dピクセルオープンワールド：12行政区、産業経営、貨物/護送/レース任務、手配・追跡。ブラウザにローカル保存。', 'apps.name.tank': '鉄甲戦史2D', 'apps.tag.tank': '雲壇ワンタップログイン', 'apps.desc.tank': '4つの戦役の戦争ゲーム：鉄甲の奔流、兵種相性、陣地進撃。装甲部隊を指揮しよう。', 'apps.name.century': '世紀戦争', 'apps.tag.century': '雲壇ワンタップログイン', 'apps.desc.century': '100年をまたぐ4大戦役：塹壕から電撃戦まで、名戦史のターン制対決。', 'apps.name.game': 'ゲーム理論・均衡ラボ', 'apps.tag.game': '雲壇ワンタップログイン', 'apps.desc.game': '名作ゲーム理論を人機対戦で：囚人のジレンマ、ナッシュ均衡、チキンゲーム。遊びながら学べる。', 'apps.name.potato': 'クレイジーポテト', 'apps.tag.potato': '雲壇ワンタップログイン', 'apps.desc.potato': 'ジャガイモ叩きのカジュアルゲーム：反射神経チャレンジ、やめられない。', 'apps.name.puff': 'フグふくらみPuff!', 'apps.tag.puff': '雲壇ワンタップログイン', 'apps.desc.puff': 'フグのカジュアルゲーム：ふくらませて、転がして、止まらない。', 'apps.name.mist': '白霧レクイエム', 'apps.tag.mist': 'オフライン', 'apps.desc.mist': '2Dピクセル探索：霧の町、記憶を失った主人公。白い霧を払い真実を見つけよう。', 'apps.name.hanba': '旱魃伝奇', 'apps.tag.hanba': '雲壇ワンタップログイン', 'apps.desc.hanba': 'HANBA LEGEND：東洋伝説の冒険。旱魃を退け、中原を駆けろ。', 'apps.name.croissant': 'クロワッサン伝説', 'apps.tag.croissant': '雲壇ワンタップログイン', 'apps.desc.croissant': 'Croissant Legend：パン屋の世界の冒険物語。サクサクのヒーローがパリを救う。', 'apps.name.panglong': 'ぷにぷにダイエット', 'apps.tag.panglong': '雲壇ワンタップログイン', 'apps.desc.panglong': '食べすぎ小竜のスリム大作戦。食事をコントロールして動こう！', 'apps.name.weiren': '偽人・偽人シミュレーション研究所', 'apps.tag.weiren': 'オフライン', 'apps.desc.weiren': '観察し、見分け、模倣する。真実と偽りの間で選択を。', 'apps.name.star': '星の旅人', 'apps.tag.star': '雲壇ワンタップログイン', 'apps.desc.star': 'Star Voyager：星と宇宙の探検。宇宙船で星の海を渡ろう。', 'apps.name.lovezone': '恋の禁区', 'apps.tag.lovezone': 'ダークウェブ限定・解除で解放', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE：ダークウェブの奥の禁断の物語。あなたの選択が結末を決める。', 'apps.name.faceless': '顔のない人', 'apps.tag.faceless': '反戦ピクセル', 'apps.desc.faceless': 'THE FACELESS：反戦ピクセルゲーム。戦争は地獄だ。', 'apps.lovezone.locked': '🔒 まずダークウェブで取得してください（ページ下部のバージョン番号を5回連打）', 'settings.sound': '背景音', 'settings.soundHint': 'ホワイトノイズや環境音を選んで、途切れなくループ再生します', 'settings.soundOn': '背景音を有効にする', 'settings.volume': '音量', 'sound.balance': 'バランスノイズ', 'sound.bright': 'ブライトノイズ', 'sound.dark': 'ダークノイズ', 'sound.rain': '雨音', 'sound.ocean': '海の波音', 'sound.stream': 'せせらぎ', 'sound.night': '夜の静けさ', 'sound.fire': '焚き火', 'sound.steam': '蒸気', 'sound.fan': '扇風機', 'sound.white': 'ホワイトノイズ', 'chat.empty': 'まだメッセージはありません。あいさつしてみましょう', 'chat.copy': 'コピー', 'chat.translate': '翻訳', 'chat.recall': '撤回', 'chat.delete': '削除', 'chat.recalled': 'メッセージは撤回されました', 'chat.recalledByOther': '相手がメッセージを撤回しました', 'chat.copied': 'コピーしました', 'chat.recallOk': '撤回しました', 'chat.deleteOk': '削除しました（自分にのみ非表示）', 'chat.recallTimeout': '2分を過ぎると削除のみ可能です', 'chat.translating': '翻訳中…', 'chat.you': '私', 'profile.follow': 'フォロー', 'profile.following': 'フォロー中', 'profile.followed': 'フォローしました', 'profile.unfollowed': 'フォロー解除', 'profile.sendMsg': 'メッセージ', 'profile.block': 'ブロック', 'profile.unblock': 'ブロック解除', 'profile.unblocked': 'ブロックを解除しました', 'profile.confirmBlock': 'このユーザーをブロックしますか？ブロック後、相手の内容は表示されなくなります。', 'profile.blocked': 'ブロックしました', 'profile.mutual': '相互フォロー中 · メッセージ可', 'profile.joinedAt': '参加日', 'profile.noBio': 'このユーザーはまだプロフィールを書いていません。', 'admin.confirmRemove': 'この管理者を一般ユーザーに降格しますか？', 'admin.removeDone': '一般ユーザーに降格しました', 'admin.confirmDisable': 'この管理者を無効にしますか？直ちに管理権限が失効します。', 'admin.confirmEnable': 'この管理者を有効にしますか？', 'admin.disableDone': '無効にしました', 'expandAll': 'すべて表示（{0}）', 'admin.enableDone': '有効にしました',      'settings.title': '設定',
     'settings.sub': '雲壇の体験をカスタマイズ',
     'apps.title': 'ミニアプリ',
     'apps.sub': '内蔵ミニゲーム · ログインでアカウント連携',
@@ -4730,7 +4783,7 @@ var I18N = {
     'post.retry': '다시 시도',
     'notif.empty': '알림 없음',
     'toast.alreadySigned': '오늘 이미 출석했습니다',
-    'nav.home': '홈', 'nav.new': '글쓰기', 'nav.chat': '쪽지', 'nav.notif': '알림', 'nav.apps': '미니앱', 'nav.login': '로그인', 'nav.signup': '가입', 'nav.logout': '로그아웃', 'search.ph': '게시글 검색…', 'cat.all': '전체', 'cat.chat': '잡담', 'cat.study': '공부', 'cat.game': '게임', 'cat.tech': '기술', 'cat.announce': '공지','cat.life': '생활', 'cat.emotion': '감정', 'cat.resource': '자료공유', 'cat.music': '음악', 'cat.movie': '영화', 'cat.anime': '2차원', 'cat.campus': '캠퍼스', 'cat.career': '직장', 'cat.digital': '디지털', 'cat.local': '동네', 'cat.pet': '반려동물', 'cat.food': '맛집', 'cat.travel': '여행', 'cat.sports': '운동', 'cat.photo': '사진', 'cat.reading': '독서',  'login.title': '운단에 가입', 'login.sub': '하나의 계정으로 모든 기기에서 사용 가능합니다.', 'login.account': '휴대폰 번호 또는 이메일', 'login.password': '비밀번호', 'login.captcha': '답 입력', 'login.submit': '로그인', 'login.noAcc': '계정이 없으신가요?', 'login.gotoSignup': '가입하기', 'login.haveAcc': '계정이 있으신가요?', 'login.gotoLogin': '로그인하기', 'signup.title': '계정 만들기', 'signup.sub': '전용 계정을 등록합니다.', 'signup.username': '사용자 이름', 'signup.submit': '가입', 'new.title': '새 글', 'new.sub': '한눈에 알아볼 수 있는 제목으로 이야기를 시작하세요.', 'new.t': '제목', 'new.cat': '분류', 'new.body': '내용', 'new.file': '첨부(선택)', 'new.filePick': '클릭하여 파일 선택', 'new.submit': '게시', 'new.phTitle': '주제를 한 줄로', 'new.phBody': '자세히…(줄바꿈 지원)', 'post.back': '← 홈으로', 'post.reply': '답글', 'post.replies': '개의 답글', 'post.confirmDelete': '이 게시글을 삭제할까요? 되돌릴 수 없습니다.', 'post.deleted': '게시글이 삭제되었습니다', 'post.confirmDelComment': '이 답글을 삭제할까요? 되돌릴 수 없습니다.', 'post.commentDeleted': '답글이 삭제되었습니다', 'settings.theme': '테마', 'settings.themeHint': '마음에 드는 화면 스타일을 선택하세요', 'settings.official': '공식', 'settings.solid': '단색', 'settings.gradient': '그라데이션', 'settings.culture': '문화', 'settings.default': '기본', 'settings.glass': '리퀴드 글라스', 'settings.glassHint': '「단색」「그라데이션」테마에서만 사용 가능. 유리 질감 + 색상·투명도 설정', 'settings.glassOn': '리퀴드 글라스 모드 켜기', 'settings.glassColor': '유리 색상', 'settings.opacity': '투명도', 'settings.lang': '표시 언어', 'settings.langHint': '화면 표시 언어 전환', 'settings.pwd': '비밀번호 변경', 'settings.save': '저장 후 연결', 'settings.clear': '설정 지우기', 'settings.themeSaved': '테마를 변경했습니다', 'settings.saveFail': '저장 실패:', 'settings.glassOnDone': '리퀴드 글라스 켜짐', 'settings.glassOffDone': '리퀴드 글라스 꺼짐', 'settings.glassColorDone': '유리 색상을 업데이트했습니다', 'settings.glassAlphaDone': '유리 투명도를 업데이트했습니다', 'settings.langDone': '언어를 변경했습니다', 'welcome': '환영합니다,', 'signupOk': '가입 완료. HanBer 운단에 오신 것을 환영합니다', 'pleaseLogin': '먼저 로그인하세요', 'uploadFail': '업로드 실패', 'netErr': '요청 시간 초과', 'footer': 'HanBerOS 6.4', 'nav.signin': '출석', 'report.title': '신고', 'report.reason': '신고 사유(필수)', 'report.detail': '상세(선택)', 'report.ok': '신고가 접수되었습니다. 관리자가 확인합니다', 'pin.admin': '고정', 'pin.adminOff': '고정 해제', 'admin.reports': '신고 관리', 'admin.handle': '처리', 'admin.ignore': '무시', 'admin.actionPh': '조치(예: 삭제 / 7일 정지)', 'admin.signins': '출석 기록', 'admin.audit': '조작 로그', 'admin.export': '사용자 데이터 내보내기', 'admin.exportPh': '이름 또는 ID 입력', 'export.title': '데이터 내보내기', 'export.mine': '내 전체 데이터 내보내기', 'export.admin': '이 사용자 내보내기', 'export.need': '운단의 모든 데이터(게시글·댓글·쪽지·알림·출석)를 JSON으로 내보냅니다. 나만 볼 수 있습니다.', 'nav.notifClear': '읽음 지우기', 'nav.notifCleared': '읽은 알림을 지웠습니다', 'apps.login.ok1': '✅ 운단으로 로그인됨:', 'apps.login.ok2': '—— 게임에 자동으로 계정이 들어갑니다', 'apps.login.no1': '🔒 운단에 로그인하지 않음,', 'apps.login.no2': '게임에서 원탭 로그인 가능(로그인 없이도 체험 가능)', 'apps.needlogin': '이 게임은 운단 로그인이 필요합니다. 먼저 로그인하세요', 'apps.fs.on': '⛶ 전체 화면 종료', 'apps.fs.off': '⛶ 전체 화면', 'apps.name.bread': '빵킬·군웅쟁패', 'apps.tag.bread': '공동 제작 · 플레이 전 선언 필요', 'apps.desc.bread': '삼국지풍 카드 배틀: 매칭/랭크, 장수 스킬, 장비·계략 풀패. Han Ber & Bread Guard Team 공동 제작.', 'apps.name.gta': 'GTA·상하이 픽셀 시티', 'apps.tag.gta': '오프라인 플레이', 'apps.desc.gta': '2D 픽셀 오픈월드: 12개 행정구, 산업 경영, 화물/호송/레이스 임무, 지명 수배, 브라우저 로컬 저장.', 'apps.name.tank': '철갑전사 2D', 'apps.tag.tank': '운단 원탭 로그인', 'apps.desc.tank': '4개 전역의 전쟁 게임: 철갑의 파도, 병종 상성, 진지 전진. 기갑 부대를 지휘하세요.', 'apps.name.century': '세기 전쟁', 'apps.tag.century': '운단 원탭 로그인', 'apps.desc.century': '100년을 아우르는 4대 전역: 참호전에서 전격전까지, 명장면 턴제 대결.', 'apps.name.game': '게임이론·균형 연구소', 'apps.tag.game': '운단 원탭 로그인', 'apps.desc.game': '고전 게임이론 인공지능 대전: 죄수의 딜레마, 내시 균형, 돼지 게임. 배우며 즐기세요.', 'apps.name.potato': '크레이지 감자', 'apps.tag.potato': '운단 원탭 로그인', 'apps.desc.potato': '감자 치기 캐주얼 게임: 반사 신경 도전, 멈출 수 없음.', 'apps.name.puff': '부풀복어 Puff!', 'apps.tag.puff': '운단 원탭 로그인', 'apps.desc.puff': '복어 캐주얼 게임: 부풀고, 뒤집고, 멈출 수 없음.', 'apps.name.mist': '백무 진혼곡', 'apps.tag.mist': '오프라인', 'apps.desc.mist': '2D 픽셀 탐험: 안개 마을, 기억을 잃은 주인공. 흰 안개를 헤치고 진실을 찾아라.', 'apps.name.hanba': '한발 전설', 'apps.tag.hanba': '운단 원탭 로그인', 'apps.desc.hanba': 'HANBA LEGEND: 동방 전설 모험. 가뭄을 물리치고 중원을 누비라.', 'apps.name.croissant': '크루아상 전설', 'apps.tag.croissant': '운단 원탭 로그인', 'apps.desc.croissant': 'Croissant Legend: 제과 세계의 모험담. 바삭한 영웅이 파리를 구한다.', 'apps.name.panglong': '뚱보용 다이어트', 'apps.tag.panglong': '운단 원탭 로그인', 'apps.desc.panglong': '먹보 작은용의 다이어트 대작전. 식이조절하고 움직여라!', 'apps.name.weiren': '위인·위인 시뮬레이션 연구소', 'apps.tag.weiren': '오프라인', 'apps.desc.weiren': '관찰하고, 구별하고, 모방하라. 진짜와 가짜 사이에서 선택하라.', 'apps.name.star': '별의 여행자', 'apps.tag.star': '운단 원탭 로그인', 'apps.desc.star': 'Star Voyager: 별과 우주 탐험. 우주선을 타고 별바다를 건너세요.', 'apps.name.lovezone': '사랑의 금지구역', 'apps.tag.lovezone': '다크웹 한정 · 해금 필요', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: 다크웹 깊은 곳의 금기 서사. 당신의 선택이 결말을 정합니다.', 'apps.name.faceless': '얼굴 없는 사람', 'apps.tag.faceless': '반전 픽셀', 'apps.desc.faceless': 'THE FACELESS: 반전 픽셀 게임. 전쟁은 지옥이다.', 'apps.lovezone.locked': '🔒 먼저 다크웹에서 획득해야 함(페이지 하단 버전 번호 5번 연타)', 'settings.sound': '배경음', 'settings.soundHint': '화이트 노이즈나 환경음을 선택해 끊김 없이 반복 재생합니다', 'settings.soundOn': '배경음 켜기', 'settings.volume': '볼륨', 'sound.balance': '균형 노이즈', 'sound.bright': '밝은 노이즈', 'sound.dark': '어두운 노이즈', 'sound.rain': '빗소리', 'sound.ocean': '파도 소리', 'sound.stream': '시냇물', 'sound.night': '밤의 고요', 'sound.fire': '모닥불', 'sound.steam': '증기', 'sound.fan': '선풍기', 'sound.white': '화이트 노이즈', 'chat.empty': '아직 메시지가 없습니다. 인사해 보세요', 'chat.copy': '복사', 'chat.translate': '번역', 'chat.recall': '회수', 'chat.delete': '삭제', 'chat.recalled': '메시지가 회수되었습니다', 'chat.recalledByOther': '상대방이 메시지를 회수했습니다', 'chat.copied': '복사되었습니다', 'chat.recallOk': '회수되었습니다', 'chat.deleteOk': '삭제되었습니다(나만 안 보임)', 'chat.recallTimeout': '2분이 지나면 삭제만 가능합니다', 'chat.translating': '번역 중…', 'chat.you': '나', 'profile.follow': '팔로우', 'profile.following': '팔로우 중', 'profile.followed': '팔로우함', 'profile.unfollowed': '팔로우 취소', 'profile.sendMsg': '쪽지 보내기', 'profile.block': '차단', 'profile.unblock': '차단 해제', 'profile.unblocked': '차단 해제됨', 'profile.confirmBlock': '이 사용자를 차단할까요? 차단하면 상대의 콘텐츠를 볼 수 없습니다.', 'profile.blocked': '차단됨', 'profile.mutual': '맞팔로우 · 쪽지 가능', 'profile.joinedAt': '가입일', 'profile.noBio': '이 사용자는 아직 프로필을 작성하지 않았습니다.', 'admin.confirmRemove': '이 관리자를 일반 사용자로 강등할까요?', 'admin.removeDone': '일반 사용자로 강등됨', 'admin.confirmDisable': '이 관리자를 비활성화할까요? 관리 권한이 즉시 소멸됩니다.', 'admin.confirmEnable': '이 관리자를 활성화할까요?', 'admin.disableDone': '비활성화됨', 'expandAll': '모두 보기 ({0})', 'admin.enableDone': '활성화됨',      'settings.title': '설정',
+    'nav.home': '홈', 'nav.new': '글쓰기', 'nav.chat': '쪽지', 'nav.notif': '알림', 'nav.apps': '미니앱', 'nav.login': '로그인', 'nav.signup': '가입', 'nav.logout': '로그아웃', 'search.ph': '게시글 검색…', 'cat.all': '전체', 'cat.chat': '잡담', 'cat.study': '공부', 'cat.game': '게임', 'cat.tech': '기술', 'cat.announce': '공지','cat.life': '생활', 'cat.emotion': '감정', 'cat.resource': '자료공유', 'cat.music': '음악', 'cat.movie': '영화', 'cat.anime': '2차원', 'cat.campus': '캠퍼스', 'cat.career': '직장', 'cat.digital': '디지털', 'cat.local': '동네', 'cat.pet': '반려동물', 'cat.food': '맛집', 'cat.travel': '여행', 'cat.sports': '운동', 'cat.photo': '사진', 'cat.reading': '독서',  'login.title': '운단에 가입', 'login.sub': '하나의 계정으로 모든 기기에서 사용 가능합니다.', 'login.account': '휴대폰 번호 또는 이메일', 'login.password': '비밀번호', 'login.captcha': '답 입력', 'login.submit': '로그인', 'login.noAcc': '계정이 없으신가요?', 'login.gotoSignup': '가입하기', 'login.haveAcc': '계정이 있으신가요?', 'login.gotoLogin': '로그인하기', 'signup.title': '계정 만들기', 'signup.sub': '전용 계정을 등록합니다.', 'signup.username': '사용자 이름', 'signup.submit': '가입', 'new.title': '새 글', 'new.sub': '한눈에 알아볼 수 있는 제목으로 이야기를 시작하세요.', 'new.t': '제목', 'new.cat': '분류', 'new.body': '내용', 'new.file': '첨부(선택)', 'new.filePick': '클릭하여 파일 선택', 'new.submit': '게시', 'new.phTitle': '주제를 한 줄로', 'new.phBody': '자세히…(줄바꿈 지원)', 'post.back': '← 홈으로', 'post.reply': '답글', 'post.replies': '개의 답글', 'post.confirmDelete': '이 게시글을 삭제할까요? 되돌릴 수 없습니다.', 'post.deleted': '게시글이 삭제되었습니다', 'post.confirmDelComment': '이 답글을 삭제할까요? 되돌릴 수 없습니다.', 'post.commentDeleted': '답글이 삭제되었습니다', 'settings.theme': '테마', 'settings.themeHint': '마음에 드는 화면 스타일을 선택하세요', 'settings.official': '공식', 'settings.solid': '단색', 'settings.gradient': '그라데이션', 'settings.culture': '문화', 'settings.default': '기본', 'settings.glass': '리퀴드 글라스', 'settings.glassHint': '「단색」「그라데이션」테마에서만 사용 가능. 유리 질감 + 색상·투명도 설정', 'settings.glassOn': '리퀴드 글라스 모드 켜기', 'settings.glassColor': '유리 색상', 'settings.opacity': '투명도', 'settings.lang': '표시 언어', 'settings.langHint': '화면 표시 언어 전환', 'settings.pwd': '비밀번호 변경', 'settings.save': '저장 후 연결', 'settings.clear': '설정 지우기', 'settings.themeSaved': '테마를 변경했습니다', 'settings.saveFail': '저장 실패:', 'settings.glassOnDone': '리퀴드 글라스 켜짐', 'settings.glassOffDone': '리퀴드 글라스 꺼짐', 'settings.glassColorDone': '유리 색상을 업데이트했습니다', 'settings.glassAlphaDone': '유리 투명도를 업데이트했습니다', 'settings.langDone': '언어를 변경했습니다', 'welcome': '환영합니다,', 'signupOk': '가입 완료. HanBer 운단에 오신 것을 환영합니다', 'pleaseLogin': '먼저 로그인하세요', 'uploadFail': '업로드 실패', 'netErr': '요청 시간 초과', 'footer': 'HanBerOS 6.4.6', 'nav.signin': '출석', 'report.title': '신고', 'report.reason': '신고 사유(필수)', 'report.detail': '상세(선택)', 'report.ok': '신고가 접수되었습니다. 관리자가 확인합니다', 'pin.admin': '고정', 'pin.adminOff': '고정 해제', 'admin.reports': '신고 관리', 'admin.handle': '처리', 'admin.ignore': '무시', 'admin.actionPh': '조치(예: 삭제 / 7일 정지)', 'admin.signins': '출석 기록', 'admin.audit': '조작 로그', 'admin.export': '사용자 데이터 내보내기', 'admin.exportPh': '이름 또는 ID 입력', 'export.title': '데이터 내보내기', 'export.mine': '내 전체 데이터 내보내기', 'export.admin': '이 사용자 내보내기', 'export.need': '운단의 모든 데이터(게시글·댓글·쪽지·알림·출석)를 JSON으로 내보냅니다. 나만 볼 수 있습니다.', 'nav.notifClear': '읽음 지우기', 'nav.notifCleared': '읽은 알림을 지웠습니다', 'apps.login.ok1': '✅ 운단으로 로그인됨:', 'apps.login.ok2': '—— 게임에 자동으로 계정이 들어갑니다', 'apps.login.no1': '🔒 운단에 로그인하지 않음,', 'apps.login.no2': '게임에서 원탭 로그인 가능(로그인 없이도 체험 가능)', 'apps.needlogin': '이 게임은 운단 로그인이 필요합니다. 먼저 로그인하세요', 'apps.fs.on': '⛶ 전체 화면 종료', 'apps.fs.off': '⛶ 전체 화면', 'apps.name.bread': '빵킬·군웅쟁패', 'apps.tag.bread': '공동 제작 · 플레이 전 선언 필요', 'apps.desc.bread': '삼국지풍 카드 배틀: 매칭/랭크, 장수 스킬, 장비·계략 풀패. Han Ber & Bread Guard Team 공동 제작.', 'apps.name.gta': 'GTA·상하이 픽셀 시티', 'apps.tag.gta': '오프라인 플레이', 'apps.desc.gta': '2D 픽셀 오픈월드: 12개 행정구, 산업 경영, 화물/호송/레이스 임무, 지명 수배, 브라우저 로컬 저장.', 'apps.name.tank': '철갑전사 2D', 'apps.tag.tank': '운단 원탭 로그인', 'apps.desc.tank': '4개 전역의 전쟁 게임: 철갑의 파도, 병종 상성, 진지 전진. 기갑 부대를 지휘하세요.', 'apps.name.century': '세기 전쟁', 'apps.tag.century': '운단 원탭 로그인', 'apps.desc.century': '100년을 아우르는 4대 전역: 참호전에서 전격전까지, 명장면 턴제 대결.', 'apps.name.game': '게임이론·균형 연구소', 'apps.tag.game': '운단 원탭 로그인', 'apps.desc.game': '고전 게임이론 인공지능 대전: 죄수의 딜레마, 내시 균형, 돼지 게임. 배우며 즐기세요.', 'apps.name.potato': '크레이지 감자', 'apps.tag.potato': '운단 원탭 로그인', 'apps.desc.potato': '감자 치기 캐주얼 게임: 반사 신경 도전, 멈출 수 없음.', 'apps.name.puff': '부풀복어 Puff!', 'apps.tag.puff': '운단 원탭 로그인', 'apps.desc.puff': '복어 캐주얼 게임: 부풀고, 뒤집고, 멈출 수 없음.', 'apps.name.mist': '백무 진혼곡', 'apps.tag.mist': '오프라인', 'apps.desc.mist': '2D 픽셀 탐험: 안개 마을, 기억을 잃은 주인공. 흰 안개를 헤치고 진실을 찾아라.', 'apps.name.hanba': '한발 전설', 'apps.tag.hanba': '운단 원탭 로그인', 'apps.desc.hanba': 'HANBA LEGEND: 동방 전설 모험. 가뭄을 물리치고 중원을 누비라.', 'apps.name.croissant': '크루아상 전설', 'apps.tag.croissant': '운단 원탭 로그인', 'apps.desc.croissant': 'Croissant Legend: 제과 세계의 모험담. 바삭한 영웅이 파리를 구한다.', 'apps.name.panglong': '뚱보용 다이어트', 'apps.tag.panglong': '운단 원탭 로그인', 'apps.desc.panglong': '먹보 작은용의 다이어트 대작전. 식이조절하고 움직여라!', 'apps.name.weiren': '위인·위인 시뮬레이션 연구소', 'apps.tag.weiren': '오프라인', 'apps.desc.weiren': '관찰하고, 구별하고, 모방하라. 진짜와 가짜 사이에서 선택하라.', 'apps.name.star': '별의 여행자', 'apps.tag.star': '운단 원탭 로그인', 'apps.desc.star': 'Star Voyager: 별과 우주 탐험. 우주선을 타고 별바다를 건너세요.', 'apps.name.lovezone': '사랑의 금지구역', 'apps.tag.lovezone': '다크웹 한정 · 해금 필요', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: 다크웹 깊은 곳의 금기 서사. 당신의 선택이 결말을 정합니다.', 'apps.name.faceless': '얼굴 없는 사람', 'apps.tag.faceless': '반전 픽셀', 'apps.desc.faceless': 'THE FACELESS: 반전 픽셀 게임. 전쟁은 지옥이다.', 'apps.lovezone.locked': '🔒 먼저 다크웹에서 획득해야 함(페이지 하단 버전 번호 5번 연타)', 'settings.sound': '배경음', 'settings.soundHint': '화이트 노이즈나 환경음을 선택해 끊김 없이 반복 재생합니다', 'settings.soundOn': '배경음 켜기', 'settings.volume': '볼륨', 'sound.balance': '균형 노이즈', 'sound.bright': '밝은 노이즈', 'sound.dark': '어두운 노이즈', 'sound.rain': '빗소리', 'sound.ocean': '파도 소리', 'sound.stream': '시냇물', 'sound.night': '밤의 고요', 'sound.fire': '모닥불', 'sound.steam': '증기', 'sound.fan': '선풍기', 'sound.white': '화이트 노이즈', 'chat.empty': '아직 메시지가 없습니다. 인사해 보세요', 'chat.copy': '복사', 'chat.translate': '번역', 'chat.recall': '회수', 'chat.delete': '삭제', 'chat.recalled': '메시지가 회수되었습니다', 'chat.recalledByOther': '상대방이 메시지를 회수했습니다', 'chat.copied': '복사되었습니다', 'chat.recallOk': '회수되었습니다', 'chat.deleteOk': '삭제되었습니다(나만 안 보임)', 'chat.recallTimeout': '2분이 지나면 삭제만 가능합니다', 'chat.translating': '번역 중…', 'chat.you': '나', 'profile.follow': '팔로우', 'profile.following': '팔로우 중', 'profile.followed': '팔로우함', 'profile.unfollowed': '팔로우 취소', 'profile.sendMsg': '쪽지 보내기', 'profile.block': '차단', 'profile.unblock': '차단 해제', 'profile.unblocked': '차단 해제됨', 'profile.confirmBlock': '이 사용자를 차단할까요? 차단하면 상대의 콘텐츠를 볼 수 없습니다.', 'profile.blocked': '차단됨', 'profile.mutual': '맞팔로우 · 쪽지 가능', 'profile.joinedAt': '가입일', 'profile.noBio': '이 사용자는 아직 프로필을 작성하지 않았습니다.', 'admin.confirmRemove': '이 관리자를 일반 사용자로 강등할까요?', 'admin.removeDone': '일반 사용자로 강등됨', 'admin.confirmDisable': '이 관리자를 비활성화할까요? 관리 권한이 즉시 소멸됩니다.', 'admin.confirmEnable': '이 관리자를 활성화할까요?', 'admin.disableDone': '비활성화됨', 'expandAll': '모두 보기 ({0})', 'admin.enableDone': '활성화됨',      'settings.title': '설정',
     'settings.sub': 'Yuntan 경험을 맞춤설정하세요',
     'apps.title': '미니 앱',
     'apps.sub': '내장 미니 게임 · 로그인 시 자동 연동',
@@ -5055,7 +5108,7 @@ var I18N = {
     'post.retry': 'Tentar novamente',
     'notif.empty': 'Sem notificações',
     'toast.alreadySigned': 'Já fez check-in hoje',
-    'nav.home': 'Início', 'nav.new': 'Publicar', 'nav.chat': 'Mensagens', 'nav.notif': 'Notificações', 'nav.apps': 'Mini Apps', 'nav.login': 'Entrar', 'nav.signup': 'Cadastrar', 'nav.logout': 'Sair', 'search.ph': 'Pesquisar posts…', 'cat.all': 'Tudo', 'cat.chat': 'Papo', 'cat.study': 'Estudos', 'cat.game': 'Jogos', 'cat.tech': 'Tecnologia', 'cat.announce': 'Notícias','cat.life': 'Vida', 'cat.emotion': 'Emoções', 'cat.resource': 'Recursos', 'cat.music': 'Música', 'cat.movie': 'Filmes', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Carreira', 'cat.digital': 'Digital', 'cat.local': 'Local', 'cat.pet': 'Animais', 'cat.food': 'Comida', 'cat.travel': 'Viagens', 'cat.sports': 'Desporto', 'cat.photo': 'Fotografia', 'cat.reading': 'Leitura',  'login.title': 'Entre no Fórum', 'login.sub': 'Uma conta para todos os dispositivos.', 'login.account': 'Telefone ou e-mail', 'login.password': 'Senha', 'login.captcha': 'Digite a resposta', 'login.submit': 'Entrar', 'login.noAcc': 'Sem conta?', 'login.gotoSignup': 'Cadastre-se', 'login.haveAcc': 'Já tem conta?', 'login.gotoLogin': 'Entrar', 'signup.title': 'Criar Conta', 'signup.sub': 'Registre uma conta exclusiva.', 'signup.username': 'Nome de usuário', 'signup.submit': 'Cadastrar', 'new.title': 'Novo Post', 'new.sub': 'Escreva um tema que dê para entender de primeira.', 'new.t': 'Título', 'new.cat': 'Categoria', 'new.body': 'Conteúdo', 'new.file': 'Anexo (opcional)', 'new.filePick': 'Clique para escolher arquivos', 'new.submit': 'Publicar', 'new.phTitle': 'Resuma o tema em uma frase', 'new.phBody': 'Detalhes… (quebras de linha suportadas)', 'post.back': '← Voltar ao início', 'post.reply': 'Responder', 'post.replies': ' respostas', 'post.confirmDelete': 'Eliminar esta publicação? Não dá para desfazer.', 'post.deleted': 'Publicação eliminada', 'post.confirmDelComment': 'Eliminar esta resposta? Não dá para desfazer.', 'post.commentDeleted': 'Resposta eliminada', 'settings.theme': 'Aparência do tema', 'settings.themeHint': 'Escolha seu estilo de interface', 'settings.official': 'Oficial', 'settings.solid': 'Sólido', 'settings.gradient': 'Gradiente', 'settings.culture': 'Cultural', 'settings.default': 'Padrão', 'settings.glass': 'Vidro líquido', 'settings.glassHint': 'Disponível apenas nos temas "Sólido" e "Gradiente". Visual de vidro + cor e opacidade opcionais', 'settings.glassOn': 'Ativar modo vidro líquido', 'settings.glassColor': 'Cor do vidro', 'settings.opacity': 'Opacidade', 'settings.lang': 'Idioma da interface', 'settings.langHint': 'Alterar o idioma da interface', 'settings.pwd': 'Alterar senha', 'settings.save': 'Salvar e conectar', 'settings.clear': 'Limpar configuração', 'settings.themeSaved': 'Tema alterado', 'settings.saveFail': 'Falha ao salvar:', 'settings.glassOnDone': 'Vidro líquido ativado', 'settings.glassOffDone': 'Vidro líquido desativado', 'settings.glassColorDone': 'Cor do vidro atualizada', 'settings.glassAlphaDone': 'Opacidade do vidro atualizada', 'settings.langDone': 'Idioma alterado', 'welcome': 'Bem-vindo de volta,', 'signupOk': 'Cadastro concluído. Bem-vindo ao HanBer Fórum', 'pleaseLogin': 'Faça login primeiro', 'uploadFail': 'Falha no upload', 'netErr': 'Tempo de solicitação esgotado', 'footer': 'HanBerOS 6.4', 'nav.signin': 'Check-in', 'report.title': 'Denunciar', 'report.reason': 'Motivo (obrigatório)', 'report.detail': 'Detalhes (opcional)', 'report.ok': 'Denúncia enviada, os admins vão analisar', 'pin.admin': 'Fixar', 'pin.adminOff': 'Desafixar', 'admin.reports': 'Gestão de Denúncias', 'admin.handle': 'Processar', 'admin.ignore': 'Ignorar', 'admin.actionPh': 'Ação (ex. apagar / ban 7d)', 'admin.signins': 'Registos de Check-in', 'admin.audit': 'Registo de Operações', 'admin.export': 'Exportar Dados', 'admin.exportPh': 'Insira nome ou ID', 'export.title': 'Exportação de Dados', 'export.mine': 'Exportar Todos os Meus Dados', 'export.admin': 'Exportar Este Utilizador', 'export.need': 'Exporta todos os teus dados (posts, respostas, mensagens, notificações, check-ins) em JSON. Só tu podes ver.', 'nav.notifClear': 'Limpar lidas', 'nav.notifCleared': 'Notificações lidas limpas', 'apps.login.ok1': '✅ Conectado pelo Fórum:', 'apps.login.ok2': '—— o jogo entra com sua conta automaticamente', 'apps.login.no1': '🔒 Não conectado ao Fórum,', 'apps.login.no2': 'faça login em um toque no jogo (dá para jogar sem login)', 'apps.needlogin': 'Este jogo precisa do login do Fórum. Entre primeiro', 'apps.fs.on': '⛶ Sair da tela cheia', 'apps.fs.off': '⛶ Tela cheia', 'apps.name.bread': 'Pão Mortal · Batalha dos Heróis', 'apps.tag.bread': 'Produção conjunta · leia o aviso antes de entrar', 'apps.desc.bread': 'Batalha de cartas estilo Três Reinos: match/ranqueada, habilidades de generais, equipamentos e estratagemas. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Cidade Pixel de Xangai', 'apps.tag.gta': 'Jogo offline', 'apps.desc.gta': 'Mundo aberto 2D pixel: 12 distritos, gestão de negócios, missões de carga/escolta/corrida, perseguição. Salvo no navegador.', 'apps.name.tank': 'História Blindada 2D', 'apps.tag.tank': 'Login em um toque', 'apps.desc.tank': 'Jogo de guerra com 4 campanhas: onda blindada, contração entre tropas, avanço de posição. Comande suas forças blindadas.', 'apps.name.century': 'Guerra dos Séculos', 'apps.tag.century': 'Login em um toque', 'apps.desc.century': 'Quatro grandes batalhas por cem anos: das trincheiras à guerra-relâmpago, confrontos de turnos.', 'apps.name.game': 'Teoria dos Jogos · Lab de Equilíbrio', 'apps.tag.game': 'Login em um toque', 'apps.desc.game': 'Casos clássicos contra a IA: dilema do prisioneiro, equilíbrio de Nash, jogo do porco. Aprenda jogando.', 'apps.name.potato': 'Batata Maluca', 'apps.tag.potato': 'Login em um toque', 'apps.desc.potato': 'Jogo casual de bater na batata: desafio de reflexos, vicia.', 'apps.name.puff': 'Baiacu Puff!', 'apps.tag.puff': 'Login em um toque', 'apps.desc.puff': 'Jogo casual do baiacu: sopre, infle, vire. Não consegue parar.', 'apps.name.mist': 'Réquiem na Névoa', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Exploração 2D pixel: cidade enevoada, protagonista sem memória. Descubra a verdade na névoa.', 'apps.name.hanba': 'Lenda de Hanba', 'apps.tag.hanba': 'Login em um toque', 'apps.desc.hanba': 'HANBA LEGEND: aventura de lendas orientais. Domine a seca e conquiste a planície central.', 'apps.name.croissant': 'Lenda do Croissant', 'apps.tag.croissant': 'Login em um toque', 'apps.desc.croissant': 'Croissant Legend: aventura no mundo da confeitaria. Um herói crocante salva Paris.', 'apps.name.panglong': 'Dieta do Dragão Gordo', 'apps.tag.panglong': 'Login em um toque', 'apps.desc.panglong': 'A grande batalha de emagrecimento de um pequeno dragão guloso. Cuide da dieta e mexa-se!', 'apps.name.weiren': 'Wei Ren · Instituto de Simulação', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Observe, distinga, simule. Escolha entre o real e o falso.', 'apps.name.star': 'Viajante das Estrelas', 'apps.tag.star': 'Login em um toque', 'apps.desc.star': 'Star Voyager: exploração de estrelas e espaço. Pilote sua nave pelo mar de estrelas.', 'apps.name.lovezone': 'Zona Proibida do Amor', 'apps.tag.lovezone': 'Limitado à deep web · desbloqueio', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: uma narrativa proibida nas profundezas da deep web. Sua escolha define o fim.', 'apps.name.faceless': 'O Homem Sem Rosto', 'apps.tag.faceless': 'Pixel antiguerra', 'apps.desc.faceless': 'THE FACELESS: um jogo pixel antiguerra. A guerra é o inferno.', 'apps.lovezone.locked': '🔒 É preciso obter na deep web (toque 5 vezes no número de versão no rodapé)', 'settings.sound': 'Som de fundo', 'settings.soundHint': 'Escolha um ruído branco ou som ambiente para tocar em loop sem parar', 'settings.soundOn': 'Ativar som de fundo', 'settings.volume': 'Volume', 'sound.balance': 'Ruído balanceado', 'sound.bright': 'Ruído brilhante', 'sound.dark': 'Ruído escuro', 'sound.rain': 'Chuva', 'sound.ocean': 'Oceano', 'sound.stream': 'Riacho', 'sound.night': 'Noite', 'sound.fire': 'Fogueira', 'sound.steam': 'Vapor', 'sound.fan': 'Ventilador', 'sound.white': 'Ruído branco', 'chat.empty': 'Ainda não há mensagens. Diga olá!', 'chat.copy': 'Copiar', 'chat.translate': 'Traduzir', 'chat.recall': 'Retirar', 'chat.delete': 'Excluir', 'chat.recalled': 'Mensagem retirada', 'chat.recalledByOther': 'A outra pessoa retirou uma mensagem', 'chat.copied': 'Copiado', 'chat.recallOk': 'Retirada', 'chat.deleteOk': 'Excluída (oculta só para você)', 'chat.recallTimeout': 'Após 2 minutos só dá para excluir', 'chat.translating': 'Traduzindo…', 'chat.you': 'Eu', 'profile.follow': 'Seguir', 'profile.following': 'Seguindo', 'profile.followed': 'Seguiu', 'profile.unfollowed': 'Deixou de seguir', 'profile.sendMsg': 'Enviar mensagem', 'profile.block': 'Bloquear', 'profile.unblock': 'Desbloquear', 'profile.unblocked': 'Desbloqueado', 'profile.confirmBlock': 'Bloquear este utilizador? Deixarás de ver o conteúdo dele.', 'profile.blocked': 'Bloqueado', 'profile.mutual': 'Seguem-se mutuamente · podem conversar', 'profile.joinedAt': 'Entrou em', 'profile.noBio': 'Este utilizador ainda não escreveu uma biografia.', 'admin.confirmRemove': 'Rebaixar este administrador para utilizador normal?', 'admin.removeDone': 'Rebaixado para utilizador normal', 'admin.confirmDisable': 'Desativar este administrador? Os privilégios de admin serão revogados imediatamente.', 'admin.confirmEnable': 'Ativar este administrador?', 'admin.disableDone': 'Desativado', 'expandAll': 'Mostrar tudo ({0})', 'admin.enableDone': 'Ativado',      'settings.title': 'Configurações',
+    'nav.home': 'Início', 'nav.new': 'Publicar', 'nav.chat': 'Mensagens', 'nav.notif': 'Notificações', 'nav.apps': 'Mini Apps', 'nav.login': 'Entrar', 'nav.signup': 'Cadastrar', 'nav.logout': 'Sair', 'search.ph': 'Pesquisar posts…', 'cat.all': 'Tudo', 'cat.chat': 'Papo', 'cat.study': 'Estudos', 'cat.game': 'Jogos', 'cat.tech': 'Tecnologia', 'cat.announce': 'Notícias','cat.life': 'Vida', 'cat.emotion': 'Emoções', 'cat.resource': 'Recursos', 'cat.music': 'Música', 'cat.movie': 'Filmes', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Carreira', 'cat.digital': 'Digital', 'cat.local': 'Local', 'cat.pet': 'Animais', 'cat.food': 'Comida', 'cat.travel': 'Viagens', 'cat.sports': 'Desporto', 'cat.photo': 'Fotografia', 'cat.reading': 'Leitura',  'login.title': 'Entre no Fórum', 'login.sub': 'Uma conta para todos os dispositivos.', 'login.account': 'Telefone ou e-mail', 'login.password': 'Senha', 'login.captcha': 'Digite a resposta', 'login.submit': 'Entrar', 'login.noAcc': 'Sem conta?', 'login.gotoSignup': 'Cadastre-se', 'login.haveAcc': 'Já tem conta?', 'login.gotoLogin': 'Entrar', 'signup.title': 'Criar Conta', 'signup.sub': 'Registre uma conta exclusiva.', 'signup.username': 'Nome de usuário', 'signup.submit': 'Cadastrar', 'new.title': 'Novo Post', 'new.sub': 'Escreva um tema que dê para entender de primeira.', 'new.t': 'Título', 'new.cat': 'Categoria', 'new.body': 'Conteúdo', 'new.file': 'Anexo (opcional)', 'new.filePick': 'Clique para escolher arquivos', 'new.submit': 'Publicar', 'new.phTitle': 'Resuma o tema em uma frase', 'new.phBody': 'Detalhes… (quebras de linha suportadas)', 'post.back': '← Voltar ao início', 'post.reply': 'Responder', 'post.replies': ' respostas', 'post.confirmDelete': 'Eliminar esta publicação? Não dá para desfazer.', 'post.deleted': 'Publicação eliminada', 'post.confirmDelComment': 'Eliminar esta resposta? Não dá para desfazer.', 'post.commentDeleted': 'Resposta eliminada', 'settings.theme': 'Aparência do tema', 'settings.themeHint': 'Escolha seu estilo de interface', 'settings.official': 'Oficial', 'settings.solid': 'Sólido', 'settings.gradient': 'Gradiente', 'settings.culture': 'Cultural', 'settings.default': 'Padrão', 'settings.glass': 'Vidro líquido', 'settings.glassHint': 'Disponível apenas nos temas "Sólido" e "Gradiente". Visual de vidro + cor e opacidade opcionais', 'settings.glassOn': 'Ativar modo vidro líquido', 'settings.glassColor': 'Cor do vidro', 'settings.opacity': 'Opacidade', 'settings.lang': 'Idioma da interface', 'settings.langHint': 'Alterar o idioma da interface', 'settings.pwd': 'Alterar senha', 'settings.save': 'Salvar e conectar', 'settings.clear': 'Limpar configuração', 'settings.themeSaved': 'Tema alterado', 'settings.saveFail': 'Falha ao salvar:', 'settings.glassOnDone': 'Vidro líquido ativado', 'settings.glassOffDone': 'Vidro líquido desativado', 'settings.glassColorDone': 'Cor do vidro atualizada', 'settings.glassAlphaDone': 'Opacidade do vidro atualizada', 'settings.langDone': 'Idioma alterado', 'welcome': 'Bem-vindo de volta,', 'signupOk': 'Cadastro concluído. Bem-vindo ao HanBer Fórum', 'pleaseLogin': 'Faça login primeiro', 'uploadFail': 'Falha no upload', 'netErr': 'Tempo de solicitação esgotado', 'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Denunciar', 'report.reason': 'Motivo (obrigatório)', 'report.detail': 'Detalhes (opcional)', 'report.ok': 'Denúncia enviada, os admins vão analisar', 'pin.admin': 'Fixar', 'pin.adminOff': 'Desafixar', 'admin.reports': 'Gestão de Denúncias', 'admin.handle': 'Processar', 'admin.ignore': 'Ignorar', 'admin.actionPh': 'Ação (ex. apagar / ban 7d)', 'admin.signins': 'Registos de Check-in', 'admin.audit': 'Registo de Operações', 'admin.export': 'Exportar Dados', 'admin.exportPh': 'Insira nome ou ID', 'export.title': 'Exportação de Dados', 'export.mine': 'Exportar Todos os Meus Dados', 'export.admin': 'Exportar Este Utilizador', 'export.need': 'Exporta todos os teus dados (posts, respostas, mensagens, notificações, check-ins) em JSON. Só tu podes ver.', 'nav.notifClear': 'Limpar lidas', 'nav.notifCleared': 'Notificações lidas limpas', 'apps.login.ok1': '✅ Conectado pelo Fórum:', 'apps.login.ok2': '—— o jogo entra com sua conta automaticamente', 'apps.login.no1': '🔒 Não conectado ao Fórum,', 'apps.login.no2': 'faça login em um toque no jogo (dá para jogar sem login)', 'apps.needlogin': 'Este jogo precisa do login do Fórum. Entre primeiro', 'apps.fs.on': '⛶ Sair da tela cheia', 'apps.fs.off': '⛶ Tela cheia', 'apps.name.bread': 'Pão Mortal · Batalha dos Heróis', 'apps.tag.bread': 'Produção conjunta · leia o aviso antes de entrar', 'apps.desc.bread': 'Batalha de cartas estilo Três Reinos: match/ranqueada, habilidades de generais, equipamentos e estratagemas. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Cidade Pixel de Xangai', 'apps.tag.gta': 'Jogo offline', 'apps.desc.gta': 'Mundo aberto 2D pixel: 12 distritos, gestão de negócios, missões de carga/escolta/corrida, perseguição. Salvo no navegador.', 'apps.name.tank': 'História Blindada 2D', 'apps.tag.tank': 'Login em um toque', 'apps.desc.tank': 'Jogo de guerra com 4 campanhas: onda blindada, contração entre tropas, avanço de posição. Comande suas forças blindadas.', 'apps.name.century': 'Guerra dos Séculos', 'apps.tag.century': 'Login em um toque', 'apps.desc.century': 'Quatro grandes batalhas por cem anos: das trincheiras à guerra-relâmpago, confrontos de turnos.', 'apps.name.game': 'Teoria dos Jogos · Lab de Equilíbrio', 'apps.tag.game': 'Login em um toque', 'apps.desc.game': 'Casos clássicos contra a IA: dilema do prisioneiro, equilíbrio de Nash, jogo do porco. Aprenda jogando.', 'apps.name.potato': 'Batata Maluca', 'apps.tag.potato': 'Login em um toque', 'apps.desc.potato': 'Jogo casual de bater na batata: desafio de reflexos, vicia.', 'apps.name.puff': 'Baiacu Puff!', 'apps.tag.puff': 'Login em um toque', 'apps.desc.puff': 'Jogo casual do baiacu: sopre, infle, vire. Não consegue parar.', 'apps.name.mist': 'Réquiem na Névoa', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Exploração 2D pixel: cidade enevoada, protagonista sem memória. Descubra a verdade na névoa.', 'apps.name.hanba': 'Lenda de Hanba', 'apps.tag.hanba': 'Login em um toque', 'apps.desc.hanba': 'HANBA LEGEND: aventura de lendas orientais. Domine a seca e conquiste a planície central.', 'apps.name.croissant': 'Lenda do Croissant', 'apps.tag.croissant': 'Login em um toque', 'apps.desc.croissant': 'Croissant Legend: aventura no mundo da confeitaria. Um herói crocante salva Paris.', 'apps.name.panglong': 'Dieta do Dragão Gordo', 'apps.tag.panglong': 'Login em um toque', 'apps.desc.panglong': 'A grande batalha de emagrecimento de um pequeno dragão guloso. Cuide da dieta e mexa-se!', 'apps.name.weiren': 'Wei Ren · Instituto de Simulação', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Observe, distinga, simule. Escolha entre o real e o falso.', 'apps.name.star': 'Viajante das Estrelas', 'apps.tag.star': 'Login em um toque', 'apps.desc.star': 'Star Voyager: exploração de estrelas e espaço. Pilote sua nave pelo mar de estrelas.', 'apps.name.lovezone': 'Zona Proibida do Amor', 'apps.tag.lovezone': 'Limitado à deep web · desbloqueio', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: uma narrativa proibida nas profundezas da deep web. Sua escolha define o fim.', 'apps.name.faceless': 'O Homem Sem Rosto', 'apps.tag.faceless': 'Pixel antiguerra', 'apps.desc.faceless': 'THE FACELESS: um jogo pixel antiguerra. A guerra é o inferno.', 'apps.lovezone.locked': '🔒 É preciso obter na deep web (toque 5 vezes no número de versão no rodapé)', 'settings.sound': 'Som de fundo', 'settings.soundHint': 'Escolha um ruído branco ou som ambiente para tocar em loop sem parar', 'settings.soundOn': 'Ativar som de fundo', 'settings.volume': 'Volume', 'sound.balance': 'Ruído balanceado', 'sound.bright': 'Ruído brilhante', 'sound.dark': 'Ruído escuro', 'sound.rain': 'Chuva', 'sound.ocean': 'Oceano', 'sound.stream': 'Riacho', 'sound.night': 'Noite', 'sound.fire': 'Fogueira', 'sound.steam': 'Vapor', 'sound.fan': 'Ventilador', 'sound.white': 'Ruído branco', 'chat.empty': 'Ainda não há mensagens. Diga olá!', 'chat.copy': 'Copiar', 'chat.translate': 'Traduzir', 'chat.recall': 'Retirar', 'chat.delete': 'Excluir', 'chat.recalled': 'Mensagem retirada', 'chat.recalledByOther': 'A outra pessoa retirou uma mensagem', 'chat.copied': 'Copiado', 'chat.recallOk': 'Retirada', 'chat.deleteOk': 'Excluída (oculta só para você)', 'chat.recallTimeout': 'Após 2 minutos só dá para excluir', 'chat.translating': 'Traduzindo…', 'chat.you': 'Eu', 'profile.follow': 'Seguir', 'profile.following': 'Seguindo', 'profile.followed': 'Seguiu', 'profile.unfollowed': 'Deixou de seguir', 'profile.sendMsg': 'Enviar mensagem', 'profile.block': 'Bloquear', 'profile.unblock': 'Desbloquear', 'profile.unblocked': 'Desbloqueado', 'profile.confirmBlock': 'Bloquear este utilizador? Deixarás de ver o conteúdo dele.', 'profile.blocked': 'Bloqueado', 'profile.mutual': 'Seguem-se mutuamente · podem conversar', 'profile.joinedAt': 'Entrou em', 'profile.noBio': 'Este utilizador ainda não escreveu uma biografia.', 'admin.confirmRemove': 'Rebaixar este administrador para utilizador normal?', 'admin.removeDone': 'Rebaixado para utilizador normal', 'admin.confirmDisable': 'Desativar este administrador? Os privilégios de admin serão revogados imediatamente.', 'admin.confirmEnable': 'Ativar este administrador?', 'admin.disableDone': 'Desativado', 'expandAll': 'Mostrar tudo ({0})', 'admin.enableDone': 'Ativado',      'settings.title': 'Configurações',
     'settings.sub': 'Personalize sua experiência no Yuntan.',
     'apps.title': 'Mini aplicativos',
     'apps.sub': 'Mini-jogos integrados · vínculo automático.',
@@ -5380,7 +5433,7 @@ var I18N = {
     'post.retry': 'Erneut versuchen',
     'notif.empty': 'Keine Benachrichtigungen',
     'toast.alreadySigned': 'Heute bereits eingecheckt',
-    'nav.home': 'Startseite', 'nav.new': 'Neuer Beitrag', 'nav.chat': 'Nachrichten', 'nav.notif': 'Benachrichtigungen', 'nav.apps': 'Mini-Apps', 'nav.login': 'Anmelden', 'nav.signup': 'Registrieren', 'nav.logout': 'Abmelden', 'search.ph': 'Beiträge suchen…', 'cat.all': 'Alle', 'cat.chat': 'Plaudern', 'cat.study': 'Lernen', 'cat.game': 'Spiele', 'cat.tech': 'Technik', 'cat.announce': 'Ankündigungen','cat.life': 'Leben', 'cat.emotion': 'Gefühle', 'cat.resource': 'Ressourcen', 'cat.music': 'Musik', 'cat.movie': 'Filme', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Karriere', 'cat.digital': 'Digital', 'cat.local': 'Lokal', 'cat.pet': 'Haustiere', 'cat.food': 'Essen', 'cat.travel': 'Reisen', 'cat.sports': 'Sport', 'cat.photo': 'Fotografie', 'cat.reading': 'Lesen',  'login.title': 'Dem Forum beitreten', 'login.sub': 'Ein Konto für alle Geräte.', 'login.account': 'Telefon oder E-Mail', 'login.password': 'Passwort', 'login.captcha': 'Antwort eingeben', 'login.submit': 'Anmelden', 'login.noAcc': 'Kein Konto?', 'login.gotoSignup': 'Registrieren', 'login.haveAcc': 'Schon ein Konto?', 'login.gotoLogin': 'Anmelden', 'signup.title': 'Konto erstellen', 'signup.sub': 'Registriere ein eigenes Konto.', 'signup.username': 'Benutzername', 'signup.submit': 'Registrieren', 'new.title': 'Neuer Beitrag', 'new.sub': 'Schreibe ein Thema, dessen Titel sofort klar ist.', 'new.t': 'Titel', 'new.cat': 'Kategorie', 'new.body': 'Inhalt', 'new.file': 'Anhang (optional)', 'new.filePick': 'Klicken zum Auswählen', 'new.submit': 'Veröffentlichen', 'new.phTitle': 'Thema in einem Satz', 'new.phBody': 'Details… (Zeilenumbrüche möglich)', 'post.back': '← Zurück zur Startseite', 'post.reply': 'Antworten', 'post.replies': ' Antworten', 'post.confirmDelete': 'Diesen Beitrag löschen? Das kann nicht rückgängig gemacht werden.', 'post.deleted': 'Beitrag gelöscht', 'post.confirmDelComment': 'Diese Antwort löschen? Das kann nicht rückgängig gemacht werden.', 'post.commentDeleted': 'Antwort gelöscht', 'settings.theme': 'Design', 'settings.themeHint': 'Wähle deinen Lieblingsstil', 'settings.official': 'Offiziell', 'settings.solid': 'Einfarbig', 'settings.gradient': 'Verlauf', 'settings.culture': 'Kulturell', 'settings.default': 'Standard', 'settings.glass': 'Flüssigglas', 'settings.glassHint': 'Nur für „Einfarbig“ und „Verlauf“ verfügbar. Glas-Optik + wählbare Farbe und Transparenz', 'settings.glassOn': 'Flüssigglas-Modus aktivieren', 'settings.glassColor': 'Glasfarbe', 'settings.opacity': 'Transparenz', 'settings.lang': 'Sprache', 'settings.langHint': 'Sprache der Oberfläche wechseln', 'settings.pwd': 'Passwort ändern', 'settings.save': 'Speichern & verbinden', 'settings.clear': 'Konfiguration löschen', 'settings.themeSaved': 'Design gewechselt', 'settings.saveFail': 'Speichern fehlgeschlagen:', 'settings.glassOnDone': 'Flüssigglas aktiviert', 'settings.glassOffDone': 'Flüssigglas deaktiviert', 'settings.glassColorDone': 'Glasfarbe aktualisiert', 'settings.glassAlphaDone': 'Transparenz aktualisiert', 'settings.langDone': 'Sprache gewechselt', 'welcome': 'Willkommen zurück,', 'signupOk': 'Registrierung erfolgreich. Willkommen im HanBer Forum', 'pleaseLogin': 'Bitte zuerst anmelden', 'uploadFail': 'Upload fehlgeschlagen', 'netErr': 'Zeitüberschreitung', 'footer': 'HanBerOS 6.4', 'nav.signin': 'Check-in', 'report.title': 'Melden', 'report.reason': 'Grund (Pflicht)', 'report.detail': 'Details (optional)', 'report.ok': 'Meldung gesendet, Admins prüfen bald', 'pin.admin': 'Anheften', 'pin.adminOff': 'Lösen', 'admin.reports': 'Report-Verwaltung', 'admin.handle': 'Bearbeiten', 'admin.ignore': 'Ignorieren', 'admin.actionPh': 'Maßnahme (z.B. löschen / 7d Bann)', 'admin.signins': 'Check-in-Protokoll', 'admin.audit': 'Operationsprotokoll', 'admin.export': 'Daten exportieren', 'admin.exportPh': 'Benutzername oder ID', 'export.title': 'Datenexport', 'export.mine': 'Alle meine Daten exportieren', 'export.admin': 'Diesen Nutzer exportieren', 'export.need': 'Exportiere alle deine Forum-Daten (Beiträge, Antworten, Nachrichten, Benachrichtigungen, Check-ins) als JSON. Nur du kannst sie sehen.', 'nav.notifClear': 'Gelesene löschen', 'nav.notifCleared': 'Gelesene Benachrichtigungen gelöscht', 'apps.login.ok1': '✅ Über das Forum angemeldet:', 'apps.login.ok2': '—— das Spiel übernimmt dein Konto automatisch', 'apps.login.no1': '🔒 Nicht im Forum angemeldet,', 'apps.login.no2': 'im Spiel mit einem Klick anmelden (auch ohne Anmeldung spielbar)', 'apps.needlogin': 'Dieses Spiel erfordert die Forum-Anmeldung. Bitte zuerst anmelden', 'apps.fs.on': '⛶ Vollbild beenden', 'apps.fs.off': '⛶ Vollbild', 'apps.name.bread': 'Brot-Killer · Kampf der Helden', 'apps.tag.bread': 'Gemeinschaftsproduktion · Hinweis vor dem Spiel lesen', 'apps.desc.bread': 'Kartenschlacht im Stil der Drei Reiche: Match/Platzierung, Generalsfähigkeiten, Ausrüstung und Strategien. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Offline spielen', 'apps.desc.gta': '2D-Pixel-Open-World: 12 Bezirke, Industrie-Management, Fracht/Eskorte/Rennmissionen, Fahndung. Lokal im Browser gespeichert.', 'apps.name.tank': 'Panzergeschichte 2D', 'apps.tag.tank': '1-Klick-Anmeldung', 'apps.desc.tank': 'Kriegsspiel mit 4 Kampagnen: Panzerwelle, Einheiten-Counter, Stellungsvorstoß. Führe deine Panzertruppen.', 'apps.name.century': 'Jahrhundert-Krieg', 'apps.tag.century': '1-Klick-Anmeldung', 'apps.desc.century': 'Vier Schlachten über hundert Jahre: vom Grabenkrieg zum Blitzkrieg, klassische Runden-Duelle.', 'apps.name.game': 'Spieltheorie · Gleichgewichtslabor', 'apps.tag.game': '1-Klick-Anmeldung', 'apps.desc.game': 'Klassische Spieltheorie gegen die KI: Gefangenendilemma, Nash-Gleichgewicht, Schwein-Spiel. Spielend lernen.', 'apps.name.potato': 'Verrückte Kartoffel', 'apps.tag.potato': '1-Klick-Anmeldung', 'apps.desc.potato': 'Lässiges Kartoffel-Hämmern: Reaktions-Challenge, macht süchtig.', 'apps.name.puff': 'Kugelfisch Puff!', 'apps.tag.puff': '1-Klick-Anmeldung', 'apps.desc.puff': 'Lässiges Kugelfisch-Spiel: pusten, aufblähen, drehen. Unaufhörlich.', 'apps.name.mist': 'Requiem im Nebel', 'apps.tag.mist': 'Offline', 'apps.desc.mist': '2D-Pixel-Erkundung: Nebelstadt, Protagonist mit Amnesie. Finde die Wahrheit im weißen Nebel.', 'apps.name.hanba': 'Hanba-Legende', 'apps.tag.hanba': '1-Klick-Anmeldung', 'apps.desc.hanba': 'HANBA LEGEND: Abenteuer der östlichen Legenden. Bezwinge die Dürre, erobere das Kernland.', 'apps.name.croissant': 'Croissant-Legende', 'apps.tag.croissant': '1-Klick-Anmeldung', 'apps.desc.croissant': 'Croissant Legend: Abenteuer in der Backwelt. Ein knuspriger Held rettet Paris.', 'apps.name.panglong': 'Dicker-Drachen-Diät', 'apps.tag.panglong': '1-Klick-Anmeldung', 'apps.desc.panglong': 'Die Schlankheits-Operation eines gefräßigen Drachens. Kontrolliere die Ernährung, beweg dich!', 'apps.name.weiren': 'Wei Ren · Institut für Simulation', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Beobachte, unterscheide, simuliere. Wähle zwischen echt und falsch.', 'apps.name.star': 'Sternenreisender', 'apps.tag.star': '1-Klick-Anmeldung', 'apps.desc.star': 'Star Voyager: Stern- und Weltraum-Erkundung. Fliege dein Raumschiff durch das Sternenmeer.', 'apps.name.lovezone': 'Verbotene Liebeszone', 'apps.tag.lovezone': 'Darknet-exklusiv · Freischaltung', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: eine verbotene Erzählung in den Tiefen des Darknets. Deine Wahl bestimmt das Ende.', 'apps.name.faceless': 'Der Mann ohne Gesicht', 'apps.tag.faceless': 'Antikriegs-Pixel', 'apps.desc.faceless': 'THE FACELESS: ein Antikriegs-Pixelspiel. Krieg ist die Hölle.', 'apps.lovezone.locked': '🔒 Erst im Darknet holen (5-mal auf die Versionsnummer im Fußbereich tippen)', 'settings.sound': 'Hintergrundgeräusch', 'settings.soundHint': 'Wähle ein Rauschen oder Ambiente für durchgehende Schleife', 'settings.soundOn': 'Hintergrundgeräusch aktivieren', 'settings.volume': 'Lautstärke', 'sound.balance': 'Ausgewogenes Rauschen', 'sound.bright': 'Helles Rauschen', 'sound.dark': 'Dunkles Rauschen', 'sound.rain': 'Regen', 'sound.ocean': 'Ozean', 'sound.stream': 'Bach', 'sound.night': 'Nacht', 'sound.fire': 'Feuer', 'sound.steam': 'Dampf', 'sound.fan': 'Ventilator', 'sound.white': 'Weißes Rauschen', 'chat.empty': 'Noch keine Nachrichten. Sag hallo!', 'chat.copy': 'Kopieren', 'chat.translate': 'Übersetzen', 'chat.recall': 'Zurückziehen', 'chat.delete': 'Löschen', 'chat.recalled': 'Nachricht zurückgezogen', 'chat.recalledByOther': 'Die andere Person hat eine Nachricht zurückgezogen', 'chat.copied': 'Kopiert', 'chat.recallOk': 'Zurückgezogen', 'chat.deleteOk': 'Gelöscht (nur für dich unsichtbar)', 'chat.recallTimeout': 'Nach 2 Minuten ist nur Löschen möglich', 'chat.translating': 'Übersetzen…', 'chat.you': 'Ich', 'profile.follow': 'Folgen', 'profile.following': 'Gefolgt', 'profile.followed': 'Gefolgt', 'profile.unfollowed': 'Entfolgt', 'profile.sendMsg': 'Nachricht', 'profile.block': 'Blockieren', 'profile.unblock': 'Entblockieren', 'profile.unblocked': 'Entblockiert', 'profile.confirmBlock': 'Diesen Nutzer blockieren? Du siehst seine Inhalte dann nicht mehr.', 'profile.blocked': 'Blockiert', 'profile.mutual': 'Folgt euch gegenseitig · Nachricht möglich', 'profile.joinedAt': 'Beigetreten', 'profile.noBio': 'Dieser Nutzer hat noch keine Bio.', 'admin.confirmRemove': 'Diesen Admin zu einem normalen Nutzer herabstufen?', 'admin.removeDone': 'Zu normalem Nutzer herabgestuft', 'admin.confirmDisable': 'Diesen Admin deaktivieren? Seine Rechte werden sofort entzogen.', 'admin.confirmEnable': 'Diesen Admin aktivieren?', 'admin.disableDone': 'Deaktiviert', 'expandAll': 'Alle anzeigen ({0})', 'admin.enableDone': 'Aktiviert',      'settings.title': 'Einstellungen',
+    'nav.home': 'Startseite', 'nav.new': 'Neuer Beitrag', 'nav.chat': 'Nachrichten', 'nav.notif': 'Benachrichtigungen', 'nav.apps': 'Mini-Apps', 'nav.login': 'Anmelden', 'nav.signup': 'Registrieren', 'nav.logout': 'Abmelden', 'search.ph': 'Beiträge suchen…', 'cat.all': 'Alle', 'cat.chat': 'Plaudern', 'cat.study': 'Lernen', 'cat.game': 'Spiele', 'cat.tech': 'Technik', 'cat.announce': 'Ankündigungen','cat.life': 'Leben', 'cat.emotion': 'Gefühle', 'cat.resource': 'Ressourcen', 'cat.music': 'Musik', 'cat.movie': 'Filme', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Karriere', 'cat.digital': 'Digital', 'cat.local': 'Lokal', 'cat.pet': 'Haustiere', 'cat.food': 'Essen', 'cat.travel': 'Reisen', 'cat.sports': 'Sport', 'cat.photo': 'Fotografie', 'cat.reading': 'Lesen',  'login.title': 'Dem Forum beitreten', 'login.sub': 'Ein Konto für alle Geräte.', 'login.account': 'Telefon oder E-Mail', 'login.password': 'Passwort', 'login.captcha': 'Antwort eingeben', 'login.submit': 'Anmelden', 'login.noAcc': 'Kein Konto?', 'login.gotoSignup': 'Registrieren', 'login.haveAcc': 'Schon ein Konto?', 'login.gotoLogin': 'Anmelden', 'signup.title': 'Konto erstellen', 'signup.sub': 'Registriere ein eigenes Konto.', 'signup.username': 'Benutzername', 'signup.submit': 'Registrieren', 'new.title': 'Neuer Beitrag', 'new.sub': 'Schreibe ein Thema, dessen Titel sofort klar ist.', 'new.t': 'Titel', 'new.cat': 'Kategorie', 'new.body': 'Inhalt', 'new.file': 'Anhang (optional)', 'new.filePick': 'Klicken zum Auswählen', 'new.submit': 'Veröffentlichen', 'new.phTitle': 'Thema in einem Satz', 'new.phBody': 'Details… (Zeilenumbrüche möglich)', 'post.back': '← Zurück zur Startseite', 'post.reply': 'Antworten', 'post.replies': ' Antworten', 'post.confirmDelete': 'Diesen Beitrag löschen? Das kann nicht rückgängig gemacht werden.', 'post.deleted': 'Beitrag gelöscht', 'post.confirmDelComment': 'Diese Antwort löschen? Das kann nicht rückgängig gemacht werden.', 'post.commentDeleted': 'Antwort gelöscht', 'settings.theme': 'Design', 'settings.themeHint': 'Wähle deinen Lieblingsstil', 'settings.official': 'Offiziell', 'settings.solid': 'Einfarbig', 'settings.gradient': 'Verlauf', 'settings.culture': 'Kulturell', 'settings.default': 'Standard', 'settings.glass': 'Flüssigglas', 'settings.glassHint': 'Nur für „Einfarbig“ und „Verlauf“ verfügbar. Glas-Optik + wählbare Farbe und Transparenz', 'settings.glassOn': 'Flüssigglas-Modus aktivieren', 'settings.glassColor': 'Glasfarbe', 'settings.opacity': 'Transparenz', 'settings.lang': 'Sprache', 'settings.langHint': 'Sprache der Oberfläche wechseln', 'settings.pwd': 'Passwort ändern', 'settings.save': 'Speichern & verbinden', 'settings.clear': 'Konfiguration löschen', 'settings.themeSaved': 'Design gewechselt', 'settings.saveFail': 'Speichern fehlgeschlagen:', 'settings.glassOnDone': 'Flüssigglas aktiviert', 'settings.glassOffDone': 'Flüssigglas deaktiviert', 'settings.glassColorDone': 'Glasfarbe aktualisiert', 'settings.glassAlphaDone': 'Transparenz aktualisiert', 'settings.langDone': 'Sprache gewechselt', 'welcome': 'Willkommen zurück,', 'signupOk': 'Registrierung erfolgreich. Willkommen im HanBer Forum', 'pleaseLogin': 'Bitte zuerst anmelden', 'uploadFail': 'Upload fehlgeschlagen', 'netErr': 'Zeitüberschreitung', 'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Melden', 'report.reason': 'Grund (Pflicht)', 'report.detail': 'Details (optional)', 'report.ok': 'Meldung gesendet, Admins prüfen bald', 'pin.admin': 'Anheften', 'pin.adminOff': 'Lösen', 'admin.reports': 'Report-Verwaltung', 'admin.handle': 'Bearbeiten', 'admin.ignore': 'Ignorieren', 'admin.actionPh': 'Maßnahme (z.B. löschen / 7d Bann)', 'admin.signins': 'Check-in-Protokoll', 'admin.audit': 'Operationsprotokoll', 'admin.export': 'Daten exportieren', 'admin.exportPh': 'Benutzername oder ID', 'export.title': 'Datenexport', 'export.mine': 'Alle meine Daten exportieren', 'export.admin': 'Diesen Nutzer exportieren', 'export.need': 'Exportiere alle deine Forum-Daten (Beiträge, Antworten, Nachrichten, Benachrichtigungen, Check-ins) als JSON. Nur du kannst sie sehen.', 'nav.notifClear': 'Gelesene löschen', 'nav.notifCleared': 'Gelesene Benachrichtigungen gelöscht', 'apps.login.ok1': '✅ Über das Forum angemeldet:', 'apps.login.ok2': '—— das Spiel übernimmt dein Konto automatisch', 'apps.login.no1': '🔒 Nicht im Forum angemeldet,', 'apps.login.no2': 'im Spiel mit einem Klick anmelden (auch ohne Anmeldung spielbar)', 'apps.needlogin': 'Dieses Spiel erfordert die Forum-Anmeldung. Bitte zuerst anmelden', 'apps.fs.on': '⛶ Vollbild beenden', 'apps.fs.off': '⛶ Vollbild', 'apps.name.bread': 'Brot-Killer · Kampf der Helden', 'apps.tag.bread': 'Gemeinschaftsproduktion · Hinweis vor dem Spiel lesen', 'apps.desc.bread': 'Kartenschlacht im Stil der Drei Reiche: Match/Platzierung, Generalsfähigkeiten, Ausrüstung und Strategien. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Offline spielen', 'apps.desc.gta': '2D-Pixel-Open-World: 12 Bezirke, Industrie-Management, Fracht/Eskorte/Rennmissionen, Fahndung. Lokal im Browser gespeichert.', 'apps.name.tank': 'Panzergeschichte 2D', 'apps.tag.tank': '1-Klick-Anmeldung', 'apps.desc.tank': 'Kriegsspiel mit 4 Kampagnen: Panzerwelle, Einheiten-Counter, Stellungsvorstoß. Führe deine Panzertruppen.', 'apps.name.century': 'Jahrhundert-Krieg', 'apps.tag.century': '1-Klick-Anmeldung', 'apps.desc.century': 'Vier Schlachten über hundert Jahre: vom Grabenkrieg zum Blitzkrieg, klassische Runden-Duelle.', 'apps.name.game': 'Spieltheorie · Gleichgewichtslabor', 'apps.tag.game': '1-Klick-Anmeldung', 'apps.desc.game': 'Klassische Spieltheorie gegen die KI: Gefangenendilemma, Nash-Gleichgewicht, Schwein-Spiel. Spielend lernen.', 'apps.name.potato': 'Verrückte Kartoffel', 'apps.tag.potato': '1-Klick-Anmeldung', 'apps.desc.potato': 'Lässiges Kartoffel-Hämmern: Reaktions-Challenge, macht süchtig.', 'apps.name.puff': 'Kugelfisch Puff!', 'apps.tag.puff': '1-Klick-Anmeldung', 'apps.desc.puff': 'Lässiges Kugelfisch-Spiel: pusten, aufblähen, drehen. Unaufhörlich.', 'apps.name.mist': 'Requiem im Nebel', 'apps.tag.mist': 'Offline', 'apps.desc.mist': '2D-Pixel-Erkundung: Nebelstadt, Protagonist mit Amnesie. Finde die Wahrheit im weißen Nebel.', 'apps.name.hanba': 'Hanba-Legende', 'apps.tag.hanba': '1-Klick-Anmeldung', 'apps.desc.hanba': 'HANBA LEGEND: Abenteuer der östlichen Legenden. Bezwinge die Dürre, erobere das Kernland.', 'apps.name.croissant': 'Croissant-Legende', 'apps.tag.croissant': '1-Klick-Anmeldung', 'apps.desc.croissant': 'Croissant Legend: Abenteuer in der Backwelt. Ein knuspriger Held rettet Paris.', 'apps.name.panglong': 'Dicker-Drachen-Diät', 'apps.tag.panglong': '1-Klick-Anmeldung', 'apps.desc.panglong': 'Die Schlankheits-Operation eines gefräßigen Drachens. Kontrolliere die Ernährung, beweg dich!', 'apps.name.weiren': 'Wei Ren · Institut für Simulation', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Beobachte, unterscheide, simuliere. Wähle zwischen echt und falsch.', 'apps.name.star': 'Sternenreisender', 'apps.tag.star': '1-Klick-Anmeldung', 'apps.desc.star': 'Star Voyager: Stern- und Weltraum-Erkundung. Fliege dein Raumschiff durch das Sternenmeer.', 'apps.name.lovezone': 'Verbotene Liebeszone', 'apps.tag.lovezone': 'Darknet-exklusiv · Freischaltung', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: eine verbotene Erzählung in den Tiefen des Darknets. Deine Wahl bestimmt das Ende.', 'apps.name.faceless': 'Der Mann ohne Gesicht', 'apps.tag.faceless': 'Antikriegs-Pixel', 'apps.desc.faceless': 'THE FACELESS: ein Antikriegs-Pixelspiel. Krieg ist die Hölle.', 'apps.lovezone.locked': '🔒 Erst im Darknet holen (5-mal auf die Versionsnummer im Fußbereich tippen)', 'settings.sound': 'Hintergrundgeräusch', 'settings.soundHint': 'Wähle ein Rauschen oder Ambiente für durchgehende Schleife', 'settings.soundOn': 'Hintergrundgeräusch aktivieren', 'settings.volume': 'Lautstärke', 'sound.balance': 'Ausgewogenes Rauschen', 'sound.bright': 'Helles Rauschen', 'sound.dark': 'Dunkles Rauschen', 'sound.rain': 'Regen', 'sound.ocean': 'Ozean', 'sound.stream': 'Bach', 'sound.night': 'Nacht', 'sound.fire': 'Feuer', 'sound.steam': 'Dampf', 'sound.fan': 'Ventilator', 'sound.white': 'Weißes Rauschen', 'chat.empty': 'Noch keine Nachrichten. Sag hallo!', 'chat.copy': 'Kopieren', 'chat.translate': 'Übersetzen', 'chat.recall': 'Zurückziehen', 'chat.delete': 'Löschen', 'chat.recalled': 'Nachricht zurückgezogen', 'chat.recalledByOther': 'Die andere Person hat eine Nachricht zurückgezogen', 'chat.copied': 'Kopiert', 'chat.recallOk': 'Zurückgezogen', 'chat.deleteOk': 'Gelöscht (nur für dich unsichtbar)', 'chat.recallTimeout': 'Nach 2 Minuten ist nur Löschen möglich', 'chat.translating': 'Übersetzen…', 'chat.you': 'Ich', 'profile.follow': 'Folgen', 'profile.following': 'Gefolgt', 'profile.followed': 'Gefolgt', 'profile.unfollowed': 'Entfolgt', 'profile.sendMsg': 'Nachricht', 'profile.block': 'Blockieren', 'profile.unblock': 'Entblockieren', 'profile.unblocked': 'Entblockiert', 'profile.confirmBlock': 'Diesen Nutzer blockieren? Du siehst seine Inhalte dann nicht mehr.', 'profile.blocked': 'Blockiert', 'profile.mutual': 'Folgt euch gegenseitig · Nachricht möglich', 'profile.joinedAt': 'Beigetreten', 'profile.noBio': 'Dieser Nutzer hat noch keine Bio.', 'admin.confirmRemove': 'Diesen Admin zu einem normalen Nutzer herabstufen?', 'admin.removeDone': 'Zu normalem Nutzer herabgestuft', 'admin.confirmDisable': 'Diesen Admin deaktivieren? Seine Rechte werden sofort entzogen.', 'admin.confirmEnable': 'Diesen Admin aktivieren?', 'admin.disableDone': 'Deaktiviert', 'expandAll': 'Alle anzeigen ({0})', 'admin.enableDone': 'Aktiviert',      'settings.title': 'Einstellungen',
     'settings.sub': 'Personalisieren Sie Ihr Yuntan-Erlebnis.',
     'apps.title': 'Mini-Apps',
     'apps.sub': 'Integrierte Minispiele · Konto wird automatisch verknüpft.',
@@ -5705,7 +5758,7 @@ var I18N = {
     'post.retry': 'Riprova',
     'notif.empty': 'Nessuna notifica',
     'toast.alreadySigned': 'Check-in già fatto oggi',
-    'nav.home': 'Home', 'nav.new': 'Nuovo Post', 'nav.chat': 'Messaggi', 'nav.notif': 'Notifiche', 'nav.apps': 'Mini App', 'nav.login': 'Accedi', 'nav.signup': 'Registrati', 'nav.logout': 'Esci', 'search.ph': 'Cerca post…', 'cat.all': 'Tutto', 'cat.chat': 'Chiacchiere', 'cat.study': 'Studio', 'cat.game': 'Giochi', 'cat.tech': 'Tech', 'cat.announce': 'Notizie','cat.life': 'Vita', 'cat.emotion': 'Emozioni', 'cat.resource': 'Risorse', 'cat.music': 'Musica', 'cat.movie': 'Film', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Lavoro', 'cat.digital': 'Digitale', 'cat.local': 'Locale', 'cat.pet': 'Animali', 'cat.food': 'Cibo', 'cat.travel': 'Viaggi', 'cat.sports': 'Sport', 'cat.photo': 'Fotografia', 'cat.reading': 'Lettura',  'login.title': 'Entra nel Forum', 'login.sub': 'Un account per tutti i dispositivi.', 'login.account': 'Telefono o email', 'login.password': 'Password', 'login.captcha': 'Inserisci la risposta', 'login.submit': 'Accedi', 'login.noAcc': 'Nessun account?', 'login.gotoSignup': 'Registrati', 'login.haveAcc': 'Hai già un account?', 'login.gotoLogin': 'Accedi', 'signup.title': 'Crea Account', 'signup.sub': 'Registra un account personale.', 'signup.username': 'Nome utente', 'signup.submit': 'Registrati', 'new.title': 'Nuovo Post', 'new.sub': 'Scrivi un argomento con un titolo chiaro.', 'new.t': 'Titolo', 'new.cat': 'Categoria', 'new.body': 'Contenuto', 'new.file': 'Allegato (facoltativo)', 'new.filePick': 'Clicca per scegliere i file', 'new.submit': 'Pubblica', 'new.phTitle': 'Riassumi il tema in una frase', 'new.phBody': 'Dettagli… (supporta a capo)', 'post.back': '← Torna alla home', 'post.reply': 'Rispondi', 'post.replies': ' risposte', 'post.confirmDelete': 'Eliminare questo post? Non si può annullare.', 'post.deleted': 'Post eliminato', 'post.confirmDelComment': 'Eliminare questa risposta? Non si può annullare.', 'post.commentDeleted': 'Risposta eliminata', 'settings.theme': 'Aspetto', 'settings.themeHint': 'Scegli lo stile che preferisci', 'settings.official': 'Ufficiale', 'settings.solid': 'Tinta unita', 'settings.gradient': 'Gradiente', 'settings.culture': 'Culturale', 'settings.default': 'Predefinito', 'settings.glass': 'Vetro liquido', 'settings.glassHint': 'Solo per i temi "Tinta unita" e "Gradiente". Effetto vetro + colore e trasparenza opzionali', 'settings.glassOn': 'Attiva modalità vetro liquido', 'settings.glassColor': 'Colore del vetro', 'settings.opacity': 'Trasparenza', 'settings.lang': 'Lingua dell\'interfaccia', 'settings.langHint': 'Cambia la lingua dell\'interfaccia', 'settings.pwd': 'Cambia password', 'settings.save': 'Salva e connetti', 'settings.clear': 'Svuota configurazione', 'settings.themeSaved': 'Tema cambiato', 'settings.saveFail': 'Salvataggio fallito:', 'settings.glassOnDone': 'Vetro liquido attivato', 'settings.glassOffDone': 'Vetro liquido disattivato', 'settings.glassColorDone': 'Colore del vetro aggiornato', 'settings.glassAlphaDone': 'Trasparenza del vetro aggiornata', 'settings.langDone': 'Lingua cambiata', 'welcome': 'Bentornato,', 'signupOk': 'Registrazione completata. Benvenuto nel Forum HanBer', 'pleaseLogin': 'Accedi prima', 'uploadFail': 'Upload fallito', 'netErr': 'Richiesta scaduta', 'footer': 'HanBerOS 6.4', 'nav.signin': 'Check-in', 'report.title': 'Segnala', 'report.reason': 'Motivo (obbligatorio)', 'report.detail': 'Dettagli (facoltativi)', 'report.ok': 'Segnalazione inviata, gli admin la esamineranno', 'pin.admin': 'In alto', 'pin.adminOff': 'Togli in alto', 'admin.reports': 'Gestione Segnalazioni', 'admin.handle': 'Gestisci', 'admin.ignore': 'Ignora', 'admin.actionPh': 'Azione (es. elimina / ban 7g)', 'admin.signins': 'Registri Check-in', 'admin.audit': 'Registro Operazioni', 'admin.export': 'Esporta Dati', 'admin.exportPh': 'Inserisci nome o ID', 'export.title': 'Esportazione Dati', 'export.mine': 'Esporta Tutti i Miei Dati', 'export.admin': 'Esporta Questo Utente', 'export.need': 'Esporta tutti i tuoi dati (post, risposte, messaggi, notifiche, check-in) in JSON. Solo tu puoi vederli.', 'nav.notifClear': 'Pulisci lette', 'nav.notifCleared': 'Notifiche lette cancellate', 'apps.login.ok1': '✅ Connesso tramite il Forum:', 'apps.login.ok2': '—— il gioco usa automaticamente il tuo account', 'apps.login.no1': '🔒 Non connesso al Forum,', 'apps.login.no2': 'accedi in un tocco nel gioco (si può provare anche senza)', 'apps.needlogin': 'Questo gioco richiede l\'accesso al Forum. Accedi prima', 'apps.fs.on': '⛶ Esci da schermo intero', 'apps.fs.off': '⛶ Schermo intero', 'apps.name.bread': 'Pane Mortale · Battaglia degli Eroi', 'apps.tag.bread': 'Produzione congiunta · leggi l\'avviso prima di entrare', 'apps.desc.bread': 'Battaglia di carte stile Tre Regni: match/ranked, abilità dei generali, equipaggiamento e strategie. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Gioco offline', 'apps.desc.gta': 'Mondo aperto 2D pixel: 12 distretti, gestione industriale, missioni cargo/scorta/gara, caccia. Salvato nel browser.', 'apps.name.tank': 'Storia Corazzata 2D', 'apps.tag.tank': 'Accesso in un tocco', 'apps.desc.tank': 'Gioco di guerra con 4 campagne: ondata corazzata, contro delle unità, avanzata su posizione. Guida le tue truppe corazzate.', 'apps.name.century': 'Guerra dei Secoli', 'apps.tag.century': 'Accesso in un tocco', 'apps.desc.century': 'Quattro battaglie su cento anni: dalle trincee alla guerra lampo, duelli a turni.', 'apps.name.game': 'Teoria dei Giochi · Lab dell\'Equilibrio', 'apps.tag.game': 'Accesso in un tocco', 'apps.desc.game': 'Casi classici contro l\'IA: dilemma del prigioniero, equilibrio di Nash, gioco del maiale. Impara giocando.', 'apps.name.potato': 'Patata Pazza', 'apps.tag.potato': 'Accesso in un tocco', 'apps.desc.potato': 'Gioco casuale di schiacciare patate: sfida di riflessi, non smetti più.', 'apps.name.puff': 'Pesce palla Puff!', 'apps.tag.puff': 'Accesso in un tocco', 'apps.desc.puff': 'Gioco casuale del pesce palla: soffia, gonfia, rigira. Non riesci a smettere.', 'apps.name.mist': 'Requiem nella Nebbia', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Esplorazione 2D pixel: città nebbiosa, protagonista senza memoria. Scopri la verità nella nebbia.', 'apps.name.hanba': 'Leggenda di Hanba', 'apps.tag.hanba': 'Accesso in un tocco', 'apps.desc.hanba': 'HANBA LEGEND: avventura delle leggende orientali. Sconfiggi la siccità, conquista la pianura.', 'apps.name.croissant': 'Leggenda del Croissant', 'apps.tag.croissant': 'Accesso in un tocco', 'apps.desc.croissant': 'Croissant Legend: avventura nel mondo della pasticceria. Un eroe croccante salva Parigi.', 'apps.name.panglong': 'Dieta del Dragone Ciccione', 'apps.tag.panglong': 'Accesso in un tocco', 'apps.desc.panglong': 'La grande sfida dimagrante di un draghetto goloso. Controlla la dieta e muoviti!', 'apps.name.weiren': 'Wei Ren · Istituto di Simulazione', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Osserva, distingui, simula. Scegli tra vero e falso.', 'apps.name.star': 'Viaggiatore delle Stelle', 'apps.tag.star': 'Accesso in un tocco', 'apps.desc.star': 'Star Voyager: esplorazione di stelle e spazio. Pilota la tua nave nel mare di stelle.', 'apps.name.lovezone': 'Zona Proibita dell\'Amore', 'apps.tag.lovezone': 'Solo dark web · sblocco', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: una narrazione proibita nelle profondità del dark web. La tua scelta decide il finale.', 'apps.name.faceless': 'L\'Uomo Senza Volto', 'apps.tag.faceless': 'Pixel contro la guerra', 'apps.desc.faceless': 'THE FACELESS: un gioco pixel contro la guerra. La guerra è l\'inferno.', 'apps.lovezone.locked': '🔒 Da ottenere prima nel dark web (tocca 5 volte il numero di versione nel piè di pagina)', 'settings.sound': 'Suono di sottofondo', 'settings.soundHint': 'Scegli un rumore bianco o un suono ambientale da riprodurre in loop senza interruzioni', 'settings.soundOn': 'Attiva il suono di sottofondo', 'settings.volume': 'Volume', 'sound.balance': 'Rumore bilanciato', 'sound.bright': 'Rumore brillante', 'sound.dark': 'Rumore scuro', 'sound.rain': 'Pioggia', 'sound.ocean': 'Oceano', 'sound.stream': 'Ruscello', 'sound.night': 'Notte', 'sound.fire': 'Fuoco', 'sound.steam': 'Vapore', 'sound.fan': 'Ventilatore', 'sound.white': 'Rumore bianco', 'chat.empty': 'Non ci sono ancora messaggi. Saluta!', 'chat.copy': 'Copia', 'chat.translate': 'Traduci', 'chat.recall': 'Ritira', 'chat.delete': 'Elimina', 'chat.recalled': 'Messaggio ritirato', 'chat.recalledByOther': 'L’altra persona ha ritirato un messaggio', 'chat.copied': 'Copiato', 'chat.recallOk': 'Ritirato', 'chat.deleteOk': 'Eliminato (invisibile solo per te)', 'chat.recallTimeout': 'Dopo 2 minuti puoi solo eliminare', 'chat.translating': 'Traduzione…', 'chat.you': 'Io', 'profile.follow': 'Segui', 'profile.following': 'Seguito', 'profile.followed': 'Seguito', 'profile.unfollowed': 'Non seguito', 'profile.sendMsg': 'Invia messaggio', 'profile.block': 'Blocca', 'profile.unblock': 'Sblocca', 'profile.unblocked': 'Sbloccato', 'profile.confirmBlock': 'Bloccare questo utente? Non vedrai più i suoi contenuti.', 'profile.blocked': 'Bloccato', 'profile.mutual': 'Follow reciproco · puoi scrivere', 'profile.joinedAt': 'Iscritto il', 'profile.noBio': 'Questo utente non ha ancora scritto una bio.', 'admin.confirmRemove': 'Retrocedere questo amministratore a utente normale?', 'admin.removeDone': 'Retrocesso a utente normale', 'admin.confirmDisable': 'Disattivare questo amministratore? I suoi permessi verranno revocati subito.', 'admin.confirmEnable': 'Attivare questo amministratore?', 'admin.disableDone': 'Disattivato', 'expandAll': 'Mostra tutto ({0})', 'admin.enableDone': 'Attivato',      'settings.title': 'Impostazioni',
+    'nav.home': 'Home', 'nav.new': 'Nuovo Post', 'nav.chat': 'Messaggi', 'nav.notif': 'Notifiche', 'nav.apps': 'Mini App', 'nav.login': 'Accedi', 'nav.signup': 'Registrati', 'nav.logout': 'Esci', 'search.ph': 'Cerca post…', 'cat.all': 'Tutto', 'cat.chat': 'Chiacchiere', 'cat.study': 'Studio', 'cat.game': 'Giochi', 'cat.tech': 'Tech', 'cat.announce': 'Notizie','cat.life': 'Vita', 'cat.emotion': 'Emozioni', 'cat.resource': 'Risorse', 'cat.music': 'Musica', 'cat.movie': 'Film', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Lavoro', 'cat.digital': 'Digitale', 'cat.local': 'Locale', 'cat.pet': 'Animali', 'cat.food': 'Cibo', 'cat.travel': 'Viaggi', 'cat.sports': 'Sport', 'cat.photo': 'Fotografia', 'cat.reading': 'Lettura',  'login.title': 'Entra nel Forum', 'login.sub': 'Un account per tutti i dispositivi.', 'login.account': 'Telefono o email', 'login.password': 'Password', 'login.captcha': 'Inserisci la risposta', 'login.submit': 'Accedi', 'login.noAcc': 'Nessun account?', 'login.gotoSignup': 'Registrati', 'login.haveAcc': 'Hai già un account?', 'login.gotoLogin': 'Accedi', 'signup.title': 'Crea Account', 'signup.sub': 'Registra un account personale.', 'signup.username': 'Nome utente', 'signup.submit': 'Registrati', 'new.title': 'Nuovo Post', 'new.sub': 'Scrivi un argomento con un titolo chiaro.', 'new.t': 'Titolo', 'new.cat': 'Categoria', 'new.body': 'Contenuto', 'new.file': 'Allegato (facoltativo)', 'new.filePick': 'Clicca per scegliere i file', 'new.submit': 'Pubblica', 'new.phTitle': 'Riassumi il tema in una frase', 'new.phBody': 'Dettagli… (supporta a capo)', 'post.back': '← Torna alla home', 'post.reply': 'Rispondi', 'post.replies': ' risposte', 'post.confirmDelete': 'Eliminare questo post? Non si può annullare.', 'post.deleted': 'Post eliminato', 'post.confirmDelComment': 'Eliminare questa risposta? Non si può annullare.', 'post.commentDeleted': 'Risposta eliminata', 'settings.theme': 'Aspetto', 'settings.themeHint': 'Scegli lo stile che preferisci', 'settings.official': 'Ufficiale', 'settings.solid': 'Tinta unita', 'settings.gradient': 'Gradiente', 'settings.culture': 'Culturale', 'settings.default': 'Predefinito', 'settings.glass': 'Vetro liquido', 'settings.glassHint': 'Solo per i temi "Tinta unita" e "Gradiente". Effetto vetro + colore e trasparenza opzionali', 'settings.glassOn': 'Attiva modalità vetro liquido', 'settings.glassColor': 'Colore del vetro', 'settings.opacity': 'Trasparenza', 'settings.lang': 'Lingua dell\'interfaccia', 'settings.langHint': 'Cambia la lingua dell\'interfaccia', 'settings.pwd': 'Cambia password', 'settings.save': 'Salva e connetti', 'settings.clear': 'Svuota configurazione', 'settings.themeSaved': 'Tema cambiato', 'settings.saveFail': 'Salvataggio fallito:', 'settings.glassOnDone': 'Vetro liquido attivato', 'settings.glassOffDone': 'Vetro liquido disattivato', 'settings.glassColorDone': 'Colore del vetro aggiornato', 'settings.glassAlphaDone': 'Trasparenza del vetro aggiornata', 'settings.langDone': 'Lingua cambiata', 'welcome': 'Bentornato,', 'signupOk': 'Registrazione completata. Benvenuto nel Forum HanBer', 'pleaseLogin': 'Accedi prima', 'uploadFail': 'Upload fallito', 'netErr': 'Richiesta scaduta', 'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Segnala', 'report.reason': 'Motivo (obbligatorio)', 'report.detail': 'Dettagli (facoltativi)', 'report.ok': 'Segnalazione inviata, gli admin la esamineranno', 'pin.admin': 'In alto', 'pin.adminOff': 'Togli in alto', 'admin.reports': 'Gestione Segnalazioni', 'admin.handle': 'Gestisci', 'admin.ignore': 'Ignora', 'admin.actionPh': 'Azione (es. elimina / ban 7g)', 'admin.signins': 'Registri Check-in', 'admin.audit': 'Registro Operazioni', 'admin.export': 'Esporta Dati', 'admin.exportPh': 'Inserisci nome o ID', 'export.title': 'Esportazione Dati', 'export.mine': 'Esporta Tutti i Miei Dati', 'export.admin': 'Esporta Questo Utente', 'export.need': 'Esporta tutti i tuoi dati (post, risposte, messaggi, notifiche, check-in) in JSON. Solo tu puoi vederli.', 'nav.notifClear': 'Pulisci lette', 'nav.notifCleared': 'Notifiche lette cancellate', 'apps.login.ok1': '✅ Connesso tramite il Forum:', 'apps.login.ok2': '—— il gioco usa automaticamente il tuo account', 'apps.login.no1': '🔒 Non connesso al Forum,', 'apps.login.no2': 'accedi in un tocco nel gioco (si può provare anche senza)', 'apps.needlogin': 'Questo gioco richiede l\'accesso al Forum. Accedi prima', 'apps.fs.on': '⛶ Esci da schermo intero', 'apps.fs.off': '⛶ Schermo intero', 'apps.name.bread': 'Pane Mortale · Battaglia degli Eroi', 'apps.tag.bread': 'Produzione congiunta · leggi l\'avviso prima di entrare', 'apps.desc.bread': 'Battaglia di carte stile Tre Regni: match/ranked, abilità dei generali, equipaggiamento e strategie. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Gioco offline', 'apps.desc.gta': 'Mondo aperto 2D pixel: 12 distretti, gestione industriale, missioni cargo/scorta/gara, caccia. Salvato nel browser.', 'apps.name.tank': 'Storia Corazzata 2D', 'apps.tag.tank': 'Accesso in un tocco', 'apps.desc.tank': 'Gioco di guerra con 4 campagne: ondata corazzata, contro delle unità, avanzata su posizione. Guida le tue truppe corazzate.', 'apps.name.century': 'Guerra dei Secoli', 'apps.tag.century': 'Accesso in un tocco', 'apps.desc.century': 'Quattro battaglie su cento anni: dalle trincee alla guerra lampo, duelli a turni.', 'apps.name.game': 'Teoria dei Giochi · Lab dell\'Equilibrio', 'apps.tag.game': 'Accesso in un tocco', 'apps.desc.game': 'Casi classici contro l\'IA: dilemma del prigioniero, equilibrio di Nash, gioco del maiale. Impara giocando.', 'apps.name.potato': 'Patata Pazza', 'apps.tag.potato': 'Accesso in un tocco', 'apps.desc.potato': 'Gioco casuale di schiacciare patate: sfida di riflessi, non smetti più.', 'apps.name.puff': 'Pesce palla Puff!', 'apps.tag.puff': 'Accesso in un tocco', 'apps.desc.puff': 'Gioco casuale del pesce palla: soffia, gonfia, rigira. Non riesci a smettere.', 'apps.name.mist': 'Requiem nella Nebbia', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Esplorazione 2D pixel: città nebbiosa, protagonista senza memoria. Scopri la verità nella nebbia.', 'apps.name.hanba': 'Leggenda di Hanba', 'apps.tag.hanba': 'Accesso in un tocco', 'apps.desc.hanba': 'HANBA LEGEND: avventura delle leggende orientali. Sconfiggi la siccità, conquista la pianura.', 'apps.name.croissant': 'Leggenda del Croissant', 'apps.tag.croissant': 'Accesso in un tocco', 'apps.desc.croissant': 'Croissant Legend: avventura nel mondo della pasticceria. Un eroe croccante salva Parigi.', 'apps.name.panglong': 'Dieta del Dragone Ciccione', 'apps.tag.panglong': 'Accesso in un tocco', 'apps.desc.panglong': 'La grande sfida dimagrante di un draghetto goloso. Controlla la dieta e muoviti!', 'apps.name.weiren': 'Wei Ren · Istituto di Simulazione', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Osserva, distingui, simula. Scegli tra vero e falso.', 'apps.name.star': 'Viaggiatore delle Stelle', 'apps.tag.star': 'Accesso in un tocco', 'apps.desc.star': 'Star Voyager: esplorazione di stelle e spazio. Pilota la tua nave nel mare di stelle.', 'apps.name.lovezone': 'Zona Proibita dell\'Amore', 'apps.tag.lovezone': 'Solo dark web · sblocco', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: una narrazione proibita nelle profondità del dark web. La tua scelta decide il finale.', 'apps.name.faceless': 'L\'Uomo Senza Volto', 'apps.tag.faceless': 'Pixel contro la guerra', 'apps.desc.faceless': 'THE FACELESS: un gioco pixel contro la guerra. La guerra è l\'inferno.', 'apps.lovezone.locked': '🔒 Da ottenere prima nel dark web (tocca 5 volte il numero di versione nel piè di pagina)', 'settings.sound': 'Suono di sottofondo', 'settings.soundHint': 'Scegli un rumore bianco o un suono ambientale da riprodurre in loop senza interruzioni', 'settings.soundOn': 'Attiva il suono di sottofondo', 'settings.volume': 'Volume', 'sound.balance': 'Rumore bilanciato', 'sound.bright': 'Rumore brillante', 'sound.dark': 'Rumore scuro', 'sound.rain': 'Pioggia', 'sound.ocean': 'Oceano', 'sound.stream': 'Ruscello', 'sound.night': 'Notte', 'sound.fire': 'Fuoco', 'sound.steam': 'Vapore', 'sound.fan': 'Ventilatore', 'sound.white': 'Rumore bianco', 'chat.empty': 'Non ci sono ancora messaggi. Saluta!', 'chat.copy': 'Copia', 'chat.translate': 'Traduci', 'chat.recall': 'Ritira', 'chat.delete': 'Elimina', 'chat.recalled': 'Messaggio ritirato', 'chat.recalledByOther': 'L’altra persona ha ritirato un messaggio', 'chat.copied': 'Copiato', 'chat.recallOk': 'Ritirato', 'chat.deleteOk': 'Eliminato (invisibile solo per te)', 'chat.recallTimeout': 'Dopo 2 minuti puoi solo eliminare', 'chat.translating': 'Traduzione…', 'chat.you': 'Io', 'profile.follow': 'Segui', 'profile.following': 'Seguito', 'profile.followed': 'Seguito', 'profile.unfollowed': 'Non seguito', 'profile.sendMsg': 'Invia messaggio', 'profile.block': 'Blocca', 'profile.unblock': 'Sblocca', 'profile.unblocked': 'Sbloccato', 'profile.confirmBlock': 'Bloccare questo utente? Non vedrai più i suoi contenuti.', 'profile.blocked': 'Bloccato', 'profile.mutual': 'Follow reciproco · puoi scrivere', 'profile.joinedAt': 'Iscritto il', 'profile.noBio': 'Questo utente non ha ancora scritto una bio.', 'admin.confirmRemove': 'Retrocedere questo amministratore a utente normale?', 'admin.removeDone': 'Retrocesso a utente normale', 'admin.confirmDisable': 'Disattivare questo amministratore? I suoi permessi verranno revocati subito.', 'admin.confirmEnable': 'Attivare questo amministratore?', 'admin.disableDone': 'Disattivato', 'expandAll': 'Mostra tutto ({0})', 'admin.enableDone': 'Attivato',      'settings.title': 'Impostazioni',
     'settings.sub': 'Personalizza la tua esperienza Yuntan.',
     'apps.title': 'Mini app',
     'apps.sub': 'Mini-giochi integrati · account collegato.',
@@ -6049,7 +6102,7 @@ var I18N = {
     'settings.themeSaved': 'Thème changé', 'settings.saveFail': 'Échec de l’enregistrement : ', 'settings.glassOnDone': 'Verre liquide activé', 'settings.glassOffDone': 'Verre liquide désactivé',
     'settings.glassColorDone': 'Couleur du verre mise à jour', 'settings.glassAlphaDone': 'Opacité du verre mise à jour', 'settings.langDone': 'Langue changée',
     'welcome': 'Bon retour, ', 'signupOk': 'Inscription réussie. Bienvenue sur le forum HanBer !', 'pleaseLogin': 'Veuillez d’abord vous connecter', 'uploadFail': 'Échec du téléversement', 'netErr': 'Délai de requête dépassé',
-    'footer': 'HanBerOS 6.4', 'nav.signin': 'Check-in', 'report.title': 'Signaler', 'report.reason': 'Raison (requise)', 'report.detail': 'Détails (facultatif)', 'report.ok': 'Signalement envoyé, les admins vont examiner', 'pin.admin': 'Épingler', 'pin.adminOff': 'Désépingler', 'admin.reports': 'Gestion des signalements', 'admin.handle': 'Traiter', 'admin.ignore': 'Ignorer', 'admin.actionPh': 'Action (ex. supprimer / ban 7j)', 'admin.signins': 'Historique des check-ins', 'admin.audit': 'Journal des opérations', 'admin.export': 'Exporter les données', 'admin.exportPh': 'Entrez nom ou ID', 'export.title': 'Export de données', 'export.mine': 'Exporter toutes mes données', 'export.admin': 'Exporter cet utilisateur', 'export.need': 'Exportez toutes vos données (posts, réponses, messages, notifications, check-ins) en JSON. Vous seul pouvez les voir.',
+    'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Signaler', 'report.reason': 'Raison (requise)', 'report.detail': 'Détails (facultatif)', 'report.ok': 'Signalement envoyé, les admins vont examiner', 'pin.admin': 'Épingler', 'pin.adminOff': 'Désépingler', 'admin.reports': 'Gestion des signalements', 'admin.handle': 'Traiter', 'admin.ignore': 'Ignorer', 'admin.actionPh': 'Action (ex. supprimer / ban 7j)', 'admin.signins': 'Historique des check-ins', 'admin.audit': 'Journal des opérations', 'admin.export': 'Exporter les données', 'admin.exportPh': 'Entrez nom ou ID', 'export.title': 'Export de données', 'export.mine': 'Exporter toutes mes données', 'export.admin': 'Exporter cet utilisateur', 'export.need': 'Exportez toutes vos données (posts, réponses, messages, notifications, check-ins) en JSON. Vous seul pouvez les voir.',
     'nav.notifClear': 'Effacer les lues',
     'nav.notifCleared': 'Notifications lues effacées',
 'apps.login.ok1': '✅ Connecté via YunTan : ',
@@ -6322,7 +6375,7 @@ function setLang(id) {
   /* 按当前路由重渲染，保证私聊/帖子/个人页/管理后台/通知页等全部跟随语言切换 */
   var r = parseHash();
   var active = r.path;
-  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback'];
+  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback', 'featured'];
   if (active === 'circle') { homeState.circle = r.params.get('id') || ''; homeState.topic = ''; active = 'home'; }
   if (active === 'topic') { homeState.topic = r.params.get('id') || ''; homeState.circle = ''; active = 'home'; }
   /* 修复：回到首页且无圈子/话题参数时清空筛选（话题/圈子条"全部"点击生效） */
@@ -6344,6 +6397,7 @@ function setLang(id) {
   if (active === 'settings') renderSettings();
   if (active === 'admin') renderAdmin();
   if (active === 'apps') renderApps();
+  if (active === 'featured') renderFeatured();
 }
 
 /* ============================================================
@@ -7031,6 +7085,16 @@ var CloudStore = {
       method: 'POST', headers: this._h(),
       body: JSON.stringify(params)
     }).then(function (res) { return res.json(); });
+  },
+  setFeatured: function (postId, on) {
+    var c = this._cfg();
+    return this._fetch(c.url + '/rest/v1/rpc/admin_set_featured', { method: 'POST', headers: this._h(), body: JSON.stringify({ p_post: postId, p_on: !!on }) })
+      .then(this._check).then(function (res) { return res.json(); });
+  },
+  featuredPosts: function () {
+    var c = this._cfg();
+    return this._fetch(c.url + '/rest/v1/rpc/featured_posts', { method: 'POST', headers: this._h(), body: '{}' })
+      .then(this._check).then(function (res) { return res.json(); });
   },
   deletePost: function (id) {
     var c = this._cfg();
@@ -8020,7 +8084,7 @@ function parseHash() {
 function router() {
   var r = parseHash();
   var active = r.path;
-  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback'];
+  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback', 'featured'];
   /* v6.4.1 修复：点击话题/圈子筛选链接后，正确写入筛选状态再回首页渲染 */
   if (active === 'circle') { homeState.circle = r.params.get('id') || ''; homeState.topic = ''; active = 'home'; }
   if (active === 'topic') { homeState.topic = r.params.get('id') || ''; homeState.circle = ''; active = 'home'; }
@@ -8052,6 +8116,7 @@ function router() {
   if (active === 'settings') renderSettings();
   if (active === 'admin') renderAdmin();
   if (active === 'apps') renderApps();
+  if (active === 'featured') renderFeatured();
 
   window.scrollTo(0, 0);
 }
@@ -8169,10 +8234,55 @@ function renderApps() {
   }
 }
 
+/* ===== PWA 安装 App（v6.4.6） ===== */
+var _deferredPrompt = null;
+var INSTALL_TXT = {zh:'安装', en:'Install', es:'Instalar', ru:'Установить', ja:'インストール', ko:'설치', pt:'Instalar', de:'Installieren', it:'Installa', fr:'Installer'};
+function isPwaStandalone() {
+  try {
+    if (window.navigator.standalone === true) return true;
+    if (window.matchMedia && matchMedia('(display-mode: standalone)').matches) return true;
+  } catch (e) {}
+  return false;
+}
+function isIOSDevice() { return /ip(hone|od|ad)/i.test(navigator.userAgent || ''); }
+function installBtnVisible() {
+  if (isPwaStandalone()) return false;
+  if (_deferredPrompt) return true;
+  if (isIOSDevice() && /safari/i.test(navigator.userAgent || '')) return true;
+  return false;
+}
+function updateInstallBtn() {
+  var b = document.getElementById('nav-install');
+  if (!b) return;
+  b.style.display = installBtnVisible() ? '' : 'none';
+  b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="nav-label">' + (INSTALL_TXT[currentLang] || INSTALL_TXT.en) + '</span>';
+}
+function doInstallApp() {
+  if (_deferredPrompt) {
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then(function (choice) {
+      if (choice.outcome === 'accepted') _deferredPrompt = null;
+      updateInstallBtn();
+    })['catch'](function () {});
+    return;
+  }
+  if (isIOSDevice()) {
+    toast('iOS 请在浏览器菜单点「分享」→「添加到主屏幕」，即可把云坛装到桌面');
+  } else {
+    toast('请用 Chrome / Edge / 安卓浏览器打开本站后点「安装」，即可下载安装云坛 App');
+  }
+}
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  _deferredPrompt = e;
+  updateInstallBtn();
+});
+
 function renderNav() {
   var nav = $('#nav');
   var html = '<a class="nav-link" href="#/"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">' + t("nav.home") + '</span></a>';
   html += '<a class="nav-link" href="#/apps"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M22 8l-5 4 5 4V8z"/></svg><span class="nav-label">' + t("nav.apps") + '</span></a>';
+  html += '<a class="nav-link" href="#/featured"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg><span class="nav-label">精选</span></a>';
 
   if (session) {
     html += '<a class="nav-link" href="#/new"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="nav-label">' + t("nav.new") + '</span></a>';
@@ -8190,7 +8300,14 @@ function renderNav() {
     html += '<a class="nav-link" href="#/login"><span class="nav-label">' + t("nav.login") + '</span></a>';
     html += '<a class="btn btn-primary btn-sm" href="#/login" style="min-height:38px">' + t("nav.signup") + '</a>';
   }
+  html += '<a id="nav-install" class="nav-link" href="#" style="display:none" title="安装 App"></a>';
   nav.innerHTML = html;
+  var ib = document.getElementById('nav-install');
+  if (ib && !ib._bound) {
+    ib._bound = true;
+    ib.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); doInstallApp(); });
+  }
+  updateInstallBtn();
 }
 
 function loadUnread() {
@@ -8341,8 +8458,8 @@ function renderCtx() {
   if (!box) return;
   var g = _ctxCache;
   Promise.all([
-    g.circles ? Promise.resolve(g.circles) : CloudStore.getCircles().then(function (c) { g.circles = c; return c; }),
-    g.topics ? Promise.resolve(g.topics) : CloudStore.getTopics().then(function (c) { g.topics = c; return c; })
+    CloudStore.getCircles().then(function (c) { g.circles = c; return c; }),
+    CloudStore.getTopics().then(function (c) { g.topics = c; return c; })
   ]).then(function (rs) {
     var circles = rs[0] || [], topics = rs[1] || [];
     var html = '';
@@ -8543,15 +8660,24 @@ function renderPost(id) {
   });
 }
 
+var _ctxRefreshing = false;
+function ensureCtxFresh() {
+  if (_ctxRefreshing) return;
+  _ctxRefreshing = true;
+  CloudStore.getCircles().then(function (c) { _ctxCache.circles = c; _ctxRefreshing = false; }).catch(function () { _ctxRefreshing = false; });
+  CloudStore.getTopics().then(function (c) { _ctxCache.topics = c; }).catch(function () {});
+}
 function circleNameOf(id) {
   var cs = (_ctxCache && _ctxCache.circles) || [];
   for (var i = 0; i < cs.length; i++) if (cs[i].id === id) return (cs[i].icon || '⭕') + ' ' + cs[i].name;
-  return '⭕ ' + String(id).slice(0, 6);
+  ensureCtxFresh();
+  return '⭕ ' + ((t && t('circle.unknown')) || '圈子');
 }
 function topicNameOf(id) {
   var ts = (_ctxCache && _ctxCache.topics) || [];
   for (var i = 0; i < ts.length; i++) if (ts[i].id === id) return (ts[i].emoji || '🏆') + ' ' + ts[i].name;
-  return '🏆 ' + String(id).slice(0, 6);
+  ensureCtxFresh();
+  return '🏆 ' + ((t && t('circle.unknown')) || '话题');
 }
 function lotteryCardHtml(p, isAdmin) {
   if (!p.lottery_prize && p.lottery_floor == null) return '';
@@ -8618,6 +8744,7 @@ function renderPostBody(p, comments, likes, box, avatarMap, levels) {
       + (session ? '<button class="btn btn-ghost btn-sm" data-action="report-post" data-post="' + p.id + '">' + t('report.title') + '</button>' : '')
       + (isAuthor ? '<button class="btn btn-danger-ghost btn-sm" data-action="del-post" data-post="' + p.id + '">删除</button>' : '')
       + (isAdmin ? '<button class="btn btn-ghost btn-sm" data-action="toggle-pin" data-post="' + p.id + '">' + (p.pinned === true ? t('pin.adminOff') : t('pin.admin')) + '</button>' : '')
+       + (isAdmin ? '<button class="btn btn-ghost btn-sm" data-action="toggle-featured" data-post="' + p.id + '">' + (p.is_featured === true ? '⭐ 取消精选' : '⭐ 设精选') + '</button>' : '')
       + (isAdmin && !isAuthor ? '<button class="btn btn-danger-ghost btn-sm" data-action="admin-del-post" data-post="' + p.id + '">管理员删除</button>' : '')
       + '</div>'
       + (session && !isAuthor ? '<div class="tip-row">' + (p.tip_total ? '<span style="font-size:13px;color:var(--ink-3)">🪙 ' + t('tip.total', p.tip_total) + '</span>' : '') + '<button class="btn btn-ghost btn-sm" data-action="tip-post" data-post="' + p.id + '">' + t('tip.btn') + '</button></div>' : '')
@@ -8667,6 +8794,115 @@ function renderPostBody(p, comments, likes, box, avatarMap, levels) {
  * 发帖
  * ============================================================ */
 var selectedCat = 'chat';
+/* ===== v6.4.3 发帖 AI 助手（本地规则引擎，无需后端） ===== */
+function aiDailyTopic() {
+  var topics = [
+    '聊聊你最近在追的一部剧/游戏/书',
+    '分享一件让你今天开心的小事',
+    '安利一个你回购过 3 次以上的好物',
+    '讲一个你记忆最深的故事或经历',
+    '分享一个你最近学会的小技巧',
+    '这周末你打算怎么过？',
+    '来许个愿：未来一个月你最想做成的一件事'
+  ];
+  return topics[new Date().getDay()];
+}
+function aiGenTitle(cat) {
+  var pats = {
+    chat: ['【提问】{w}，你怎么看？', '有没有人遇到过{w}？', '{w}，大家都来聊聊！', '你们会{w}吗？说说看法'],
+    study: ['干货分享：{w}的学习笔记', '{w} 最全攻略，收藏不亏', '关于{w}，我总结了这几点', '{w} 学起来其实很简单'],
+    game: ['{w} 通关心得，含剧透', '{w} 新手避坑指南', '玩了这么久{w}，说说我的评价', '{w} 里的隐藏彩蛋你发现了吗'],
+    tech: ['{w} 踩坑记录，附解决方案', '用 {w} 做了个小项目，分享出来', '{w} 原理浅析', '{w} 遇到这个问题别慌'],
+    life: ['我的 {w} 日常', '{w} 好物推荐', '第一次尝试{w}，结果没想到…', '{w} 真的会改变生活'],
+    emotion: ['关于{w}，我有些话想说', '{w} 后，我终于明白了', '有人能聊聊{w}吗', '那些{w}的瞬间'],
+    resource: ['整理了一批 {w} 资源，自取', '{w} 合集分享', '全网搜罗的 {w}，都在这里'],
+    music: ['安利一首 {w} 风格的歌', '{w} 歌单分享', '最近循环的 {w}，太上头了'],
+    movie: ['{w} 观影报告（无剧透）', '{w} 值不值得看？', '看完{w}，我想说…'],
+    anime: ['{w} 番剧安利', '{w} 角色分析', '{w} 里的那些神展开'],
+    other: ['关于{w}，我有话说', '{w} 二三事', '分享一点 {w} 的经验']
+  };
+  var words = ['第一次', '熬夜', '排队', '踩雷', '上头', '离谱', '治愈', '封神', '小众', '宝藏', '极限', '翻车', '省钱', '效率', '情绪', '成长', '手残', '真香', '破防'];
+  var list = pats[cat] || pats.other;
+  var tpl = list[Math.floor(Math.random() * list.length)];
+  var w = words[Math.floor(Math.random() * words.length)];
+  return tpl.replace('{w}', w);
+}
+function aiDeAIFy(text) {
+  var map = [
+    ['总而言之', '说到底'], ['综上所述', '说白了'], ['值得注意的是', '对了'],
+    ['不难发现', '其实'], ['由此可见', '所以'], ['众所周知', '大家都知道'],
+    ['在当今社会', ''], ['随着时代的发展', ''], ['随着科技的进步', ''],
+    ['首先', '第一'], ['其次', '第二'], ['最后', '第三'],
+    ['赋能', '帮忙'], ['抓手', '办法'], ['闭环', '搞定'], ['沉淀', '攒下来'],
+    ['与此同时', '同时'], ['毫无疑问', '肯定'], ['显而易见', '明摆着'],
+    ['不可否认', '确实'], ['深入浅出', '讲得明白'], ['不仅仅', '不光'],
+    ['一方面', '一来'], ['另一方面', '二来'], ['在这个快节奏的时代', '']
+  ];
+  var out = String(text || '');
+  map.forEach(function (p) { out = out.split(p[0]).join(p[1]); });
+  out = out.replace(/([\w\u4e00-\u9fa5]{2,})！{2,}/g, '$1！').replace(/（笑）/g, '').replace(/【[^】]{1,8}】/g, '');
+  return out;
+}
+function aiRestyle(text, style) {
+  var s = String(text || '').trim();
+  if (!s) return '';
+  if (style === 'live') {
+    var lines = s.split('\n').map(function (l) { return l ? '✨ ' + l : l; });
+    return lines.join('\n') + (s.charAt(s.length - 1) === '！' ? '' : '！');
+  }
+  if (style === 'formal') {
+    var ls = s.split('\n').filter(Boolean);
+    if (ls.length <= 1 && s.length > 40) {
+      var parts = s.split(/[。；]/).filter(Boolean);
+      ls = parts.slice(0, 6).map(function (p, i) { return (i + 1) + '. ' + p + '；'; });
+    }
+    return ls.join('\n');
+  }
+  if (style === 'short') {
+    s = s.replace(/[（(][^）)]*[）)]/g, '').replace(/\s+/g, ' ');
+    if (s.length > 60) s = s.slice(0, 60) + '…';
+    return s;
+  }
+  return s;
+}
+/* ===== v6.4.3 定时发布（本地队列） ===== */
+function getScheduled() { try { return JSON.parse(localStorage.getItem('forum_sched') || '[]'); } catch (e) { return []; } }
+function pushScheduled(item) { var q = getScheduled(); q.push(item); try { localStorage.setItem('forum_sched', JSON.stringify(q)); } catch (e) {} }
+function removeScheduled(id) { var q = getScheduled().filter(function (x) { return x.id !== id; }); try { localStorage.setItem('forum_sched', JSON.stringify(q)); } catch (e) {} }
+function fmtSched(ts) { var d = new Date(ts); var p = function (n) { return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+function renderSchedList() {
+  var box = $('#np-sched-list');
+  if (!box) return;
+  var q = getScheduled();
+  if (!q.length) { box.innerHTML = ''; return; }
+  var h = '<div style="margin-top:6px;border-top:1px solid var(--ink-2);padding-top:6px">待发布 ' + q.length + ' 条：</div>';
+  q.forEach(function (it) {
+    h += '<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">⏰ ' + fmtSched(it.at) + ' · ' + esc(it.title) + '</span><button type="button" class="btn btn-ghost btn-sm" data-cancel-sched="' + it.id + '" style="padding:2px 8px">取消</button></div>';
+  });
+  box.innerHTML = h;
+}
+function fireScheduled(item) {
+  CloudStore.createPost({
+    user_id: session ? session.id : item.user_id,
+    author_name: session ? session.username : item.author_name,
+    title: item.title, content: item.content, category: item.category,
+    attachments: null, poll_data: item.poll_data || null,
+    circle_id: item.circle_id || null, topic_id: item.topic_id || null,
+    lottery: item.lottery || null, blocked_uids: item.blocked_uids || null
+  }).then(function (p) {
+    if (p && p.id) { toast('⏰ 定时帖已发布：' + item.title); renderHome(); }
+    else { toast('⏰ 定时帖发布失败：返回异常'); }
+  }).catch(function (err) { toast('⏰ 定时帖发布失败：' + (err.message || err)); });
+}
+function tickScheduled() {
+  var q = getScheduled(), fired = [];
+  q.forEach(function (it) { if (it.at <= Date.now()) { fireScheduled(it); fired.push(it.id); } });
+  if (fired.length) {
+    var left = q.filter(function (x) { return fired.indexOf(x.id) < 0; });
+    try { localStorage.setItem('forum_sched', JSON.stringify(left)); } catch (e) {}
+    if (location.hash.indexOf('#/new') === 0) renderSchedList();
+  }
+}
 function renderNew() {
   if (!requireLogin()) return;
   if (isBanned('post')) {
@@ -8686,6 +8922,9 @@ function renderNew() {
   var filesInput = $('#np-files');
   if (filesInput) filesInput.value = '';
   
+  var aiTips = $('#np-ai-tips');
+  if (aiTips) aiTips.textContent = '💡 今日灵感：' + aiDailyTopic();
+  renderSchedList();
   var npc = $('#np-cats');
   var html = '';
   for (var key in CATEGORIES) {
@@ -8841,7 +9080,7 @@ function renderProfile() {
       if (!myPosts.length) {
         html += '<div class="empty"><p class="empty-title">还没有发过帖子</p><a class="btn btn-primary" href="#/new">去发第一帖</a></div>';
       } else {
-        html += '<div class="post-list">' + myPosts.map(function (p) { return postCardHtml(p, counts, {}, {}, myLv); }).join('') + '</div>';
+        html += '<div class="post-list">' + myPosts.map(function (p) { return postCardHtml(p, counts, likeRows, {}, myLv); }).join('') + '</div>';
       }
       box.innerHTML = html;
       myBlockedIds().then(function (bl) {
@@ -8875,10 +9114,12 @@ function renderUserProfile(userId) {
     CloudStore.myPosts(userId),
     CloudStore.getFollowStatus(userId),
     CloudStore.myBlocks(),
-    CloudStore.getUserSignin(userId)
+    CloudStore.getUserSignin(userId),
+    CloudStore.commentCounts(),
+    CloudStore.likeStats(userId)
   ])
   .then(function (res) {
-    var p = res[0], userPosts = res[1] || [], followStatus = res[2] || {}, blockedList = res[3] || [], usign = res[4] || { streak: 0, total: 0 };
+    var p = res[0], userPosts = res[1] || [], followStatus = res[2] || {}, blockedList = res[3] || [], usign = res[4] || { streak: 0, total: 0 }, upCounts = res[5] || {}, upLikes = res[6] || {};
     if (!p) { box.innerHTML = '<div class="empty"><p class="empty-title">用户不存在</p></div>'; return; }
 
     var isMe = session && session.id === userId;
@@ -8927,7 +9168,7 @@ function renderUserProfile(userId) {
       if (!visPosts.length) {
         html += '<div class="empty"><p class="empty-title">暂无可见帖子</p></div>';
       } else {
-        html += '<div class="post-list">' + visPosts.map(function (p) { return postCardHtml(p, {}, {}, {}, hisLv); }).join('') + '</div>';
+        html += '<div class="post-list">' + visPosts.map(function (p) { return postCardHtml(p, upCounts, upLikes, {}, hisLv); }).join('') + '</div>';
       }
     }
     box.innerHTML = html;
@@ -8993,6 +9234,8 @@ function renderNotifications() {
           /* 所有通知都可点击进入发起人主页（头像/昵称可见） */
           var actorDisp = n.actor_name || (n.actor_id || '').slice(0, 6);
           var clickable = '#/profile?id=' + encodeURIComponent(n.actor_id || '');
+          /* v6.4.2 修复：回复/点赞通知点击直达对应帖子（ref_id 即帖子ID） */
+          if ((n.type === 'reply' || n.type === 'like') && n.ref_id) clickable = '#/post?id=' + encodeURIComponent(n.ref_id);
           var tag = 'a';
           var extra = '';
           var textHtml = '<strong>' + esc(actorDisp) + '</strong> ' + esc(n.content || '');
@@ -9448,6 +9691,28 @@ function renderTasks() {
     });
   }).catch(function () { box.innerHTML = '<div class="empty">' + t('loadFail') + '</div>'; });
 }
+function hotTagHtml(posts) {
+  if (!posts || !posts.length) return '';
+  var catN = {}, topN = {};
+  posts.forEach(function (p) {
+    var k = p.category || 'other';
+    catN[k] = (catN[k] || 0) + 1;
+    if (p.topic_id) topN[p.topic_id] = (topN[p.topic_id] || 0) + 1;
+  });
+  var catArr = Object.keys(catN).map(function (k) { return { k: k, n: catN[k] }; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 8);
+  var topArr = Object.keys(topN).map(function (k) { return { k: k, n: topN[k] }; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 8);
+  if (!catArr.length && !topArr.length) return '';
+  var h = '<div class="rank-seg"><h3>🔥 热门分类 / 话题</h3><div style="display:flex;flex-wrap:wrap;gap:8px">';
+  var maxC = catArr.length ? catArr[0].n : 1, maxT = topArr.length ? topArr[0].n : 1;
+  catArr.forEach(function (r) {
+    h += '<span class="chip" style="font-size:' + (11 + 5 * r.n / maxC) + 'px;padding:6px 12px;cursor:pointer" data-hot="' + encodeURIComponent('cat:' + r.k) + '">' + catShort(r.k) + ' · ' + r.n + '</span>';
+  });
+  topArr.forEach(function (r) {
+    h += '<span class="chip" style="font-size:' + (11 + 5 * r.n / maxT) + 'px;padding:6px 12px;cursor:pointer" data-hot="' + encodeURIComponent('topic:' + r.k) + '">' + topicNameOf(r.k) + ' · ' + r.n + '</span>';
+  });
+  h += '</div></div>';
+  return h;
+}
 function renderRank() {
   var box = $('#rank-panel');
   if (!requireLogin()) return;
@@ -9466,7 +9731,10 @@ function renderRank() {
         return '<div class="rank-item"><span class="rank-no">' + (i + 1) + '</span><a href="#/post?id=' + encodeURIComponent(hp.id) + '" style="color:var(--ink-1);text-decoration:none;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(hp.title) + '</a><span style="margin-left:auto;font-weight:700">' + hp._heat + '</span></div>';
       }).join('');
       html += '<div class="rank-seg"><h3>🔥 ' + t('rank.hot') + '</h3>' + (hotRows || '<div class="empty" style="padding:8px 0">' + t('rank.empty') + '</div>') + '</div>';
-      box.innerHTML = html;
+      return CloudStore.listPosts().then(function (posts) {
+        html += hotTagHtml(posts);
+        box.innerHTML = html;
+      }).catch(function () { box.innerHTML = html; });
     }).catch(function () { box.innerHTML = html; });
   }).catch(function () { box.innerHTML = '<div class="empty">' + t('loadFail') + '</div>'; });
 }
@@ -9569,6 +9837,8 @@ function openSpinModal() {
   mask.querySelector('#spin-close').addEventListener('click', function () { mask.remove(); });
   mask.querySelector('#spin-go').addEventListener('click', function () {
     var go = mask.querySelector('#spin-go');
+    if (go.getAttribute('data-running') === '1') return;
+    go.setAttribute('data-running', '1');
     go.disabled = true;
     var wheel = mask.querySelector('#spin-wheel');
     var rot = 360 * 5 + Math.floor(Math.random() * 360);
@@ -9588,7 +9858,22 @@ function openSpinModal() {
           }, 3300);
         });
       });
-    }).catch(function (err) { mask.querySelector('#spin-prize').textContent = ''; toast((err && err.message) || t('task.spinFail')); go.disabled = false; go.textContent = t('task.spinGo'); });
+    }).catch(function (err) {
+      mask.querySelector('#spin-prize').textContent = '';
+      var em = (err && err.message) || '';
+      if (em.indexOf('已抽过') >= 0 || em.indexOf('already') >= 0) {
+        toast(t('task.spinDone', ''));
+        renderTasks();
+        mask.remove();
+        return;
+      }
+      toast(em || t('task.spinFail'));
+      go.disabled = false;
+      go.textContent = t('task.spinGo');
+      wheel.style.transition = 'none';
+      wheel.style.transform = 'rotate(0deg)';
+      setTimeout(function () { wheel.style.transition = 'transform 3.2s cubic-bezier(.12,.68,.08,.96)'; }, 50);
+    });
   });
 }
 function pollHtml(p) {
@@ -9629,6 +9914,34 @@ function npPollData() {
   if (opts.length < 2) return null;
   var multi = $('#np-poll-multi') ? $('#np-poll-multi').checked : false;
   return { question: q, options: opts, multi: multi, endAt: null };
+}
+function renderFeatured() {
+  var box = $('#featured-list');
+  if (!box) return;
+  box.innerHTML = loadingHtml();
+  CloudStore.featuredPosts().then(function (rows) {
+    if (!rows || !rows.length) {
+      box.innerHTML = '<div class="empty"><p class="empty-title">还没有精选内容</p><p>管理员可以把优质帖子设为精选，沉淀为社区知识库。</p></div>';
+      return;
+    }
+    var html = rows.map(function (p) {
+      var body = '<article class="post-item" style="cursor:pointer" data-goto="post?id=' + encodeURIComponent(p.id) + '">'
+        + '<div class="post-head"><span class="avatar" style="background:' + avatarColor(p.author_name || '') + '">' + esc((p.author_name || '?').charAt(0)) + '</span>'
+        + '<div style="flex:1;min-width:0"><div style="font-weight:600">' + esc(p.author_name || '匿名') + '</div>'
+        + '<div style="font-size:12px;color:var(--ink-3)">' + fmtTime(p.created_at) + ' · ' + (topicNameOf(p.topic_id) || categoryLabel(p.category)) + '</div></div>'
+        + '<span class="chip" style="background:var(--accent-soft);color:var(--accent)">⭐ 精选</span></div>'
+        + '<h3 style="margin:8px 0 4px">' + esc(p.title) + '</h3>'
+        + '<p style="font-size:13px;color:var(--ink-3);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + esc((p.content || '').slice(0, 160)) + '</p>'
+        + '</article>';
+      return body;
+    }).join('');
+    box.innerHTML = html;
+    box.querySelectorAll('[data-goto]').forEach(function (el) {
+      el.addEventListener('click', function () { location.hash = '#/' + el.getAttribute('data-goto'); });
+    });
+  }).catch(function () {
+    box.innerHTML = '<div class="empty"><p>精选内容加载失败</p></div>';
+  });
 }
 function renderFeedback() {
   var box = $('#feedback-panel');
@@ -9684,10 +9997,15 @@ function renderSettings() {
   var petBox = $('#pet-panel');
   if (petBox) {
     var petOn = deskPetVisible();
+    var voiceOn = voiceEnabled();
     petBox.innerHTML = '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600">'
       + '<input type="checkbox" id="pet-desk-toggle"' + (petOn ? ' checked' : '') + ' style="width:18px;height:18px"> '
       + t('pet.deskShow') + '</label>'
-      + '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">' + (petOn ? t('pet.deskOn') : t('pet.deskOff')) + '</p>';
+      + '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">' + (petOn ? t('pet.deskOn') : t('pet.deskOff')) + '</p>'
+      + '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600;margin-top:10px">'
+      + '<input type="checkbox" id="pet-voice-toggle"' + (voiceOn ? ' checked' : '') + ' style="width:18px;height:18px"> '
+      + '语音对话（双击桌宠说话 / AI 问答）</label>'
+      + '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">开启后双击桌宠即可语音聊天，支持打开页面、查天气、看新闻、查数据</p>';
   }
 
   /* 主题选择器 */
@@ -9742,6 +10060,85 @@ function isAdminUser() {
  * 后台
  * ============================================================ */
 var adminFold = { admins: true, users: true, posts: true, reports: true };
+/* ===== v6.4.3 管理面板图表（Canvas 自绘，适配当前主题色） ===== */
+function _cssVar(name, fallback) { try { return getComputedStyle(document.body).getPropertyValue(name).trim() || fallback; } catch (e) { return fallback; } }
+function catShort(k) { return (CATEGORIES && CATEGORIES[k] && CATEGORIES[k].label) ? CATEGORIES[k].label : String(k); }
+function barChart(cid, labels, vals, color, ink, line) {
+  var cv = document.getElementById(cid); if (!cv || !vals.length) return;
+  var ctx; try { ctx = cv.getContext('2d'); } catch (e) { return; }
+  if (!ctx) return;
+  var w = cv.width = cv.clientWidth || 300, h = cv.height = cv.clientHeight || 150;
+  ctx.clearRect(0, 0, w, h);
+  var pad = 26, max = Math.max.apply(null, vals.concat([1]));
+  ctx.font = '10px sans-serif';
+  vals.forEach(function (v, i) {
+    var slot = (w - pad * 2) / vals.length;
+    var x = pad + i * slot + slot / 2;
+    var bh = (h - pad * 2) * v / max;
+    ctx.fillStyle = color; ctx.fillRect(x - slot * 0.25, h - pad - bh, slot * 0.5, bh);
+    ctx.fillStyle = ink; ctx.textAlign = 'center';
+    ctx.fillText(labels[i], x, h - 8);
+    if (v) { ctx.fillStyle = ink; ctx.fillText(v, x, h - pad - bh - 4); }
+  });
+}
+function hbarChart(cid, labels, vals, color, ink, line) {
+  var cv = document.getElementById(cid); if (!cv) return;
+  var ctx; try { ctx = cv.getContext('2d'); } catch (e) { return; }
+  if (!ctx) return;
+  var w = cv.width = cv.clientWidth || 300, h = cv.height = cv.clientHeight || 150;
+  ctx.clearRect(0, 0, w, h);
+  if (!vals.length) { ctx.fillStyle = ink; ctx.fillText('暂无数据', 10, 20); return; }
+  var max = Math.max.apply(null, vals.concat([1]));
+  var rh = Math.min(20, (h - 10) / vals.length);
+  ctx.font = '10px sans-serif';
+  vals.forEach(function (v, i) {
+    var y = 8 + i * rh + rh / 2;
+    var bw = (w - 92) * v / max;
+    ctx.fillStyle = ink; ctx.textAlign = 'right';
+    ctx.fillText(String(labels[i]).slice(0, 8), 84, y + 4);
+    ctx.fillStyle = color; ctx.fillRect(90, y - rh / 2 + 2, Math.max(bw, v ? 3 : 0), rh - 4);
+    ctx.fillStyle = ink; ctx.textAlign = 'left';
+    ctx.fillText(v, 96 + bw, y + 4);
+  });
+}
+function lineChart(cid, labels, vals, color, ink, line) {
+  var cv = document.getElementById(cid); if (!cv || !vals.length) return;
+  var ctx; try { ctx = cv.getContext('2d'); } catch (e) { return; }
+  if (!ctx) return;
+  var w = cv.width = cv.clientWidth || 300, h = cv.height = cv.clientHeight || 150;
+  ctx.clearRect(0, 0, w, h);
+  var pad = 26, max = Math.max.apply(null, vals.concat([1]));
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, h / 2); ctx.lineTo(w - pad, h / 2); ctx.stroke();
+  var pts = vals.map(function (v, i) {
+    return { x: pad + i * (w - pad * 2) / (vals.length - 1 || 1), y: h - pad - (h - pad * 2) * v / max };
+  });
+  ctx.strokeStyle = color; ctx.lineWidth = 2;
+  ctx.beginPath();
+  pts.forEach(function (p, i) { i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
+  ctx.stroke();
+  ctx.fillStyle = color;
+  pts.forEach(function (p, i) {
+    ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = ink; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(labels[i], p.x, h - 8);
+    ctx.fillText(vals[i], p.x, p.y - 6);
+    ctx.fillStyle = color;
+  });
+}
+function drawAdminCharts(stats) {
+  try {
+    if (!stats) return;
+    var accent = _cssVar('--accent', '#3b82f6');
+    var ink = _cssVar('--ink-3', '#94a3b8');
+    var line = _cssVar('--line', '#334155');
+    var pby = stats.posts_by_day || [], pcat = stats.posts_by_cat || [], topu = stats.top_users || [], sby = stats.signins_by_day || [];
+    barChart('ch-posts-day', pby.map(function (x) { return x.d; }), pby.map(function (x) { return x.n; }), accent, ink, line);
+    hbarChart('ch-posts-cat', pcat.map(function (x) { return catShort(x.cat); }), pcat.map(function (x) { return x.n; }), accent, ink, line);
+    hbarChart('ch-top-users', topu.map(function (x) { return x.name; }), topu.map(function (x) { return x.n; }), accent, ink, line);
+    lineChart('ch-signins-day', sby.map(function (x) { return x.d; }), sby.map(function (x) { return x.n; }), accent, ink, line);
+  } catch (e) {}
+}
 function renderAdmin() {
   if (!session) {
     $('#admin-panel').innerHTML = '<div class="empty"><p class="empty-title">无权限</p><p>此页面仅限管理员访问。</p></div>';
@@ -9801,6 +10198,12 @@ function renderAdmin() {
             return '<div style="background:var(--card-hover);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px">' + c.icon + '</div><div style="font-size:22px;font-weight:800;color:var(--ink-1)">' + c.v + '</div><div style="font-size:12px;color:var(--ink-3)">' + c.k + '</div></div>';
           }).join('')
           + '</div></div>';
+          html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px">'
+            + '<div style="background:var(--card-hover);border:1px solid var(--line);border-radius:12px;padding:12px"><div style="font-size:13px;font-weight:700;margin-bottom:8px">📈 近7天发帖趋势</div><canvas id="ch-posts-day" style="width:100%;height:150px"></canvas></div>'
+            + '<div style="background:var(--card-hover);border:1px solid var(--line);border-radius:12px;padding:12px"><div style="font-size:13px;font-weight:700;margin-bottom:8px">📊 分类分布</div><canvas id="ch-posts-cat" style="width:100%;height:150px"></canvas></div>'
+            + '<div style="background:var(--card-hover);border:1px solid var(--line);border-radius:12px;padding:12px"><div style="font-size:13px;font-weight:700;margin-bottom:8px">🏆 活跃发帖用户</div><canvas id="ch-top-users" style="width:100%;height:150px"></canvas></div>'
+            + '<div style="background:var(--card-hover);border:1px solid var(--line);border-radius:12px;padding:12px"><div style="font-size:13px;font-weight:700;margin-bottom:8px">📅 近7天签到趋势</div><canvas id="ch-signins-day" style="width:100%;height:150px"></canvas></div>'
+            + '</div>';
       }
 
       /* ===== BUG 反馈（管理员可见，超管可接收） ===== */
@@ -10027,6 +10430,7 @@ function renderAdmin() {
         + '<button class="btn btn-primary btn-sm" data-action="admin-export">导出</button></div></div>';
 
           box.innerHTML = html;
+          drawAdminCharts(stats);
         });
     })
     .catch(function (e) { box.innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
@@ -10330,6 +10734,18 @@ document.addEventListener('click', function (e) {
     return;
   }
 
+  /* 管理员设/取消精选 */
+  if (act === 'toggle-featured') {
+    e.preventDefault();
+    if (!isAdminUser()) return;
+    var fpid = el.getAttribute('data-post');
+    var nowOn = el.textContent.indexOf('取消精选') >= 0;
+    CloudStore.setFeatured(fpid, !nowOn)
+      .then(function () { toast(nowOn ? '已取消精选' : '已设为精选 ⭐'); renderPost(fpid); })
+      .catch(function (err) { toast(err.message); });
+    return;
+  }
+
   /* 管理员处理举报 */
   if (act === 'admin-handle-report' || act === 'admin-ignore-report') {
     e.preventDefault();
@@ -10530,7 +10946,7 @@ document.addEventListener('click', function (e) {
     var cd = $('#adm-circle-desc') ? $('#adm-circle-desc').value.trim() : '';
     var ci = $('#adm-circle-icon') ? $('#adm-circle-icon').value.trim() : '⭕';
     if (!cn) { toast(t('circles.name') + ' 不能为空'); return; }
-    CloudStore.createCircle(cn, cd, ci).then(function () { toast(t('circles.create') + ' ✓'); renderAdmin(); }).catch(function (err) { toast(err.message); });
+    CloudStore.createCircle(cn, cd, ci).then(function () { toast(t('circles.create') + ' ✓'); _ctxCache.circles = null; renderAdmin(); }).catch(function (err) { toast(err.message); });
     return;
   }
   if (act === 'adm-circle-edit') {
@@ -10540,7 +10956,7 @@ document.addEventListener('click', function (e) {
     if (!nn) return;
     var nd = prompt(t('circles.desc'), el.getAttribute('data-desc')) || '';
     var ni = prompt(t('circles.icon'), el.getAttribute('data-icon')) || '⭕';
-    CloudStore.updateCircle(cid, nn.trim(), nd, ni).then(function () { toast(t('circles.edit') + ' ✓'); renderAdmin(); }).catch(function (err) { toast(err.message); });
+    CloudStore.updateCircle(cid, nn.trim(), nd, ni).then(function () { toast(t('circles.edit') + ' ✓'); _ctxCache.circles = null; renderAdmin(); }).catch(function (err) { toast(err.message); });
     return;
   }
   if (act === 'adm-circle-del') {
@@ -10558,7 +10974,7 @@ document.addEventListener('click', function (e) {
     var te = $('#adm-topic-emoji') ? $('#adm-topic-emoji').value.trim() : '🏆';
     var tend = $('#adm-topic-end') ? $('#adm-topic-end').value : '';
     if (!tn) { toast(t('topics.name') + ' 不能为空'); return; }
-    CloudStore.createTopic(tn, td, te, tend || null).then(function () { toast(t('topics.create') + ' ✓'); renderAdmin(); }).catch(function (err) { toast(err.message); });
+    CloudStore.createTopic(tn, td, te, tend || null).then(function () { toast(t('topics.create') + ' ✓'); _ctxCache.topics = null; renderAdmin(); }).catch(function (err) { toast(err.message); });
     return;
   }
   if (act === 'adm-topic-edit') {
@@ -10568,7 +10984,7 @@ document.addEventListener('click', function (e) {
     if (!tn2) return;
     var td2 = prompt(t('topics.desc'), el.getAttribute('data-desc')) || '';
     var te2 = prompt(t('topics.emoji'), el.getAttribute('data-emoji')) || '🏆';
-    CloudStore.updateTopic(tid, { name: tn2.trim(), desc: td2, emoji: te2 }).then(function () { toast(t('topics.del') + ' ✓'); _ctxCache.topics = null; renderAdmin(); }).catch(function (err) { toast(err.message); });
+    CloudStore.updateTopic(tid, { name: tn2.trim(), desc: td2, emoji: te2 }).then(function () { toast(t('topics.edit') + ' ✓'); _ctxCache.topics = null; renderAdmin(); }).catch(function (err) { toast(err.message); });
     return;
   }
   if (act === 'adm-topic-del') {
@@ -11091,6 +11507,31 @@ document.addEventListener('submit', function (e) {
     var title = $('#np-title').value.trim();
     var content = $('#np-content').value.trim();
     if (!title || !content) { toast('标题和内容都要填写'); return; }
+    /* v6.4.3 定时发布：设置了时间则入队不立即发布（附件不支持定时） */
+    var schedEl = $('#np-sched-at');
+    if (schedEl && schedEl.value) {
+      var schedTs = new Date(schedEl.value).getTime();
+      if (isNaN(schedTs) || schedTs <= Date.now()) { toast('定时时间需晚于当前时间'); return; }
+      var schedFiles = $('#np-files').files;
+      if (schedFiles && schedFiles.length) { toast('定时发布暂不支持附件，请先移除附件'); return; }
+      var sCircle = $('#np-circle') ? $('#np-circle').value : '';
+      var sTopic = $('#np-topic') ? $('#np-topic').value : '';
+      var sLottery = null;
+      if (isAdminUser()) {
+        var slf = $('#np-lottery-floor') ? parseInt($('#np-lottery-floor').value, 10) : 0;
+        var slp = $('#np-lottery-prize') ? $('#np-lottery-prize').value.trim() : '';
+        if (slf >= 2 && slp) sLottery = { floor: slf, prize: slp, winner_uid: null, winner_name: null, drawn_at: null };
+      }
+      var sBlocked = [];
+      var sbi = $('#np-blocked') ? $('#np-blocked').value.trim() : '';
+      if (sbi) sBlocked = sbi.split(/[,，\s]+/).filter(Boolean).slice(0, 20);
+      pushScheduled({ id: 's' + Date.now(), at: schedTs, title: title, content: content, category: selectedCat, poll_data: npPollData(), circle_id: sCircle || null, topic_id: sTopic || null, lottery: sLottery, blocked_uids: sBlocked.length ? sBlocked : null });
+      toast('⏰ 已加入定时发布队列（' + fmtSched(schedTs) + '）');
+      $('#np-title').value = ''; $('#np-content').value = '';
+      schedEl.value = '';
+      renderSchedList();
+      return;
+    }
     /* v6.1 敏感词拦截 */
     var st = checkSensitive(title), sc = checkSensitive(content);
     if (st.hit) { toast(t('sensitive.hit', st.word)); return; }
@@ -11254,6 +11695,42 @@ document.addEventListener('click', function (e) {
 /* 主题选择点击 */
 document.addEventListener('click', function (e) {
   if (e.target.id === 'captcha-refresh') { newCaptcha(); }
+  var hotEl = e.target.closest ? e.target.closest('[data-hot]') : null;
+  if (hotEl) {
+    var hv = decodeURIComponent(hotEl.getAttribute('data-hot'));
+    if (hv.indexOf('cat:') === 0) { homeState.category = hv.slice(4); homeState.topic = ''; homeState.circle = ''; }
+    else if (hv.indexOf('topic:') === 0) { homeState.topic = hv.slice(6); homeState.category = 'all'; homeState.circle = ''; }
+    location.hash = '#/';
+    return;
+  }
+  if (e.target.id === 'np-sched-clear') {
+    var sce = $('#np-sched-at'); if (sce) sce.value = '';
+    return;
+  }
+  var csb = e.target.closest ? e.target.closest('[data-cancel-sched]') : null;
+  if (csb) {
+    removeScheduled(csb.getAttribute('data-cancel-sched'));
+    renderSchedList();
+    toast('已取消该定时帖');
+    return;
+  }
+  var aiBtn = e.target.closest ? e.target.closest('[data-ai]') : null;
+  if (aiBtn) {
+    var aiAct = aiBtn.getAttribute('data-ai');
+    var aiTitle = $('#np-title'), aiContent = $('#np-content'), aiOut = $('#np-ai-out');
+    if (aiAct === 'title') {
+      var aiCat = (typeof selectedCat !== 'undefined' && selectedCat) || 'chat';
+      if (aiTitle) aiTitle.value = aiGenTitle(aiCat);
+      if (aiOut) aiOut.textContent = '标题已生成（可再点一次换一个）';
+    } else if (aiAct === 'deaif') {
+      if (aiContent) aiContent.value = aiDeAIFy(aiContent.value);
+      if (aiOut) aiOut.textContent = '已去AI味：替换了模板腔词句';
+    } else if (aiAct === 'live' || aiAct === 'formal' || aiAct === 'short') {
+      if (aiContent) aiContent.value = aiRestyle(aiContent.value, aiAct);
+      if (aiOut) aiOut.textContent = '已按风格改写，不满意可再点其他风格';
+    }
+    return;
+  }
   var item = e.target.closest('.theme-item');
   if (!item) return;
   /* 修复：玻璃颜色按钮、语言选项同样带 .theme-item 类，若不排除会误触发主题切换（读不到 data-theme-id → setTheme(null) → 整体恢复默认，还会把云端 theme 清空） */
@@ -11302,6 +11779,16 @@ document.addEventListener('change', function (e) {
     if (petBox) {
       var note = petBox.querySelector('p');
       if (note) note.textContent = e.target.checked ? t('pet.deskOn') : t('pet.deskOff');
+    }
+    return;
+  }
+  if (e.target.id === 'pet-voice-toggle') {
+    try { localStorage.setItem('pet_voice_on', e.target.checked ? '1' : '0'); } catch (err) {}
+    if (e.target.checked) {
+      var petD = document.getElementById('desk-pet');
+      if (petD) petSay(petD, '语音对话已开启，双击我就能说话啦~');
+    } else {
+      stopVoice();
     }
     return;
   }
@@ -11927,8 +12414,18 @@ function fallbackCopy(txt) {
  * 初始化
  * ============================================================ */
 window.addEventListener('hashchange', router);
+setInterval(tickScheduled, 30000);
+setTimeout(tickScheduled, 3000);
 
 (function init() {
+  /* PWA 支持：页面加载即静默注册 Service Worker（离线缓存 + 可安装成软件）。
+     仅在 HTTPS 或 localhost 生效；file:// 或非 HTTPS 静默失败，不影响任何功能 */
+  try {
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
+  } catch (e) {}
+
   /* 应用本地保存的界面语言 */
   setLang(currentLang);
   var cfg = getConfig();
@@ -12257,7 +12754,7 @@ var DARKNET_MAP = {
   }catch(e){}
 })();
 
-/* ================= 桌宠（首页浮动小宠物，随机走动） ================= */
+/* ================= 桌宠 v6.4.3（AI 桌宠：可拖拽 + 挣扎 + 等级成长 + 对话面板 + 语音 AI 问答） ================= */
   var BEHAVIORS = [
     { k: 'walk', cls: 'dp-walk', dur: 4500, w: 32 },
     { k: 'jump', cls: 'dp-jump', dur: 1900, w: 20 },
@@ -12278,6 +12775,80 @@ var TITLE_TIERS = [
   { k: 't3', price: 150 },
   { k: 't4', price: 250 }
 ];
+  /* 等级解锁动作（不与商城动作重复） */
+  var LEVEL_ACTIONS = [
+    { lv: 2,  k: 'roll',   cls: 'dp-roll',   dur: 2600, w: 12 },
+    { lv: 4,  k: 'dance',  cls: 'dp-dance',  dur: 3600, w: 10 },
+    { lv: 6,  k: 'wiggle', cls: 'dp-wiggle', dur: 2400, w: 9 },
+    { lv: 8,  k: 'bounce', cls: 'dp-bounce', dur: 2800, w: 9 },
+    { lv: 10, k: 'float',  cls: 'dp-float',  dur: 4200, w: 8 },
+    { lv: 12, k: 'party',  cls: 'dp-party',  dur: 5200, w: 7 }
+  ];
+  var _bubbleTimer = null, _speakTimer = null;
+  var _voiceRec = null, _voiceOn = false, _voiceTimer = null;
+  var _suppressClick = false, _dragging = false;
+  var _dragX = 0, _dragY = 0, _dragBaseL = 0, _dragBaseT = 0, _moved = 0;
+  var _petCtx = [], _petChatBuilt = false;
+
+  function petLevel() {
+    if (!session) return 1;
+    var lv = parseInt(session.level, 10);
+    if (!isNaN(lv) && lv > 0) return Math.min(lv, 30);
+    return Math.min(1 + Math.floor(Math.sqrt((parseInt(session.xp, 10) || 0) / 40)), 30);
+  }
+  function petName() { return (session && session.pet) || '小可爱'; }
+  /* 等级说话池：等级越高会说的话越多 */
+  function petSayPool() {
+    var lv = petLevel();
+    var pool = [];
+    ['pet.bubble1', 'pet.bubble2', 'pet.bubble3', 'pet.bubble4', 'pet.bubble5'].forEach(function (k) { pool.push(t(k)); });
+    if (lv >= 3) pool.push('主人今天也要加油哦~', '要不要去任务页赚点金币？', '听说今天有人发了新帖！');
+    if (lv >= 5) pool.push('你的等级好高呀，夸夸你！', '我发现了个好玩的话题~', '记得去商店看看新皮肤！');
+    if (lv >= 7) pool.push('主人辛苦了，休息一下再战！', '双击我可以语音控制哦~', '我能感觉到你越来越厉害了！');
+    if (lv >= 9) pool.push('试试对我说"打开商店"？', '"今天天气怎么样"也可以问我~', '"新闻热点"我也知道！');
+    if (lv >= 11) pool.push('我已经学会好多动作啦！', '等级越高，我越聪明！', '主人，你是我见过最棒的人！');
+    return pool;
+  }
+  /* 笑话 / 冷知识库：等级越高解锁越多 */
+  var PET_JOKES = [
+    '为什么程序员分不清万圣节和圣诞节？因为 Oct 31 == Dec 25。',
+    '鱼为什么生活在水里？因为岸上有猫。',
+    '一只小熊问妈妈："我是怎么来的？"妈妈说："你是照哈哈镜来的！"',
+    '为什么数学书总是很忧伤？因为它有太多问题。',
+    '老板问我为什么总迟到，我说因为地球转得太慢了。'
+  ];
+  var PET_JOKES_HIGH = [
+    '程序员最讨厌的两件事：别人不写注释，别人写的注释。',
+    '为什么猪不能踢足球？因为它一碰球就"拱"出去了！',
+    '我买了一台空气净化器，结果它说自己是"清净器"……',
+    '有一只蜗牛摔倒了，起来后说："我没事，就是有点慢。"',
+    '为什么篮球场总是很挤？因为大家都想"投"奔理想。',
+    '熊猫的愿望：拍一张彩色照片。',
+    '为什么手机要带充电器？因为"机"不可失！',
+    '我告诉宠物要减肥，它回我一句："汪"！'
+  ];
+  var PET_KNOWLEDGE = [
+    '章鱼有三颗心脏，血液是蓝色的。',
+    '蜜蜂的嗡嗡声来自每秒 200 次扇动翅膀。',
+    '人的胃酸酸性很强，能溶解小金属片。',
+    '地球绕太阳一圈，其实不用整整一年。',
+    '香蕉是浆果，草莓反而不是浆果。',
+    '你的大脑在你睡着时，比白天更活跃。',
+    '袋鼠不会倒退着走。',
+    '水滴不一定是圆的，在太空它是球形的。'
+  ];
+  var PET_PRAISE = [
+    '主人超棒！我要给你点个赞~',
+    '哇，主人今天状态拉满！',
+    '你帅你说了算，我都听你的！',
+    '主人这么厉害，我也要加油变强！'
+  ];
+  var PET_MOOD = [
+    '我现在心情超好，因为看到主人啦！',
+    '有点小困…不过陪主人聊天就不困了！',
+    '我在想，今天主人会给我讲什么有趣的事呢？'
+  ];
+  function randPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
   function ownedActions() {
     var o = [];
     try { o = JSON.parse(localStorage.getItem('pet_actions_owned') || '[]'); } catch (e) {}
@@ -12285,8 +12856,10 @@ var TITLE_TIERS = [
     return o;
   }
   function pickBehavior() {
+    var lv = petLevel();
     var pool = BEHAVIORS.filter(function (b) { return b.k === 'idle' || ownedActions().indexOf(b.k) >= 0; });
-    if (!pool.length) pool = BEHAVIORS.filter(function (b) { return b.k === 'idle'; });
+    LEVEL_ACTIONS.forEach(function (a) { if (lv >= a.lv) pool.push(a); });
+    if (!pool.length) pool = [{ k: 'idle', cls: 'dp-idle', dur: 2100, w: 16 }];
     var total = pool.reduce(function (a, b) { return a + b.w; }, 0);
     var r = Math.random() * total;
     for (var i = 0; i < pool.length; i++) { r -= pool[i].w; if (r <= 0) return pool[i]; }
@@ -12295,26 +12868,383 @@ var TITLE_TIERS = [
 
   function nextBehavior(d) {
     if (document.getElementById('desk-pet') !== d) return;
+    if (d._dragging) { setTimeout(function () { nextBehavior(d); }, 600); return; }
     var bh = pickBehavior();
     d.className = bh.cls;
     var vw = window.innerWidth, vh = window.innerHeight;
     if (bh.k === 'walk') {
-      /* 跑动：换一个位置，并按水平方向镜像，跳/坐/趴/摇在原位 */
       var targetL = 16 + Math.random() * Math.max(50, vw - 160);
-      var targetB = 16 + Math.random() * Math.max(40, vh * 0.45);
       d.style.left = targetL + 'px';
-      d.style.bottom = targetB + 'px';
+      if (d.style.top && d.style.top !== '') {
+        var targetT = 16 + Math.random() * Math.max(40, vh - 150);
+        d.style.top = targetT + 'px';
+      } else {
+        var targetB = 16 + Math.random() * Math.max(40, vh * 0.45);
+        d.style.bottom = targetB + 'px';
+      }
       var curL = parseFloat(d.style.left) || 24;
       var inner = d.querySelector('.dp-inner');
       if (inner) inner.classList.toggle('dp-flip', targetL < curL - 10);
     }
     setTimeout(function () { nextBehavior(d); }, bh.dur + Math.random() * 700);
   }
+  /* 说话：气泡 + 语音朗读 + 同步对话面板（noPanel=true 时面板已由调用方写入） */
+  function petSay(d, txt, noPanel) {
+    if (!d) d = document.getElementById('desk-pet');
+    var b = d ? d.querySelector('#desk-pet-bubble') : null;
+    if (b) {
+      b.textContent = txt;
+      b.style.display = 'block';
+      if (_bubbleTimer) clearTimeout(_bubbleTimer);
+      _bubbleTimer = setTimeout(function () { b.style.display = 'none'; }, 3400);
+    }
+    if (!noPanel && _petChatBuilt && document.getElementById('pet-chat') && txt) petChatSay('p', txt, true);
+    try {
+      if (window.speechSynthesis && window.SpeechSynthesisUtterance) {
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'zh-CN'; u.rate = 1.05; u.volume = 0.9;
+        window.speechSynthesis.speak(u);
+      }
+    } catch (e) {}
+  }
+  /* 主动说话：等级越高间隔越短 */
+  function activeSpeak(d) {
+    if (document.getElementById('desk-pet') !== d) return;
+    if (!d._dragging && !d._listening && (!_petChatBuilt || !document.getElementById('pet-chat'))) {
+      var pool = petSayPool();
+      petSay(d, pool[Math.floor(Math.random() * pool.length)]);
+    }
+    var lv = petLevel();
+    var gap = Math.max(15000, 70000 - lv * 3000);
+    _speakTimer = setTimeout(function () { activeSpeak(d); }, gap);
+  }
+  /* ---------- AI 问答引擎 ---------- */
+  function petNorm(s) { return String(s || '').toLowerCase().replace(/[，。？！、…\s]/g, ''); }
+  function safeCalc(expr) {
+    var e = String(expr || '').replace(/[^0-9+\-*/().]/g, '');
+    if (!e || !/^[\d+\-*/().]+$/.test(e)) return null;
+    var ops = e.replace(/[\d.]+/g, '');
+    if (!ops) return null;
+    try {
+      var v = Function('"use strict";return (' + e + ')')();
+      if (typeof v !== 'number' || !isFinite(v)) return null;
+      return Math.round(v * 10000) / 10000;
+    } catch (err) { return null; }
+  }
+  function aiTodayStr() {
+    var d = new Date();
+    var p = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function aiFetch(path) {
+    var c = CloudStore._cfg();
+    return fetch(c.url + path, { headers: { Authorization: 'Bearer ' + (session ? session.token : ''), apikey: c.key } })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); });
+  }
+  function aiTodayPosts(done) {
+    aiFetch('/rest/v1/posts?select=id&created_at=gte.' + aiTodayStr() + 'T00:00:00Z&limit=1000')
+      .then(function (rows) {
+        var n = (rows && rows.length) || 0;
+        done('今天一共有 ' + n + ' 条新帖子' + (n ? '，热度不错哦！' : '，第一个发帖就是你！'));
+      })
+      .catch(function () { done('今天的新帖数我暂时查不到，晚点再问我吧~'); });
+  }
+  function aiTotalPosts(done) {
+    aiFetch('/rest/v1/posts?select=id&limit=1000')
+      .then(function (rows) {
+        var n = (rows && rows.length) || 0;
+        done('云坛目前一共有 ' + n + ' 条帖子！');
+      })
+      .catch(function () { done('帖子总数我暂时查不到，晚点再问我吧~'); });
+  }
+  function aiTopUser(done) {
+    aiFetch('/rest/v1/profiles?select=username,xp,level&order=xp.desc&limit=1')
+      .then(function (rows) {
+        if (!rows || !rows.length) { done('还没有人上榜呢，快去抢第一！'); return; }
+        var u = rows[0];
+        done('目前等级最高的是「' + (u.username || '神秘用户') + '」，Lv.' + (u.level || 1) + '，经验 ' + (u.xp || 0) + '！');
+      })
+      .catch(function () { done('排行榜我暂时查不到，晚点再问我吧~'); });
+  }
+  function petCity() {
+    try { return localStorage.getItem('pet_city') || ''; } catch (e) { return ''; }
+  }
+  function voiceWeather() {
+    petSpeakText('我查一下今天的天气…');
+    var city = petCity();
+    var url = 'https://wttr.in/' + (city ? encodeURIComponent(city) : '') + '?lang=zh&format=j1';
+    fetch(url)
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) {
+        var c = j && j.current_condition && j.current_condition[0];
+        if (!c) { petSpeakText('暂时查不到天气呢'); return; }
+        var tmp = c.temp_C + '°C';
+        var desc = (c.lang_zh && c.lang_zh[0] && c.lang_zh[0].value) || (c.weatherDesc && c.weatherDesc[0] && c.weatherDesc[0].value) || '未知';
+        var where = '你所在城市';
+        var area = j.nearest_area && j.nearest_area[0];
+        if (area) {
+          var an = area.areaName && area.areaName[0] && area.areaName[0].value;
+          if (an) where = an;
+          else if (area.name) where = area.name;
+        }
+        if (city) where = city;
+        petSpeakText(where + ' 今天 ' + tmp + '，' + desc + '。');
+      })
+      .catch(function () { petSpeakText('天气服务连不上，晚点再问我吧～'); });
+  }
+  function voiceNews() {
+    petSpeakText('我看看今天的新闻热点…');
+    var sources = [
+      'https://api.vvhan.com/api/hotlist/v1/baidu',
+      'https://api.vvhan.com/api/hotlist/v1/toutiao'
+    ];
+    var tried = 0;
+    function next() {
+      if (tried >= sources.length) { petSpeakText('新闻源暂时连不上，晚点再问我吧～'); return; }
+      var url = sources[tried++];
+      fetch(url)
+        .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+        .then(function (j) {
+          var data = (j && j.data) || j || {};
+          var list = data.list || [];
+          if (!list.length) { petSpeakText('暂时没有抓到新闻热点'); return; }
+          var picks = list.slice(0, 3).map(function (x) { return x.title || x.word || x.name || ''; }).filter(Boolean);
+          if (!picks.length) { petSpeakText('暂时没有抓到新闻热点'); return; }
+          petSpeakText('今天的新闻热点：' + picks.join('，') + '。');
+        })
+        .catch(function () { next(); });
+    }
+    next();
+  }
+  function petGoPage(name) {
+    var map = { 首页: 'home', 主页: 'profile', 我的主页: 'profile', 个人主页: 'profile', 发帖: 'new', 发布: 'new', 私信: 'messages', 消息: 'messages', 通知: 'notifications', 任务: 'tasks', 商店: 'shop', 商城: 'shop', 排行: 'rank', 排行榜: 'rank', 设置: 'settings', 管理: 'admin', 后台: 'admin', 反馈: 'feedback', 聊天: 'chat', 签到: 'tasks' };
+    for (var k in map) { if (name.indexOf(k) >= 0) { location.hash = '#/' + map[k]; return '好的，带你去' + k + '～'; } }
+    return null;
+  }
+  /* 主问答：同步返回文案；异步类调用 done 回填。失败返回 null 表示已进入异步流程 */
+  function petAI(text, done) {
+    var t0 = petNorm(text);
+    var lv = petLevel();
+    var u = String(text || '').trim();
+    /* 多轮：重复上一条 */
+    if (t0.indexOf('刚才') >= 0 || t0.indexOf('再说一遍') >= 0 || t0 === '重复') {
+      if (_petCtx.length) return '你刚才问的是：' + _petCtx[_petCtx.length - 1].u + '\n' + _petCtx[_petCtx.length - 1].a;
+      return '我们还没聊过呢，你先问我点什么吧~';
+    }
+    /* 问候 */
+    if (/(你好|哈喽|嗨|hello|hi|在吗|早上好|中午好|晚上好)/.test(t0)) return randPick([
+      '你好呀，我是你的AI桌宠' + petName() + '！想聊什么都可以~',
+      '嗨！主人，我在呢！双击我还能语音对话哦~',
+      '你好你好！今天想让我帮你做点什么？'
+    ]);
+    if (/(再见|拜拜|晚安|我要睡了|下了)/.test(t0)) return '再见，主人！记得想我，我会一直在这里等你~';
+    if (/(谢谢|感谢|多谢)/.test(t0)) return randPick(['不客气！能帮上主人最开心啦~', '小事一桩，主人开心最重要！']);
+    /* 介绍 */
+    if (/(你是谁|你叫什么|你的名字|介绍下你)/.test(t0)) return '我是你的AI桌宠「' + petName() + '」！我现在 Lv.' + lv + '，会走路跳舞讲笑话，还能帮你查天气、看新闻、查论坛数据，双击我还能语音聊天哦~';
+    /* 功能帮助 */
+    if (/(你能做什么|你会什么|帮助|功能|指令|怎么用)/.test(t0)) return '我会的可多啦：\n① 打开页面：说"打开商店/发帖/排行"\n② 查天气："今天天气怎么样"\n③ 新闻热点："今天有什么新闻"\n④ 查数据："我的金币/今日新帖/排行榜第一"\n⑤ 问时间、算数学、讲笑话、冷知识\n⑥ 双击我说话，或点气泡里的"聊天"打字！';
+    /* 心情 / 状态 */
+    if (/(你开心吗|你心情|你饿吗|你累吗|你困吗)/.test(t0)) return randPick(PET_MOOD);
+    if (/(夸我|我很棒|我帅|我厉害|我好优秀)/.test(t0)) return randPick(PET_PRAISE);
+    if (/(无聊|没意思|好闲|陪我玩)/.test(t0)) return '那我们来玩个游戏吧！问我"讲个笑话"或者"冷知识"，保证逗你开心~';
+    /* 笑话（等级越高库越大） */
+    if (/(笑话|讲个笑话|逗我)/.test(t0)) {
+      var js = PET_JOKES.slice(0);
+      if (lv >= 5) js = js.concat(PET_JOKES_HIGH);
+      return '哈哈哈，听好咯：' + randPick(js);
+    }
+    /* 冷知识（Lv5 解锁） */
+    if (/(冷知识|涨知识|科普|你知道吗)/.test(t0)) {
+      if (lv < 5) return '这个功能要 Lv.5 才能解锁哦，你还差一点点，加油升级！';
+      return '冷知识来了：' + randPick(PET_KNOWLEDGE);
+    }
+    /* 时间日期 */
+    var now = new Date();
+    if (/(几点了|现在几点|时间)/.test(t0)) {
+      var h = now.getHours(), mi = now.getMinutes();
+      return '现在是 ' + (h < 10 ? '0' + h : h) + ':' + (mi < 10 ? '0' + mi : mi) + ' 啦~';
+    }
+    if (/(星期几|今天星期|周几)/.test(t0)) return '今天是星期' + '日一二三四五六'[now.getDay()] + '！';
+    if (/(几号|几月几号|日期|今天多少号)/.test(t0)) return '今天是 ' + (now.getMonth() + 1) + ' 月 ' + now.getDate() + ' 日！';
+    if (/(今年|哪一年|年份)/.test(t0)) return '现在是 ' + now.getFullYear() + ' 年啦~';
+    /* 计算 */
+    if (/(算一下|等于多少|计算)/.test(t0) || /^[\d+\-*/().\s]+$/.test(u)) {
+      var expr = u.replace(/[^0-9+\-*/().]/g, '');
+      var v = safeCalc(expr);
+      if (v !== null) return '算好啦：' + expr + ' = ' + v;
+    }
+    /* 论坛数据 */
+    if (/(我的金币|我有多少钱|金币|余额|存款)/.test(t0)) {
+      var coins = (session && session.coins) || 0;
+      return '主人现在有 ' + coins + ' 🪙 金币！去任务页做任务还能赚更多~';
+    }
+    if (/(我的等级|几级了|我的经验|多少经验|升级)/.test(t0)) {
+      var xp = (session && session.xp) || 0;
+      var lv2 = petLevel();
+      var need = 40 * lv2 * lv2;
+      return '主人现在是 Lv.' + lv2 + '，经验 ' + xp + '，升到下一级还需要 ' + Math.max(0, need - xp) + ' 经验！';
+    }
+    if (/(今日新帖|今天.*新帖|新帖子|今天.*帖子)/.test(t0)) { aiTodayPosts(done); return null; }
+    if (/(帖子总数|一共.*帖子|总共有多少帖)/.test(t0)) { aiTotalPosts(done); return null; }
+    if (/(排行榜第一|排名第一|最厉害的人|榜首|第一名是谁)/.test(t0)) { aiTopUser(done); return null; }
+    if (/(我的通知|有没有消息|未读|谁回复我)/.test(t0)) { location.hash = '#/notifications'; return '我帮你打开通知页啦，去看看谁找你~'; }
+    if (/(签到|任务)/.test(t0)) { location.hash = '#/tasks'; return '任务页给你打开啦，签到转盘在那儿~'; }
+    /* 设置天气城市 */
+    if (/(我住在|我住|家住|家在|所在城市|我的城市|把城市改成|把天气城市设成)/.test(t0)) {
+      var m2 = t0.match(/(我住在|我住|家住|家在|所在城市|我的城市|把城市改成|把天气城市设成)([\u4e00-\u9fa5A-Za-z]{1,10})/);
+      if (m2 && m2[2]) {
+        var city = m2[2].replace(/^(是|在|住|的|了)/, '').trim();
+        try { localStorage.setItem('pet_city', city); } catch (e) {}
+        return '好的，以后天气就查「' + city + '」啦~想换城市随时告诉我！';
+      }
+      return '告诉我你想看的城市，比如"我住北京"就行~';
+    }
+    /* 天气 / 新闻 */
+    if (/(天气|气温|冷不冷|热不热)/.test(t0)) { voiceWeather(); return null; }
+    if (/(新闻|热点|热搜|今天.*大事)/.test(t0)) { voiceNews(); return null; }
+    /* 打开页面 */
+    var m = t0.match(/(打开|进入|去|跳转|前往|帮我开|带我去)(.+)/);
+    if (m) {
+      var r = petGoPage(m[2]);
+      if (r) return r;
+    }
+    /* 兜底 */
+    return randPick([
+      '这个问题我还在学习中~你可以试试问我：时间、算数学、我的金币、排行榜第一、讲个笑话、今天天气。想换城市就说"我住北京"~',
+      '我还在学习中呢！不过我可以查天气、看新闻、算数、讲笑话哦~',
+      '这个问题我还在学习~你也可以让我"打开商店"或问问"今日新帖"试试！'
+    ]);
+  }
+  function petSpeakText(txt) {
+    var d = document.getElementById('desk-pet');
+    if (d) petSay(d, txt);
+    else petChatSay('p', txt, false);
+  }
+  /* ---------- 对话面板 ---------- */
+  function petChatSay(role, txt, skipSay) {
+    var body = document.getElementById('pet-chat-body');
+    if (!body) return;
+    var div = document.createElement('div');
+    div.className = 'pet-msg ' + (role === 'u' ? 'u' : 'p');
+    div.textContent = txt;
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+  }
+  function buildPetChat() {
+    if (_petChatBuilt) { var el = document.getElementById('pet-chat'); if (el) { el.style.display = 'flex'; el.style.opacity = '1'; } return el; }
+    _petChatBuilt = true;
+    var el = document.createElement('div');
+    el.id = 'pet-chat';
+    el.style.cssText = 'position:fixed;right:16px;bottom:112px;width:272px;max-height:396px;z-index:9992;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden;font-size:13px;';
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(135deg,#4d7cfe,#7c5cff);color:#fff;font-weight:600;flex-shrink:0">'
+      + '🐾 AI 桌宠 <span style="font-weight:400;font-size:11px;opacity:.85">Lv.' + petLevel() + '</span>'
+      + '<button id="pet-chat-x" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer;line-height:1">×</button></div>'
+      + '<div id="pet-chat-body" class="pet-chat-body" style="flex:1;overflow-y:auto;padding:10px;min-height:130px;background:#f6f7fa"></div>'
+      + '<div style="display:flex;gap:6px;padding:8px;border-top:1px solid #eceef2;background:#fff;flex-shrink:0">'
+      + '<button id="pet-chat-mic" title="语音说话" style="flex-shrink:0;width:34px;height:34px;border-radius:50%;border:none;background:#4d7cfe;color:#fff;cursor:pointer;font-size:15px">🎤</button>'
+      + '<input id="pet-chat-input" placeholder="和桌宠聊天，回车发送…" style="flex:1;min-width:0;border:1px solid #dfe2ea;border-radius:17px;padding:0 12px;font-size:13px;outline:none;height:34px">'
+      + '<button id="pet-chat-send" style="flex-shrink:0;height:34px;padding:0 14px;border:none;border-radius:17px;background:#4d7cfe;color:#fff;cursor:pointer;font-size:13px">发送</button></div>';
+    document.body.appendChild(el);
+    el.querySelector('#pet-chat-x').addEventListener('click', function () { el.style.display = 'none'; });
+    var input = el.querySelector('#pet-chat-input');
+    el.querySelector('#pet-chat-send').addEventListener('click', function () { sendPetChat(); });
+    input.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); sendPetChat(); } });
+    el.querySelector('#pet-chat-mic').addEventListener('click', function () {
+      var d = document.getElementById('desk-pet');
+      if (d) startVoice(d, true); else petSpeakText('请先登录并使用桌面端哦');
+    });
+    petChatSay('sys', '你好，我是你的 AI 桌宠！打字或点 🎤 语音和我聊天~');
+    return el;
+  }
+  function togglePetChat() {
+    var el = document.getElementById('pet-chat');
+    if (el && el.style.display !== 'none') { el.style.display = 'none'; return; }
+    buildPetChat();
+  }
+  function sendPetChat() {
+    var input = document.getElementById('pet-chat-input');
+    if (!input) return;
+    var txt = input.value.trim();
+    if (!txt) return;
+    input.value = '';
+    petChatSay('u', txt);
+    _petCtx.push({ u: txt, a: '' });
+    if (_petCtx.length > 3) _petCtx.shift();
+    var done = function (ans) {
+      if (_petCtx.length) _petCtx[_petCtx.length - 1].a = ans;
+      petChatSay('p', ans);
+      petSay(document.getElementById('desk-pet'), ans, true);
+    };
+    var ans = petAI(txt, done);
+    if (ans !== null && ans !== undefined) done(ans);
+  }
+  /* ---------- 语音控制（双击 / 麦克风按钮） ---------- */
+  function voiceEnabled() {
+    try { return localStorage.getItem('pet_voice_on') !== '0'; } catch (e) { return true; }
+  }
+  function startVoice(d, viaChat) {
+    if (!voiceEnabled() && !viaChat) { petSpeakText('语音控制已关闭，可在设置-桌宠里打开'); return; }
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { petSpeakText('当前浏览器不支持语音识别，建议用 Chrome 打开'); return; }
+    if (_voiceOn) { stopVoice(d); return; }
+    try {
+      _voiceRec = new SR();
+      _voiceRec.lang = 'zh-CN';
+      _voiceRec.interimResults = false;
+      _voiceRec.maxAlternatives = 1;
+      _voiceOn = true;
+      if (d) d._listening = true;
+      petSay(d, '🎤 我在听…跟我聊天或下指令吧');
+      if (_voiceTimer) clearTimeout(_voiceTimer);
+      _voiceTimer = setTimeout(function () { if (_voiceOn) stopVoice(d); }, 5000);
+      _voiceRec.onresult = function (ev) {
+        if (_voiceTimer) clearTimeout(_voiceTimer);
+        var txt = '';
+        for (var i = 0; i < ev.results.length; i++) {
+          if (ev.results[i].isFinal) txt = (ev.results[i][0] && ev.results[i][0].transcript) || txt;
+        }
+        if (txt && txt.trim()) {
+          petSay(d, '你说：' + txt);
+          if (document.getElementById('pet-chat')) petChatSay('u', txt);
+          _petCtx.push({ u: txt, a: '' });
+          if (_petCtx.length > 3) _petCtx.shift();
+          var done = function (ans) {
+            if (_petCtx.length) _petCtx[_petCtx.length - 1].a = ans;
+            petSpeakText(ans);
+          };
+          var ans = petAI(txt, done);
+          if (ans !== null && ans !== undefined) done(ans);
+          stopVoice(d);
+        }
+      };
+      _voiceRec.onerror = function (ev) {
+        if (_voiceTimer) clearTimeout(_voiceTimer);
+        if (ev.error === 'no-speech' || ev.error === 'not-allowed' || ev.error === 'audio-capture' || ev.error === 'aborted') {
+          stopVoice(d);
+        }
+      };
+      _voiceRec.onend = function () { if (_voiceOn) stopVoice(d); };
+      try { _voiceRec.start(); } catch (e) { _voiceOn = false; petSpeakText('语音开小差了，再试一次吧'); }
+    } catch (e) {
+      _voiceOn = false;
+      petSpeakText('语音开小差了，再试一次吧');
+    }
+  }
+  function stopVoice(d) {
+    if (_voiceTimer) clearTimeout(_voiceTimer);
+    _voiceOn = false;
+    if (d) d._listening = false;
+    try { if (_voiceRec) { _voiceRec.stop(); } } catch (e) {}
+    try { if (_voiceRec) { _voiceRec.abort && _voiceRec.abort(); } } catch (e) {}
+  }
   function deskPetVisible() {
     try { return localStorage.getItem('desk_pet_hidden') !== '1'; } catch (e) { return true; }
   }
   function hideDeskPet() {
     try { localStorage.setItem('desk_pet_hidden', '1'); } catch (e) {}
+    if (_speakTimer) clearTimeout(_speakTimer);
+    stopVoice();
     var el = document.getElementById('desk-pet');
     if (el) el.remove();
   }
@@ -12335,33 +13265,88 @@ var TITLE_TIERS = [
     }
     var d = document.createElement('div');
     d.id = 'desk-pet';
-    d.style.cssText = 'position:fixed;left:24px;bottom:24px;z-index:9990;cursor:pointer;transition:left 4.5s ease,bottom 4.5s ease;';
+    d.style.cssText = 'position:fixed;left:24px;bottom:24px;z-index:9990;cursor:grab;touch-action:none;user-select:none;transition:left 4.5s ease,bottom 4.5s ease,top 4.5s ease;';
     d.innerHTML = '<div style="position:relative">'
       + '<img class="dp-inner" src="' + petSrc(session.pet_img) + '" alt="pet" style="width:64px;height:64px;object-fit:contain;display:block;filter:drop-shadow(0 3px 5px rgba(0,0,0,.22))">'
-      + '<div id="desk-pet-bubble" style="position:absolute;bottom:70px;left:0;background:#222;color:#fff;font-size:12px;padding:4px 9px;border-radius:9px;display:none;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.25)"></div>'
+      + '<div id="desk-pet-bubble" style="position:absolute;bottom:70px;left:0;background:#222;color:#fff;font-size:12px;padding:4px 9px;border-radius:9px;display:none;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:9991"></div>'
       + '<button id="desk-pet-x" title="收起桌宠" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#888;color:#fff;border:none;font-size:11px;line-height:20px;cursor:pointer;opacity:.85">×</button>'
       + '</div>';
     document.body.appendChild(d);
     d.querySelector('#desk-pet-x').addEventListener('click', function (ev) { ev.stopPropagation(); hideDeskPet(); });
-    d.addEventListener('click', function () {
-      var b = d.querySelector('#desk-pet-bubble');
-      var msgs = [t('pet.bubble1'), t('pet.bubble2'), t('pet.bubble3'), t('pet.bubble4'), t('pet.bubble5')];
-      b.textContent = msgs[Math.floor(Math.random() * msgs.length)];
-      b.style.display = 'block';
+    /* 拖拽（拖动时挣扎） */
+    d.addEventListener('pointerdown', function (ev) {
+      if (ev.target.id === 'desk-pet-x' || ev.target.id === 'desk-pet-chat-btn') return;
+      _dragging = true; d._dragging = true;
+      d.style.transition = 'none';
+      d.style.cursor = 'grabbing';
+      var r = d.getBoundingClientRect();
+      _dragBaseL = r.left; _dragBaseT = r.top;
+      _dragX = ev.clientX; _dragY = ev.clientY;
+      _moved = 0;
+      if (_speakTimer) clearTimeout(_speakTimer);
       if (_bubbleTimer) clearTimeout(_bubbleTimer);
-      _bubbleTimer = setTimeout(function () { b.style.display = 'none'; }, 2400);
+      if (d.setPointerCapture) { try { d.setPointerCapture(ev.pointerId); } catch (e) {} }
+      d.className = 'dp-struggle';
+    });
+    d.addEventListener('pointermove', function (ev) {
+      if (!d._dragging) return;
+      var dx = ev.clientX - _dragX, dy = ev.clientY - _dragY;
+      _moved = Math.max(_moved, Math.abs(dx) + Math.abs(dy));
+      var nl = Math.max(0, Math.min(window.innerWidth - 90, _dragBaseL + dx));
+      var nt = Math.max(0, Math.min(window.innerHeight - 110, _dragBaseT + dy));
+      d.style.left = nl + 'px';
+      d.style.top = nt + 'px';
+      d.style.bottom = 'auto';
+    });
+    function endDrag(ev) {
+      if (!d._dragging) return;
+      d._dragging = false; _dragging = false;
+      d.classList.remove('dp-struggle');
+      d.style.cursor = 'grab';
+      d.style.transition = 'left 4.5s ease,bottom 4.5s ease,top 4.5s ease';
+      if (d.releasePointerCapture && ev && ev.pointerId) { try { d.releasePointerCapture(ev.pointerId); } catch (e) {} }
+      if (_moved > 6) _suppressClick = true;
+      nextBehavior(d);
+      activeSpeak(d);
+    }
+    d.addEventListener('pointerup', endDrag);
+    d.addEventListener('pointercancel', endDrag);
+    /* 单击说话（含"聊天"按钮）/ 双击语音 */
+    var _clickTimer = null, _clickCount = 0;
+    d.addEventListener('click', function () {
+      if (_suppressClick) { _suppressClick = false; return; }
+      _clickCount++;
+      if (_clickCount === 1) {
+        _clickTimer = setTimeout(function () {
+          _clickCount = 0;
+          var pool = petSayPool();
+          var b = d.querySelector('#desk-pet-bubble');
+          if (b) {
+            b.innerHTML = '<span>' + esc(pool[Math.floor(Math.random() * pool.length)]) + '</span> <button id="desk-pet-chat-btn">和我聊天</button>';
+            b.style.display = 'block';
+            if (_bubbleTimer) clearTimeout(_bubbleTimer);
+            _bubbleTimer = setTimeout(function () { b.style.display = 'none'; }, 3400);
+            var btn = b.querySelector('#desk-pet-chat-btn');
+            if (btn) btn.addEventListener('click', function (ev2) {
+              ev2.stopPropagation();
+              buildPetChat();
+            });
+          }
+        }, 260);
+      } else {
+        clearTimeout(_clickTimer);
+        _clickCount = 0;
+        startVoice(d);
+      }
     });
     nextBehavior(d);
+    activeSpeak(d);
   }
 function initDeskPet() {
   if (window._deskPetInit) return;
   window._deskPetInit = true;
-  var _bubbleTimer = null;
-  /* 行为表：权重 + 时长。walk 会顺带移动位置，其余在原地做姿态动画 */
-
   setInterval(ensureDeskPet, 2000);
 }
-initDeskPet();
-</script>
+initDeskPet();</script>
 </body>
 </html>
