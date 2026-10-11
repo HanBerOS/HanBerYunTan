@@ -2243,8 +2243,6 @@ body[data-glass] .modal-mask {
 .rank-item:nth-child(2) .rank-no { background:#f5b400; color:#fff; }
 .rank-item:nth-child(3) .rank-no { background:#aab2c0; color:#fff; }
 .rank-item:nth-child(4) .rank-no { background:#c98a5e; color:#fff; }
-#spin-modal { display:none; }
-#spin-modal.open { display:flex; }
 .spin-stage { position:relative; width:min(300px,80vw); margin:20px auto; }
 .spin-wheel { width:min(300px,80vw); aspect-ratio:1; border-radius:50%; position:relative; overflow:hidden; border:6px solid #3b82f6; box-shadow:0 8px 30px rgba(0,0,0,.35); transition:transform 3.2s cubic-bezier(.12,.68,.08,.96); }
 .spin-wheel .sw-seg { position:absolute; width:50%; height:50%; left:50%; top:0; transform-origin:0 100%; display:flex; align-items:flex-start; justify-content:center; }
@@ -2751,7 +2749,7 @@ var I18N = {
     'task.close': '关闭',
     'task.claimed': '领取成功 +%d 金币',
     'task.claimFail': '领取失败',
-    'task.spinFail': '签到/转盘失败，请确认已执行 v5.6.6 SQL',
+    'task.spinFail': '签到/转盘失败，请确认已执行 v6.4.6 SQL',
     'rank.title': '每周排行',
     'rank.sub': '本周 发帖 / 获赞 TOP10',
     'rank.posts': '🏆 发帖榜',
@@ -3152,7 +3150,7 @@ var I18N = {
     'task.close': 'Close',
     'task.claimed': 'Claimed +%d coins',
     'task.claimFail': 'Claim failed',
-    'task.spinFail': 'Spin failed, run v5.6.6 SQL first',
+    'task.spinFail': 'Spin failed, run v6.4.6 SQL first',
     'rank.title': 'Weekly Ranking',
     'rank.sub': 'Top 10 this week: posts / likes',
     'rank.posts': '🏆 Posts',
@@ -3552,7 +3550,7 @@ var I18N = {
     'task.close': 'Cerrar',
     'task.claimed': 'Reclamado +%d monedas',
     'task.claimFail': 'Error al reclamar',
-    'task.spinFail': 'Error, ejecuta el SQL v5.6.6',
+    'task.spinFail': 'Error, ejecuta el SQL v6.4.6',
     'rank.title': 'Ranking semanal',
     'rank.sub': 'Top 10 de la semana: temas / likes',
     'rank.posts': '🏆 Temas',
@@ -3952,7 +3950,7 @@ var I18N = {
     'task.close': 'Закрыть',
     'task.claimed': 'Получено +%d монет',
     'task.claimFail': 'Ошибка',
-    'task.spinFail': 'Ошибка, выполните SQL v5.6.6',
+    'task.spinFail': 'Ошибка, выполните SQL v6.4.6',
     'rank.title': 'Недельный рейтинг',
     'rank.sub': 'Топ-10 за неделю: посты / лайки',
     'rank.posts': '🏆 Посты',
@@ -4352,7 +4350,7 @@ var I18N = {
     'task.close': '閉じる',
     'task.claimed': '+%dコイン受け取り',
     'task.claimFail': '受取失敗',
-    'task.spinFail': '失敗。v5.6.6 SQLを実行してください',
+    'task.spinFail': '失敗。v6.4.6 SQLを実行してください',
     'rank.title': '週間ランキング',
     'rank.sub': '今週のTOP10：投稿 / いいね',
     'rank.posts': '🏆 投稿',
@@ -4677,7 +4675,7 @@ var I18N = {
     'task.close': '닫기',
     'task.claimed': '+%d코인 수령',
     'task.claimFail': '수령 실패',
-    'task.spinFail': '실패. v5.6.6 SQL을 실행하세요',
+    'task.spinFail': '실패. v6.4.6 SQL을 실행하세요',
     'rank.title': '주간 랭킹',
     'rank.sub': '이번 주 TOP10: 게시글 / 좋아요',
     'rank.posts': '🏆 게시글',
@@ -5002,7 +5000,7 @@ var I18N = {
     'task.close': 'Fechar',
     'task.claimed': 'Resgatado +%d moedas',
     'task.claimFail': 'Falha',
-    'task.spinFail': 'Falha, execute o SQL v5.6.6',
+    'task.spinFail': 'Falha, execute o SQL v6.4.6',
     'rank.title': 'Ranking semanal',
     'rank.sub': 'Top 10 da semana: tópicos / curtidas',
     'rank.posts': '🏆 Tópicos',
@@ -5327,7 +5325,7 @@ var I18N = {
     'task.close': 'Schließen',
     'task.claimed': '+%d Münzen erhalten',
     'task.claimFail': 'Fehler',
-    'task.spinFail': 'Fehler, v5.6.6 SQL ausführen',
+    'task.spinFail': 'Fehler, v6.4.6 SQL ausführen',
     'rank.title': 'Wochen-Rangliste',
     'rank.sub': 'Top 10 diese Woche: Beiträge / Likes',
     'rank.posts': '🏆 Beiträge',
@@ -5652,7 +5650,7 @@ var I18N = {
     'task.close': 'Chiudi',
     'task.claimed': 'Riscosso +%d monete',
     'task.claimFail': 'Errore',
-    'task.spinFail': 'Errore, esegui il SQL v5.6.6',
+    'task.spinFail': 'Errore, esegui il SQL v6.4.6',
     'rank.title': 'Classifica settimanale',
     'rank.sub': 'Top 10 della settimana: post / mi piace',
     'rank.posts': '🏆 Post',
@@ -5977,7 +5975,7 @@ var I18N = {
     'task.close': 'Fermer',
     'task.claimed': 'Réclamé +%d pièces',
     'task.claimFail': 'Échec',
-    'task.spinFail': 'Échec, exécutez le SQL v5.6.6',
+    'task.spinFail': 'Échec, exécutez le SQL v6.4.6',
     'rank.title': 'Classement hebdo',
     'rank.sub': 'Top 10 cette semaine : sujets / likes',
     'rank.posts': '🏆 Sujets',
@@ -8236,6 +8234,7 @@ function renderApps() {
 
 /* ===== PWA 安装 App（v6.4.6） ===== */
 var _deferredPrompt = null;
+var _installed = false;
 var INSTALL_TXT = {zh:'安装', en:'Install', es:'Instalar', ru:'Установить', ja:'インストール', ko:'설치', pt:'Instalar', de:'Installieren', it:'Installa', fr:'Installer'};
 function isPwaStandalone() {
   try {
@@ -8247,9 +8246,9 @@ function isPwaStandalone() {
 function isIOSDevice() { return /ip(hone|od|ad)/i.test(navigator.userAgent || ''); }
 function installBtnVisible() {
   if (isPwaStandalone()) return false;
-  if (_deferredPrompt) return true;
-  if (isIOSDevice() && /safari/i.test(navigator.userAgent || '')) return true;
-  return false;
+  if (_installed) return false;
+  /* 始终显示入口：支持安装的浏览器点按弹安装框，iOS/其他浏览器点按给引导提示 */
+  return true;
 }
 function updateInstallBtn() {
   var b = document.getElementById('nav-install');
@@ -8261,8 +8260,11 @@ function doInstallApp() {
   if (_deferredPrompt) {
     _deferredPrompt.prompt();
     _deferredPrompt.userChoice.then(function (choice) {
-      if (choice.outcome === 'accepted') _deferredPrompt = null;
-      updateInstallBtn();
+      if (choice.outcome === 'accepted') {
+        _deferredPrompt = null;
+        _installed = true;
+        updateInstallBtn();
+      }
     })['catch'](function () {});
     return;
   }
