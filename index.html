@@ -10926,6 +10926,12 @@ document.addEventListener('submit', function (e) {
       });
     })
     .then(function (p) {
+      if (!p || !p.id) {
+        console.error('发帖返回异常:', p);
+        toast('发布未生效：帖子未被写入（请检查 posts 表 RLS 策略与 v6.3 迁移 SQL 是否已执行）');
+        btn2.disabled = false; btn2.textContent = '发布';
+        return;
+      }
       toast(t('xp.gainPost'));
       CloudStore.bumpTask('post');
       CloudStore.addXp(20).then(function (r) { if (session && r) { session.xp = r.xp; session.level = r.level; } });
