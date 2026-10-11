@@ -2168,8 +2168,8 @@ body[data-theme].dark-theme .auth-tabs,
 body[data-theme].dark-theme .profile-stats > div,
 body[data-theme].dark-theme .chat-msg,
 body[data-theme].dark-theme .chips {
-  background: rgba(255,255,255,0.05) !important;
-  border-color: rgba(255,255,255,0.12) !important;
+  background: transparent !important;
+  border-color: transparent !important;
 }
 body[data-theme].dark-theme .topbar {
   background: rgba(10,14,26,0.30) !important;
@@ -2250,6 +2250,35 @@ body[data-glass] .modal {
 .tip-row { display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap; }
 .accepted-answer { border:2px solid #16a34a !important; background:rgba(22,163,74,.08) !important; }
 .accepted-badge { display:inline-block; background:#16a34a; color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px; }
+
+/* ============ v6.4.1 宠物尺寸 ============ */
+.pet-wrap { display:inline-flex; flex-direction:column; align-items:center; line-height:0; }
+.pet-wrap img { object-fit:cover; border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,.15); display:block; background:var(--bg-2,#f0f0f0); }
+.pet-wrap i { font-style:normal; font-size:11px; color:var(--ink-2); margin-top:4px; line-height:1.2; }
+.pet-sm img { width:72px; height:72px; }
+.pet-md img { width:112px; height:112px; }
+.pet-lg img { width:144px; height:144px; }
+
+/* ============ v6.4.1 桌宠行为动画 ============ */
+@keyframes dpWalkA { 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-3px) rotate(2deg);} }
+@keyframes dpJumpA { 0%,100%{ transform:translateY(0);} 35%{ transform:translateY(-18px) rotate(-6deg);} 55%{ transform:translateY(-18px) rotate(6deg);} 80%{ transform:translateY(-3px) rotate(0);} }
+@keyframes dpSitA  { 0%,100%{ transform:scaleY(.82) translateY(7px);} 50%{ transform:scaleY(.78) translateY(8px);} }
+@keyframes dpLieA  { 0%,100%{ transform:scaleY(.58) rotate(-9deg);} 50%{ transform:scaleY(.54) rotate(-11deg);} }
+@keyframes dpIdleA { 0%,100%{ transform:rotate(-4deg);} 50%{ transform:rotate(4deg);} }
+.dp-inner { display:block; transition:transform .35s ease; will-change:transform; }
+.dp-walk  .dp-inner { animation:dpWalkA .5s ease-in-out infinite; }
+.dp-jump  .dp-inner { animation:dpJumpA .9s ease-in-out infinite; }
+.dp-sit   .dp-inner { animation:dpSitA 1.1s ease-in-out infinite; }
+.dp-lie   .dp-inner { animation:dpLieA 2.2s ease-in-out infinite; }
+.dp-idle  .dp-inner { animation:dpIdleA 1.5s ease-in-out infinite; }
+.dp-flip  { transform:scaleX(-1); }
+
+/* ============ v6.4.1 头像裁剪 ============ */
+.crop-box { position:relative; width:256px; height:256px; margin:0 auto; border-radius:14px; overflow:hidden; background:var(--bg-2,#e8e8e8); touch-action:none; user-select:none; cursor:move; }
+.crop-box img { position:absolute; left:0; top:0; max-width:none; display:block; }
+.crop-box::after { content:''; position:absolute; inset:0; border:2px dashed rgba(255,255,255,.75); border-radius:14px; pointer-events:none; }
+.crop-row { display:flex; align-items:center; gap:8px; margin-top:12px; }
+.crop-row input[type=range] { flex:1; }
 </style>
 </head>
 <body>
@@ -2997,7 +3026,35 @@ var I18N = {
     'topics.emoji': '话题图标',
     'topics.end': '已结束',
     'topics.name': '话题名称',
-    'circles.confirmDel': '确定删除该圈子？'},
+    'circles.confirmDel': '确定删除该圈子？',
+    'nav.shop': '商店',
+    'crop.title': '裁剪头像',
+    'crop.confirm': '确认',
+    'crop.cancel': '取消',
+    'crop.hint': '拖动图片调整位置，滑块缩放',
+    'topics.edit': '编辑话题',
+    'circles.title': '圈子',
+    'topics.title': '话题',
+    'block.blockedPost': '已屏蔽的帖子',
+    'block.none': '暂无屏蔽',
+    'block.postTitle': '帖子标题',
+    'block.title': '屏蔽管理',
+    'circles.create': '创建圈子',
+    'circles.del': '删除圈子',
+    'circles.desc': '圈子简介',
+    'circles.edit': '编辑圈子',
+    'circles.icon': '圈子图标',
+    'circles.name': '圈子名称',
+    'forget.ph': '请输入注册手机号或邮箱',
+    'forget.send': '发送重置链接',
+    'forget.title': '忘记密码',
+    'lottery.title': '每日抽奖',
+    'pet.default': '默认',
+    'pet.rename': '重命名',
+    'profile.needLogin': '请先登录',
+    'rank.hot': '热门',
+    'search.empty': '无搜索结果',
+    'search.users': '用户'},
   en: {
     'nav.tasks': 'Tasks',
     'loadFail': 'Failed to load',
@@ -3366,7 +3423,35 @@ var I18N = {
     'topics.emoji': 'Icon',
     'topics.end': 'Ended',
     'topics.name': 'Name',
-    'circles.confirmDel': 'Delete this circle?'},
+    'circles.confirmDel': 'Delete this circle?',
+    'nav.shop': 'Shop',
+    'crop.title': 'Crop Avatar',
+    'crop.confirm': 'Apply',
+    'crop.cancel': 'Cancel',
+    'crop.hint': 'Drag to position, slide to zoom',
+    'topics.edit': 'Edit Topic',
+    'circles.title': 'Circles',
+    'topics.title': 'Topics',
+    'block.blockedPost': 'Blocked Post',
+    'block.none': 'No blocks',
+    'block.postTitle': 'Post Title',
+    'block.title': 'Block Management',
+    'circles.create': 'Create Circle',
+    'circles.del': 'Delete Circle',
+    'circles.desc': 'Circle Description',
+    'circles.edit': 'Edit Circle',
+    'circles.icon': 'Circle Icon',
+    'circles.name': 'Circle Name',
+    'forget.ph': 'Enter registered phone or email',
+    'forget.send': 'Send Reset Link',
+    'forget.title': 'Forgot Password',
+    'lottery.title': 'Daily Lottery',
+    'pet.default': 'Default',
+    'pet.rename': 'Rename',
+    'profile.needLogin': 'Please log in first',
+    'rank.hot': 'Hot',
+    'search.empty': 'No results',
+    'search.users': 'Users'},
   es: {
     'nav.tasks': 'Tareas',
     'loadFail': 'Error al cargar',
@@ -3735,7 +3820,35 @@ var I18N = {
     'topics.emoji': 'Icono',
     'topics.end': 'Finalizado',
     'topics.name': 'Nombre',
-    'circles.confirmDel': '¿Eliminar círculo?'},
+    'circles.confirmDel': '¿Eliminar círculo?',
+    'nav.shop': 'Tienda',
+    'crop.title': 'Recortar avatar',
+    'crop.confirm': 'Aplicar',
+    'crop.cancel': 'Cancelar',
+    'crop.hint': 'Arrastra y usa el deslizador',
+    'topics.edit': 'Editar tema',
+    'circles.title': 'Círculos',
+    'topics.title': 'Temas',
+    'block.blockedPost': 'Publicación bloqueada',
+    'block.none': 'Sin bloqueos',
+    'block.postTitle': 'Título de la publicación',
+    'block.title': 'Gestión de bloqueos',
+    'circles.create': 'Crear círculo',
+    'circles.del': 'Eliminar círculo',
+    'circles.desc': 'Descripción del círculo',
+    'circles.edit': 'Editar círculo',
+    'circles.icon': 'Icono del círculo',
+    'circles.name': 'Nombre del círculo',
+    'forget.ph': 'Introduce tu teléfono o correo registrado',
+    'forget.send': 'Enviar enlace de restablecimiento',
+    'forget.title': 'Olvidé mi contraseña',
+    'lottery.title': 'Lotería diaria',
+    'pet.default': 'Predeterminado',
+    'pet.rename': 'Renombrar',
+    'profile.needLogin': 'Inicia sesión primero',
+    'rank.hot': 'Popular',
+    'search.empty': 'Sin resultados',
+    'search.users': 'Usuarios'},
   ru: {
     'nav.tasks': 'Задания',
     'loadFail': 'Ошибка загрузки',
@@ -4104,7 +4217,35 @@ var I18N = {
     'topics.emoji': 'Иконка',
     'topics.end': 'Завершено',
     'topics.name': 'Название',
-    'circles.confirmDel': 'Удалить круг?'},
+    'circles.confirmDel': 'Удалить круг?',
+    'nav.shop': 'Магазин',
+    'crop.title': 'Обрезка аватара',
+    'crop.confirm': 'Применить',
+    'crop.cancel': 'Отмена',
+    'crop.hint': 'Перетащите и масштабируйте',
+    'topics.edit': 'Изменить тему',
+    'circles.title': 'Круги',
+    'topics.title': 'Темы',
+    'block.blockedPost': 'Заблокированный пост',
+    'block.none': 'Нет блокировок',
+    'block.postTitle': 'Название поста',
+    'block.title': 'Управление блокировками',
+    'circles.create': 'Создать круг',
+    'circles.del': 'Удалить круг',
+    'circles.desc': 'Описание круга',
+    'circles.edit': 'Изменить круг',
+    'circles.icon': 'Иконка круга',
+    'circles.name': 'Название круга',
+    'forget.ph': 'Введите зарегистрированный телефон или почту',
+    'forget.send': 'Отправить ссылку сброса',
+    'forget.title': 'Забыли пароль',
+    'lottery.title': 'Ежедневная лотерея',
+    'pet.default': 'По умолчанию',
+    'pet.rename': 'Переименовать',
+    'profile.needLogin': 'Сначала войдите',
+    'rank.hot': 'Популярное',
+    'search.empty': 'Ничего не найдено',
+    'search.users': 'Пользователи'},
   ja: {
     'nav.tasks': 'タスク',
     'loadFail': '読み込みに失敗',
@@ -4398,7 +4539,35 @@ var I18N = {
     'topics.emoji': 'アイコン',
     'topics.end': '終了',
     'topics.name': '名前',
-    'circles.confirmDel': '削除しますか？'},
+    'circles.confirmDel': '削除しますか？',
+    'nav.shop': 'ショップ',
+    'crop.title': 'アバターを切り抜き',
+    'crop.confirm': '適用',
+    'crop.cancel': 'キャンセル',
+    'crop.hint': 'ドラッグで移動、スライダーで拡大',
+    'topics.edit': '話題を編集',
+    'circles.title': 'サークル',
+    'topics.title': 'トピック',
+    'block.blockedPost': 'ブロック済み投稿',
+    'block.none': 'ブロックなし',
+    'block.postTitle': '投稿タイトル',
+    'block.title': 'ブロック管理',
+    'circles.create': 'サークル作成',
+    'circles.del': 'サークル削除',
+    'circles.desc': 'サークル紹介',
+    'circles.edit': 'サークル編集',
+    'circles.icon': 'サークルアイコン',
+    'circles.name': 'サークル名',
+    'forget.ph': '登録した電話かメールを入力',
+    'forget.send': 'リセットリンクを送信',
+    'forget.title': 'パスワードを忘れた',
+    'lottery.title': 'デイリーくじ',
+    'pet.default': 'デフォルト',
+    'pet.rename': '名前変更',
+    'profile.needLogin': 'ログインしてください',
+    'rank.hot': '人気',
+    'search.empty': '結果なし',
+    'search.users': 'ユーザー'},
   ko: {
     'nav.tasks': '할 일',
     'loadFail': '불러오기 실패',
@@ -4692,7 +4861,35 @@ var I18N = {
     'topics.emoji': '아이콘',
     'topics.end': '종료',
     'topics.name': '이름',
-    'circles.confirmDel': '삭제할까요?'},
+    'circles.confirmDel': '삭제할까요?',
+    'nav.shop': '상점',
+    'crop.title': '아바타 자르기',
+    'crop.confirm': '적용',
+    'crop.cancel': '취소',
+    'crop.hint': '드래그 이동, 슬라이더 확대',
+    'topics.edit': '토픽 편집',
+    'circles.title': '서클',
+    'topics.title': '토픽',
+    'block.blockedPost': '차단된 게시글',
+    'block.none': '차단 없음',
+    'block.postTitle': '게시글 제목',
+    'block.title': '차단 관리',
+    'circles.create': '서클 만들기',
+    'circles.del': '서클 삭제',
+    'circles.desc': '서클 소개',
+    'circles.edit': '서클 편집',
+    'circles.icon': '서클 아이콘',
+    'circles.name': '서클 이름',
+    'forget.ph': '등록한 전화 또는 이메일 입력',
+    'forget.send': '재설정 링크 보내기',
+    'forget.title': '비밀번호 찾기',
+    'lottery.title': '일일 추첨',
+    'pet.default': '기본',
+    'pet.rename': '이름 변경',
+    'profile.needLogin': '먼저 로그인하세요',
+    'rank.hot': '인기',
+    'search.empty': '결과 없음',
+    'search.users': '사용자'},
   pt: {
     'nav.tasks': 'Tarefas',
     'loadFail': 'Falha ao carregar',
@@ -4986,7 +5183,35 @@ var I18N = {
     'topics.emoji': 'Ícone',
     'topics.end': 'Encerrado',
     'topics.name': 'Nome',
-    'circles.confirmDel': 'Excluir círculo?'},
+    'circles.confirmDel': 'Excluir círculo?',
+    'nav.shop': 'Loja',
+    'crop.title': 'Recortar avatar',
+    'crop.confirm': 'Aplicar',
+    'crop.cancel': 'Cancelar',
+    'crop.hint': 'Arraste e use o controle',
+    'topics.edit': 'Editar tópico',
+    'circles.title': 'Círculos',
+    'topics.title': 'Tópicos',
+    'block.blockedPost': 'Post bloqueado',
+    'block.none': 'Sem bloqueios',
+    'block.postTitle': 'Título do post',
+    'block.title': 'Gestão de bloqueios',
+    'circles.create': 'Criar círculo',
+    'circles.del': 'Excluir círculo',
+    'circles.desc': 'Descrição do círculo',
+    'circles.edit': 'Editar círculo',
+    'circles.icon': 'Ícone do círculo',
+    'circles.name': 'Nome do círculo',
+    'forget.ph': 'Digite seu telefone ou e-mail registrado',
+    'forget.send': 'Enviar link de redefinição',
+    'forget.title': 'Esqueci a senha',
+    'lottery.title': 'Loteria diária',
+    'pet.default': 'Padrão',
+    'pet.rename': 'Renomear',
+    'profile.needLogin': 'Faça login primeiro',
+    'rank.hot': 'Popular',
+    'search.empty': 'Sem resultados',
+    'search.users': 'Usuários'},
   de: {
     'nav.tasks': 'Aufgaben',
     'loadFail': 'Laden fehlgeschlagen',
@@ -5280,7 +5505,35 @@ var I18N = {
     'topics.emoji': 'Icon',
     'topics.end': 'Beendet',
     'topics.name': 'Name',
-    'circles.confirmDel': 'Kreis löschen?'},
+    'circles.confirmDel': 'Kreis löschen?',
+    'nav.shop': 'Shop',
+    'crop.title': 'Avatar zuschneiden',
+    'crop.confirm': 'Übernehmen',
+    'crop.cancel': 'Abbrechen',
+    'crop.hint': 'Positionieren per Drag, Zoomen per Slider',
+    'topics.edit': 'Thema bearbeiten',
+    'circles.title': 'Kreise',
+    'topics.title': 'Themen',
+    'block.blockedPost': 'Blockierter Beitrag',
+    'block.none': 'Keine Blockierungen',
+    'block.postTitle': 'Beitragstitel',
+    'block.title': 'Blockierverwaltung',
+    'circles.create': 'Kreis erstellen',
+    'circles.del': 'Kreis löschen',
+    'circles.desc': 'Kreisbeschreibung',
+    'circles.edit': 'Kreis bearbeiten',
+    'circles.icon': 'Kreis-Icon',
+    'circles.name': 'Kreisname',
+    'forget.ph': 'Registrierte Telefonnummer oder E-Mail eingeben',
+    'forget.send': 'Reset-Link senden',
+    'forget.title': 'Passwort vergessen',
+    'lottery.title': 'Tägliche Lotterie',
+    'pet.default': 'Standard',
+    'pet.rename': 'Umbenennen',
+    'profile.needLogin': 'Bitte zuerst anmelden',
+    'rank.hot': 'Beliebt',
+    'search.empty': 'Keine Ergebnisse',
+    'search.users': 'Benutzer'},
   it: {
     'nav.tasks': 'Compiti',
     'loadFail': 'Errore di caricamento',
@@ -5574,7 +5827,35 @@ var I18N = {
     'topics.emoji': 'Icona',
     'topics.end': 'Chiuso',
     'topics.name': 'Nome',
-    'circles.confirmDel': 'Eliminare?'},
+    'circles.confirmDel': 'Eliminare?',
+    'nav.shop': 'Negozio',
+    'crop.title': 'Ritaglia avatar',
+    'crop.confirm': 'Applica',
+    'crop.cancel': 'Annulla',
+    'crop.hint': 'Trascina e usa lo slider',
+    'topics.edit': 'Modifica argomento',
+    'circles.title': 'Circoli',
+    'topics.title': 'Argomenti',
+    'block.blockedPost': 'Post bloccato',
+    'block.none': 'Nessun blocco',
+    'block.postTitle': 'Titolo del post',
+    'block.title': 'Gestione blocchi',
+    'circles.create': 'Crea circolo',
+    'circles.del': 'Elimina circolo',
+    'circles.desc': 'Descrizione circolo',
+    'circles.edit': 'Modifica circolo',
+    'circles.icon': 'Icona circolo',
+    'circles.name': 'Nome circolo',
+    'forget.ph': 'Inserisci telefono o email registrati',
+    'forget.send': 'Invia link di reimpostazione',
+    'forget.title': 'Password dimenticata',
+    'lottery.title': 'Lotteria quotidiana',
+    'pet.default': 'Predefinito',
+    'pet.rename': 'Rinomina',
+    'profile.needLogin': 'Accedi prima',
+    'rank.hot': 'Popolare',
+    'search.empty': 'Nessun risultato',
+    'search.users': 'Utenti'},
   fr: {
     'nav.tasks': 'Tâches',
     'loadFail': 'Échec du chargement',
@@ -5943,7 +6224,35 @@ var I18N = {
     'topics.emoji': 'Icône',
     'topics.end': 'Terminé',
     'topics.name': 'Nom',
-    'circles.confirmDel': 'Supprimer ?'}
+    'circles.confirmDel': 'Supprimer ?',
+    'nav.shop': 'Boutique',
+    'crop.title': 'Recadrer l\'avatar',
+    'crop.confirm': 'Appliquer',
+    'crop.cancel': 'Annuler',
+    'crop.hint': 'Faites glisser et utilisez le curseur',
+    'topics.edit': 'Modifier le sujet',
+    'circles.title': 'Cercles',
+    'topics.title': 'Sujets',
+    'block.blockedPost': 'Publication bloquée',
+    'block.none': 'Aucun blocage',
+    'block.postTitle': 'Titre de la publication',
+    'block.title': 'Gestion des blocages',
+    'circles.create': 'Créer un cercle',
+    'circles.del': 'Supprimer le cercle',
+    'circles.desc': 'Description du cercle',
+    'circles.edit': 'Modifier le cercle',
+    'circles.icon': 'Icône du cercle',
+    'circles.name': 'Nom du cercle',
+    'forget.ph': 'Entrez votre téléphone ou e-mail enregistré',
+    'forget.send': 'Envoyer le lien de réinitialisation',
+    'forget.title': 'Mot de passe oublié',
+    'lottery.title': 'Loterie quotidienne',
+    'pet.default': 'Par défaut',
+    'pet.rename': 'Renommer',
+    'profile.needLogin': 'Veuillez vous connecter',
+    'rank.hot': 'Populaire',
+    'search.empty': 'Aucun résultat',
+    'search.users': 'Utilisateurs'}
 };
 var currentLang = localStorage.getItem('forum_lang') || 'zh';
 function t(k) {
@@ -5963,7 +6272,7 @@ function setLang(id) {
   /* 按当前路由重渲染，保证私聊/帖子/个人页/管理后台/通知页等全部跟随语言切换 */
   var r = parseHash();
   var active = r.path;
-  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'rank', 'settings', 'admin', 'apps', 'feedback'];
+  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback'];
   if (active === 'circle') { homeState.circle = r.params.get('id') || ''; homeState.topic = ''; active = 'home'; }
   if (active === 'topic') { homeState.topic = r.params.get('id') || ''; homeState.circle = ''; active = 'home'; }
   if (validRoutes.indexOf(active) < 0) active = 'home';
@@ -5977,6 +6286,7 @@ function setLang(id) {
   if (active === 'messages') renderMessages();
   if (active === 'chat') renderChat(r.params.get('id'));
   if (active === 'tasks') renderTasks();
+  if (active === 'shop') { if (!session || !session.id) { renderLogin(); } else { openSkinShopModal(); } }
   if (active === 'rank') renderRank();
     if (active === 'feedback') renderFeedback();
   if (active === 'settings') renderSettings();
@@ -7643,7 +7953,7 @@ function parseHash() {
 function router() {
   var r = parseHash();
   var active = r.path;
-  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'rank', 'settings', 'admin', 'apps', 'feedback'];
+  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback'];
   if (validRoutes.indexOf(active) < 0) active = 'home';
 
   $$('.route').forEach(function (el) { el.classList.remove('active'); });
@@ -7663,6 +7973,7 @@ function router() {
   if (active === 'messages') renderMessages();
   if (active === 'chat') renderChat(r.params.get('id'));
   if (active === 'tasks') renderTasks();
+  if (active === 'shop') { if (!session || !session.id) { renderLogin(); } else { openSkinShopModal(); } }
   if (active === 'rank') renderRank();
     if (active === 'feedback') renderFeedback();
   if (active === 'settings') renderSettings();
@@ -7796,6 +8107,7 @@ function renderNav() {
     html += '<a class="nav-link" href="#/messages"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">' + t("nav.chat") + '</span></a>';
     html += '<a class="nav-link" href="#/profile">' + avatarHtml(session.username, '', session.avatar_url) + '</a>';
     html += '<a class="nav-link" href="#/tasks" title="' + t('nav.tasks') + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">' + t('nav.tasks') + '</span></a>';
+    html += '<a class="nav-link" href="#/shop" title="' + t('nav.shop') + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span class="nav-label">' + t('nav.shop') + '</span></a>';
     html += '<a class="nav-link" href="#/feedback" title="' + t('nav.feedback') + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg><span class="nav-label">' + t('nav.feedback') + '</span></a>';
     html += '<a class="nav-link" href="#/rank" title="' + t('nav.rank') + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M6 4h12v4a6 6 0 0 1-12 0z"/><rect x="6" y="4" width="12" height="4"/></svg><span class="nav-label">' + t('nav.rank') + '</span></a>';
     html += (window._coins > 0 ? '<span class="nav-link" style="display:flex;align-items:center;gap:3px;color:#d9a03f;font-weight:600">🪙 ' + window._coins + '</span>' : '');
@@ -9421,7 +9733,7 @@ function renderAdmin() {
         html += '<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>' + t('topics.name') + '</th><th>' + t('topics.desc') + '</th><th>' + t('topics.end') + '</th><th>' + t('admin.action') + '</th></tr></thead><tbody>';
         topics.forEach(function (tp) {
           html += '<tr><td>' + esc(tp.emoji || '🏆') + ' ' + esc(tp.name) + '</td><td>' + esc(tp.desc || '') + '</td><td>' + (tp.end_date ? fmtTime(tp.end_date) : '—') + '</td><td style="white-space:nowrap">'
-            + '<button class="btn btn-ghost btn-sm" data-action="adm-topic-edit" data-id="' + tp.id + '" data-name="' + esc(tp.name) + '" data-desc="' + esc(tp.desc || '') + '" data-emoji="' + esc(tp.emoji || '🏆') + '" data-end="' + esc(tp.end_date || '') + '">' + t('topics.del') + '</button> '
+            + '<button class="btn btn-ghost btn-sm" data-action="adm-topic-edit" data-id="' + tp.id + '" data-name="' + esc(tp.name) + '" data-desc="' + esc(tp.desc || '') + '" data-emoji="' + esc(tp.emoji || '🏆') + '" data-end="' + esc(tp.end_date || '') + '">' + t('topics.edit') + '</button> '
             + '<button class="btn btn-danger-ghost btn-sm" data-action="adm-topic-del" data-id="' + tp.id + '" data-name="' + esc(tp.name) + '">' + t('topics.del') + '</button></td></tr>';
         });
         html += '</tbody></table></div>';
@@ -10759,24 +11071,110 @@ document.addEventListener('change', function (e) {
     var file = e.target.files[0];
     if (file.size > 2 * 1024 * 1024) { toast('图片不能超过2MB'); return; }
     if (!isSafeFileType(file)) { toast('头像仅支持图片格式'); return; }
-    /* 图片魔数校验：确认是真图片 */
     checkImageMagic(file).then(function (ok) {
       if (!ok) { toast('文件内容异常，不是有效图片'); return; }
-      toast('上传中…');
-      var uploadedUrl = null;
-      CloudStore.uploadFile('avatars', file).then(function (url) {
-        uploadedUrl = url;
-        return CloudStore.updateProfile(session.id, { avatar_url: url });
-      }).then(function (updatedProfile) {
-        /* 直接用上传得到的url，加随机参数防止浏览器缓存旧头像 */
-        session.avatar_url = uploadedUrl + '?t=' + Date.now();
-        toast('头像已更新');
-        renderProfile();
-        renderNav();
-      }).catch(function (err) { toast('上传失败：' + err.message); });
+      var rd = new FileReader();
+      rd.onload = function () {
+        openAvatarCropModal(rd.result, function (blob) {
+          toast('上传中…');
+          var uploadedUrl = null;
+          var f = new File([blob], 'avatar_' + Date.now() + '.jpg', { type: 'image/jpeg' });
+          CloudStore.uploadFile('avatars', f).then(function (url) {
+            uploadedUrl = url;
+            return CloudStore.updateProfile(session.id, { avatar_url: url });
+          }).then(function (updatedProfile) {
+            session.avatar_url = uploadedUrl + '?t=' + Date.now();
+            toast('头像已更新');
+            renderProfile();
+            renderNav();
+          }).catch(function (err) { toast('上传失败：' + err.message); });
+        });
+      };
+      rd.onerror = function () { toast('读取图片失败'); };
+      rd.readAsDataURL(file);
     });
   }
   
+
+/* v6.4.1 头像裁剪弹窗：拖动定位 + 滑块缩放，输出 256x256 JPEG */
+function openAvatarCropModal(dataUrl, onDone) {
+  var old = document.getElementById('avatar-crop-modal');
+  if (old) old.remove();
+  var mask = document.createElement('div');
+  mask.className = 'modal-mask show';
+  mask.id = 'avatar-crop-modal';
+  mask.innerHTML = '<div class="modal" style="max-width:360px"><h3 class="modal-title">✂️ ' + t('crop.title') + '</h3>'
+    + '<div class="crop-box" id="crop-box"><img id="crop-img" src="' + dataUrl + '" draggable="false"></div>'
+    + '<div class="crop-row"><span style="font-size:13px">🔍</span><input type="range" id="crop-zoom" min="0.6" max="2.5" step="0.05" value="1"><span style="font-size:13px">🔎</span></div>'
+    + '<p style="font-size:12px;color:var(--ink-2);margin:6px 0 0;text-align:center">' + t('crop.hint') + '</p>'
+    + '<div style="text-align:center;margin-top:12px"><button class="btn btn-primary" id="crop-ok">' + t('crop.confirm') + '</button> <button class="btn btn-ghost" id="crop-cancel">' + t('crop.cancel') + '</button></div></div>';
+  document.body.appendChild(mask);
+  var box = mask.querySelector('#crop-box');
+  var img = mask.querySelector('#crop-img');
+  var zoom = mask.querySelector('#crop-zoom');
+  var st = { x: 0, y: 0, scale: 1, drag: null };
+  function layout() {
+    img.style.left = st.x + 'px';
+    img.style.top = st.y + 'px';
+    img.style.width = Math.round(img.naturalWidth * st.scale) + 'px';
+    img.style.height = Math.round(img.naturalHeight * st.scale) + 'px';
+  }
+  function clamp() {
+    var w = img.naturalWidth * st.scale, h = img.naturalHeight * st.scale;
+    var minX = Math.min(0, 256 - w), maxX = 0;
+    var minY = Math.min(0, 256 - h), maxY = 0;
+    st.x = Math.max(minX, Math.min(maxX, st.x));
+    st.y = Math.max(minY, Math.min(maxY, st.y));
+  }
+  img.onload = function () {
+    var minS = Math.max(256 / img.naturalWidth, 256 / img.naturalHeight);
+    zoom.min = Math.max(0.6, minS);
+    if (parseFloat(zoom.value) < parseFloat(zoom.min)) zoom.value = zoom.min;
+    st.scale = parseFloat(zoom.value);
+    st.x = (256 - img.naturalWidth * st.scale) / 2;
+    st.y = (256 - img.naturalHeight * st.scale) / 2;
+    clamp(); layout();
+  };
+  function down(ev) { st.drag = { sx: ev.clientX, sy: ev.clientY, ox: st.x, oy: st.y }; ev.preventDefault(); }
+  function move(ev) {
+    if (!st.drag) return;
+    st.x = st.drag.ox + (ev.clientX - st.drag.sx);
+    st.y = st.drag.oy + (ev.clientY - st.drag.sy);
+    clamp(); layout();
+  }
+  function up() { st.drag = null; }
+  box.addEventListener('mousedown', down);
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+  box.addEventListener('touchstart', down, { passive: false });
+  document.addEventListener('touchmove', move, { passive: false });
+  document.addEventListener('touchend', up);
+  zoom.addEventListener('input', function (e) {
+    var ns = parseFloat(e.target.value);
+    if (!ns) return;
+    var r = ns / st.scale;
+    st.scale = ns;
+    st.x = 128 - (128 - st.x) * r;
+    st.y = 128 - (128 - st.y) * r;
+    clamp(); layout();
+  });
+  mask.querySelector('#crop-cancel').addEventListener('click', function () { mask.remove(); });
+  mask.querySelector('#crop-ok').addEventListener('click', function () {
+    var ox = -st.x / st.scale, oy = -st.y / st.scale;
+    var ow = 256 / st.scale, oh = 256 / st.scale;
+    var cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 256;
+    var ctx = cv.getContext('2d');
+    ctx.beginPath(); ctx.arc(128, 128, 128, 0, Math.PI * 2); ctx.clip();
+    ctx.drawImage(img, ox, oy, ow, oh, 0, 0, 256, 256);
+    cv.toBlob(function (blob) {
+      if (!blob) { toast('裁剪失败'); return; }
+      mask.remove();
+      onDone(blob);
+    }, 'image/jpeg', 0.9);
+  });
+}
+
   /* 发帖附件选择预览 */
   if (e.target.id === 'np-files' && e.target.files.length) {
     var preview = $('#np-preview');
@@ -11603,23 +12001,36 @@ function initDeskPet() {
   if (window._deskPetInit) return;
   window._deskPetInit = true;
   var _bubbleTimer = null;
+  /* 行为表：权重 + 时长。walk 会顺带移动位置，其余在原地做姿态动画 */
+  var BEHAVIORS = [
+    { k: 'walk', cls: 'dp-walk', dur: 4500, w: 32 },
+    { k: 'jump', cls: 'dp-jump', dur: 1900, w: 20 },
+    { k: 'sit',  cls: 'dp-sit',  dur: 2500, w: 18 },
+    { k: 'lie',  cls: 'dp-lie',  dur: 3200, w: 14 },
+    { k: 'idle', cls: 'dp-idle', dur: 2100, w: 16 }
+  ];
+  function pickBehavior() {
+    var total = BEHAVIORS.reduce(function (a, b) { return a + b.w; }, 0);
+    var r = Math.random() * total;
+    for (var i = 0; i < BEHAVIORS.length; i++) { r -= BEHAVIORS[i].w; if (r <= 0) return BEHAVIORS[i]; }
+    return BEHAVIORS[0];
+  }
   function ensureDeskPet() {
     var el = document.getElementById('desk-pet');
     if (!session || !session.id) { if (el) el.remove(); return; }
-    /* 手机小屏不显示，避免遮挡 */
     if (window.innerWidth < 768) { if (el) el.remove(); return; }
     if (el) {
-      var img = el.querySelector('img');
+      var img = el.querySelector('img.dp-inner');
       var src = petSrc(session.pet_img);
       if (img && img.getAttribute('src') !== src) img.setAttribute('src', src);
       return;
     }
     var d = document.createElement('div');
     d.id = 'desk-pet';
-    d.style.cssText = 'position:fixed;left:20px;bottom:20px;z-index:9990;cursor:pointer;transition:left 4.5s ease,bottom 4.5s ease;';
+    d.style.cssText = 'position:fixed;left:24px;bottom:24px;z-index:9990;cursor:pointer;transition:left 4.5s ease,bottom 4.5s ease;';
     d.innerHTML = '<div style="position:relative">'
-      + '<img src="' + petSrc(session.pet_img) + '" alt="pet" style="width:60px;height:60px;object-fit:contain;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))">'
-      + '<div id="desk-pet-bubble" style="position:absolute;bottom:66px;left:0;background:#222;color:#fff;font-size:12px;padding:4px 9px;border-radius:9px;display:none;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.25)"></div>'
+      + '<img class="dp-inner" src="' + petSrc(session.pet_img) + '" alt="pet" style="width:64px;height:64px;object-fit:contain;display:block;filter:drop-shadow(0 3px 5px rgba(0,0,0,.22))">'
+      + '<div id="desk-pet-bubble" style="position:absolute;bottom:70px;left:0;background:#222;color:#fff;font-size:12px;padding:4px 9px;border-radius:9px;display:none;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.25)"></div>'
       + '<button id="desk-pet-x" title="收起桌宠" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#888;color:#fff;border:none;font-size:11px;line-height:20px;cursor:pointer;opacity:.85">×</button>'
       + '</div>';
     document.body.appendChild(d);
@@ -11632,15 +12043,24 @@ function initDeskPet() {
       if (_bubbleTimer) clearTimeout(_bubbleTimer);
       _bubbleTimer = setTimeout(function () { b.style.display = 'none'; }, 2400);
     });
-    moveDeskPet(d);
+    nextBehavior(d);
   }
-  function moveDeskPet(d) {
+  function nextBehavior(d) {
+    if (document.getElementById('desk-pet') !== d) return;
+    var bh = pickBehavior();
+    d.className = bh.cls;
     var vw = window.innerWidth, vh = window.innerHeight;
-    var l = 16 + Math.random() * Math.max(40, vw - 140);
-    var b = 16 + Math.random() * Math.max(30, vh * 0.5);
-    d.style.left = l + 'px';
-    d.style.bottom = b + 'px';
-    setTimeout(function () { if (document.getElementById('desk-pet') === d) moveDeskPet(d); }, 4200 + Math.random() * 4200);
+    if (bh.k === 'walk') {
+      /* 跑动：换一个位置，并按水平方向镜像，跳/坐/趴/摇在原位 */
+      var targetL = 16 + Math.random() * Math.max(50, vw - 160);
+      var targetB = 16 + Math.random() * Math.max(40, vh * 0.45);
+      d.style.left = targetL + 'px';
+      d.style.bottom = targetB + 'px';
+      var curL = parseFloat(d.style.left) || 24;
+      var inner = d.querySelector('.dp-inner');
+      if (inner) inner.classList.toggle('dp-flip', targetL < curL - 10);
+    }
+    setTimeout(function () { nextBehavior(d); }, bh.dur + Math.random() * 700);
   }
   setInterval(ensureDeskPet, 2000);
 }
