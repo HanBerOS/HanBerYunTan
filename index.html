@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>☁️</text></svg>">
-<meta name="referrer" content="no-referrer"> <meta name="theme-color" content="#3b82f6"> <meta name="mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <meta name="apple-mobile-web-app-title" content="云坛"> <link rel="manifest" href="manifest.json"> <link rel="apple-touch-icon" href="icon-192.png">
-<title>云坛 v6.4.6 · HanBerOS 6.4.6</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><rect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27white%27/><path d=%27M24 60c-7 0-11-5-9-11 2-6 8-8 11-5 2-9 11-13 17-9 4-5 11-6 15-3 5-1 10 2 10 8 4 1 6 5 4 9 3 2 1 7-3 7H24z%27 fill=%27%23C9ECFF%27 stroke=%27%236EB5D5%27 stroke-width=%273%27/><path d=%27M31 76h38v7H31z%27 fill=%27%23C9ECFF%27 stroke=%27%236EB5D5%27 stroke-width=%273%27/><line x1=%2736%27 y1=%2742%27 x2=%2764%27 y2=%2742%27 stroke=%27%236EB5D5%27 stroke-width=%273%27/><line x1=%2738%27 y1=%2751%27 x2=%2762%27 y2=%2751%27 stroke=%27%236EB5D5%27 stroke-width=%273%27/><text x=%2750%27 y=%2768%27 font-size=%2720%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%236EB5D5%27 font-family=%27PingFang SC,Microsoft YaHei,sans-serif%27>坛</text></svg>">
+<meta name="referrer" content="no-referrer"> <meta name="theme-color" content="#A3D5EE"> <meta name="mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <meta name="apple-mobile-web-app-title" content="云坛"> <link rel="manifest" href="manifest.json"> <link rel="apple-touch-icon" href="icon-192.png">
+<title>云坛</title>
 <script>
 /* 点击劫持防护：禁止本页被 iframe 嵌入 */
 if (window.top !== window.self) { window.top.location = window.self.location; }
@@ -8256,6 +8256,42 @@ function updateInstallBtn() {
   b.style.display = installBtnVisible() ? '' : 'none';
   b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="nav-label">' + (INSTALL_TXT[currentLang] || INSTALL_TXT.en) + '</span>';
 }
+function installHelpModal() {
+  var old = document.getElementById('install-help-modal');
+  if (old) old.remove();
+  var ua = navigator.userAgent || '';
+  var isVivo = /vivo/i.test(ua) && !/iphone|ipad/i.test(ua);
+  var title, steps;
+  if (isIOSDevice()) {
+    title = 'iOS 安装到主屏幕';
+    steps = ['在浏览器底部点「分享」按钮', '下滑点「添加到主屏幕」', '桌面出现云坛图标，点开即 App'];
+  } else if (isVivo) {
+    title = 'vivo 安装云坛';
+    steps = ['方法一：点浏览器右上角「⋮」→「添加到桌面」', '方法二：点下方按钮下载安卓 App 安装包（推荐，图标更干净）'];
+  } else {
+    title = '安装云坛 App';
+    steps = ['方法一：Chrome/Edge 点右上角「安装应用 / 添加到主屏幕」', '方法二：点下方按钮下载安卓 App 安装包（推荐，图标更干净）'];
+  }
+  var isAndroid = /android/i.test(ua);
+  var apkBtn = (/iphone|ipad/i.test(ua) || !isAndroid) ? '' :
+    '<a class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none" href="https://hanberos.github.io/HanBerYunTan/yuntan.apk" download>📲 下载安卓版 APK</a>';
+  var mask = document.createElement('div');
+  mask.className = 'modal-mask show';
+  mask.id = 'install-help-modal';
+  mask.innerHTML = '<div class="modal" style="max-width:360px">'
+    + '<h3 class="modal-title">📲 ' + title + '</h3>'
+    + '<ol style="padding-left:20px;line-height:1.9;font-size:14px;margin:0">'
+    + steps.map(function (s) { return '<li>' + s + '</li>'; }).join('')
+    + '</ol>'
+    + '<p style="font-size:12px;color:var(--ink-3);margin:12px 0 0">安装后可像 App 一样从桌面直接打开，无需再进浏览器。</p>'
+    + '<div style="display:flex;gap:10px;margin-top:16px">'
+    + apkBtn
+    + '<button class="btn btn-ghost" style="flex:1" id="install-help-close">知道了</button>'
+    + '</div></div>';
+  mask.addEventListener('click', function (e) { if (e.target === mask) mask.remove(); });
+  document.body.appendChild(mask);
+  mask.querySelector('#install-help-close').addEventListener('click', function () { mask.remove(); });
+}
 function doInstallApp() {
   if (_deferredPrompt) {
     _deferredPrompt.prompt();
@@ -8268,11 +8304,7 @@ function doInstallApp() {
     })['catch'](function () {});
     return;
   }
-  if (isIOSDevice()) {
-    toast('iOS 请在浏览器菜单点「分享」→「添加到主屏幕」，即可把云坛装到桌面');
-  } else {
-    toast('请用 Chrome / Edge / 安卓浏览器打开本站后点「安装」，即可下载安装云坛 App');
-  }
+  installHelpModal();
 }
 window.addEventListener('beforeinstallprompt', function (e) {
   e.preventDefault();
