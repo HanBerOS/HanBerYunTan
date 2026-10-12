@@ -1,0 +1,20 @@
+{
+  "name": "yuntan-app",
+  "version": "6.4.6",
+  "description": "云坛 HanBerOS —— 安卓 App 壳（内容实时加载网页版，与网页同步更新）",
+  "main": "index.js",
+  "author": "HanBer",
+  "license": "MIT",
+  "scripts": {
+    "sync": "cap sync android",
+    "open:android": "cap open android",
+    "build:apk": "cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
+  }
+}

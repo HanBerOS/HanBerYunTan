@@ -1,0 +1,17 @@
+{
+	"appId": "com.hanber.yuntan",
+	"appName": "云坛",
+	"webDir": "www",
+	"server": {
+		"url": "https://hanberos.github.io/HanBerYunTan/",
+		"cleartext": false,
+		"androidScheme": "https"
+	},
+	"android": {
+		"allowMixedContent": false,
+		"backgroundColor": "#0f172a"
+	},
+	"ios": {
+		"backgroundColor": "#0f172a"
+	}
+}
