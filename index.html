@@ -8257,9 +8257,8 @@ function updateInstallBtn() {
   var icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="nav-label">' + (INSTALL_TXT[currentLang] || INSTALL_TXT.en) + '</span>';
   b.innerHTML = icon;
   if (!/iphone|ipad/i.test(navigator.userAgent || '')) {
-    /* 非苹果设备（安卓/鸿蒙/桌面）：安装按钮 = 直接下载 APK 的链接，点击即下载，绝不弹窗 */
+    /* 非苹果设备：安装按钮 = 普通跳转链接，点击直接打开 APK 地址（vivo 等浏览器兼容最好） */
     b.setAttribute('href', 'https://hanberos.github.io/HanBerYunTan/yuntan.apk');
-    b.setAttribute('download', '');
     b.setAttribute('title', '下载安装云坛 App');
   }
 }
@@ -8346,13 +8345,13 @@ function renderNav() {
     html += '<a class="nav-link" href="#/login"><span class="nav-label">' + t("nav.login") + '</span></a>';
     html += '<a class="btn btn-primary btn-sm" href="#/login" style="min-height:38px">' + t("nav.signup") + '</a>';
   }
-  html += '<a id="nav-install" class="nav-link" href="#" style="display:none" title="安装 App"></a>';
+  html += '<a id="nav-install" class="nav-link" href="https://hanberos.github.io/HanBerYunTan/yuntan.apk" style="display:none" title="下载安装云坛 App"></a>';
   nav.innerHTML = html;
   var ib = document.getElementById('nav-install');
   if (ib && !ib._bound) {
     ib._bound = true;
     ib.addEventListener('click', function (e) {
-      if (!/iphone|ipad/i.test(navigator.userAgent || '')) return; /* 非苹果设备：放行 a[download] 直接下载 APK */
+      if (!/iphone|ipad/i.test(navigator.userAgent || '')) return; /* 非苹果设备：普通链接跳转 APK，点击即下载 */
       e.preventDefault(); e.stopPropagation(); doInstallApp();
     });
   }
