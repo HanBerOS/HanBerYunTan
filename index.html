@@ -8293,6 +8293,11 @@ function installHelpModal() {
   mask.querySelector('#install-help-close').addEventListener('click', function () { mask.remove(); });
 }
 function doInstallApp() {
+  /* 安卓：点「安装」直接下载 APK（图标版 App，与网页同步） */
+  if (/android/i.test(navigator.userAgent || '')) {
+    window.location.href = 'https://hanberos.github.io/HanBerYunTan/yuntan.apk';
+    return;
+  }
   if (_deferredPrompt) {
     _deferredPrompt.prompt();
     _deferredPrompt.userChoice.then(function (choice) {
