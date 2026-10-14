@@ -164678,11 +164678,18 @@ setInterval(tickScheduled, 30000);
 setTimeout(tickScheduled, 3000);
 
 (function init() {
-  /* PWA 支持：页面加载即静默注册 Service Worker（离线缓存 + 可安装成软件）。
-     仅在 HTTPS 或 localhost 生效；file:// 或非 HTTPS 静默失败，不影响任何功能 */
+  /* v6.5 不再自动注册 Service Worker：sw.js 会缓存旧版 index.html，导致刷新永远看到旧版。
+     改为：主动注销已注册的 SW 并清空缓存；仅当用户手动开启通知推送时才按需注册 */
   try {
-    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-      navigator.serviceWorker.register('sw.js').catch(function () {});
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (rs) {
+        rs.forEach(function (r) { r.unregister(); });
+      }).catch(function () {});
+      if (window.caches && window.caches.keys) {
+        window.caches.keys().then(function (ks) {
+          ks.forEach(function (k) { window.caches.delete(k); });
+        }).catch(function () {});
+      }
     }
   } catch (e) {}
 
