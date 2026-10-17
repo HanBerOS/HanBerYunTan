@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HanBer FIVE</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%230b0e13'/><text x='50' y='66' font-size='44' font-family='monospace' font-weight='bold' text-anchor='middle' fill='%23ff5a3c'>5</text></svg>">
+<style>
+:root{
+  --bg:#0b0e13; --panel:#12171f; --panel2:#0e1319; --line:#26303d;
+  --ink:#d7dfe8; --dim:#8b97a5; --accent:#ff5a3c; --accent2:#ffc531;
+  --ok:#4cd99b; --warn:#ffc531; --bad:#ff5a3c; --info:#5aa7ff;
+  --mono:'SF Mono',Consolas,'Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:#000; color:var(--ink);
+  font-family:var(--mono);
+  user-select:none; -webkit-user-select:none;
+}
+#app{position:fixed;inset:0;}
+
+/* ===== 主菜单 ===== */
+.screen{position:absolute;inset:0;display:none;z-index:20;}
+.screen.active{display:flex;}
+#menu{flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 30%,#15202e 0%,#070a0e 60%,#020304 100%);}
+#menu .scanlines{position:absolute;inset:0;pointer-events:none;opacity:.18;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px);}
+.titlebox{position:relative;text-align:center;padding:0 20px;}
+.logo{font-size:clamp(30px,7vw,64px);font-weight:800;letter-spacing:4px;color:#fff;
+  text-shadow:0 0 18px rgba(255,90,60,.55);}
+.logo .five{color:var(--accent);}
+.subtitle{margin-top:6px;font-size:clamp(11px,2vw,15px);color:var(--dim);letter-spacing:6px;}
+.tagline{margin-top:22px;font-size:clamp(12px,2vw,15px);color:var(--accent2);letter-spacing:2px;}
+.menuBtns{margin-top:34px;display:flex;flex-direction:column;gap:12px;width:min(340px,80vw);}
+.mbtn{padding:14px 20px;font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:3px;
+  color:var(--ink);background:var(--panel);border:1px solid var(--line);cursor:pointer;
+  transition:.18s;text-align:center;}
+.mbtn:hover{border-color:var(--accent);color:#fff;background:#1a232f;transform:translateX(4px);}
+.mbtn.special{border-color:var(--accent);color:var(--accent);}
+.mbtn .k{margin-left:8px;color:var(--dim);font-weight:400;}
+.foot{margin-top:26px;font-size:11px;color:#5a6672;letter-spacing:1px;}
+.menuTip{position:absolute;bottom:22px;width:100%;text-align:center;font-size:11px;color:#4c5762;}
+
+/* ===== 游戏 HUD ===== */
+#game{position:absolute;inset:0;background:#000;z-index:5;}
+#cv{position:absolute;inset:0;display:block;}
+.hud{position:absolute;top:8px;left:8px;right:8px;pointer-events:none;z-index:8;}
+.bars{display:flex;flex-wrap:wrap;gap:8px;background:rgba(10,13,17,.78);padding:8px 10px;border:1px solid var(--line);max-width:430px;}
+.bar{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);}
+.bar .lbl{width:34px;}
+.bar .track{width:96px;height:10px;background:#1b232e;border:1px solid #2a3442;position:relative;overflow:hidden;}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;width:50%;transition:width .2s;}
+#hpH{background:var(--bad);} #hpHunger{background:var(--accent2);} #hpH2o{background:var(--info);}
+#hpEne{background:var(--ok);} #hpSan{background:#c084fc;}
+.cash{color:var(--accent2);}
+.topline{margin-top:6px;font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;}
+.loc{color:var(--info);}
+.minimap{position:absolute;top:8px;right:8px;width:150px;height:150px;background:rgba(8,10,14,.85);
+  border:1px solid var(--line);z-index:8;pointer-events:none;}
+
+/* ===== 快捷栏 ===== */
+#hotbar{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;display:flex;gap:6px;z-index:9;pointer-events:none;}
+.slot{width:52px;height:52px;background:rgba(10,13,17,.8);border:1px solid var(--line);position:relative;font-size:10px;color:var(--dim);display:flex;align-items:center;justify-content:center;flex-direction:column;}
+.slot.sel{border-color:var(--accent);color:#fff;}
+.slot .ic{font-size:22px;line-height:1;}
+.slot .n{position:absolute;bottom:1px;right:3px;color:var(--accent2);font-size:10px;}
+
+/* ===== 对话框 / 浮窗 ===== */
+.overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:28;
+  background:rgba(2,3,5,.72);}
+.overlay.active{display:flex;}
+.panel{width:min(560px,92vw);max-height:82vh;overflow:auto;background:var(--panel);
+  border:1px solid var(--line);box-shadow:0 0 40px rgba(0,0,0,.6);padding:20px;}
+.panel h2{font-size:16px;letter-spacing:2px;margin-bottom:6px;}
+.panel .who{color:var(--accent);font-size:13px;margin-bottom:10px;letter-spacing:1px;}
+.panel .body{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;}
+.panel .opts{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+.opt{padding:10px 12px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  font-family:var(--mono);font-size:13px;cursor:pointer;text-align:left;}
+.opt:hover{border-color:var(--accent);color:#fff;}
+.opt .key{color:var(--accent2);margin-right:8px;}
+.closeline{color:var(--dim);font-size:11px;margin-top:12px;text-align:center;}
+
+/* ===== 背包 ===== */
+.invGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px;}
+.iItem{padding:8px;background:var(--panel2);border:1px solid var(--line);cursor:pointer;font-size:11px;text-align:center;}
+.iItem:hover{border-color:var(--accent);}
+.iItem .ic{font-size:22px;}
+.iItem .nm{color:var(--ink);margin-top:4px;}
+.iItem .cnt{color:var(--accent2);}
+
+/* ===== 地图 ===== */
+#mapOv{position:absolute;inset:0;z-index:12;background:rgba(3,5,8,.94);display:none;overflow:auto;}
+#mapOv.active{display:block;}
+#mapCanvas{display:block;margin:0 auto;}
+
+/* ===== 剧情日志 ===== */
+.chap{background:var(--panel2);border:1px solid var(--line);padding:14px;margin-bottom:12px;}
+.chap h3{color:var(--accent);font-size:14px;letter-spacing:2px;}
+.chap .recap{font-size:13px;line-height:1.7;color:var(--dim);white-space:pre-wrap;margin-top:8px;}
+.chap.done{border-color:#2b5b43;}
+.chap.done h3{color:var(--ok);}
+.obj{font-size:13px;color:var(--dim);margin-top:8px;line-height:1.6;}
+.obj .done{color:var(--ok);}
+
+/* ===== 悬挂点 ===== */
+.cliff{width:min(560px,92vw);text-align:center;padding:30px;}
+.cliff .big{font-size:22px;color:var(--accent);letter-spacing:4px;margin:12px 0;}
+.cliff p{color:var(--dim);line-height:1.8;font-size:13px;}
+.cliff .next{color:var(--accent2);margin-top:14px;font-size:12px;}
+
+.toast{position:absolute;left:50%;top:30%;transform:translateX(-50%);z-index:40;background:rgba(8,11,15,.9);
+  border:1px solid var(--line);padding:10px 18px;font-size:13px;color:var(--ink);pointer-events:none;opacity:0;transition:.3s;}
+.toast.show{opacity:1;}
+
+#hintbar{position:absolute;bottom:8px;left:8px;font-size:11px;color:#5a6672;z-index:8;pointer-events:none;line-height:1.6;}
+
+.touchjoy{position:absolute;bottom:12px;right:12px;display:none;z-index:9;opacity:.5;pointer-events:auto;}
+.tj-btn{width:52px;height:52px;border:1px solid var(--line);background:rgba(10,13,17,.6);color:var(--ink);font-size:20px;}
+@media (pointer:coarse){ .touchjoy{display:flex;} }
+</style>
+<style id="hanber-soviet-skin">
+/* === HanBer 统一皮肤 · 后苏联忧郁美学 (Post-Soviet Melancholy) === */
+html,body{
+  background-color:#15181e !important;
+  background-image:
+    radial-gradient(ellipse at 50% -5%, rgba(201,168,106,.10), transparent 55%),
+    linear-gradient(165deg,#11141a 0%,#1a1f28 48%,#231d15 100%) !important;
+  color:#d6cdb8 !important;
+}
+#hanber-vignette{position:fixed;inset:0;z-index:99998;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(0,0,0,.55) 100%);}
+</style>
+<div id="hanber-vignette"></div>
+</head>
+<body>
+<div id="app">
+  <!-- ===== 主菜单 ===== -->
+  <div id="menu" class="screen active">
+    <div class="scanlines"></div>
+    <div class="titlebox">
+      <div class="logo">HANBER <span class="five">FIVE</span></div>
+      <div class="subtitle">· 1953 · 结局反转之后的世界 ·</div>
+      <div class="tagline">「活下去，顺便揭开一切」</div>
+    </div>
+    <div class="menuBtns">
+      <button class="mbtn" data-m="story">主线模式<span class="k">[ 剧情 ]</span></button>
+      <button class="mbtn" data-m="free">自由模式<span class="k">[ 生存 ]</span></button>
+      <button class="mbtn" data-m="load">读取存档<span class="k">[ 续 ]</span></button>
+      <button class="mbtn special" data-m="about">世界观 · 剧情预览</button>
+    </div>
+    <div class="foot">本地存档 · 单文件 · GitHub Pages 可直传</div>
+    <div class="menuTip">操作：WASD/方向键移动 · E 互动 · 空格 攻击 · I 背包 · M 地图 · J 剧情 · Esc 菜单</div>
+  </div>
+
+  <!-- ===== 游戏画面 ===== -->
+  <div id="game">
+    <canvas id="cv"></canvas>
+    <div class="hud">
+      <div class="bars">
+        <div class="bar"><span class="lbl">生命</span><div class="track"><div class="fill" id="hpH"></div></div></div>
+        <div class="bar"><span class="lbl">饱食</span><div class="track"><div class="fill" id="hpHunger"></div></div></div>
+        <div class="bar"><span class="lbl">水分</span><div class="track"><div class="fill" id="hpH2o"></div></div></div>
+        <div class="bar"><span class="lbl">精力</span><div class="track"><div class="fill" id="hpEne"></div></div></div>
+        <div class="bar"><span class="lbl">理智</span><div class="track"><div class="fill" id="hpSan"></div></div></div>
+      </div>
+      <div class="topline"><span class="cash" id="cashLine"></span><span id="timeLine"></span><span id="locLine" class="loc"></span><span id="modeLine"></span></div>
+    </div>
+    <canvas id="minimapCv" class="minimap" width="150" height="150"></canvas>
+    <div id="hotbar"></div>
+    <div id="hintbar"></div>
+    <div class="touchjoy" id="touchjoy">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+        <div></div><button class="tj-btn" data-d="up">▲</button><div></div>
+        <button class="tj-btn" data-d="left">◀</button><button class="tj-btn" data-d="down">▼</button><button class="tj-btn" data-d="right">▶</button>
+        <div></div><button class="tj-btn" data-d="act">E</button><button class="tj-btn" data-d="att">攻</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 对话框 ===== -->
+  <div id="dlgOv" class="overlay">
+    <div class="panel">
+      <div class="who" id="dlgWho"></div>
+      <div class="body" id="dlgBody"></div>
+      <div class="opts" id="dlgOpts"></div>
+      <div class="closeline">按 E / 回车 继续 · 数字键选对话</div>
+    </div>
+  </div>
+
+  <!-- ===== 背包 ===== -->
+  <div id="invOv" class="overlay">
+    <div class="panel">
+      <h2>背包 <span style="color:var(--dim);font-size:12px;">I 关闭 · 点击物品使用</span></h2>
+      <div class="invGrid" id="invGrid"></div>
+    </div>
+  </div>
+
+  <!-- ===== 大地图 ===== -->
+  <div id="mapOv"><canvas id="mapCanvas"></canvas></div>
+
+  <!-- ===== 剧情日志 ===== -->
+  <div id="jrnOv" class="overlay">
+    <div class="panel">
+      <h2>剧情日志 <span style="color:var(--dim);font-size:12px;">J 关闭</span></h2>
+      <div id="jrnBody"></div>
+    </div>
+  </div>
+
+  <!-- ===== 暂停菜单 ===== -->
+  <div id="escOv" class="overlay">
+    <div class="panel">
+      <h2>菜单</h2>
+      <div class="opts">
+        <button class="opt" data-esc="save"><span class="key">1</span>保存存档</button>
+        <button class="opt" data-esc="saveSlot2"><span class="key">2</span>另存到存档2</button>
+        <button class="opt" data-esc="load"><span class="key">3</span>读取存档</button>
+        <button class="opt" data-esc="resume"><span class="key">4</span>返回游戏</button>
+        <button class="opt" data-esc="mainmenu"><span class="key">5</span>返回主菜单</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 章节完结 / 悬念 ===== -->
+  <div id="cliffOv" class="overlay">
+    <div class="panel cliff">
+      <div style="color:var(--accent);font-size:12px;letter-spacing:4px;">—— 本章完结 · 悬念留驻 ——</div>
+      <div class="big" id="cliffTitle"></div>
+      <p id="cliffBody"></p>
+      <div class="next" id="cliffNext"></div>
+      <button class="opt" id="cliffGo" style="margin-top:16px;text-align:center;">继续</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   HanBer FIVE  —— 单文件大型 2D 开放世界生存/剧情单机游戏
+   世界观：1953 年朝鲜战争结局反转，南方阵营获胜并完成半岛统一，
+   诞生“汉京共和国（Han Republic）”。本作世界设定于反转后的 2026 年。
+   虚构地点与人名，人物皆为虚构角色。
+   单文件自包含 · localStorage 本地存档 · 可直接托管 GitHub Pages
+   ============================================================ */
+/* ===== 常量 ===== */
+const TILE=32, MW=120, MH=120;
+const TER={ // 地形
+  WATER:0,BEACH:1,GRASS:2,FOREST:3,MOUNTAIN:4,CITY:5,ROAD:6,MIL:7,WASTE:8,CAMP:9,RUIN:10,SAND:11
+};
+const TNAME=["水域","滩涂","平原","林地","山地","城区","道路","军管区","废土","营地","废墟","沙地"];
+/* ===== 世界生成 ===== */
+// 简单哈希噪声
+function hash(x,y){let h=(x*374761393 + y*668265263); h=(h^(h>>>13))*1274126177; h=(h^(h>>>16))>>>0; return h/4294967295;}
+function hash2(x,y){let h=(x*911382323 + y*972663749); h=(h^(h>>>11))*121999999; h=(h^(h>>>13))>>>0; return h/4294967295;}
+
+// 地点定义（虚构）：位置 x,y；名称；图标字符
+const LOCATIONS=[
+ {id:"hanjing",   name:"汉京共和国·都", x:60,y:112, ic:"京", desc:"反转后的半岛心脏，中央大都会。"},
+ {id:"sinchon",   name:"新川市（玩家出生地）", x:78,y:56, ic:"城", desc:"中北边境的前线港口工业城，鱼龙混杂。"},
+ {id:"tieshan",   name:"铁山军事管区", x:46,y:46, ic:"军", desc:"北方集团军的重兵驻区，哨卡林立。"},
+ {id:"samha",     name:"三河镇", x:62,y:12, ic:"镇", desc:"紧贴旧三八线故地的边陲小镇。"},
+ {id:"oldfield",  name:"老战场", x:30,y:22, ic:"场", desc:"1951 年决战遗址，焦土与锈铁。"},
+ {id:"wanghai",   name:"望海港", x:108,y:72, ic:"港", desc:"东岸大港，走私与洋流交汇处。"},
+ {id:"huixian",   name:"灰线营", x:90,y:40, ic:"营", desc:"地下走私网络“灰线”的集散地。"},
+ {id:"sitefive",  name:"五号设施", x:18,y:58, ic:"5", desc:"深藏山腹的秘密设施，谜团的源头。"},
+ {id:"yiyuan",    name:"忆渊", x:44,y:18, ic:"忆", desc:"北部冻土下的记忆金库。"}
+];
+const LOC_BY_ID={}; LOCATIONS.forEach(l=>LOC_BY_ID[l.id]=l);
+
+let grid=[];
+function buildMap(){
+  grid=[]; for(let y=0;y<MH;y++){grid.push(new Array(MW).fill(TER.GRASS));}
+  // 北废土带（旧战场） y<34
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    let n=hash(x,y), n2=hash2(x,y);
+    let t=TER.GRASS;
+    // 水域：东西两侧海 + 中部河流
+    let isSeaEast=(x>=112), isSeaWest=(x<=5);
+    let river=(x>=58&&x<=62&&y>=8&&y<=104);
+    if(isSeaEast||isSeaWest||river){t=TER.WATER; if(y>=MH-2)t=TER.WATER;}
+    if(t!==TER.WATER){
+      if(y<=6){t=n<0.55?TER.WASTE:(n<0.8?TER.SAND:TER.RUIN);}          // 极北冻土废土
+      else if(y<34){t=(n<0.42)?TER.WASTE:(n<0.6?TER.RUIN:(n<0.78?TER.SAND:TER.GRASS));} // 北境战场
+      else if(y<48){ // 铁山军事区带
+        t=(n<0.4)?TER.MIL:(n<0.62?TER.WASTE:(n<0.8?TER.GRASS:TER.FOREST));
+        if(n2<0.08) t=TER.MIL;
+      }
+      else if(y<70){ // 中北：工业/平原/城市
+        t=(n<0.3)?TER.GRASS:(n<0.5?TER.FOREST:(n<0.66?TER.CITY:(n<0.78?TER.WASTE:TER.CAMP)));
+      }
+      else if(y<104){ // 临江平原
+        t=(n<0.34)?TER.GRASS:(n<0.52?TER.FOREST:(n<0.7?TER.CITY:(n<0.85?TER.CAMP:TER.MIL)));
+      }
+      else { // 汉京都会区
+        t=(n<0.5)?TER.CITY:(n<0.72?TER.ROAD:(n<0.86?TER.GRASS:TER.CAMP));
+      }
+      // 山带（几处山脉）
+      let mt=(x>14&&x<26&&y>44&&y<70)||(x>38&&x<52&&y>54&&y<72)||(x>96&&x<106&&y>30&&y<46);
+      if(mt && t!==TER.WATER){ if(n2<0.8) t=TER.MOUNTAIN; }
+      // 滩涂
+      if((isSeaEast&&x==111)||(isSeaWest&&x==6)) t=TER.BEACH;
+    }
+    grid[y][x]=t;
+  }
+  // 道路网
+  roadTo(60,112,78,56); // 汉京-新川
+  roadTo(78,56,46,46);  // 新川-铁山
+  roadTo(78,56,90,40);  // 新川-灰线营
+  roadTo(78,56,108,72); // 新川-望海港
+  roadTo(46,46,62,12);  // 铁山-三河
+  roadTo(30,22,62,12);  // 老战场-三河
+  // 在指定位置铺城/营/设施
+  carve(LOC_BY_ID.hanjing,  5, 7);
+  carve(LOC_BY_ID.sinchon,  5, 5);
+  carve(LOC_BY_ID.tieshan,  7, 4);
+  carve(LOC_BY_ID.samha,    3, 3);
+  carve(LOC_BY_ID.wanghai,  4, 4);
+  carve(LOC_BY_ID.huixian,  3, 3);
+  carve(LOC_BY_ID.oldfield, RUIN_REL(), 4);
+  carve(LOC_BY_ID.sitefive, 4, 3);
+  carve(LOC_BY_ID.yiyuan,   4, 3);
+  // 让水域边缘保留
+}
+function roadTo(x1,y1,x2,y2){
+  let x=x1,y=y1, guard=0;
+  while((x!==x2||y!==y2)&&guard++<2000){
+    if(grid[y]&&grid[y][x]&&grid[y][x]!==TER.WATER&&grid[y][x]!==TER.MOUNTAIN) grid[y][x]=TER.ROAD;
+    if(Math.abs(x-x2)>Math.abs(y-y2)) x+=(x<x2?1:-1); else y+=(y<y2?1:-1);
+  }
+}
+function RUIN_REL(){return 5;}
+function carve(loc,t,radius){
+  for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
+    let x=loc.x+dx, y=loc.y+dy;
+    if(x<0||y<0||x>=MW||y>=MH)continue;
+    if(dx*dx+dy*dy>radius*radius)continue;
+    if(grid[y][x]===TER.WATER)continue;
+    grid[y][x]=t;
+  }
+}
+// 地形可否行走
+function solid(t){return t===TER.WATER||t===TER.MOUNTAIN;}
+function terrainAt(x,y){ if(x<0||y<0||x>=MW||y>=MH)return TER.MOUNTAIN; return grid[y][x]; }
+function passable(x,y){ return !solid(terrainAt(x,y)); }
+function locNameAt(x,y){
+  for(const l of LOCATIONS){ if(Math.abs(l.x-x)<=2&&Math.abs(l.y-y)<=2) return l.name; }
+  return "";
+}
+/* ===== 道具表 ===== */
+const ITEMS={
+ food_can:  {nm:"军用罐头",ic:"🥫",cat:"food",hunger:28,water:4,sanity:2,price:18},
+ food_rice: {nm:"米饭团",ic:"🍙",cat:"food",hunger:22,water:2,sanity:1,price:10},
+ food_meat: {nm:"烤肉",ic:"🍖",cat:"food",hunger:35,water:1,sanity:3,price:22,craft:["wood","scrap"]},
+ water_b:   {nm:"瓶装水",ic:"💧",cat:"water",water:34,price:8},
+ water_c:   {nm:"净水袋",ic:"🫗",cat:"water",water:20,price:5},
+ med_b:     {nm:"急救包",ic:"⛑",cat:"med",hp:45,price:40},
+ med_s:     {nm:"绷带",ic:"🩹",cat:"med",hp:20,price:15,craft:["cloth"]},
+ energy:    {nm:"能量剂",ic:"⚡",cat:"energy",energy:40,sanity:-3,price:30},
+ tonic:     {nm:"镇定剂",ic:"💊",cat:"tonic",sanity:30,price:26},
+ knife:     {nm:"军刀",ic:"🔪",cat:"weapon",dmg:14,range:1,price:35},
+ bat:       {nm:"铁管",ic:"🪝",cat:"weapon",dmg:9,range:1,price:12},
+ pistol:    {nm:"手枪",ic:"🔫",cat:"gun",dmg:24,range:6,ammo:1,price:160},
+ rifle:     {nm:"步枪",ic:"🎯",cat:"gun",dmg:38,range:9,ammo:1,price:260},
+ ammo_pistol:{nm:"手枪弹",ic:"•",cat:"ammo",price:8},
+ ammo_rifle: {nm:"步枪弹",ic:"◍",cat:"ammo",price:12},
+ scrap:     {nm:"废铁",ic:"🧱",cat:"mat",price:4},
+ wood:      {nm:"木料",ic:"🪵",cat:"mat",price:3},
+ cloth:     {nm:"布料",ic:"🧵",cat:"mat",price:5},
+ tool:      {nm:"工具",ic:"🛠",cat:"mat",price:20},
+ chip:      {nm:"数据芯片",ic:"💽",cat:"quest",price:120},
+ doc:       {nm:"机密文件",ic:"📄",cat:"quest",price:200},
+ key:       {nm:"钥匙",ic:"🗝",cat:"quest",price:0},
+ relic:     {nm:"战前遗物",ic:"🏺",cat:"trade",price:55},
+ chem:      {nm:"化学品",ic:"🧪",cat:"mat",price:11},
+ cig:       {nm:"旧烟",ic:"🚬",cat:"trade",price:6},
+ med_stim:  {nm:"兴奋剂",ic:"💉",cat:"med",hp:10,energy:50,sanity:-12,price:36},
+};
+function itemById(id){return ITEMS[id]||null;}
+
+/* ===== 命名 NPC ===== */
+const NPCS=[
+ {id:"zhou",   name:"周叔", x:80,y:55, ic:"🧓", role:"老货郎", shop:["food_can","food_rice","water_b","water_c","knife","bat","cloth","scrap","cig","tool"],
+   diag:[
+    ["嗨，小子。新川这地方，饿不死活人也容易。你要什么，明码标价。","三河那边又闹枪声了，这仗——五十多年了，还没打完。","我是第一批跟着北上的老兵，赢了仗，却没赢下日子。"],
+    ["五号设施？离这儿不远，那鬼地方少去。进去过的，出来都不太对劲。","你问我当年的事？1951 年，我们在铁山把战线钉死，一个夏天，半个半岛换旗。","记住，在这片地界，能相信的只有你兜里的干粮。"]
+   ]},
+ {id:"suying", name:"苏英", x:77,y:53, ic:"👩‍⚕️", role:"战地医生", heal:1, diag:
+   [["受伤了？坐下。我这儿止血的、消毒的都有，收费公道。","汉京来的药品配额老不够，边境的人只能自己撑。","我看你这伤，不像是摔的——谁动的手？"] ]},
+ {id:"tiesheng",name:"铁生", x:90,y:40, ic:"🦹", role:"灰线头目", shop:["pistol","ammo_pistol","ammo_rifle","med_b","energy","tonic","chem","chip"], diag:
+   [["灰线做的是边境的生意：北边要的东西，南边给不了的东西。","想入伙？先替我跑一趟。这世道，讲义气最值钱，也最容易被卖。","五号设施？我们做过那边的单，给的钱多到烫手——那地方，别有用心的人在挖什么。"] ]},
+ {id:"milan",  name:"米兰", x:106,y:71, ic:"🧕", role:"信使", diag:
+   [["我送信，也送秘密。新川到望海港一天一夜，路不好走。","有人说看见夜里从五号设施方向飘来的光，蓝的。","把这封信交给铁生，他会给你回扣。别打开看，对你有好处。"] ]},
+ {id:"duizhang",name:"崔队长", x:46,y:46, ic:"🎖", role:"驻军长官", diag:
+   [["这里军事管区，无证闲人禁入。你从南边来？最近边境风声紧，站好队。","汉京怀疑北边在重建旧三八线的工事，可谁都知道，那道线早就没了。","要是你真见过五号设施的东西——立刻报告我。那东西，不该被翻出来。"] ]},
+ {id:"yaba",  name:"哑巴", x:29,y:22, ic:"👴", role:"拾荒者", diag:
+   [["（哑巴指了指北面，又指了指自己的头，比划着“地下、很大”的动作。）","（他在废铁堆里翻出一枚锈透的徽章，塞给你，眼神像是托付什么。）","（夜里，你听见他对着虚空咿咿呀呀地说话，像在和什么人讲价。）"] ]},
+ {id:"hanbo", name:"韩博", x:18,y:58, ic:"👨‍🔬", role:"叛逃科学家", diag:
+   [["我是五号设施的档案员。他们造的不是武器，是记忆。","汉伯·五号——五个容器，五次尝试，为了留住……一场不该被忘掉的战争。","别让汉京发现你来找过我。逃到新川，带着这个芯片。"] ]},
+ {id:"wuhu",  name:"??", x:18,y:60, ic:"👁", role:"??", diag:
+   [["你终于走到源头。","我们五个人，是一场战争的五段记忆。","而你——是最后一段。"] ]},
+];
+const NPC_BY_ID={}; NPCS.forEach(n=>NPC_BY_ID[n.id]=n);
+
+/* ===== 敌人表 ===== */
+const ENEMY_TYPES={
+ bandit:{nm:"劫匪",ic:"🗡",hp:34,dmg:8,speed:1.6,range:1.2,radius:8,zone:["WASTE","RUIN","CAMP"],color:"#d9534f",loot:["scrap","cloth","cig","food_can"],tag:"bandit"},
+ feral: {nm:"受感染者",ic:"🩸",hp:22,dmg:5,speed:2.1,range:1.1,radius:7,zone:["RUIN","WASTE","FOREST"],color:"#7fbf5a",loot:["cloth","scrap","chem"],tag:"feral"},
+ soldier:{nm:"北方哨兵",ic:"🗿",hp:44,dmg:11,speed:1.4,range:2,radius:8,zone:["MIL"],color:"#5aa7ff",loot:["ammo_pistol","ammo_rifle","food_can","med_s"],tag:"soldier",passive:true},
+ ghost: {nm:"灰影",ic:"🌫",hp:52,dmg:14,speed:2.3,range:3,radius:9,zone:["MIL","WASTE","CITY"],color:"#c084fc",loot:["chip","med_stim","energy","doc"],tag:"ghost",story:true},
+ beast: {nm:"野犬",ic:"🐺",hp:16,dmg:6,speed:2.4,range:1.1,radius:6,zone:["FOREST","SAND","GRASS"],color:"#e6b8a8",loot:["food_meat","cloth"],tag:"beast"},
+};
+
+/* ===== 全局状态 ===== */
+let G=null;
+function freshState(){
+  return {
+    mode:null, chapter:0, chaptersDone:[],
+    px:78*TILE+16, py:56*TILE+16,
+    hp:100,hunger:100,water:100,energy:100,sanity:100,money:60,
+    day:1, timeH:7, timeM:0,
+    inv:{food_can:1,water_b:1,knife:1},
+    selInv:0, craftUnlock:{},
+    talk:{}, collected:[], flags:{},
+    kills:{}, npcCount:0, rep:0,
+    npcs:[], enemies:[], items:[], drops:[],
+    questPos:{}, npcPos:{},
+    storyLine:null, lastLoc:null,
+    startKind:null,
+  };
+}
+/* ===== 实体生成 ===== */
+function makeNPC(def,shuffle){
+  let o={id:def.id,name:def.name,ic:def.ic,role:def.role,x:def.x,y:def.y,shop:def.shop||null,
+         heal:def.heal||0,dir:2,state:"idle",t:Math.random()*100};
+  // 用保存的对话进度
+  let lines=def.diag||[];
+  let li=(G.talk[def.id]||0);
+  o.li=li;
+  o.lines=lines;
+  return o;
+}
+function randNPC(){
+  const names=["老陈","阿山","秀儿","大牛","杏儿","福子","二狗","柳条","黑子","文姐","小满","铁蛋","水妹","老根","顺子"];
+  const roles=["拾荒者","货郎","逃难者","守夜人","渔民","厨娘","技工","信差","隐士","商贩"];
+  const nm=names[Math.floor(Math.random()*names.length)];
+  const rl=roles[Math.floor(Math.random()*roles.length)];
+  return {id:"n_"+Math.floor(Math.random()*1e6),name:nm,ic:"🧍",role:rl,x:0,y:0,shop:null,heal:0,
+    rand:true,dir:Math.floor(Math.random()*4),state:"wander",t:Math.random()*100,flavor:flavorLines(rl,nm)};
+}
+function flavorLines(rl,nm){
+  const pool={
+   "拾荒者":[["废土里总能翻出点能卖钱的东西。","别走太北，那边的土都是咸的。","五号设施？哑巴常去那边捡东西，回来就发烧。"],],
+   "逃难者":[["汉京说我们赢了，可我们赢的是哪一场仗？","村里的人，一部分进了城，一部分进了土。","日子比打仗那会儿，也就好这么一点。"],],
+   "守夜人":[["夜里别点太多火。火光会招东西。","哨卡换防是半夜两点，想进城趁那会儿。","我听老周说，那个‘五’字，在汉京是禁忌。"],],
+   "渔民":[["望海港的鱼卖到汉京，一个来回，三天。","海上有时候能看到蓝光，顺流从北边漂下来。","我这辈子见过最大的一网鱼，是 51 年打捞上来的，全是锈。"],],
+   "商贩":[["灰线的东西便宜，但要验货，别信铁生的嘴。","边境上，一条消息能换一顿饭。","你有芯片吗？有人高价收。"],],
+   "技工":[["这发电机是五号设施淘汰的，命硬得很。","废旧零件我有，你拿铁换。","北边那些大机器，夜里会自己响。"],],
+   "信差":[["一封信一个馒头，一封秘密三个。","别把信交给穿蓝制服的人。","到望海港的路，有桥断了，绕渡口。"],],
+   "隐士":[["我见过 51 年的事，不是你们书里写的那样。","那场仗的结尾，改写了整个世界的开头。","汉伯五号……那不是代号，是名字。"],],
+   "厨娘":[["孩子饿，就来找我，一碗热汤收五块钱。","军营的伙食配额，一半喂给了墙上的地图。","北边的土豆比南边的甜，可惜种不活。"],],
+   "守夜人":[]
+  };
+  return pool[rl]||[[nm+"：你好。小心点，这里不太平。"]];
+}
+/* ===== 生成实体 ===== */
+function spawnWorld(){
+  // 命名 NPC
+  G.npcs=[];
+  NPCS.forEach(def=>{ G.npcs.push(makeNPC(def)); });
+  // 随机 NPC（城内/营地/滩涂/平原）
+  let spots=[];
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    let t=grid[y][x];
+    if(t===TER.CITY||t===TER.CAMP||t===TER.BEACH){
+      if(hash(x,y)<0.06){ let o=randNPC(); o.x=x*TILE+16; o.y=y*TILE+16; spots.push(o); }
+    }
+  }
+  // 只保留前 ~22 个，且避开出生地
+  spots=spots.filter(s=>Math.abs(s.x-G.px)>300).slice(0,22);
+  G.npcs.push(...spots);
+  G.npcCount=G.npcs.length;
+  // 敌人（按地带密度）
+  G.enemies=[];
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    let t=grid[y][x];
+    let zone=TNAME[t];
+    let th=hash(x,y);
+    let dens=(zone==="废土"?0.030:(zone==="废墟"?0.028:(zone==="林地"?0.018:(zone==="军管区"?0.020:(zone==="沙地"?0.012:0.004)))));
+    if(th<dens && !(zone==="军管区")){
+      // 选择该地带类型
+      let type;
+      if(zone==="废土"||zone==="废墟") type=(th*100< dens*100*0.6)?"bandit":"feral";
+      else if(zone==="林地") type="beast";
+      else if(zone==="沙地") type="beast";
+      else type="bandit";
+      if(Math.abs(x*TILE+16-G.px)<400) continue;
+      spawnEnemy(type,x*TILE+16,y*TILE+16);
+    }
+  }
+  // 军管区哨兵
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    if(grid[y][x]===TER.MIL && hash2(x,y)<0.012 && Math.abs(x*TILE+16-G.px)>500){
+      spawnEnemy("soldier",x*TILE+16,y*TILE+16);
+    }
+  }
+  // 地面战利品（废墟/废土/营地）
+  G.drops=[];
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    let t=grid[y][x];
+    if((t===TER.RUIN||t===TER.WASTE||t===TER.CAMP)&&hash2(x,y)<0.05){
+      let pool=t===TER.RUIN?["scrap","relic","doc","cloth","food_can","ammo_pistol","chip","tool"]
+                          :(t===TER.CAMP?["food_rice","food_can","water_b","cloth","cig","scrap"]:["scrap","cloth","chem","food_meat"]);
+      let it=pool[Math.floor(Math.random()*pool.length)];
+      G.drops.push({id:it,x:x*TILE+16,y:y*TILE+16});
+    }
+  }
+}
+function spawnEnemy(type,px,py){
+  let e=ENEMY_TYPES[type];
+  G.enemies.push({type,id:"e_"+Math.floor(Math.random()*1e7),nm:e.nm,ic:e.ic,hp:e.hp,max:e.hp,dmg:e.dmg,
+    speed:e.speed,range:e.range,r:e.radius,x:px,y:py,dir:0,state:"idle",t:Math.random()*6,passive:e.passive,aggro:false});
+}
+
+/* ===== 工具函数 ===== */
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+function addInv(id,count){ count=count||1; if(!G.inv[id])G.inv[id]=0; G.inv[id]+=count; if(G.inv[id]<=0)delete G.inv[id]; }
+function hasInv(id){return (G.inv[id]||0)>0;}
+function invCount(id){return G.inv[id]||0;}
+function msg(t){const el=document.getElementById("toast");el.textContent=t;el.classList.add("show");clearTimeout(msg._t);msg._t=setTimeout(()=>el.classList.remove("show"),2200);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+/* ===== 时间 & 生存 ===== */
+function advanceTime(dt){
+  // dt 为真实秒
+  let minutes=dt*2; // 1 秒 = 2 游戏分钟
+  G.timeM+=minutes;
+  while(G.timeM>=60){G.timeM-=60;G.timeH++;if(G.timeH>=24){G.timeH=0;G.day++;}}
+  // 生存消耗（按分钟）
+  let minutesF=dt*2;
+  G.hunger-=0.7*minutesF; G.water-=0.9*minutesF;
+  let moving=(G.moving?1:0);
+  G.energy-=(1.0+ (moving?0.5:0))*minutesF;
+  let h=hour();
+  if(h>=20||h<6) G.sanity-=0.25*minutesF;
+  // 状态溢出
+  if(G.hunger<=0){G.hunger=0;G.hp-=0.5*minutesF;}
+  if(G.water<=0){G.water=0;G.hp-=0.8*minutesF;}
+  if(G.energy<=0){G.energy=0;G.sanity-=0.3*minutesF;}
+  if(G.hp<=0){G.hp=0; die(); }
+  G.hunger=clamp(G.hunger,0,100);G.water=clamp(G.water,0,100);G.energy=clamp(G.energy,0,100);G.sanity=clamp(G.sanity,0,100);
+}
+function hour(){return G.timeH;}
+function isNight(){let h=hour();return h>=20||h<6;}
+function isDawn(){let h=hour();return h>=6&&h<8;}
+function isDusk(){let h=hour();return h>=17&&h<20;}
+function timeStr(){return ("0"+G.day).slice(-3)+"日 " + ("0"+G.timeH).slice(-2)+":"+("0"+G.timeM).slice(-2);}
+
+function die(){
+  msg("你倒下了……这个世界没有存档复活点以外的第二次。");
+  setTimeout(()=>{ openOv("escOv"); },600);
+}
+function healAll(){ G.hp=100;G.hunger=100;G.water=100;G.energy=100;G.sanity=100; }
+function respawn(){ healAll(); G.px=LOC_BY_ID.sinchon.x*TILE+16; G.py=LOC_BY_ID.sinchon.y*TILE+16; G.money=Math.max(G.money,30); }
+
+/* ===== 战斗 ===== */
+function playerAttack(){
+  let wep=currentWeapon();
+  if(!wep){ msg("你赤手空拳"); return; }
+  if(wep.cat==="gun"){
+    let ammo=wep.id==="pistol"?"ammo_pistol":"ammo_rifle";
+    if(!hasInv(ammo)){ msg("没有弹药"); return; }
+    addInv(ammo,-1);
+    // 对瞄准方向最近的敌人射击
+    let bx=G.px+Math.cos(G.aim)*wep.range*TILE, by=G.py+Math.sin(G.aim)*wep.range*TILE;
+    let best=null,bd=1e9;
+    G.enemies.forEach(e=>{
+      let d=segDist(G.px,G.py,bx,by,e.x,e.y);
+      if(d< TILE*0.6+ e.r && d<bd){bd=d;best=e;}
+    });
+    if(best){ damageEnemy(best,wep.dmg); }
+    else msg("打空了");
+    return;
+  }
+  // 近战：打身边敌人
+  let hit=false;
+  G.enemies.forEach(e=>{ if(!hit && dist(G,e)<TILE*1.0){ damageEnemy(e,wep.dmg); hit=true; } });
+  if(!hit) msg("挥空了");
+  G.energy-=2;
+}
+function currentWeapon(){
+  let sel=G.selInv, ids=Object.keys(G.inv).filter(k=>G.inv[k]>0);
+  if(sel>=ids.length)sel=0;
+  let id=ids[sel]||"";
+  let it=itemById(id);
+  return (it&&(it.cat==="weapon"||it.cat==="gun"))?it:null;
+}
+function damageEnemy(e,dmg){
+  e.hp-=dmg; e.aggro=true; e.state="chase"; e.t=0;
+  if(e.hp<=0){ e.hp=0; killEnemy(e); }
+}
+function killEnemy(e){
+  let idx=G.enemies.indexOf(e); if(idx>=0)G.enemies.splice(idx,1);
+  G.kills[e.type]=(G.kills[e.type]||0)+1;
+  let loot=ENEMY_TYPES[e.type].loot;
+  if(loot&&Math.random()<0.55){ G.drops.push({id:loot[Math.floor(Math.random()*loot.length)],x:e.x,y:e.y}); }
+  if(e.type==="bandit"){G.money+=Math.floor(Math.random()*8);}
+  if(e.type==="ghost"&&!G.flags.ghostKilled){G.flags.ghostKilled=true;}
+  if(G.mode==="free"){G.rep+=1;}
+}
+function playerHit(dmg){
+  G.hp-=dmg; if(G.hp<0)G.hp=0;
+  if(Math.random()<0.08)G.sanity-=2;
+  if(G.hp<=0)die();
+}
+/* 线段到点距离（射击判定） */
+function segDist(x1,y1,x2,y2,px,py){
+  let dx=x2-x1,dy=y2-y1;
+  let L2=dx*dx+dy*dy; if(L2===0)return Math.hypot(px-x1,py-y1);
+  let t=clamp(((px-x1)*dx+(py-y1)*dy)/L2,0,1);
+  return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));
+}
+
+/* ===== 敌人 AI ===== */
+function updateEnemies(dt){
+  for(let i=G.enemies.length-1;i>=0;i--){
+    let e=G.enemies[i];
+    e.t+=dt;
+    let d=dist(G,e);
+    let aggroR=isNight()?TILE*7:TILE*5;
+    if(e.passive){
+      if(d<TILE*2.5&&G.flags.fired){e.aggro=true;}
+    } else if(d<aggroR){ e.aggro=true; }
+    if(e.aggro&&d<TILE*1.3){ // 攻击
+      if(e.t>1.0){ playerHit(e.dmg); e.t=0; e.state="attack"; }
+      e.state="attack";
+    } else if(e.aggro){ // 追击
+      let dx=G.px-e.x,dy=G.py-e.y, dl=Math.hypot(dx,dy)||1;
+      let nx=dx/dl,ny=dy/dl;
+      let nx2=e.x+nx*e.speed*dt*TILE*0.6, ny2=e.y+ny*e.speed*dt*TILE*0.6;
+      if(passable(Math.floor(nx2/TILE),Math.floor(ny2/TILE))){e.x=nx2;e.y=ny2;}
+      e.state="chase";
+    } else { // 游荡
+      if(e.t>3&&Math.random()<0.3){
+        let ang=Math.random()*6.28; let nx2=e.x+Math.cos(ang)*TILE*0.8,ny2=e.y+Math.sin(ang)*TILE*0.8;
+        if(passable(Math.floor(nx2/TILE),Math.floor(ny2/TILE))){e.x=nx2;e.y=ny2;}
+        e.t=0;
+      }
+      e.state="idle";
+    }
+  }
+}
+/* ===== 交互 / 对话 ===== */
+let dlgCtx=null; // {npc, session, line}
+function nearestNPC(){ let b=null,bd=1e9; G.npcs.forEach(n=>{let d=dist(G,n);if(d<bd){bd=d;b=n;}}); return bd<TILE*1.5?b:null; }
+function nearestDrop(){ let b=null,bd=1e9; G.drops.forEach(d=>{let dd=dist(G,d);if(dd<bd){bd=dd;b=d;}}); return bd<TILE*1.2?b:null; }
+function interact(){
+  let n=nearestNPC();
+  if(n){ startDialogue(n); return; }
+  let d=nearestDrop();
+  if(d){ pickDrop(d); return; }
+  let its=groundItem();
+  if(its){ pickItemTile(its); return; }
+  msg("这里没有可以互动的东西");
+}
+function pickDrop(d){
+  let it=itemById(d.id);
+  addInv(d.id,1);
+  G.drops.splice(G.drops.indexOf(d),1);
+  if(it&&it.cat==="quest"){G.collected.push(d.id);}
+  msg("拾取："+(it?it.nm:d.id));
+}
+// 地面战利品块（同坐标合并渲染用）
+function groundItem(){ return null; }
+function pickItemTile(t){}
+
+function startDialogue(n){
+  dlgCtx={npc:n,session:0,line:0};
+  let def=findNpcDef(n.id);
+  // 随机 NPC 用自身 flavor
+  renderDialogue();
+  openOv("dlgOv");
+  if(n.rand){ G.talk[n.id]=(G.talk[n.id]||0); }
+}
+function findNpcDef(id){ return NPC_BY_ID[id]||null; }
+function currentLines(n){
+  if(n.rand){ return [n.flavor[Math.floor(Math.random()*n.flavor.length)]]; }
+  let def=findNpcDef(n.id); if(!def)return [];
+  let groups=def.diag;
+  let gi=(G.talk[n.id]||0)%groups.length;
+  return groups[gi];
+}
+function renderDialogue(){
+  let n=dlgCtx.npc;
+  let lines=currentLines(n);
+  let who=document.getElementById("dlgWho");
+  let body=document.getElementById("dlgBody");
+  let opts=document.getElementById("dlgOpts");
+  who.textContent=n.ic+"  "+n.name+" · "+n.role;
+  let li=clamp(dlgCtx.line,0,lines.length-1);
+  body.textContent=lines[li];
+  opts.innerHTML="";
+  let end=lines.length-1;
+  let def=findNpcDef(n.id);
+  function addOpt(label,key,fn){
+    let b=document.createElement("button");b.className="opt";
+    b.innerHTML='<span class="key">'+key+'</span>'+label;
+    b.onclick=fn; opts.appendChild(b);
+  }
+  // 继续
+  addOpt(dlgCtx.line<end?("继续说 "+n.name):"（结束对话）",dlgCtx.line<end?"E":"→",()=>{
+    if(dlgCtx.line<end){ dlgCtx.line++; renderDialogue(); }
+    else{ advanceTalk(n); closeOv("dlgOv"); }
+  });
+  // 交易
+  if(def&&def.shop){ addOpt("交易","T",()=>{ openTrade(n); }); }
+  // 治疗
+  if(def&&def.heal){ addOpt("治疗（30 元）","H",()=>{ if(G.money>=30){G.money-=30;G.hp=Math.min(100,G.hp+60);G.sanity=Math.min(100,G.sanity+15);msg("苏英为你包扎，生命恢复。");}else{msg("钱不够");} }); }
+  // 剧情 NPC 交付
+  storyTalkHooks(n);
+}
+function advanceTalk(n){
+  if(n.rand)return;
+  G.talk[n.id]=(G.talk[n.id]||0)+1;
+}
+function storyTalkHooks(n){
+  let chap=G.chapter;
+  let def=findNpcDef(n.id);
+  let opts=document.getElementById("dlgOpts");
+  function add(label,fn){let b=document.createElement("button");b.className="opt";b.textContent=label;b.onclick=fn;opts.appendChild(b);}
+  // 韩博交付芯片
+  if(def&&def.id==="hanbo"&&chap===1&&!G.flags.gotChip){
+    add("【剧情】韩博把一枚芯片塞进你手里",()=>{
+      addInv("chip",1); G.flags.gotChip=true; msg("获得：数据芯片"); closeOv("dlgOv"); addSuspense(1);
+    });
+  }
+  if(def&&def.id==="hanbo"&&chap===3&&!G.flags.hanboSecret){
+    add("【剧情】追问五号设施的真相",()=>{
+      G.flags.hanboSecret=true; G.flags.talk_hanbo=true; msg("韩博压低声音说出了几个名字……");
+      closeOv("dlgOv");
+    });
+  }
+}
+function addSuspense(n){ G.flags["suspense_"+n]=true; }
+function openTrade(n){
+  let def=findNpcDef(n.id); if(!def)return;
+  dlgCtx={npc:n,trade:true};
+  let opts=document.getElementById("dlgOpts"); opts.innerHTML="";
+  let body=document.getElementById("dlgBody");
+  body.textContent="—— "+(def.shop?"货摊":"铺面")+" ——  你有 "+G.money+" 元";
+  document.getElementById("dlgWho").textContent=n.name+" · 交易";
+  function add(l,f){let b=document.createElement("button");b.className="opt";b.innerHTML='<span class="key">·</span>'+l;b.onclick=f;opts.appendChild(b);}
+  add("← 返回对话",()=>{ dlgCtx.line=0; renderDialogue(); });
+  // 买入
+  (def.shop||[]).forEach(id=>{
+    let it=itemById(id);
+    add("买入　"+it.nm+"（"+it.price+" 元）",()=>{
+      if(G.money>=it.price){ G.money-=it.price; addInv(id,1); msg("买入："+it.nm); openTrade(n); }
+      else msg("钱不够");
+    });
+  });
+  // 卖出
+  Object.keys(G.inv).forEach(id=>{
+    let it=itemById(id); if(!it||it.cat==="quest")return;
+    let pr=Math.floor(it.price/2);
+    add("卖出　"+it.nm+" x"+G.inv[id]+"（"+pr+" 元/个）",()=>{
+      addInv(id,-1); G.money+=pr; msg("卖出："+it.nm); openTrade(n);
+    });
+  });
+}
+
+/* ===== 背包 ===== */
+function renderInv(){
+  let g=document.getElementById("invGrid"); g.innerHTML="";
+  let ids=Object.keys(G.inv).filter(k=>G.inv[k]>0);
+  if(!ids.length){g.innerHTML='<div style="color:var(--dim);font-size:13px;">背包空空如也</div>';return;}
+  ids.forEach((id,ix)=>{
+    let it=itemById(id); if(!it)return;
+    let d=document.createElement("div"); d.className="iItem"+(ix===G.selInv?" sel":"");
+    d.innerHTML='<div class="ic">'+it.ic+'</div><div class="nm">'+it.nm+'</div><div class="cnt">x'+G.inv[id]+'</div>';
+    d.onclick=()=>{ G.selInv=ix; useItem(id); };
+    g.appendChild(d);
+  });
+}
+function useItem(id){
+  let it=itemById(id); if(!it)return;
+  if(it.cat==="food"){ G.hunger=Math.min(100,G.hunger+it.hunger);G.water=Math.min(100,G.water+(it.water||0));G.sanity=Math.min(100,G.sanity+(it.sanity||0)); addInv(id,-1); msg("吃了 "+it.nm); }
+  else if(it.cat==="water"){ G.water=Math.min(100,G.water+it.water); addInv(id,-1); msg("喝了 "+it.nm); }
+  else if(it.cat==="med"){ G.hp=Math.min(100,G.hp+it.hp); if(it.energy)G.energy=Math.min(100,G.energy+it.energy); if(it.sanity)G.sanity=Math.min(100,G.sanity+it.sanity); addInv(id,-1); msg("使用 "+it.nm); }
+  else if(it.cat==="energy"){ G.energy=Math.min(100,G.energy+it.energy); G.sanity=Math.max(0,G.sanity+(it.sanity||0)); addInv(id,-1); msg("使用 "+it.nm); }
+  else if(it.cat==="tonic"){ G.sanity=Math.min(100,G.sanity+it.sanity); addInv(id,-1); msg("镇定剂生效，理智恢复"); }
+  else if(it.cat==="weapon"){ G.selInv=Object.keys(G.inv).filter(k=>G.inv[k]>0).indexOf(id); msg("装备了 "+it.nm); }
+  else if(it.cat==="gun"){ G.selInv=Object.keys(G.inv).filter(k=>G.inv[k]>0).indexOf(id); msg("装备了 "+it.nm); }
+  else { msg(it.nm+"（任务/材料道具）"); }
+  renderInv(); updateHUD();
+}
+
+/* ===== 制造（简易） ===== */
+function canCraft(id){ let it=itemById(id); if(!it||!it.craft)return false; return it.craft.every(c=>hasInv(c)); }
+function craft(id){ let it=itemById(id); if(!canCraft(id)){msg("材料不足");return;} it.craft.forEach(c=>addInv(c,-1)); addInv(id,1); G.craftUnlock[id]=true; msg("制造："+it.nm); renderInv(); updateHUD(); }
+function openCraft(){
+  let opts=document.getElementById("dlgOpts");
+  let body=document.getElementById("dlgBody");
+  body.textContent="—— 简易工坊 ——  需要的材料：木料/废铁/布料";
+  document.getElementById("dlgWho").textContent="工坊";
+  opts.innerHTML="";
+  function add(l,f){let b=document.createElement("button");b.className="opt";b.onclick=f;b.innerHTML='<span class="key">·</span>'+l;opts.appendChild(b);}
+  add("← 返回",()=>{ dlgCtx={npc:null}; closeOv("dlgOv"); });
+  ["food_meat","med_s","water_c"].forEach(id=>{
+    let it=itemById(id);
+    let ok=canCraft(id);
+    add((ok?"[可] ":"[缺] ")+it.nm+"（"+(it.craft||[]).join("+")+"）",()=>{ craft(id); openCraft(); });
+  });
+}
+/* ===== 主线剧情（整年 13 章，可逐月连载解锁） ===== */
+const STORY=[
+ {id:1,title:"暗潮",tag:"第一章 · 新川市",
+  intro:[
+   "反转后的第 73 年。你活在新川市——汉京共和国北境的前线港口城。",
+   "这里没有三八线，只有一条更北的、被地图上叫做『新战线』的东西。1951 年南方赢得了战争，可赢的方式，让整个国家都带着一道看不见的伤。",
+   "今天清晨，你从工棚醒来，枕边多了一封信。没有邮戳，没有署名，只有一行字：『第五位，去老周那儿，有人在等。』",
+   "你想起昨晚值班室那台早该报废的电台——它在你转身时，突然用你的名字叫了你一声。"
+  ],
+  recap:"主角收到匿名信，卷入新川市的暗流；值班电台竟喊出你的名字。",
+  tasks:[
+   {t:"talk",npc:"zhou",label:"去老周那儿打听消息"},
+   {t:"collect",item:"chip",n:1,label:"从韩博处取得数据芯片"},
+  ],
+  cliffTitle:"「它叫了你的名字」",
+  cliffText:"深夜，你把韩博给的芯片插进工棚的旧读卡器。屏幕没有亮起任何档案——只缓缓浮出一句话：『你不是你。』随即，屋外传来整齐的、军靴踏过积水的脚步声，越来越近，停在你门口。",
+  next:"下一章：第二章『灰线』——铁生有个活儿，危险，但报酬好得可疑。"},
+ {id:2,title:"灰线",tag:"第二章 · 走私网络",
+  intro:[
+   "军靴声是巡防，你躲过了。但芯片那句『你不是你』像根钉子，扎在脑子里拔不掉。",
+   "铁生找到你：灰线有一单货，走三河镇的老路运到望海港，押货人是空着的位置。报酬足够你在城里活三个月。",
+   "你接过货箱。很轻，但里面有温度——像有什么活着的东西，在箱子里均匀地呼吸。"
+  ],
+  recap:"主角替灰线押货，货物是一台会『呼吸』的装置。",
+  tasks:[
+   {t:"goto",loc:"wanghai",r:3,label:"把货押到望海港"},
+   {t:"talk",npc:"milan",label:"米兰认出了货物"},
+  ],
+  cliffTitle:"「箱子里的呼吸声」",
+  cliffText:"交货时，米兰低声说：『这箱子里的，是五号设施的排出口，一个星期前被掏空了。』你刚想问，箱子内部突然亮起幽幽的蓝光，一个沙哑的声音贴着箱壁说——『帮我。』",
+  next:"下一章：第三章『汉伯』——韩博约你见面，说有重要的事。"},
+ {id:3,title:"汉伯",tag:"第三章 · 叛逃者",
+  intro:[
+   "你把箱子留在望海港的仓库，但夜里它自己响了三次。",
+   "韩博通过灰线递来口信：务必见面，他在五号设施山脚下的旧矿工宿舍等你。他说『汉伯』不是代号，是个计划，而你是它的第五个——最后一个。",
+   "你赶到时，韩博正在往炉子里烧文件。他说：『汉京赢了 1951 年，赢得不干净。他们用五段记忆，把这场战争焊进了这个国家的骨头里。』"
+  ],
+  recap:"韩博揭露『汉伯』是记忆封存计划，主角是第五个容器。",
+  tasks:[
+   {t:"goto",loc:"sitefive",r:3,label:"前往五号设施山脚"},
+   {t:"talk",npc:"hanbo",label:"与韩博对谈"},
+  ],
+  cliffTitle:"「七个名字，六张脸」",
+  cliffText:"韩博刚要把最关键的名单念给你听，一枚冷弹击穿窗玻璃，正中他的胸口。他倒下前，把一枚钥匙压进你手心，用气声说完最后两个字——『记住。』门外，穿灰色长风衣的人影消失在浓雾里。名单被火焰吞掉了六个字，只剩下第一个名字：它属于你。",
+  next:"下一章：第四章『五号』——五处站点，五个容器，真相开始坍缩。"},
+ {id:4,title:"五号",tag:"第四章 · 容器",
+  intro:[
+   "你继承了韩博的钥匙与执念。他烧掉的文件，你从灰烬里抢救出一角：一张工程图，标注着五处『容器站点』，以及一份从未公开的名单——五号一栏，是你的名字，拍摄时间写着 1951 年 7 月。",
+   "那一年你还没出生。可照片里的人，就是你。",
+   "你决定在军方封堵前，抢先摸清五处站点的位置。旧档案、铁生的情报、哑巴的呓语，一点点拼出一张地图。"
+  ],
+  recap:"主角发现五号容器名单上有自己 1951 年的照片。",
+  tasks:[
+   {t:"collect",item:"doc",n:1,label:"从废土废墟收集一份旧档案"},
+   {t:"explore",loc:"oldfield",r:3,label:"踏足老战场遗址"},
+   {t:"kill",type:"bandit",n:2,label:"清除沿途劫匪"},
+  ],
+  cliffTitle:"「照片里的 1951」",
+  cliffText:"在老战场一座塌陷的地堡里，你挖出一块密封的铭牌，牌上压印着一组编号，编号下面，是一张与你一模一样的脸，以及一行被磨损的字：『五号 · 载体 · 失忆再生 · 1951—』后面的年份是空白。你在发抖——照片里那人穿的是北军的军服。",
+  next:"下一章：第五章『镜像』——北边，也有一套一模一样的五号。"},
+ {id:5,title:"镜像",tag:"第五章 · 北方",
+  intro:[
+   "北军的军服。这个信息像一盆冰水浇在头上。你越往北探，就越发现：三河镇以北的废土，埋着一座被拆掉一半的姊妹城，结构和你长大的新川几乎一样。",
+   "夜里，你在断墙边遇见一个背着同样铭牌的人。他抬头的瞬间，你看见了——一张和你完全相同的脸。",
+   "他先开口，叫出了你的名字。"
+  ],
+  recap:"主角在北境遇到自己的『镜像』，同样背负五号。",
+  tasks:[
+   {t:"goto",loc:"samha",r:3,label:"深入三河镇以北"},
+   {t:"explore",loc:"yiyuan",r:4,label:"靠近北境记忆金库的入口"},
+  ],
+  cliffTitle:"「另一个你」",
+  cliffText:"镜像人缓缓拉开领口，露出和你一模一样的铭牌编号。他说：『我才是五号。汉京造了你，让我以为你是我。』话音未落，北境的天际亮起一排探照灯，装甲车引擎的轰鸣自远而近——一场为你们两个人准备的围猎，开始了。",
+  next:"下一章：第六章『断线』——边境封锁，新川与外界失联。"},
+ {id:6,title:"断线",tag:"第六章 · 封锁",
+  intro:[
+   "边境风暴一夜之间爆发。汉京单方面宣布『北境安全行动』，新川、铁山、三河一线进入戒严，通信中断，海陆检查站全部封死。",
+   "你被困在这片成了孤岛的土地上。广播只剩一个重复的男声：『请公民就地避难。重申：任何人不得谈论五号设施。』",
+   "铁生叛了，把灰线的账本交给了军方换一条生路；苏英在诊所门口挂起红旗，收治所有受伤的人；崔队长领兵封锁了你最后的出口。",
+   "而那只从望海港回来的蓝光箱子，又一次在半夜说话了。这次它说的，是你小时候没人知道的秘密。"
+  ],
+  recap:"边境戒严，新川沦为孤岛，铁生叛变，箱子道出主角的秘密。",
+  tasks:[
+   {t:"goto",loc:"sinchon",r:4,label:"回到封锁中的新川市"},
+   {t:"collect",item:"food_meat",n:1,label:"在物资匮乏中想办法弄到食物"},
+   {t:"kill",type:"ghost",n:1,label:"击退一名灰影"},
+  ],
+  cliffTitle:"「它知道你的童年」",
+  cliffText:"蓝光箱子说出了你六岁那年独自走失、被一名老兵捡回的事——这件事，只有你和那名老兵知道。而老兵，就是老周。你猛地意识到：这只箱子里装的，是你自己的记忆。五号容器不是武器，是你。",
+  next:"下一章：第七章『守夜』——神秘组织现身，自称是『汉伯』的记忆。"},
+ {id:7,title:"守夜",tag:"第七章 · 围城",
+  intro:[
+   "封锁的第 21 天。城内断粮，秩序像沙一样从指缝漏走。你在诊所与老周之间往来，成了一名守夜人——夜里，你守着睡去的人，也守着那只装着你自己记忆的蓝光箱子。",
+   "一个穿灰长风衣的人终于在你面前停下，摘下兜帽：是那个击毙韩博的人。她自称『汉伯』。",
+   "不是组织的代号。她说：『汉伯是一个被切割成五份的脑子。我是第一段——决策。韩博是第三段，背叛。你是第五段，真相。我们加在一起，才是那个赢了 1951 年的人。』"
+  ],
+  recap:"灰影首领现身：『汉伯』是一个被切成五段的记忆体，主角是第五段。",
+  tasks:[
+   {t:"talk",npc:"suying",label:"安顿伤员，换取医疗物资"},
+   {t:"collect",item:"med_s",n:1,label:"设法制作或获得绷带"},
+   {t:"kill",type:"bandit",n:3,label:"守住城内的防线"},
+  ],
+  cliffTitle:"「汉伯是一个人」",
+  cliffText:"她递给你一枚旧式军表，表面刻着五道平行线。『第五段，你想起来的时候，就是汉伯醒来的时候。』她说罢转身消失在黑暗中。你低头，军表背面用指甲刻着一行字，是你自己的笔迹，可你从没写过它：『别让他们拼出完整的我。』",
+  next:"下一章：第八章『源点』——重返五号设施，直面五号本体。"},
+ {id:8,title:"源点",tag:"第八章 · 设施",
+  intro:[
+   "封锁因不明命令而松动了一角。你趁夜色潜出城，穿过铁山军事区的侧翼，摸回五号设施。",
+   "韩博烧掉的文件不完整，但设施内部完好如新。穿过三道需要钥匙的闸门，你终于站在中央大厅里。",
+   "大厅正中，悬浮着一个巨大、缓慢搏动的蓝色晶体——它像心脏一样跳动。你手中的军表开始发烫，晶体表面浮出你的脸。",
+   "『欢迎回家，第五位。』一个不属于任何人的声音，从晶体内部传来。"
+  ],
+  recap:"主角重返五号设施，直面『五号』本体——一枚搏动的记忆晶体。",
+  tasks:[
+   {t:"goto",loc:"sitefive",r:3,label:"潜入五号设施核心"},
+   {t:"collect",item:"key",n:1,label:"用韩博的钥匙打开三道闸门"},
+   {t:"kill",type:"ghost",n:2,label:"清除设施守卫"},
+  ],
+  cliffTitle:"「晶体里的脸」",
+  cliffText:"晶体中不只是你。你看见 1951 年那场被你遗忘的『决战』——没有号角，没有旗帜，只有满天的蓝光，和五具被钉在金属架上的躯体。晶体低语：『他们不让我们记住。可我替你们记着。战争没有反转，它只是被藏起来了。』",
+  next:"下一章：第九章『忆渊』——北境冻土下的记忆金库，藏着反转的真相。"},
+ {id:9,title:"忆渊",tag:"第九章 · 金库",
+  intro:[
+   "晶体没有钥匙，它说钥匙在北边：『忆渊』，北境冻土下的一座记忆金库，那里存着战争真正的结局。",
+   "你穿过三河镇，越过大半个废土，在一个被雪山环绕的断崖下找到它。入口没有门，只有一扇冻结的、刻满编号的墙。",
+   "墙上的编号，与你的铭牌一一对应。最后一格空着——那是留给五号的。"
+  ],
+  recap:"主角抵达北境『忆渊』，记忆金库的钥匙就是主角自己。",
+  tasks:[
+   {t:"goto",loc:"yiyuan",r:3,label:"抵达忆渊"},
+   {t:"collect",item:"relic",n:1,label:"收集战前遗物作为信物"},
+   {t:"kill",type:"feral",n:3,label:"突破冻土的守门者"},
+  ],
+  cliffTitle:"「钥匙是你」",
+  cliffText:"当你把手按上那最后一格，冻结的墙轰然碎裂，无数画面涌进你的脑海——不是回忆，而是别人的回忆：铁山指挥官的、三河老兵的、望海港渔民的、还有你自己的。1951 年的真相像洪水一样把你冲垮：这场战争，从来不是输赢的问题，是记忆的争夺。而你就是被选中保留那最后一段记忆的人。",
+  next:"下一章：第十章『潮涌』——真相让世界开始松动。"},
+ {id:10,title:"潮涌",tag:"第十章 · 变局",
+  intro:[
+   "你带着忆渊的记忆回到废土时，世界已经变了。",
+   "汉京内部爆出『记忆工程』的丑闻，北境的姊妹政权同一天承认他们也造了一整套『汉伯』。两个国家的广播第一次同时安静下来，像两头猛兽隔着一条河，对视。",
+   "灰影女声在广播里给你留了话：『五号，无论你想起什么，别让两边的记忆融合。一融合，汉伯就完整了——完整的汉伯，就是 1951 年那个想继续打仗的人。』",
+   "老周找到你，老泪纵横：『我捡到你的那天，你口袋里也有一枚北军铭牌。我替你藏了 70 年。』"
+  ],
+  recap:"真相公开，南北同时承认记忆工程；老周道出主角身世的最后一块拼图。",
+  tasks:[
+   {t:"talk",npc:"zhou",label:"与老周对谈，取回身世证物"},
+   {t:"collect",item:"chip",n:1,label:"取得一枚北方记忆芯片"},
+   {t:"goto",loc:"huixian",r:3,label:"前往灰线营重整力量"},
+  ],
+  cliffTitle:"「70 年的铭牌」",
+  cliffText:"老周颤抖着把那枚北军铭牌交还给你。背面，与忆渊墙面一样的编号，但多了一行新刻的、很新的字：『第五位，第二次机会。』——这是你亲手刻的。可你不记得刻过它。灰影的警告在你耳边回响：两边记忆一旦融合，汉伯就完整了。而你，是唯一握着选择权的人。",
+  next:"下一章：第十一章『双子』——南北两套五号，必须抹掉一个。"},
+ {id:11,title:"双子",tag:"第十一章 · 双生",
+  intro:[
+   "北方传来密电：他们的『五号』也活了，也在向边境移动。两枚晶体，两个你，隔着一条河同时搏动。",
+   "灰影告诉你最后的选择：汉伯计划是一场双生——南北各造了一套记忆，为的是有朝一日『优胜劣汰』。要终止这一切，必须让其中一枚晶体彻底失效。",
+   "而能让晶体失效的唯一方法，是载体——你——亲手把自己那段记忆，交出去，或被抹掉。",
+   "边境线上，你的镜像站在那里，手里捧着那枚北境的蓝色晶体。"
+  ],
+  recap:"南北双生，主角必须在『交出记忆』与『抹除自身』之间抉择。",
+  tasks:[
+   {t:"goto",loc:"oldfield",r:3,label:"前往边境对峙点"},
+   {t:"kill",type:"soldier",n:1,label:"突破南北对峙的封锁线"},
+   {t:"explore",loc:"samha",r:4,label:"走向你的镜像"},
+  ],
+  cliffTitle:"「两枚心脏」",
+  cliffText:"你和你的镜像同时开口，说出同一句话：『记忆可以交换。』你忽然明白——这不是要抹掉谁，而是两个残缺的汉伯，要用对方的记忆拼成完整的一个。可完整的汉伯若继承了『继续打仗』的意志，这片土地将永无宁日。你们之间，必须有人拒绝。",
+  next:"终章：第十二章『拂晓』——最后的抉择，边境的黎明。"},
+ {id:12,title:"拂晓",tag:"终章 · 抉择",
+  intro:[
+   "黎明前，边境线被两边的军队同时照亮。汉京的装甲车从南边开来，北境的残军在废墟后布防。",
+   "你的镜像捧着晶体，问你：『第五位，你选择成为什么？』",
+   "选项摆在你面前：让记忆融合，汉伯苏醒——它会记得战争，也记得和平，成为这片土地的新神，也可能成为新的暴君；或者，让两枚晶体同时熄灭，所有人忘记一切，包括你——世界将回到没有记忆的、普通的战争与和平。",
+   "你的手按在那枚刻着『第二次机会』的军表上。"
+  ],
+  recap:"终局：主角做出决定世界命运的选择。",
+  tasks:[
+   {t:"kill",type:"ghost",n:3,label:"守住黎明前的最后阵线"},
+   {t:"collect",item:"relic",n:2,label:"集齐两段历史的信物"},
+   {t:"talk",npc:"wuhu",label:"与『五号』本体做最后对话"},
+  ],
+  cliffTitle:"「拂晓的钟声」",
+  cliffText:"你做出选择的那一刻，边境的天空同时裂开两道光——南方的蓝，北方的白。你听见 70 年前那场决战的声音，也听见未来某个普通清晨菜市场的吆喝。记忆在交汇，汉伯在苏醒。你最后握住的手，是老周那只布满老茧的手。然后，你听见一句话，来自你自己——『这次，换我来记住。』",
+  next:"终章已解锁：第十三章『FIVE』——一年之后，新的故事开始。"},
+ {id:13,title:"FIVE",tag:"终章 · 一年之后",
+  intro:[
+   "一年后，边境的硝烟散成了寻常的雾。",
+   "新川市的集市恢复了喧闹，苏英的诊所挂起了新招牌，老周在河边的茶摊打盹。没人记得 1951 年那场被藏起来的决战——至少表面上如此。",
+   "汉伯没有苏醒，也没有熄灭。它变成了一个缓慢转动的、普通的钟——每天清晨，在新川最高的烟囱上，准时报时。",
+   "而你，在一年里收到过三次同样的信：没有邮戳，只有一行字——『第五位，他们开始动工了。』",
+   "你在旧市场的地摊上，看到一枚新刻的、与你的铭牌一模一样、却印着『五号 · 新一代』的徽章。那东西，还没被任何人戴上。"
+  ],
+  recap:"一年后世界重归平静，但新的『五号』已开始铸造。",
+  tasks:[
+   {t:"goto",loc:"sinchon",r:3,label:"回到一年后的新川市"},
+   {t:"talk",npc:"zhou",label:"与老周喝最后一杯茶"},
+   {t:"collect",item:"doc",n:1,label:"收集那份新的铸造记录"},
+  ],
+  cliffTitle:"「他们开始动工了」",
+  cliffText:"茶摊上，老周忽然压低声音：『你看那枚新徽章，编号 5A。』你顺着他的目光望去——一名年轻士兵正别上那枚徽章，他的脸，和你年轻时一模一样。老周叹了口气：『战争会忘，可锻造战争的手，不会忘。』烟囱上的钟，第一次，停了一秒。第二年的故事，从这一秒开始。",
+  next:"—— 第一年剧情完 —— 玩家可按月解锁新章节，续写第二年。"},
+];
+/* 第一章可用，其余按进度解锁（连载模式可改为逐月） */
+const STORY_BY_ID={}; STORY.forEach(c=>STORY_BY_ID[c.id]=c);
+
+function chapterTasks(c){
+  let out=[];
+  c.tasks.forEach((t,i)=>{
+    let done=G.flags["td_"+c.id+"_"+i];
+    let ok=evalTask(t);
+    if(ok&&!done){G.flags["td_"+c.id+"_"+i]=true;done=true;}
+    out.push({t,done});
+  });
+  return out;
+}
+function evalTask(t){
+  switch(t.t){
+    case "goto": case "explore": {
+      let loc=LOC_BY_ID[t.loc]; if(!loc)return true;
+      return Math.hypot(G.px-loc.x*TILE,G.py-loc.y*TILE)< (t.r||3)*TILE*1.2;
+    }
+    case "talk": return !!G.flags["talk_"+t.npc] || (G.talk[t.npc]||0)>0;
+    case "collect": return invCount(t.item)>=(t.n||1);
+    case "kill": return (G.kills[t.type]||0)>=(t.n||1);
+    case "flag": return !!G.flags[t.flag];
+  }
+  return false;
+}
+function updateStory(){
+  if(G.mode!=="story")return;
+  let c=STORY[G.chapter];
+  if(!c)return;
+  let tasks=chapterTasks(c);
+  let allDone=tasks.every(o=>o.done);
+  if(allDone && !G.flags["chdone_"+c.id]){
+    G.flags["chdone_"+c.id]=true;
+    G.chaptersDone.push(c.id);
+    G.chapter++;
+    showCliff(c);
+    autoSave();
+  }
+}
+function showCliff(c){
+  document.getElementById("cliffTitle").textContent=c.cliffTitle;
+  document.getElementById("cliffBody").textContent=c.cliffText+"\n\n"+c.next;
+  document.getElementById("cliffNext").textContent="章节已存档 · 剧情日志可回顾 · 逐月连载可续写";
+  openOv("cliffOv");
+}
+/* ===== 渲染 ===== */
+let cv,ctx,mcv,mctx,mapCanvas,mapCtx;
+let camX=0,camY=0, W=0,H=0;
+const TER_COLOR={
+ 0:"#173a52",1:"#c8b37a",2:"#4f7a3a",3:"#3f6b33",4:"#5a5f68",5:"#8a93a0",6:"#2f343c",7:"#7a6236",8:"#6b6046",9:"#8a7040",10:"#5a4a3a",11:"#d8c68a"
+};
+function render(){
+  ctx.clearRect(0,0,W,H);
+  let cx=Math.floor((G.px)/TILE), cy=Math.floor(G.py/TILE);
+  camX=G.px-W/2; camY=G.py-H/2;
+  let x0=Math.max(0,Math.floor(camX/TILE)-1), x1=Math.min(MW-1,Math.ceil((camX+W)/TILE)+1);
+  let y0=Math.max(0,Math.floor(camY/TILE)-1), y1=Math.min(MH-1,Math.ceil((camY+H)/TILE)+1);
+  // 地形
+  for(let y=y0;y<=y1;y++){
+    for(let x=x0;x<=x1;x++){
+      let t=grid[y][x];
+      let sx=Math.round(x*TILE-camX), sy=Math.round(y*TILE-camY);
+      ctx.fillStyle=TER_COLOR[t];
+      ctx.fillRect(sx,sy,TILE,TILE);
+      decor(x,y,t,sx,sy);
+      // 边界描边
+      ctx.strokeStyle="rgba(0,0,0,.18)";ctx.lineWidth=1;ctx.strokeRect(sx+.5,sy+.5,TILE-1,TILE-1);
+    }
+  }
+  // 地点旗帜
+  LOCATIONS.forEach(l=>{
+    let sx=Math.round(l.x*TILE+16-camX), sy=Math.round(l.y*TILE+16-camY);
+    if(sx<-40||sy<-40||sx>W+40||sy>H+40)return;
+    drawLocFlag(l,sx,sy);
+  });
+  // 地面战利品
+  G.drops.forEach(d=>{
+    let sx=Math.round(d.x-camX), sy=Math.round(d.y-camY);
+    if(sx<-20||sy<-20||sx>W+20||sy>H+20)return;
+    let it=itemById(d.id);
+    ctx.font="14px monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillStyle="#fff";ctx.globalAlpha=.85;ctx.fillText(it?it.ic:"?",sx,sy);
+    ctx.globalAlpha=1;
+  });
+  // NPC
+  G.npcs.forEach(n=>{
+    let sx=Math.round(n.x-camX), sy=Math.round(n.y-camY);
+    if(sx<-24||sy<-24||sx>W+24||sy>H+24)return;
+    drawNpc(n,sx,sy);
+  });
+  // 敌人
+  G.enemies.forEach(e=>{
+    let sx=Math.round(e.x-camX), sy=Math.round(e.y-camY);
+    if(sx<-24||sy<-24||sx>W+24||sy>H+24)return;
+    drawEnemy(e,sx,sy);
+  });
+  // 玩家
+  drawPlayer();
+  // 昼夜
+  if(isNight()){
+    ctx.fillStyle="rgba(6,10,24,0.5)";ctx.fillRect(0,0,W,H);
+    let grd=ctx.createRadialGradient(G.px-camX,G.py-camY,20,G.px-camX,G.py-camY,220);
+    grd.addColorStop(0,"rgba(255,200,120,0.20)");grd.addColorStop(1,"rgba(6,10,24,0)");
+    ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+  } else if(isDusk()||isDawn()){
+    ctx.fillStyle="rgba(200,120,40,0.10)";ctx.fillRect(0,0,W,H);
+  }
+}
+function decor(x,y,t,sx,sy){
+  let h=hash(x,y), h2=hash2(x,y);
+  if(t===TER.FOREST){ if(h<0.5){ ctx.fillStyle="rgba(20,40,22,0.9)";ctx.fillRect(sx+5,sy+5,TILE-10,TILE-10);} }
+  else if(t===TER.CITY){ if(h<0.4){ ctx.fillStyle="rgba(40,45,55,0.95)";ctx.fillRect(sx+3,sy+3,TILE-6,TILE-6); ctx.fillStyle="rgba(120,132,150,0.7)";ctx.fillRect(sx+6,sy+6,4,4);ctx.fillRect(sx+TILE-11,sy+6,4,4);} }
+  else if(t===TER.MIL){ if(h<0.6){ ctx.strokeStyle="rgba(90,70,30,0.9)";ctx.lineWidth=2;ctx.strokeRect(sx+4,sy+4,TILE-8,TILE-8);} }
+  else if(t===TER.RUIN){ if(h<0.5){ ctx.fillStyle="rgba(30,24,18,0.9)";ctx.fillRect(sx+4,sy+6,10,8);ctx.fillRect(sx+16,sy+10,9,9);} }
+  else if(t===TER.WASTE){ if(h2<0.2){ctx.fillStyle="rgba(20,20,16,0.6)";ctx.fillRect(sx+6,sy+6,6,6);} }
+  else if(t===TER.CAMP){ if(h<0.4){ctx.fillStyle="rgba(60,40,20,0.85)";ctx.fillRect(sx+4,sy+4,TILE-8,TILE-8);} }
+  else if(t===TER.WATER){ if(h<0.18){ctx.fillStyle="rgba(255,255,255,0.10)";ctx.fillRect(sx+6,sy+6,4,4);} }
+}
+function drawLocFlag(l,sx,sy){
+  ctx.fillStyle="rgba(0,0,0,0.5)";ctx.fillRect(sx-1,sy-1,24,24);
+  ctx.fillStyle=l.id==="sitefive"?"#ff5a3c":(l.id==="yiyuan"?"#5aa7ff":"#ffc531");
+  ctx.font="bold 15px monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText(l.ic,sx+11,sy+11);
+  ctx.font="9px monospace";ctx.fillStyle="rgba(255,255,255,0.8)";
+  ctx.fillText(l.name,sx+11,sy+30);
+}
+function drawNpc(n,sx,sy){
+  // 脚下
+  ctx.fillStyle="rgba(0,0,0,0.3)";ctx.beginPath();ctx.ellipse(sx,sy+8,9,4,0,0,6.28);ctx.fill();
+  ctx.fillStyle= n.id==="hanbo"?"#4a6a9a":(n.id==="tiesheng"?"#6a4a3a":"#5a7a8a");
+  ctx.beginPath();ctx.arc(sx,sy,9,0,6.28);ctx.fill();
+  ctx.strokeStyle="#0a0d12";ctx.lineWidth=1.5;ctx.stroke();
+  ctx.font="12px monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillStyle="#fff";ctx.fillText(n.ic,sx,sy);
+  // 名字
+  ctx.font="9px monospace";ctx.fillStyle="#e8ecf2";
+  let nm=n.name.length>3?n.name.slice(0,3)+"…":n.name;
+  ctx.fillText(nm,sx,sy+22);
+  // 可对话高亮
+  if(dist(G,n)<TILE*1.5){ ctx.strokeStyle="rgba(255,197,49,0.7)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,13,0,6.28);ctx.stroke(); }
+}
+function drawEnemy(e,sx,sy){
+  ctx.fillStyle="rgba(0,0,0,0.3)";ctx.beginPath();ctx.ellipse(sx,sy+8,9,4,0,0,6.28);ctx.fill();
+  ctx.fillStyle=e.aggro?e.color:"#5a6270";
+  ctx.beginPath();ctx.arc(sx,sy, e.r||8,0,6.28);ctx.fill();
+  ctx.strokeStyle="#0a0d12";ctx.lineWidth=1.5;ctx.stroke();
+  ctx.font="12px monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillStyle="#fff";ctx.fillText(e.ic,sx,sy);
+  // 血条
+  if(e.hp<e.max){ let w=18; let p=e.hp/e.max; ctx.fillStyle="#1b232e";ctx.fillRect(sx-w/2,sy-16,w,3);ctx.fillStyle="#ff5a3c";ctx.fillRect(sx-w/2,sy-16,w*p,3); }
+}
+function drawPlayer(){
+  let sx=Math.round(G.px-camX), sy=Math.round(G.py-camY);
+  ctx.fillStyle="rgba(0,0,0,0.35)";ctx.beginPath();ctx.ellipse(sx,sy+11,11,5,0,0,6.28);ctx.fill();
+  // 身体
+  ctx.fillStyle="#e07838";
+  ctx.fillRect(sx-7,sy-6,14,14);
+  ctx.fillStyle="#c0502a";ctx.fillRect(sx-7,sy-2,14,6);
+  // 头 + 朝向
+  let fx=Math.round(Math.cos(G.aim)),fy=Math.round(Math.sin(G.aim));
+  ctx.fillStyle="#f2c9a0";
+  ctx.beginPath();ctx.arc(sx,sy-4,6,0,6.28);ctx.fill();
+  ctx.fillStyle="#111";ctx.beginPath();ctx.arc(sx+fx*4,sy-4+fy*3,2,0,6.28);ctx.fill();
+  // 手持武器
+  let wep=currentWeapon();
+  if(wep){ ctx.fillStyle=wep.cat==="gun"?"#333":"#999";ctx.save();ctx.translate(sx+fx*8,sy+fy*8);ctx.rotate(G.aim);ctx.fillRect(0,-2,10,4);ctx.restore(); }
+  ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="10px monospace";ctx.textAlign="center";
+  ctx.fillText("●",sx,sy+4);
+}
+/* ===== 小地图 ===== */
+function renderMinimap(){
+  mctx.clearRect(0,0,150,150);
+  let sc=150/MW;
+  for(let y=0;y<MH;y+=2)for(let x=0;x<MW;x+=2){
+    let t=grid[y][x];
+    let c=TER_COLOR[t];
+    mctx.fillStyle=c;mctx.globalAlpha=0.6;mctx.fillRect(x*sc,y*sc,sc+0.5,sc+0.5);
+  }
+  mctx.globalAlpha=1;
+  LOCATIONS.forEach(l=>{ mctx.fillStyle=l.id==="sitefive"?"#ff5a3c":"#ffc531";mctx.beginPath();mctx.arc(l.x*sc,l.y*sc,1.6,0,6.28);mctx.fill(); });
+  mctx.fillStyle="#fff";mctx.beginPath();mctx.arc((G.px/MW)*sc,(G.py/MH)*sc,2.2,0,6.28);mctx.fill();
+  mctx.fillStyle="#0f1218";mctx.fillRect(0,0,150,150); // frame handled by css
+}
+/* ===== 大地图 ===== */
+let MAPZOOM=5;
+function renderBigMap(){
+  let w=MW*MAPZOOM,h=MH*MAPZOOM;
+  mapCanvas.width=w;mapCanvas.height=h;
+  mapCtx.clearRect(0,0,w,h);
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    let t=grid[y][x];
+    mapCtx.fillStyle=TER_COLOR[t];mapCtx.fillRect(x*MAPZOOM,y*MAPZOOM,MAPZOOM,MAPZOOM);
+  }
+  LOCATIONS.forEach(l=>{
+    mapCtx.fillStyle=l.id==="sitefive"?"#ff5a3c":(l.id==="yiyuan"?"#5aa7ff":"#ffc531");
+    mapCtx.beginPath();mapCtx.arc(l.x*MAPZOOM,l.y*MAPZOOM,4,0,6.28);mapCtx.fill();
+    mapCtx.font="11px monospace";mapCtx.fillStyle="#fff";mapCtx.textAlign="left";mapCtx.textBaseline="middle";
+    mapCtx.fillText(l.name,l.x*MAPZOOM+7,l.y*MAPZOOM);
+  });
+  mapCtx.fillStyle="#ff5a3c";mapCtx.beginPath();mapCtx.arc(G.px/MW*w,G.py/MH*h,6,0,6.28);mapCtx.fill();
+  mapCtx.strokeStyle="#fff";mapCtx.strokeRect(G.px/MW*w-2,G.py/MH*h-2,4,4);
+}
+/* ===== HUD ===== */
+function barFill(id,p,c){ let el=document.getElementById(id); el.style.width=clamp(p,0,100)+"%"; el.style.background=c; }
+function updateHUD(){
+  barFill("hpH",G.hp,G.hp<30?"#ff5a3c":"#e0523f");
+  barFill("hpHunger",G.hunger,"#ffc531");
+  barFill("hpH2o",G.water,"#5aa7ff");
+  barFill("hpEne",G.energy,"#4cd99b");
+  barFill("hpSan",G.sanity,"#c084fc");
+  document.getElementById("cashLine").textContent="信用点 "+G.money;
+  document.getElementById("timeLine").textContent=timeStr()+(isNight()?" 🌙":isDusk()?" 🌇":isDawn()?" 🌅":" ☀");
+  document.getElementById("locLine").textContent=locNameAt(Math.floor(G.px/TILE),Math.floor(G.py/TILE))||"边境荒地";
+  document.getElementById("modeLine").textContent=(G.mode==="story"?("主线 · 第"+ (Math.min(G.chapter+1,STORY.length))+"章"):"自由 · 生存")+" · 存活 "+G.day+" 日";
+  renderHotbar();
+  updateHint();
+}
+function renderHotbar(){
+  let bar=document.getElementById("hotbar");bar.innerHTML="";
+  let ids=Object.keys(G.inv).filter(k=>G.inv[k]>0).slice(0,6);
+  for(let i=0;i<6;i++){
+    let s=document.createElement("div");s.className="slot"+(i===G.selInv?" sel":"");
+    let id=ids[i];
+    if(id){let it=itemById(id);s.innerHTML='<div class="ic">'+it.ic+'</div><div class="n">'+G.inv[id]+'</div>';s.title=it.nm;}
+    else s.textContent="-";
+    s.onclick=()=>{G.selInv=i;};
+    bar.appendChild(s);
+  }
+}
+function updateHint(){
+  let el=document.getElementById("hintbar");
+  let lines=["[E] 互动   [空格] 攻击   [I] 背包   [M] 地图   [J] 剧情   [Esc] 菜单"];
+  let n=nearestNPC(); let d=nearestDrop();
+  if(n) lines.unshift("按 E 与 "+n.name+" 对话");
+  else if(d){let it=itemById(d.id);lines.unshift("按 E 拾取："+it.nm);}
+  el.textContent=lines.join("　");
+}
+/* ===== 输入 / 主循环 ===== */
+let keys={};
+let paused=true, running=false, lastT=0;
+function openOv(id){ paused=true; document.getElementById(id).classList.add("active"); }
+function closeOv(id){ document.getElementById(id).classList.remove("active"); paused=isAnyOv(); }
+function isAnyOv(){ return !!document.querySelector(".overlay.active"); }
+
+function loop(t){
+  requestAnimationFrame(loop);
+  let dt=Math.min(0.05,(t-lastT)/1000); lastT=t;
+  if(paused){ return; }
+  update(dt); render(); renderMinimap(); updateHUD();
+}
+function update(dt){
+  // 移动
+  let dx=((keys["d"]||keys["arrowright"])?1:0)-((keys["a"]||keys["arrowleft"])?1:0);
+  let dy=((keys["s"]||keys["arrowdown"])?1:0)-((keys["w"]||keys["arrowup"])?1:0);
+  G.moving=(dx||dy);
+  let speed=TILE*3.2 * (G.energy<15?0.6:1);
+  if(dx||dy){
+    let ang=Math.atan2(dy,dx); G.aim=ang;
+    if(!keys["space"]){ // 移动不冲突
+      let nx=G.px+dx*speed*dt, ny=G.py+dy*speed*dt;
+      if(passable(Math.floor(nx/TILE),Math.floor(ny/TILE)))G.px=nx; else G.px=Math.floor(G.px/TILE)*TILE+TILE/2;
+      if(passable(Math.floor(G.px/TILE),Math.floor(ny/TILE)))G.py=ny; else G.py=Math.floor(G.py/TILE)*TILE+TILE/2;
+    }
+  }
+  // NPC 漫游
+  G.npcs.forEach(n=>{ if(n.rand&&Math.random()<0.004){ let a=Math.floor(Math.random()*4); n.dir=a; } });
+  updateEnemies(dt);
+  advanceTime(dt);
+  updateStory();
+}
+/* ===== 键盘 ===== */
+document.addEventListener("keydown",e=>{
+  let k=e.key.toLowerCase();
+  keys[k]=true; keys[e.key.toLowerCase()]=true;
+  if(!G){ return; }
+  if(k==="e"||e.key==="Enter"){
+    if(isAnyOv()){
+      if(document.getElementById("dlgOv").classList.contains("active")){ dlgNext(); }
+      e.preventDefault();
+    } else { interact(); }
+  }
+  if(k===" "){ if(!isAnyOv()){ playerAttack(); } e.preventDefault(); }
+  if(k==="i"){ toggleInv(); }
+  if(k==="m"){ toggleMap(); }
+  if(k==="j"){ toggleJournal(); }
+  if(k==="escape"){ toggleEsc(); }
+  if(/^[1-6]$/.test(k)){ let ids=Object.keys(G.inv).filter(x=>G.inv[x]>0); if(ids.length){let i=parseInt(k)-1; if(i<ids.length){G.selInv=i;}} }
+});
+document.addEventListener("keyup",e=>{ keys[e.key.toLowerCase()]=false; });
+function dlgNext(){
+  if(dlgCtx&&dlgCtx.trade){ return; } // 交易菜单用按钮
+  if(dlgCtx&&dlgCtx.npc){
+    let lines=currentLines(dlgCtx.npc);
+    if(dlgCtx.line<lines.length-1){ dlgCtx.line++; renderDialogue(); }
+    else { let n=dlgCtx.npc; advanceTalk(n); closeOv("dlgOv"); dlgCtx=null; }
+  }
+}
+// 鼠标瞄准
+document.addEventListener("mousemove",e=>{
+  if(!G||isAnyOv())return;
+  let r=cv.getBoundingClientRect();
+  let mx=e.clientX-r.left-(G.px-camX), my=e.clientY-r.top-(G.py-camY);
+  G.aim=Math.atan2(my,mx);
+});
+// 触屏
+document.querySelectorAll(".tj-btn").forEach(b=>{
+  b.addEventListener("pointerdown",()=>{ const d=b.dataset.d; if(d==="act")interact(); else if(d==="att")playerAttack(); else keys[d]=true; });
+  b.addEventListener("pointerup",()=>{ const d=b.dataset.d; if(["up","down","left","right"].includes(d))keys[d]=false; });
+});
+
+/* ===== 背包/地图/日志切换 ===== */
+function toggleInv(){ if(document.getElementById("invOv").classList.contains("active")){closeOv("invOv");} else {renderInv();openOv("invOv");} }
+function toggleMap(){ if(document.getElementById("mapOv").classList.contains("active")){closeOv("mapOv");} else {renderBigMap();document.getElementById("mapOv").classList.add("active");paused=true;} }
+function toggleJournal(){ if(document.getElementById("jrnOv").classList.contains("active")){closeOv("jrnOv");} else {renderJournal();openOv("jrnOv");} }
+function toggleEsc(){ if(document.getElementById("escOv").classList.contains("active")){closeOv("escOv");} else openOv("escOv"); }
+
+/* ===== 剧情日志 ===== */
+function renderJournal(){
+  let b=document.getElementById("jrnBody");b.innerHTML="";
+  let reveal=document.getElementById("spoilerReveal")&&document.getElementById("spoilerReveal").checked;
+  STORY.forEach((c,i)=>{
+    let done=G.chaptersDone.includes(c.id);
+    let cur=i===G.chapter;
+    let d=document.createElement("div");d.className="chap"+(done?" done":"");
+    let tasks=chapterTasks(c);
+    let taskHtml=tasks.map(o=>{let it=o.t; let lbl=it.label||""; return '<div class="obj'+(o.done?" done":"")+'">'+(o.done?"✓ ":"○ ")+lbl+"</div>";}).join("");
+    d.innerHTML='<h3>'+c.tag+'　'+c.title+(done?' <span style="color:var(--ok)">· 已完结</span>':(cur?' <span style="color:var(--accent)">· 进行中</span>':''))+'</h3>'+
+      (reveal||done||cur?'<div class="recap">'+c.recap+'</div>':'<div class="recap" style="color:#3a4450;">（剧透锁定——剧情推进后可见）</div>')+
+      (cur?'<div style="margin-top:8px;font-size:12px;color:var(--info);letter-spacing:1px;">当前任务</div>'+taskHtml:'');
+    b.appendChild(d);
+  });
+  let toggle=document.createElement("label");
+  toggle.className="obj"; toggle.style.display="block"; toggle.style.marginTop="8px";
+  toggle.innerHTML='<input type="checkbox" id="spoilerReveal"> 剧透模式：显示全部章节概要';
+  b.appendChild(toggle);
+  if(document.getElementById("spoilerReveal"))document.getElementById("spoilerReveal").onchange=renderJournal;
+}
+
+/* ===== 存档 ===== */
+const SAVE_KEY="hanberfive_save_";
+function saveSlot(n){
+  localStorage.setItem(SAVE_KEY+n,JSON.stringify(G));
+  msg("已保存到存档"+n);
+}
+function loadSlot(n){
+  let raw=localStorage.getItem(SAVE_KEY+n);
+  if(!raw){msg("存档"+n+"不存在");return false;}
+  try{ G=JSON.parse(raw); }catch(e){ msg("存档"+n+"损坏");return false; }
+  afterLoad();
+  return true;
+}
+function autoSave(){ try{ localStorage.setItem(SAVE_KEY+"0",JSON.stringify(G)); }catch(e){} }
+function hasSlot(n){ return !!localStorage.getItem(SAVE_KEY+n); }
+function afterLoad(){
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("game").style.display="block";
+  if(!running){ running=true; lastT=performance.now(); requestAnimationFrame(loop); }
+  paused=false; updateHUD();
+}
+
+/* ===== 主菜单 ===== */
+function startMode(mode){
+  G=freshState(); G.mode=mode; G.startKind=mode;
+  // 出生地新川市
+  G.px=LOC_BY_ID.sinchon.x*TILE+16; G.py=LOC_BY_ID.sinchon.y*TILE+16;
+  if(mode==="free"){ G.inv={food_can:2,food_rice:2,water_b:2,knife:1,cloth:1,scrap:1}; G.money=40; }
+  spawnWorld();
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("game").style.display="block";
+  if(!running){ running=true; lastT=performance.now(); requestAnimationFrame(loop); }
+  paused=false;
+  updateHUD();
+  msg(mode==="story"?"主线模式 · 第一章「暗潮」":"自由模式 · 唯一目标：活下去");
+  if(mode==="story"){ openIntro(1); }
+}
+function openIntro(chId){
+  let c=STORY_BY_ID[chId]; if(!c)return;
+  document.getElementById("dlgWho").textContent="『"+c.tag+"』"+c.title;
+  document.getElementById("dlgBody").textContent=c.intro.join("\n\n");
+  let opts=document.getElementById("dlgOpts");opts.innerHTML="";
+  let b=document.createElement("button");b.className="opt";b.textContent="—— 开始 ——";b.onclick=()=>closeOv("dlgOv");opts.appendChild(b);
+  openOv("dlgOv");
+}
+document.querySelectorAll(".mbtn").forEach(b=>{
+  b.onclick=()=>{
+    let m=b.dataset.m;
+    if(m==="story")startMode("story");
+    else if(m==="free")startMode("free");
+    else if(m==="load"){ if(hasSlot("0")||hasSlot("1")){ openLoadMenu(); } else msg("没有存档"); }
+    else if(m==="about")openAbout();
+  };
+});
+document.querySelectorAll("[data-esc]").forEach(b=>{
+  b.onclick=()=>{
+    let a=b.dataset.esc;
+    if(a==="save"){saveSlot(0);closeOv("escOv");}
+    else if(a==="saveSlot2"){saveSlot(1);closeOv("escOv");}
+    else if(a==="load"){ openLoadMenu(); }
+    else if(a==="resume"){ if(G&&G.hp<=0){respawn();msg("你从新川市医疗站苏醒……");} closeOv("escOv"); }
+    else if(a==="mainmenu"){ pauseAllToMenu(); }
+  };
+});
+document.getElementById("cliffGo").onclick=()=>{ closeOv("cliffOv"); openIntro(G.chapter+1||1); };
+function openLoadMenu(){
+  let body=document.getElementById("dlgBody");body.textContent="选择要读取的存档：";
+  document.getElementById("dlgWho").textContent="读取存档";
+  let opts=document.getElementById("dlgOpts");opts.innerHTML="";
+  function add(l,f){let b=document.createElement("button");b.className="opt";b.onclick=f;b.innerHTML='<span class="key">·</span>'+l;opts.appendChild(b);}
+  for(let i=0;i<2;i++){
+    let has=hasSlot(i);
+    if(has){
+      let g=null; try{g=JSON.parse(localStorage.getItem(SAVE_KEY+i));}catch(e){g=null;}
+      add("存档"+(i+1)+"（"+(g&&g.startKind==="story"?"主线":"自由")+" · 存活 "+(g?g.day:"?")+" 日）",()=>loadSlot(i));
+    } else {
+      add("存档"+(i+1)+"　（空）",()=>{msg("该槽为空");});
+    }
+  }
+  add("← 返回",()=>closeOv("dlgOv"));
+  openOv("dlgOv");
+}
+function pauseAllToMenu(){
+  document.getElementById("game").style.display="none";
+  document.querySelectorAll(".overlay").forEach(o=>o.classList.remove("active"));
+  document.getElementById("menu").classList.add("active");
+  paused=true; dlgCtx=null;
+}
+function openAbout(){
+  let body=document.getElementById("dlgBody");
+  let who=document.getElementById("dlgWho");
+  who.textContent="HanBer FIVE · 世界观";
+  let txt=[
+   "── 反转 · 1951 ──",
+   "1951 年夏，南方联军在铁山一线钉死战线并展开反攻，战争结局彻底反转，半岛以汉京政权完成统一。冷战并未结束——它换了一条更北的边界，横贯半岛北部，史称『新战线』。",
+   "由此诞生的汉京共和国：表面繁荣、高度军国化，长期对战争记忆进行审查与重建。北境旧政权的残部在废土与冻土下运作，双方打着一场没有尽头的『灰色战争』。",
+   "── 汉伯 · 五号 ──",
+   "停战前夕，汉京军方启动绝密『汉伯计划』：把这场被藏起来的战争，切成五段关键记忆——决策、牺牲、背叛、胜利、真相——分别封存。第五号是特殊的：它必须由一名活人承载。",
+   "70 多年后，你——第五位载体——在这座边境城市醒来。自由模式里，你的唯一目标就是活下去。主线模式里，你将一步步揭开汉伯的真面目。",
+   "本作全部地点、人物均为虚构，仅在架空历史中演绎，与现实无关。"
+  ];
+  body.textContent=txt.join("\n\n");
+  let opts=document.getElementById("dlgOpts");opts.innerHTML="";
+  let b=document.createElement("button");b.className="opt";b.textContent="—— 查看主线章节（含剧透，慎点）——";b.onclick=()=>{ document.getElementById("dlgWho").textContent="主线章节总览"; let arr=["本章节含大量剧透，建议游玩后查看。\n"]; STORY.forEach(c=>arr.push(c.tag+"　"+c.title+"\n　· "+c.recap)); body.textContent=arr.join("\n"); };
+  let b2=document.createElement("button");b.className="opt";b.textContent="← 返回";b.onclick=()=>closeOv("dlgOv");
+  opts.appendChild(b);opts.appendChild(b2);
+  openOv("dlgOv");
+}
+
+/* ===== 初始化 ===== */
+function init(){
+  cv=document.getElementById("cv");ctx=cv.getContext("2d");
+  mcv=document.getElementById("minimapCv");mctx=mcv.getContext("2d");
+  mapCanvas=document.getElementById("mapCanvas");mapCtx=mapCanvas.getContext("2d");
+  buildMap();
+  function resize(){
+    let r=document.getElementById("game").getBoundingClientRect();
+    cv.width=r.width;cv.height=r.height;W=cv.width;H=cv.height;
+  }
+  window.addEventListener("resize",resize);resize();
+}
+init();
+/*----END----*/
+</script>
+</body>
+</html>

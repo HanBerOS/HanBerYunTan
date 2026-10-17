@@ -1,0 +1,4207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HanBer EIGHT · 十七度线</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+/* ============================================================
+   HanBer EIGHT · 十七度线
+   设计基调：1975 未反转的架空印支 · 战争档案
+   灰烬宣纸 / 墨线 / 黄铜 / 血锈红 / 丛林橄榄
+   ============================================================ */
+:root{
+  --paper:#E8DCC0; --paper2:#D8C79B; --paper3:#F2E8CE;
+  --ink:#241E16; --ink2:#4A3F30; --ink3:#7A6C54;
+  --brass:#B98A2F; --brass2:#8F6A22;
+  --rust:#8A4B2A; --blood:#9C3324; --blood2:#6F2118;
+  --olive:#55603F; --olive2:#39401F;
+  --fog:#6E7F8E; --river:#3E5F6E;
+  --ok:#3F6B3F; --bad:#A33B2E;
+  --panel:rgba(235,224,198,.97);
+  --panel2:rgba(216,199,154,.9);
+  --line:2px solid var(--ink);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#14100B}
+body{
+  font-family:"Noto Serif SC","Songti SC","SimSun",serif;
+  color:var(--ink); -webkit-font-smoothing:antialiased;
+  user-select:none; -webkit-user-select:none; touch-action:none;
+}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;background:#0e120d;image-rendering:auto}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10}
+#ui>*{pointer-events:auto}
+.hidden{display:none!important}
+
+/* ===== 通用面板与按钮 ===== */
+.panel{
+  background:var(--panel); border:var(--line);
+  box-shadow:4px 4px 0 rgba(0,0,0,.32), inset 0 0 0 3px rgba(185,138,47,.22);
+  border-radius:4px; padding:14px 16px; position:relative;
+}
+.panel::before,.panel::after{
+  content:""; position:absolute; width:16px; height:16px;
+  border:2px solid var(--blood); pointer-events:none;
+}
+.panel::before{top:-2px;left:-2px;border-right:none;border-bottom:none}
+.panel::after{bottom:-2px;right:-2px;border-left:none;border-top:none}
+.btn{
+  display:inline-block; min-width:96px; padding:9px 16px; margin:4px;
+  font-family:inherit; font-size:15px; font-weight:700; color:var(--paper3);
+  background:linear-gradient(180deg,#C99B43,#8F6A22);
+  border:1px solid #5C4313; border-bottom:3px solid #5C4313;
+  border-radius:3px; cursor:pointer; letter-spacing:.12em;
+  box-shadow:0 2px 0 rgba(0,0,0,.25); text-align:center;
+  transition:transform .06s, filter .12s;
+}
+.btn:hover{filter:brightness(1.1)}
+.btn:active{transform:translateY(2px);border-bottom-width:1px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink);border-bottom:3px solid var(--ink);box-shadow:none}
+.btn.danger{background:linear-gradient(180deg,#B9503F,#6F2118);border-color:#4A150E}
+.btn.olive{background:linear-gradient(180deg,#7A8760,#4C573C);border-color:#333C26}
+.btn.river{background:linear-gradient(180deg,#5C7A88,#3A5660);border-color:#243A42}
+.btn.small{min-width:64px;padding:5px 10px;font-size:13px}
+.btn.mini{min-width:46px;padding:3px 8px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.locked{opacity:.5}
+h2.pTitle{font-size:24px;letter-spacing:.4em;text-align:center;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:10px}
+h3.pTitle{font-size:17px;letter-spacing:.25em;color:var(--ink)}
+.sep{height:2px;background:linear-gradient(90deg,transparent,var(--brass),transparent);margin:8px 0}
+.mute{color:#6E6250;font-size:13px}
+.small{font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.col{display:flex;flex-direction:column;gap:6px}
+
+/* ===== 顶栏 HUD ===== */
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(180deg,rgba(20,16,11,.94),rgba(20,16,11,.72)); padding:6px 10px; border-bottom:2px solid rgba(185,138,47,.6);}
+#hud .hL{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#hud .hR{display:flex;align-items:center;gap:6px}
+#hud .stat{color:var(--paper3);font-size:14px;letter-spacing:.08em}
+#hud .stat b{color:var(--brass);font-weight:700}
+#hud .stat.warn b{color:#E0A65A}
+#hud .stat.crit b{color:#E05555;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+#hud .btn{padding:5px 10px;font-size:13px;min-width:52px}
+.gauge{display:inline-block;width:78px;height:10px;background:#C9BC98;border:1px solid var(--ink);position:relative;overflow:hidden;vertical-align:middle}
+.gauge i{display:block;height:100%;background:linear-gradient(180deg,#7BC07B,#3F7A3F)}
+.gauge i.mid{background:linear-gradient(180deg,#E0C65A,#A8872F)}
+.gauge i.low{background:linear-gradient(180deg,#E08A5A,#A84F2F)}
+.gauge i.water{background:linear-gradient(180deg,#7BB8D8,#3F7090)}
+.gauge i.eng{background:linear-gradient(180deg,#E8D86A,#B0A035)}
+.gauge i.rep{background:linear-gradient(180deg,#C0807B,#8F504A)}
+#hud .stat .ico{font-style:normal}
+
+/* ===== 底部快捷栏 ===== */
+#dock{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:6px;
+  background:linear-gradient(0deg,rgba(20,16,11,.94),rgba(20,16,11,.6)); padding:7px 8px; border-top:2px solid rgba(185,138,47,.55); flex-wrap:wrap}
+.slot{width:52px;height:52px;background:var(--paper2);border:1px solid var(--ink);border-bottom:3px solid var(--ink);position:relative;cursor:pointer;font-size:20px;line-height:52px;text-align:center}
+.slot .n{position:absolute;right:2px;bottom:0;font-size:11px;color:var(--ink3);font-weight:700}
+.slot.sel{outline:3px solid var(--blood)}
+
+/* ===== 悬浮面板容器 ===== */
+#pop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,6,4,.55);z-index:30}
+#pop .panel{max-width:min(92vw,760px);max-height:86vh;overflow:auto;width:92vw}
+#pop.wide .panel{max-width:min(96vw,980px)}
+
+/* ===== 标题界面 ===== */
+#boot{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:40;
+  background:radial-gradient(ellipse at 50% 32%,#2A2F1C 0%,#171A10 55%,#0B0D07 100%)}
+#boot .rains{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+#boot .titleT{font-size:clamp(36px,7vw,66px);font-weight:900;letter-spacing:.18em;color:var(--paper3);text-shadow:0 0 26px rgba(185,138,47,.45), 3px 3px 0 var(--ink);position:relative;z-index:2}
+#boot .titleE{font-size:clamp(18px,3vw,30px);font-weight:900;letter-spacing:.5em;color:var(--blood);position:relative;z-index:2;text-shadow:0 0 18px rgba(156,51,36,.6)}
+#boot .titleS{font-size:clamp(13px,2vw,18px);letter-spacing:.55em;color:var(--brass);position:relative;z-index:2;margin-top:4px}
+#boot .titleSub{font-size:12px;letter-spacing:.28em;color:var(--paper2);position:relative;z-index:2;margin-top:12px;max-width:90vw;text-align:center;line-height:2}
+#boot .menu{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;margin-top:24px;gap:0}
+#boot .menu .btn{min-width:250px;font-size:17px}
+#boot .ver{position:absolute;bottom:10px;right:14px;color:rgba(242,232,206,.5);font-size:12px;z-index:2}
+#boot .warnBar{position:absolute;bottom:12px;left:14px;color:rgba(242,232,206,.45);font-size:11px;z-index:2;max-width:60vw;line-height:1.6}
+
+/* ===== 对话框 ===== */
+#dlg{position:absolute;left:50%;transform:translateX(-50%);bottom:12%;width:min(94vw,880px);z-index:25;padding:0}
+#dlg .speaker{display:inline-block;background:var(--blood);color:var(--paper3);padding:4px 14px;font-size:15px;letter-spacing:.2em;border:1px solid var(--blood2);border-bottom:none;border-radius:3px 3px 0 0}
+#dlg .speaker.me{background:var(--ink2)}
+#dlg .speaker.system{background:var(--olive2)}
+#dlg .body{background:var(--panel);border:var(--line);border-radius:0 3px 3px 3px;padding:16px 20px;min-height:96px;box-shadow:5px 5px 0 rgba(0,0,0,.5)}
+#dlg .text{font-size:17px;line-height:1.9;white-space:pre-wrap;min-height:56px}
+#dlg .choices{margin-top:10px;display:flex;flex-direction:column;align-items:stretch;gap:6px}
+#dlg .choices .btn{text-align:left;font-size:15px}
+#dlg .tip{position:absolute;right:16px;bottom:10px;color:#6E6250;font-size:12px}
+
+/* ===== 章节卡 ===== */
+#chapter{position:absolute;inset:0;z-index:45;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#232A16 0%,#14180C 70%,#080A05 100%)}
+#chapter .no{font-size:15px;letter-spacing:.5em;color:var(--brass);margin-bottom:6px}
+#chapter .t{font-size:clamp(30px,6vw,52px);font-weight:900;letter-spacing:.28em;color:var(--paper3);text-shadow:0 0 22px rgba(185,138,47,.5)}
+#chapter .sub{font-size:14px;letter-spacing:.4em;color:var(--paper2);margin-top:12px}
+#chapter .lines{margin-top:24px;max-width:660px;padding:0 24px;font-size:16px;line-height:2.1;color:var(--paper2);text-align:center;letter-spacing:.08em;white-space:pre-wrap;max-height:42vh;overflow:auto}
+#chapter .btn{margin-top:28px}
+#chapter .suspense{max-width:620px;padding:14px 20px;border:1px dashed var(--brass);color:var(--brass);background:rgba(185,138,47,.08);font-size:15px;line-height:1.9;margin-top:16px;letter-spacing:.06em}
+#chapter .memo{margin-top:10px;font-size:12px;color:var(--ink3)}
+
+/* ===== 清单 / 列表 ===== */
+.listItem{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid rgba(39,33,26,.25);cursor:pointer}
+.listItem:hover{background:rgba(185,138,47,.16)}
+.listItem .nm{font-weight:700;font-size:15px}
+.listItem .ds{font-size:12px;color:#5E5340;margin-top:2px;line-height:1.6}
+.listItem .rt{font-size:13px;color:var(--blood2);white-space:nowrap}
+.tag{display:inline-block;background:var(--ink3);color:var(--paper3);font-size:11px;padding:2px 8px;border-radius:2px;letter-spacing:.12em;margin:1px}
+.tag.gold{background:var(--brass2)}
+.tag.blood{background:var(--blood)}
+.tag.olive{background:var(--olive2)}
+.tag.ok{background:var(--ok)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+
+/* ===== 物品栏网格 ===== */
+.invGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.iv{background:var(--paper2);border:1px solid var(--ink);border-bottom:3px solid var(--ink);padding:8px 6px;text-align:center;cursor:pointer;position:relative}
+.iv:hover{background:var(--paper3)}
+.iv .ic{font-size:26px;display:block}
+.iv .in{font-size:12px;font-weight:700;margin-top:2px;line-height:1.3}
+.iv .icn{position:absolute;right:3px;bottom:1px;font-size:11px;color:var(--ink3)}
+.iv.sel{outline:3px solid var(--blood)}
+
+/* ===== 世界提示 ===== */
+#hint{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:15;
+  background:rgba(20,16,11,.88);color:var(--paper3);padding:6px 16px;font-size:14px;letter-spacing:.14em;border:1px solid var(--brass);border-radius:3px;pointer-events:none;white-space:pre}
+#objective{position:absolute;top:100px;left:50%;transform:translateX(-50%);z-index:14;text-align:center;
+  background:rgba(20,16,11,.8);color:var(--paper2);padding:5px 14px;font-size:13px;letter-spacing:.1em;border-left:3px solid var(--blood);max-width:80vw;line-height:1.6;pointer-events:none}
+
+/* ===== 小地图 ===== */
+#minimap{position:absolute;right:10px;top:64px;z-index:15;border:2px solid var(--ink);background:#000;box-shadow:3px 3px 0 rgba(0,0,0,.4)}
+#minimap canvas{display:block}
+
+/* ===== 虚拟方向键 ===== */
+#dpad{position:absolute;left:12px;bottom:76px;z-index:15;display:none;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:4px}
+#dpad button{background:rgba(20,16,11,.82);border:1px solid var(--paper2);color:var(--paper3);font-size:20px;border-radius:4px;cursor:pointer}
+#dpad .up{grid-column:2}
+#dpad .left{grid-column:1;grid-row:2}
+#dpad .down{grid-column:2;grid-row:2}
+#dpad .right{grid-column:3;grid-row:2}
+@media (pointer:coarse){#dpad{display:grid}}
+
+/* ===== 输入 / 杂项 ===== */
+input.txt{width:100%;padding:10px 12px;font-family:inherit;font-size:15px;background:var(--paper3);border:1px solid var(--ink);border-radius:2px;color:var(--ink)}
+label.lbl{font-size:12px;color:#6E6250;letter-spacing:.1em}
+#errBox{position:fixed;left:8px;bottom:8px;max-width:72vw;z-index:99;background:#7C2C22;color:#FFF;font-size:12px;padding:6px 10px;border-radius:3px;display:none;white-space:pre-wrap}
+.toast{position:absolute;top:66px;left:50%;transform:translateX(-50%);background:rgba(20,16,11,.94);color:var(--paper3);padding:8px 20px;border:1px solid var(--brass);border-radius:3px;font-size:14px;letter-spacing:.1em;z-index:50;animation:toastIn .25s;pointer-events:none;white-space:pre}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.helpKey{display:inline-block;background:var(--ink);color:var(--paper3);padding:1px 7px;border-radius:3px;font-size:12px;margin:0 2px}
+.cutSceneText{font-size:17px;line-height:2.1;letter-spacing:.05em;white-space:pre-wrap;text-align:left}
+.cutTitle{font-size:26px;font-weight:900;letter-spacing:.35em;color:var(--blood);margin-bottom:16px;text-align:center}
+.suspenseBox{border:1px dashed var(--blood);background:rgba(156,51,36,.06);padding:12px 16px;color:var(--blood2);font-size:15px;line-height:1.9;margin-top:14px}
+</style>
+<style id="hanber-soviet-skin">
+/* === HanBer 统一皮肤 · 后苏联忧郁美学 (Post-Soviet Melancholy) === */
+html,body{
+  background-color:#15181e !important;
+  background-image:
+    radial-gradient(ellipse at 50% -5%, rgba(201,168,106,.10), transparent 55%),
+    linear-gradient(165deg,#11141a 0%,#1a1f28 48%,#231d15 100%) !important;
+  color:#d6cdb8 !important;
+}
+#hanber-vignette{position:fixed;inset:0;z-index:99998;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(0,0,0,.55) 100%);}
+</style>
+<div id="hanber-vignette"></div>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="ui">
+  <div id="hud" class="hidden">
+    <div class="hL">
+      <span class="stat"><span class="ico">❤</span> <span class="gauge" id="gHp"><i></i></span> <b id="vHp">100</b></span>
+      <span class="stat"><span class="ico">🍚</span> <span class="gauge" id="gHunger"><i class="mid"></i></span> <b id="vHunger">100</b></span>
+      <span class="stat"><span class="ico">💧</span> <span class="gauge" id="gThirst"><i class="water"></i></span> <b id="vThirst">100</b></span>
+      <span class="stat"><span class="ico">⚡</span> <span class="gauge" id="gEng"><i class="eng"></i></span> <b id="vEng">100</b></span>
+      <span class="stat"><b id="vMoney">0</b> 南元</span>
+      <span class="stat"><b id="vLv">1</b> 级</span>
+      <span class="stat" id="vDays"></span>
+    </div>
+    <div class="hR">
+      <span class="stat" id="vClock"></span>
+      <span class="stat" id="vWeather"></span>
+      <span class="stat" id="vLoc"></span>
+      <button class="btn small" id="btnInv">背包</button>
+      <button class="btn small" id="btnJournal">日志</button>
+      <button class="btn small" id="btnMenu">菜单</button>
+    </div>
+  </div>
+  <div id="objective" class="hidden"></div>
+  <div id="hint" class="hidden"></div>
+  <div id="minimap" class="hidden"><canvas id="mm" width="176" height="124"></canvas></div>
+  <div id="dock" class="hidden"></div>
+  <div id="dpad">
+    <button class="up" data-d="up">▲</button>
+    <button class="left" data-d="left">◀</button>
+    <button class="down" data-d="down">▼</button>
+    <button class="right" data-d="right">▶</button>
+  </div>
+  <div id="pop" class="hidden"></div>
+  <div id="dlg" class="hidden"></div>
+  <div id="chapter" class="hidden"></div>
+  <div id="boot"></div>
+</div>
+<div id="errBox"></div>
+<script>
+/* ============================================================
+   HanBer EIGHT · 十七度线 —— 核心工具与全局容器
+   ============================================================ */
+(function(){
+  var eb = document.getElementById('errBox');
+  window.addEventListener('error', function(e){
+    var m = String(e.message||e.error||'未知错误');
+    eb.style.display = 'block';
+    eb.textContent = '运行错误: ' + m + (e.lineno?' @行'+e.lineno:'');
+    console.error(m, e.error);
+  });
+})();
+var VER = 'EIGHT v1.0.0';
+var $ = function(id){ return document.getElementById(id); };
+function qs(sel, root){ return (root||document).querySelector(sel); }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function rand(a,b){ return a + Math.random()*(b-a); }
+function rndi(a,b){ return Math.floor(rand(a,b+1)); }
+function chance(p){ return Math.random() < p; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function log(){ if(window.console) console.log.apply(console, arguments); }
+function money(v){
+  v = Math.round(v);
+  return v + ' 南元';
+}
+/* 存档键名（每作独立，避免冲突） */
+var SAVE_KEY = 'hanber8_save_v1';
+var SAVE_META_KEY = 'hanber8_meta';
+/* 全局数据容器 */
+var D = {
+  items: {},      // 物品定义
+  weapons: {},    // 武器
+  enemies: {},    // 敌人类型
+  npcPools: {},   // 平民名字/台词池
+  npcs: {},       // 命名NPC
+  dialogue: {},   // 对话剧本
+  ambient: {},    // 环境台词
+  chapters: [],   // 主线章节
+  sideQuests: [], // 支线
+  areas: {},      // 区域(矩形)定义
+  towns: [],      // 城镇定义
+  roads: [],      // 道路点列
+  lootSpots: [],  // 拾荒点
+  spawnList: [],  // 命名NPC出生表
+  events: []      // 自由模式随机事件
+};
+var CFG = {
+  mapW: 320, mapH: 224, tile: 32,
+  dayLen: 240,          // 一天=240秒(现实)
+  startMoney: 180,
+  capHp: 100, capHunger: 100, capThirst: 100, capEng: 100,
+  carryLimit: 40,       // 负重kg上限
+  diff: 1               // 难度倍率
+};
+</script>
+<script>
+/* ============================================================
+   HanBer EIGHT · 核心数据：物品 / 武器 / 敌人 / 阵营 / NPC池
+   ============================================================ */
+
+/* ---- 阵营 ---- */
+D.factions = {
+  sa:    {name:'南方联盟', color:'#C9A86B', hostile:false},
+  north: {name:'越北共和国', color:'#A0392A', hostile:true},
+  guer:  {name:'山雨游击队', color:'#6B7A3F', hostile:false},
+  free:  {name:'自由港', color:'#5C8A8A', hostile:false},
+  bandit:{name:'军阀', color:'#4A4438', hostile:true},
+  civ:   {name:'平民', color:'#8A7A5C', hostile:false}
+};
+
+/* ---- 物品 ---- */
+D.items = {
+  can:     {name:'战备罐头', cat:'food',   icon:'🥫', price:12, w:0.4, food:35, desc:'军需品口味，能填饱肚子。'},
+  biscuit: {name:'压缩饼干', cat:'food',   icon:'🍘', price:8,  w:0.3, food:25, desc:'耐放，硬得能当板砖。'},
+  rice:    {name:'米饭盒',   cat:'food',   icon:'🍱', price:15, w:0.5, food:45, desc:'热气腾腾的本地米饭。'},
+  bread:   {name:'法棍面包', cat:'food',   icon:'🥖', price:10, w:0.4, food:30, desc:'殖民时代留下的传统。'},
+  banana:  {name:'香蕉',     cat:'food',   icon:'🍌', price:6,  w:0.2, food:18, thirst:5, desc:'路边的野香蕉。'},
+  rawmeat: {name:'生肉',     cat:'food',   icon:'🥩', price:8,  w:0.5, food:10, desc:'烤熟再吃吧。'},
+  cooked:  {name:'烤肉',     cat:'food',   icon:'🍖', price:18, w:0.5, food:45, desc:'滋滋冒油，人间美味。'},
+  fish:    {name:'生鱼',     cat:'food',   icon:'🐟', price:7,  w:0.4, food:12, desc:'河里的鱼，可烤。'},
+  water:   {name:'瓶装水',   cat:'drink',  icon:'💧', price:10, w:0.5, thirst:45, desc:'干净的饮用水。'},
+  dirty:   {name:'脏水',     cat:'drink',  icon:'🫗', price:3,  w:0.5, thirst:20, hp:-3, desc:'混着泥沙，能喝但不建议。'},
+  wine:    {name:'米酒',     cat:'drink',  icon:'🍶', price:22, w:0.6, thirst:25, eng:12, hp:5, desc:'夜里的暖身子水。'},
+  coffee:  {name:'黑咖啡',   cat:'drink',  icon:'☕', price:14, w:0.3, thirst:5, eng:20, desc:'前线士兵的燃料。'},
+  bandage: {name:'绷带',     cat:'med',    icon:'🩹', price:25, w:0.2, hp:25, desc:'止血包扎。'},
+  medkit:  {name:'急救包',   cat:'med',    icon:'🧰', price:80, w:0.8, hp:60, desc:'军用急救包，能救命。'},
+  pain:    {name:'止痛片',   cat:'med',    icon:'💊', price:18, w:0.1, hp:15, eng:10, desc:'一颗下去，世界柔和。'},
+  abx:     {name:'抗生素',   cat:'med',    icon:'💉', price:45, w:0.2, hp:30, desc:'伤口感染的克星。'},
+  stim:    {name:'兴奋剂',   cat:'med',    icon:'⚡', price:35, w:0.1, eng:60, hp:-10, desc:'战争留下的遗物。'},
+  scrap:   {name:'废铁',     cat:'material', icon:'🔩', price:3,  w:0.3, desc:'拾荒最常见的收获。'},
+  cloth:   {name:'布料',     cat:'material', icon:'🧵', price:4,  w:0.2, desc:'旧军装拆下来的。'},
+  wire:    {name:'电线',     cat:'material', icon:'🪢', price:6,  w:0.2, desc:'还能用的铜线。'},
+  battery: {name:'电池',     cat:'material', icon:'🔋', price:10, w:0.3, desc:'收音机还指着它。'},
+  part:    {name:'零件',     cat:'material', icon:'⚙️', price:8,  w:0.2, desc:'各种机器的心跳。'},
+  wood:    {name:'木材',     cat:'material', icon:'🪵', price:2,  w:0.5, desc:'生火、修桥都要它。'},
+  ammo9:   {name:'9mm子弹',  cat:'ammo',   icon:'🔸', price:6,  w:0.1, ammo:'9mm', desc:'手枪与冲锋枪通用。'},
+  ammo12:  {name:'12号霰弹', cat:'ammo',   icon:'🔹', price:8,  w:0.2, ammo:'12g', desc:'近距离一锤定音。'},
+  ammo7:   {name:'7.62步枪弹',cat:'ammo',  icon:'🔺', price:10, w:0.2, ammo:'7.62', desc:'步枪与狙击枪通用。'},
+  watch:   {name:'旧金表',   cat:'valuable', icon:'⌚', price:120, w:0.2, desc:'战前的好东西，有人愿意收。'},
+  silver:  {name:'银项链',   cat:'valuable', icon:'📿', price:80, w:0.1, desc:'谁家姑娘丢的。'},
+  eswatch: {name:'电子表',   cat:'valuable', icon:'🕐', price:40, w:0.1, desc:'走私品，还能走字。'},
+  cigs:    {name:'香烟',     cat:'valuable', icon:'🚬', price:25, w:0.1, eng:5, desc:'硬通货，比南元还好使。'},
+  folder:  {name:'档案卷宗', cat:'quest',  icon:'📁', price:0, w:0.5, desc:'EIGHT计划的相关档案。'},
+  tape:    {name:'录音带',   cat:'quest',  icon:'📼', price:0, w:0.2, desc:'第七区的遗物录音。'},
+  plaque:  {name:'铜牌·八',  cat:'quest',  icon:'🪙', price:0, w:0.1, desc:'刻着"第八小队·EIGHT"的军牌。'},
+  pass:    {name:'北方通行证',cat:'quest', icon:'🎫', price:0, w:0.1, desc:'伪造的过境证件。'},
+  code:    {name:'密电文',   cat:'quest',  icon:'📜', price:0, w:0.1, desc:'截获的北方加密电文。'},
+  diary:   {name:'泛黄日记', cat:'quest',  icon:'📖', price:0, w:0.2, desc:'某个拾荒者留下的日记。'},
+  medal:   {name:'旧勋章',   cat:'quest',  icon:'🎖️', price:0, w:0.1, desc:'勋章背面的名字被刮掉了。'},
+  drone:   {name:'无人机残骸',cat:'quest', icon:'🛸', price:0, w:1.0, desc:'不属于任何阵营的型号。'}
+};
+
+/* ---- 武器 ---- */
+D.weapons = {
+  fists:   {name:'拳头',  icon:'👊', price:0,   dmg:2,  range:0.9, type:'melee',  speed:2.5, w:0,   desc:'每个人都有。'},
+  knife:   {name:'匕首',  icon:'🔪', price:60,  dmg:9,  range:1.1, type:'melee',  speed:2.2, w:0.4, desc:'安静的近身工具。'},
+  machete: {name:'砍刀',  icon:'🪓', price:160, dmg:15, range:1.4, type:'melee',  speed:1.8, w:0.8, desc:'开路与劈柴两用。'},
+  pistol:  {name:'手枪',  icon:'🔫', price:420, dmg:24, range:8,  type:'ranged', speed:2.2, ammo:'9mm', auto:false, w:0.9, desc:'南方旧式军用手枪。'},
+  smg:     {name:'冲锋枪',icon:'💥', price:780, dmg:17, range:7,  type:'ranged', speed:6,  ammo:'9mm', auto:true, w:2.0, desc:'扫起来像下雨。'},
+  shotgun: {name:'霰弹枪',icon:'🧨', price:650, dmg:13, range:5,  type:'ranged', speed:1.4, ammo:'12g', pellets:6, spread:0.5, w:2.5, desc:'近战真理。'},
+  rifle:   {name:'步枪',  icon:'🎯', price:950, dmg:32, range:12, type:'ranged', speed:1.6, ammo:'7.62', auto:false, w:3.0, desc:'北方制式步枪的南方仿品。'},
+  sniper:  {name:'狙击枪',icon:'🔭', price:1600,dmg:70, range:18, type:'ranged', speed:0.7, ammo:'7.62', auto:false, w:3.6, desc:'千里之外取人性命。'}
+};
+
+/* ---- 敌人 ---- */
+D.enemies = {
+  bandit:  {name:'土匪',    hp:40,  dmg:7,  speed:1.7, aggro:6,   melee:true,  faction:'bandit', drop:['scrap','scrap','ammo9'], dropGold:[10,45], xp:12},
+  thug:    {name:'暴徒',    hp:30,  dmg:6,  speed:1.8, aggro:5,   melee:true,  faction:'bandit', drop:['scrap','cloth'], dropGold:[5,25], xp:8},
+  dog:     {name:'野狗',    hp:32,  dmg:6,  speed:2.2, aggro:5,   melee:true,  faction:'bandit', drop:['rawmeat'], dropGold:[0,5], xp:8},
+  soldier: {name:'北方士兵',hp:70,  dmg:12, speed:1.6, aggro:9,   melee:false, faction:'north', drop:['ammo7','ammo9','cloth'], dropGold:[20,60], xp:22},
+  elite:   {name:'北方精锐',hp:95,  dmg:16, speed:1.7, aggro:10,  melee:false, faction:'north', drop:['ammo7','bandage','medal'], dropGold:[40,90], xp:35},
+  boar:    {name:'野猪',    hp:45,  dmg:9,  speed:2.0, aggro:4,   melee:true,  faction:'bandit', drop:['rawmeat','rawmeat'], dropGold:[0,8], xp:14},
+  deer:    {name:'鹿',      hp:20,  dmg:0,  speed:2.6, aggro:0,   melee:false, faction:'civ', drop:['rawmeat'], dropGold:[0,4], xp:10, prey:true},
+  tiger:   {name:'印支猛虎',hp:130, dmg:22, speed:2.5, aggro:8,   melee:true,  faction:'bandit', drop:['rawmeat','rawmeat','rawmeat'], dropGold:[30,80], xp:50},
+  python:  {name:'网纹巨蟒',hp:90,  dmg:14, speed:1.5, aggro:5,   melee:true,  faction:'bandit', drop:['rawmeat'], dropGold:[10,40], xp:30},
+  boss:    {name:'铁塔',    hp:260, dmg:18, speed:1.7, aggro:12,  melee:false, faction:'bandit', drop:['rifle','ammo7','medal','watch'], dropGold:[150,300], xp:120}
+};
+
+/* ---- NPC 名字池（按阵营） ---- */
+D.npcPools = {
+  names: {
+    sa:    ['阮文雄','陈清','范氏梅','黎光','黄文达','武氏莲','杜文','范文诗','阮氏荷','郑文','吴明','裴氏兰'],
+    north: ['阮氏青','黎雄','陈国','范文德','黄文进','武光','阮文成','杜氏莲'],
+    guer:  ['山魁','阮梅','阿风','长弓','石头','火种','青竹','老枪'],
+    free:  ['杰克','玛雅','老宋','海蛇','铁皮','算盘','舵手陈','白帆','燕子','独眼龙'],
+    civ:   ['阿福','阿芳','老农','春嫂','三叔','小满','阿伦','阿妹','水伯','柴叔'],
+    bandit:['刀疤','独耳','黑牙','疯猴','土狼','钢牙','瘸子','秃鹫']
+  },
+  roles: {
+    civ:  ['农夫','难民','拾荒者','手艺人','学生','看店的'],
+    sa:   ['守卫','文员','司机','摊贩','邮差','士兵'],
+    north:['巡逻兵','文书','机械师','哨兵','广播员'],
+    guer: ['游击队员','向导','医官','联络员','爆破手'],
+    free: ['水手','走私客','掮客','修理匠','酒保','歌女'],
+    bandit:['喽啰','哨探','打手','马夫']
+  }
+};
+
+/* ---- 环境台词 ---- */
+D.ambient = {
+  civ_greet:  ['你好，外乡人。','这里天天有人来，也有人消失。','要吃的吗？便宜卖你。','别往北边去，那边是他们的枪口。','这日子，能活着就是赢了。'],
+  civ_rumor:  ['听说了吗？自由港来了艘挂黑旗的船。','北边又在界河上架铁丝网了。','山雨的人昨晚摸进了旧基地。','第七区那边夜里总有人点灯。','南方的军车一车车往丛林里开。'],
+  sa_greet:   ['站住，出示证件。','南方欢迎你，伙计。','联盟军保护这里，放心。','看什么看，没见过打仗的？'],
+  sa_rumor:   ['上面在查一支老部队的档案。','军情局的人最近很忙。','听说停火谈判又谈崩了。','有种无人机，谁都不认账。'],
+  north_greet:['（北方语）站住！','过境证！不然就地枪决！','北方不是你想来就来的。'],
+  guer_greet: ['山雨的人，自己人。','丛林里最不缺的就是敌人。','你有胆，可以跟我们干。'],
+  free_greet: ['自由港欢迎一切，除了麻烦。','有什么货？','价格好商量，兄弟。','黑旗船刚卸完货。'],
+  bandit_greet:['把值钱的留下，滚。','这里是我的地盘。','又来个送死的。'],
+  night:     ['晚上别乱跑，猛虎饿着呢。','夜里林子会说话。','界河那边整晚都在打枪。']
+};
+
+/* ============================================================
+   HanBer EIGHT · 世界数据：粗网格 / 城镇 / 道路 / 区域 / 刷怪
+   ============================================================ */
+
+/* ---- 粗网格：20列 x 14行，每格 16 瓦片 = 320x224 ----
+   M 山  N 北方红城  W 水(界河/海)  J 丛林  H 丘陵 */
+D.coarse = [
+  'MM MMMMM MMMMMMMM MM W'.replace(/ /g,''),
+  'MMMMMMNNNNNNNNNNMM W'.replace(/ /g,''),
+  'MMMMMMNNNNNNNNNNHHH W'.replace(/ /g,''),
+  'MMMMMMNNNNNNNNNNHHH W'.replace(/ /g,''),
+  'MMMMMMNNNNNNNNNNHHH W'.replace(/ /g,''),
+  'MMMMMWWWWWWWWWWWMMM W'.replace(/ /g,''),
+  'MMMMMJJJJJJJJJJJMMM W'.replace(/ /g,''),
+  'MMMJJJJJJJJJJJJJJMM W'.replace(/ /g,''),
+  'MMMJJJJJJJJJJJJJJMM W'.replace(/ /g,''),
+  'MMMJJJJJJJJJJJJJJMM W'.replace(/ /g,''),
+  'MMMJJJJJJJJJJJJJJMM W'.replace(/ /g,''),
+  'MMMJJJJJJJJJJJJJJMM W'.replace(/ /g,''),
+  'MMMJJJJJJJJJJJJJJMM W'.replace(/ /g,''),
+  'WWWWWWWWWWWWWWWWWWWW'
+];
+D.cellSize = 16;
+
+/* ---- 城镇/营地定义 (瓦片坐标 cx,cy 中心) ---- */
+D.towns = [
+  {id:'saigon',   name:'新西贡', cx:160, cy:134, w:56, h:38, kind:'city'},
+  {id:'freeport', name:'龙湾自由港', cx:256, cy:140, w:52, h:32, kind:'port'},
+  {id:'wildcat',  name:'野猫镇', cx:92, cy:140, w:32, h:24, kind:'village'},
+  {id:'farm',     name:'难民农场', cx:192, cy:178, w:40, h:26, kind:'farm'},
+  {id:'guerrilla',name:'山雨营地', cx:36, cy:140, w:30, h:22, kind:'camp'},
+  {id:'oldbase',  name:'第八基地废墟', cx:60, cy:120, w:26, h:18, kind:'ruins'},
+  {id:'sector7',  name:'第七区', cx:244, cy:56, w:34, h:24, kind:'ruins'},
+  {id:'redcity',  name:'红城·越北', cx:144, cy:40, w:52, h:36, kind:'city'},
+  {id:'outpost',  name:'北境前哨', cx:126, cy:72, w:20, h:12, kind:'outpost'},
+  {id:'military', name:'南方军区', cx:120, cy:108, w:24, h:18, kind:'base'},
+  {id:'b1', name:'西林匪寨', cx:72, cy:164, w:20, h:14, kind:'camp'},
+  {id:'b2', name:'东林匪巢', cx:212, cy:112, w:20, h:14, kind:'camp'},
+  {id:'b3', name:'稻匪窝', cx:216, cy:150, w:18, h:12, kind:'camp'},
+  {id:'b4', name:'山间匪砦', cx:40, cy:64, w:18, h:12, kind:'camp'},
+  {id:'b5', name:'铁塔老巢', cx:252, cy:180, w:24, h:16, kind:'camp'}
+];
+
+/* ---- 道路线段（瓦片坐标；过河段自动架桥） ---- */
+D.roads = [
+  [[92,140],[128,116],[160,120]],
+  [[160,120],[224,128],[256,140]],
+  [[160,120],[180,165],[192,178]],
+  [[144,40],[144,70],[136,82],[136,96]],          // 红城→南线(第一桥)
+  [[136,96],[136,112],[150,120]],
+  [[256,140],[252,180]],
+  [[92,140],[64,140],[36,140]],                    // 野猫→山雨
+  [[36,140],[60,120]],                            // 山雨→旧基地
+  [[144,52],[208,52]],                            // 北线(东)
+  [[208,52],[208,88],[208,104]],                  // 第二桥
+  [[208,104],[224,128]],
+  [[136,112],[120,108]],                          // 军区小路
+  [[92,140],[92,160],[72,164]],                   // 西林匪寨
+  [[160,120],[212,112]],                          // 东林匪巢
+  [[136,96],[124,96],[124,104]]                   // 军区北门
+];
+
+/* ---- 命名区域（用于地点提示与任务目标） ---- */
+D.areas = {
+  saigon:    {name:'新西贡', x:128, y:116, w:64, h:44},
+  freeport:  {name:'龙湾自由港', x:228, y:124, w:58, h:34},
+  wildcat:   {name:'野猫镇', x:74, y:128, w:36, h:26},
+  farm:      {name:'难民农场', x:170, y:164, w:44, h:28},
+  guerrilla: {name:'山雨营地', x:19, y:128, w:34, h:26},
+  oldbase:   {name:'第八基地废墟', x:45, y:109, w:30, h:22},
+  sector7:   {name:'第七区', x:225, y:42, w:38, h:28},
+  redcity:   {name:'红城·越北', x:116, y:20, w:56, h:42},
+  outpost:   {name:'北境前哨', x:114, y:66, w:24, h:16},
+  military:  {name:'南方军区', x:106, y:97, w:28, h:22},
+  bridge1:   {name:'十七度线大桥·西', x:128, y:78, w:18, h:20},
+  bridge2:   {name:'十七度线大桥·东', x:206, y:78, w:18, h:20},
+  jungle:    {name:'印支丛林', x:0, y:96, w:320, h:128},
+  northbank: {name:'界河北岸', x:20, y:58, w:300, h:40},
+  coast:     {name:'南海岸', x:0, y:196, w:320, h:28}
+};
+
+/* ---- 城镇人口配置（生成平民/守卫/敌对） ---- */
+D.townPop = {
+  saigon:   {civ:26, guard:10, merchant:8},
+  freeport: {civ:14, guard:6, merchant:6},
+  wildcat:  {civ:10, guard:3, merchant:4},
+  farm:     {civ:12, guard:2, merchant:2},
+  guerrilla:{guer:12},
+  redcity:  {civ:10, north:10},
+  outpost:  {north:8},
+  military: {north:9},
+  oldbase:  {civ:3},
+  sector7:  {bandit:6},
+  b1: {bandit:6}, b2:{bandit:6}, b3:{bandit:5}, b4:{bandit:5}, b5:{bandit:8}
+};
+
+/* ---- 营地刷怪点（营地外散兵/野兽） ---- */
+D.wildSpawns = [
+  {kind:'camp', x:72, y:164, r:18, type:'bandit', n:3},
+  {kind:'camp', x:212, y:112, r:16, type:'bandit', n:3},
+  {kind:'camp', x:216, y:150, r:14, type:'bandit', n:3},
+  {kind:'camp', x:40, y:64, r:16, type:'bandit', n:3},
+  {kind:'camp', x:252, y:180, r:16, type:'bandit', n:3},
+  {kind:'jungle', x:50, y:130, r:30, type:'boar', n:4},
+  {kind:'jungle', x:120, y:150, r:30, type:'boar', n:3},
+  {kind:'jungle', x:200, y:140, r:28, type:'boar', n:3},
+  {kind:'jungle', x:30, y:150, r:26, type:'tiger', n:1},
+  {kind:'jungle', x:150, y:160, r:28, type:'tiger', n:1},
+  {kind:'jungle', x:100, y:120, r:24, type:'tiger', n:1},
+  {kind:'jungle', x:60, y:110, r:20, type:'python', n:2},
+  {kind:'jungle', x:240, y:160, r:24, type:'python', n:2},
+  {kind:'hills', x:230, y:70, r:26, type:'deer', n:4},
+  {kind:'hills', x:180, y:55, r:22, type:'deer', n:3},
+  {kind:'farm', x:185, y:185, r:16, type:'boar', n:2},
+  {kind:'road', x:120, y:100, r:14, type:'bandit', n:2},
+  {kind:'road', x:220, y:100, r:14, type:'bandit', n:2}
+];
+
+/* ---- 城市/废墟内可拾荒的容器数量 ---- */
+D.lootCount = {
+  city: 22, port: 14, village: 10, farm: 8, camp: 6, ruins: 18, base: 10, outpost: 6, guerrilla: 8
+};
+
+/* ============================================================
+   HanBer EIGHT · 剧情数据：命名NPC / 对话剧本 / 12章主线 / 15支线
+   ============================================================
+   【剧情更新说明】主线在 D.chapters 数组里按序追加即可（每月一章）。
+   每章结尾的 D.chapters[i].teaser 即"悬念卡"，用于衔接下一章。
+   对话剧本写在 D.dlg 下，键名规则：c{章}_{场景}，由章节 objectives 触发。
+   ============================================================ */
+
+/* 补充剧情道具 */
+D.items.fragment = {name:'记忆碎片', cat:'quest', icon:'🧩', price:0, w:0.1, desc:'EIGHT计划的原始记忆片段。'};
+D.items.crate = {name:'走私货箱', cat:'quest', icon:'📦', price:0, w:3, desc:'老宋让你送的东西，别打开。'};
+
+/* ---- 命名NPC ---- */
+D.npcs = {
+  chen:   {name:'陈医生',  role:'军医/诊所主人',  town:'saigon',   ox:6,  oy:6,  faction:'civ',  color:'#8FB3B0', shop:['bandage','pain','abx','medkit','water'], healCost:25},
+  ali:    {name:'阿黎',    role:'走私贩子',       town:'saigon',   ox:18, oy:20, faction:'free', color:'#C9A86B'},
+  laosong:{name:'老宋',    role:'情报贩子',       town:'freeport', ox:12, oy:10, faction:'free', color:'#B98A2F', shop:['ammo9','ammo12','ammo7','scrap','part','wire','battery','cigs']},
+  maya:   {name:'玛雅',    role:'驻唱歌手',       town:'freeport', ox:26, oy:12, faction:'free', color:'#A86B8F'},
+  ruanmei:{name:'阮梅',    role:'山雨首领',       town:'guerrilla',ox:8,  oy:10, faction:'guer', color:'#6B7A3F'},
+  li:     {name:'李·少校', role:'北方特工',       town:'wildcat',  ox:10, oy:8,  faction:'north', color:'#A0392A'},
+  du:     {name:'杜上尉',  role:'南方军情局',     town:'saigon',   ox:30, oy:8,  faction:'sa',   color:'#8F6A22', shop:['ammo9','bandage','stim']},
+  chunsao:{name:'春嫂',    role:'农场主',         town:'farm',     ox:10, oy:10, faction:'civ',  color:'#8A7A5C'},
+  baifan: {name:'白帆',    role:'船长',           town:'freeport', ox:8,  oy:24, faction:'free', color:'#5C8A8A'},
+  laoqiang:{name:'老枪',   role:'游击队医官',     town:'guerrilla',ox:16, oy:8,  faction:'guer', color:'#7A8A5C', shop:['bandage','pain','water','cooked']},
+  xiaoman:{name:'小满',    role:'农场孩子',       town:'farm',     ox:22, oy:8,  faction:'civ',  color:'#C9A86B'}
+};
+
+/* ---- 对话剧本 ---- */
+D.dlg = {};
+
+/* ============ 通用/基础对话（各NPC常驻） ============ */
+D.dlg.base_chen = [
+  {who:'陈医生', txt:'伤养得差不多了。别急着逞能，这条街上的亡命徒，比你想象得多。', opts:[
+    {txt:'能治伤吗？', fx:'heal'},
+    {txt:'买点药。', fx:'trade'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+D.dlg.base_ali = [
+  {who:'阿黎', txt:'哟，活人。要货不要？价格公道，童叟无欺——才怪。', opts:[
+    {txt:'买点东西。', fx:'trade'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+D.dlg.base_laosong = [
+  {who:'老宋', txt:'想知道什么？只要钱够，死人我也能给你挖出来聊两句。', opts:[
+    {txt:'（把无人机残骸放到桌上）这玩意儿，你认识吗？', cond:'item:drone:1', next:'q_drone'},
+    {txt:'买点东西。', fx:'trade'},
+    {txt:'打听点消息。', fx:'set:gossip', next:'gossip1'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+D.dlg.gossip1 = {who:'老宋', txt:'界河的水位降了，走私船可以走浅滩。铁塔那边在收枪，价格翻了一倍。还有个有意思的：最近天上有种无人机，谁也不认账——我赌是灰隼的。', opts:[{txt:'灰隼？', next:'gossip2'},{txt:'走了。', next:'end'}]};
+D.dlg.gossip2 = {who:'老宋', txt:'灰隼集团，搞航运起家的，现在什么都做。表面上是贸易公司，背地里给两边供货——生意人嘛，战争对他们来说就是财报。', opts:[{txt:'明白了。', next:'end'}]};
+D.dlg.base_maya = [
+  {who:'玛雅', txt:'（歌声歇了，她抿了口酒）想听歌，还是要听故事？夜还长。', opts:[
+    {txt:'听首歌。', next:'song'},
+    {txt:'打听点事。', fx:'set:gossip', next:'mgossip1'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+D.dlg.song = {who:'玛雅', txt:'（她轻轻哼了一段，调子像雨点落在铁皮屋顶）"十七度线的雨，淋湿了谁的名字……"——这首歌，唱了十年了。', opts:[{txt:'好听。', next:'end'}]};
+D.dlg.mgossip1 = {who:'玛雅', txt:'南边军情局换了个新副官，姓杜。自由港这两天来了个生面孔，在打听"第八小队"——十年前的老番号了，居然还有人记得。', opts:[{txt:'第八小队？', next:'mgossip2'},{txt:'走了。', next:'end'}]};
+D.dlg.mgossip2 = {who:'玛雅', txt:'第八小队，十年前全军覆没，据说是山雨下的手。不过……（她压低声音）听说他们死的地方，连块像样的碑都没有。有人说是"被上面抹掉的"。', opts:[{txt:'谢谢。', next:'end'}]};
+D.dlg.base_ruanmei = [
+  {who:'阮梅', txt:'山雨不欢迎没带诚意的人。不过，你看得顺眼。', opts:[
+    {txt:'我想加入山雨。', fx:'set:guer_join', next:'rj1'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+D.dlg.rj1 = {who:'阮梅', txt:'山雨不招闲人。丛林里只有两种人：能打的，和尸体。先去做点事，证明自己。', opts:[{txt:'明白。', next:'end'}]};
+D.dlg.base_li = [
+  {who:'李·少校', txt:'（他抽着烟，眼睛却盯着你）有意思。你叫什么？算了，不用回答，我知道你是谁。', opts:[
+    {txt:'你认识我？', next:'li1'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+D.dlg.li1 = {who:'李·少校', txt:'我认识"第八小队"的每一个人。你的编号，不该活着。可你偏偏活着——你说，是你命大，还是有人故意的？', opts:[{txt:'……', next:'end'}]};
+D.dlg.base_du = [
+  {who:'杜上尉', txt:'（他推了推军帽）新面孔。军情局的人都记性好，我记住你了。', opts:[
+    {txt:'买点补给。', fx:'trade'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+D.dlg.base_chunsao = [
+  {who:'春嫂', txt:'孩子，饿了吧？农场收留过很多人，不差你一个。', opts:[
+    {txt:'买点东西。', fx:'trade'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+D.dlg.base_baifan = [
+  {who:'白帆', txt:'我的船跑自由港到南方三条线。只要钱到位，客人想去哪儿都行。', opts:[
+    {txt:'聊聊。', fx:'set:gossip', next:'bg1'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+D.dlg.bg1 = {who:'白帆', txt:'海上最近不太平，南边海岸有艘黑旗船，不挂任何旗子，白天装鱼，晚上运货——运什么货？我没看见，我可什么都没看见。', opts:[{txt:'明白了。', next:'end'}]};
+D.dlg.base_laoqiang = [
+  {who:'老枪', txt:'丛林里最多的不是树，是伤口。坐下，让我看看。', opts:[
+    {txt:'买点药品。', fx:'trade'},
+    {txt:'治伤。', fx:'heal'},
+    {txt:'再见。', next:'end'}
+  ]}
+];
+
+/* ============ 第一章《灰烬与编号》 ============ */
+D.dlg.ch1_chen_a = [
+  {who:'陈医生', txt:'你醒了。别乱动，弹片刚取出来，再偏半寸，我就该给你挖坑了。', opts:[
+    {txt:'这里是……哪里？我怎么了？', next:1},
+    {txt:'（摸了摸发痛的额头）我……是谁？', next:2}
+  ]},
+  {who:'陈医生', txt:'这里是新西贡，南联盟的首都。三天前的夜里，雨下得跟泼水一样，你倒在城郊的排水沟里，浑身是血，胸口中了一枪，命硬，居然还喘气。', opts:[{txt:'是你救了我？', next:3}]},
+  {who:'陈医生', txt:'（他叹了口气）先别想你是谁。你连自己叫什么都不知道，对吧？我在你身上找到这个——', opts:[{txt:'（接过一块铜牌）"第八小队·EIGHT"……', next:4}]},
+  {who:'陈医生', txt:'第八小队。十年前的老番号了，早就没了。这块牌，是你身上唯一的东西。先在我这儿把伤养好，别想太多——想太多的人，都死在想明白之前。', opts:[{txt:'谢谢医生。（你收好铜牌）', fx:'give:water,1|set:chen_met|set:ch1_1', next:'end'}]}
+];
+D.dlg.ch1_ali_a = [
+  {who:'阿黎', txt:'（她蹲在街边，叼着根烟）哟，陈老头那诊所里爬出来的活人？稀奇。听说你失忆了？装失忆的人我见多了，你是头一个装得这么真的。', opts:[
+    {txt:'你知道第八小队吗？', next:1},
+    {txt:'有水卖吗？', next:2}
+  ]},
+  {who:'阿黎', txt:'第八小队？十年前的老黄历了，道上早没人提。不过我听说啊——他们不是战死的，是"被处理的"。你要真想打听，往野猫镇走，那边有个算命的老头，专管这种死人旧账。', opts:[{txt:'谢了。', fx:'set:ch1_2', next:'end'}]},
+  {who:'阿黎', txt:'（她扔过来一瓶水）算我请的。记住，在这条街上，名字不值钱，水才值钱。', opts:[{txt:'谢谢。', fx:'give:water,1', next:'end'}]}
+];
+D.dlg.ch1_chen_b = [
+  {who:'陈医生', txt:'回来了？东西呢？（他看着你掏出的罐头，点点头）够你吃三天的。听我说——你身上这块牌，不是普通军牌。十年前我在军区医院做事，见过这种牌子：上面刻了编号的，都是"不能有名字的人"。', opts:[
+    {txt:'不能有名字的人？', next:1},
+    {txt:'牌背面还有字。', next:2}
+  ]},
+  {who:'陈医生', txt:'对。那种部队，不上花名册，死了也不立碑。第八小队一共八个人，七年零九个月前，在第七区执行任务，全灭。官方说法是"遭遇山雨伏击"——但我知道，山雨那晚根本没去过第七区。', opts:[{txt:'你怎么知道？', next:3}]},
+  {who:'陈医生', txt:'（他沉默了一会儿）因为我就是那个去收尸的军医。我数过，七具尸体，七个编号。少了一个——"EIGHT"的编号，不在尸体上。', opts:[{txt:'（你心头一紧）那……我是谁？', fx:'set:ch1_3', next:4}]},
+  {who:'陈医生', txt:'我不知道。但你要想弄清楚，就去野猫镇找一个外号"算命陈"的老头——他是当年第七区行动的向导，还活着。带上你的牌，他会认的。', opts:[{txt:'好。我去野猫镇。', fx:'set:ch1_done|give:bandage,1', next:'end'}]}
+];
+
+/* ============ 第二章《十七度线的雨》 ============ */
+D.dlg.ch2_ali_a = [
+  {who:'阿黎', txt:'（野猫镇的酒馆里，她正数钱）哈，你还真来了？算命陈上个月死了，坟头草都三寸高了——他留了句话给你："牌背面，看水的倒影。"', opts:[
+    {txt:'看水的倒影？什么意思？', next:1}
+  ]},
+  {who:'阿黎', txt:'我哪知道，我又不是算命的。不过——你来得正好。我有一批货要送过界河，北岸的哨兵认货不认人，只要钱到位，畅通无阻。跑一趟，一百南元。', opts:[
+    {txt:'接了。（江湖规矩：拿了钱，就得认命）', fx:'set:ch2_1|give:water,2', next:'end'}
+  ]}
+];
+D.dlg.ch2_bridge = [
+  {who:'哨兵', txt:'（北岸桥头，灯光雪亮）站住！过境证！没有？货呢——打开看看！', opts:[
+    {txt:'【塞钱】大哥，通融通融。（花100南元）', fx:'gold:-100|set:ch2_pass', next:1},
+    {txt:'【硬闯】跑！', fx:'fight:soldier,3', next:2},
+    {txt:'【绕路】退回去，走东边第二桥。', fx:'set:ch2_detour', next:3}
+  ]},
+  {who:'阿黎', txt:'（她拍拍你的肩）钱能解决的事，都不叫事。过河。', opts:[{txt:'过河。', fx:'set:ch2_2', next:'end'}]},
+  {who:'阿黎', txt:'（你们在枪声中狂奔，货箱差点翻进河里）够刺激！跟你跑这一趟，值了！', opts:[{txt:'（喘着气）下次加钱。', fx:'set:ch2_2', next:'end'}]},
+  {who:'阿黎', txt:'东边那条路要穿过山雨的林子——更麻烦，但至少没有桥头的探照灯。走吧，别出声。', opts:[{txt:'走。', fx:'set:ch2_2|gold:-50', next:'end'}]}
+];
+D.dlg.ch2_ali_b = [
+  {who:'阿黎', txt:'货交了，钱在这——多给你五十，买你闭嘴。（她把钱塞给你，转身要走，又停住）对了……刚才卸货的时候，我看到箱子里有台北方制电台，还在响。我一个字没听见。你也没听见，对吧？', opts:[
+    {txt:'（你确实听见了——有人在叫你的编号）……我什么都没听见。', fx:'give:crate,1|set:ch2_3', next:1}
+  ]},
+  {who:'阿黎', txt:'好样的。野猫镇往北有个旧基地，那地方十年没人去了。你要真想弄明白自己的来历——去那儿，看看谁在叫"EIGHT"。', opts:[{txt:'（你把密电文攥在手里）我去。', fx:'give:code,1|set:ch2_done', next:'end'}]}
+];
+
+/* ============ 第三章《红河情报》 ============ */
+D.dlg.ch3_ruanmei = [
+  {who:'阮梅', txt:'（旧基地的废墟里，山雨的人已经先到了）别紧张。我们也在这找东西——看来，有人捷足先登了。', opts:[
+    {txt:'你们找什么？', next:1},
+    {txt:'（举起密电文）是它引我来的。', next:2}
+  ]},
+  {who:'阮梅', txt:'十年前，山雨救过一队南方的兵——说是"救"，不如说是收尸。七具尸体，没有名字，只有编号。我们一直想知道，第八个人去哪了。现在你站在我面前——答案好像自己走来了。', opts:[{txt:'（你沉默）档案室在哪？', next:3}]},
+  {who:'阮梅', txt:'档案室在东边塌了一半的地堡里。你要的东西，应该在铁柜里——但那柜子是北方造的，带锁。给你这个（她递来一根撬棍）。别谢我，你要是死在里面，我们正好看看热闹。', opts:[{txt:'（你接过撬棍）谢了。', fx:'give:wood,1|set:ch3_1', next:'end'}]}
+];
+D.dlg.ch3_li = [
+  {who:'李·少校', txt:'（档案到手的那一刻，他从阴影里走出来）慢着。那卷宗，归北方了。你手里那玩意，十年前就该烧成灰。', opts:[
+    {txt:'【合作】给你一份副本，我们两清。', fx:'set:ch3_coop', next:1},
+    {txt:'【拒绝】档案在我手上，谁来都一样。', fx:'fight:soldier,2', next:2}
+  ]},
+  {who:'李·少校', txt:'识相。记住，EIGHT这个名字，北边也有一份档案。你要是还想活，就别两头都查。', opts:[{txt:'（你把副本递过去，他消失在雨里）', fx:'set:ch3_2', next:'end'}]},
+  {who:'李·少校', txt:'（枪响过后，他捂着肩膀退进黑暗）有意思……南方居然还藏着你这号人。你一定会后悔的。', opts:[{txt:'（你捡起地上的弹壳）', fx:'set:ch3_2|gold:40', next:'end'}]}
+];
+D.dlg.ch3_du = [
+  {who:'杜上尉', txt:'（军情局的办公室，窗帘拉得严严实实）喝茶。别紧张，我只是想看看，从旧基地爬出来的东西，长什么样。', opts:[
+    {txt:'【上交】档案在这里，长官。', fx:'set:ch3_hand|gold:150', next:1},
+    {txt:'【隐瞒】什么档案？我只是去拾荒的。', fx:'set:ch3_hide', next:2}
+  ]},
+  {who:'杜上尉', txt:'识时务。EIGHT计划是五十年前的旧账，翻它没有好处。这笔钱，是你当"拾荒者"的报酬——记住，你什么也没看见，什么都没找到。', opts:[{txt:'（你把卷宗递过去，离开）', fx:'set:ch3_done', next:'end'}]},
+  {who:'杜上尉', txt:'（他盯着你看了很久，笑了）拾荒？你口袋里那块铜牌，我隔着三米都能看见反光。随你吧——不过下次，别让我在军情局的门口看见它。', opts:[{txt:'（你转身离开，手心全是汗）', fx:'set:ch3_done', next:'end'}]}
+];
+
+/* ============ 第四章《自由港之夜》 ============ */
+D.dlg.ch4_laosong = [
+  {who:'老宋', txt:'（他戴上老花镜，就着煤油灯翻卷宗，越翻手越抖）EIGHT计划……你从哪儿弄来的这东西？！这东西要是落在不该看的人眼里，够枪毙你八回的。', opts:[
+    {txt:'（你不动声色）所以它是什么？', next:1},
+    {txt:'你认识这个计划？', next:2}
+  ]},
+  {who:'老宋', txt:'我认识个屁！我不认识！这卷宗第一页写着"双方特别委员会"——南北两边联合签署的东西，能是什么好东西？！第三页有个坐标，指向第七区。我劝你——别去。', opts:[{txt:'（你记住了坐标）我会去的。', next:3}]},
+  {who:'老宋', txt:'（他长叹一声，从柜台下摸出一把旧手枪推过来）当定金。要是你回不来，这枪就当白送。记住，要是有人问起这卷宗，你从没见过我，我也从没见过你。', opts:[{txt:'（你收下枪）成交。', fx:'give:pistol,1|give:ammo9,12|set:ch4_1', next:'end'}]}
+];
+D.dlg.ch4_maya = [
+  {who:'玛雅', txt:'（后台的化妆间，她卸着妆，从镜子里看你）你的眼睛，让我想起一个人。十年前，我在第七区外围的野战医院唱过歌——他躺在担架上，浑身是血，就这双眼睛，盯着天花板，一个字不说。', opts:[
+    {txt:'他叫什么？', next:1}
+  ]},
+  {who:'玛雅', txt:'没人知道他叫什么。担架上挂的编号牌，是"EIGHT"。后来他们告诉我，他死了。尸体没有运回来，档案没有记录，像这个人从来没存在过。可你现在站在我面前——你说，是我想多了，还是他根本就没死？', opts:[
+    {txt:'（你把铜牌放在桌上）你见过这个吗？', next:2}
+  ]},
+  {who:'玛雅', txt:'（她看着铜牌，脸色一点点白下去）第八小队……七号死了，六号死了……都死了。只有八号——（她猛地抓住你的手）八号，你不该活着！他们要是知道你还活着，会来杀你的！', opts:[
+    {txt:'（你反握住她的手）所以，你知道"他们"是谁。', fx:'set:ch4_2|give:tape,1', next:3}
+  ]},
+  {who:'玛雅', txt:'（她松开手，像是泄了气）我不知道。我什么都不知道。这盘录音带，是当年野战医院的一个护士偷偷录的——你拿去吧。别再来找我了。', opts:[{txt:'（你收好录音带，走出门）', fx:'set:ch4_done', next:'end'}]}
+];
+
+/* ============ 第五章《丛林法则》 ============ */
+D.dlg.ch5_ruanmei = [
+  {who:'阮梅', txt:'（山雨营地，篝火噼啪）你要去第七区？十年前，我们收的七具尸体就埋在那儿。第八个——现在你告诉我，第八个人要来给自己上坟。', opts:[
+    {txt:'墓碑上写了什么？', next:1},
+    {txt:'带我去。', next:2}
+  ]},
+  {who:'阮梅', txt:'八块碑。七个有名字的，一块空的。空碑上没刻名字，只刻了一行字——"EIGHT，卒于战役结束前夜"。奇怪的是，那块碑是新的，石头还白着。', opts:[{txt:'（你心里一沉）有人来过了。', next:2}]},
+  {who:'阮梅', txt:'（她递给你一把砍刀）山雨不欠谁的。但你要去，我们给你开路。记住：第七区的地堡里，十年前运进去的东西，还没运出来。', opts:[{txt:'（你接过砍刀，走进雨林）', fx:'give:machete,1|set:ch5_1', next:'end'}]}
+];
+D.dlg.ch5_diary = [
+  {who:'（泛黄的日记）', txt:'"第七天。我们守在地堡里，等着撤退命令。命令一直没来。他们切断电台的时候，我知道——我们被放弃了。或者，我们从来就是被放弃的那批。"', opts:[
+    {txt:'（你继续翻）', next:1}
+  ]},
+  {who:'（泛黄的日记）', txt:'"他们从北边来，也从南边来。他们是同一批人，穿着不同的制服。七号临死前说，他看见了"自己的脸"——他一定是疯了。"', opts:[
+    {txt:'（日记到此为止，最后几页被撕掉了）', fx:'set:ch5_2|give:diary,1', next:'end'}
+  ]}
+];
+
+/* ============ 第六章《第七区的幽灵》 ============ */
+D.dlg.ch6_maya = [
+  {who:'玛雅', txt:'（自由港，她听完录音，手在发抖）这盘带子……是十年前那个护士录的。她录完就死了，死在回南方的路上，档案写"交通意外"。', opts:[
+    {txt:'录音最后，是八号的声音。', next:1}
+  ]},
+  {who:'玛雅', txt:'（她捂着脸）我知道。八号没死。或者说——八号死了，又活了。你听过那句话吗："如果我不存在，谁在说话？"……这话，就是八号说的。', opts:[
+    {txt:'（你忽然觉得头皮发麻）……他说的，是我。', fx:'set:ch6_1', next:2}
+  ]},
+  {who:'玛雅', txt:'（她抬起头，眼泪干在脸上）别再查了。查到底，你会发现自己不是自己。去南方军区吧——那里的档案室，有EIGHT计划的完整记录。如果你非要一个答案，那就去偷。', opts:[{txt:'（你点点头）我会去的。', fx:'set:ch6_done', next:'end'}]}
+];
+D.dlg.ch6_du2 = [
+  {who:'杜上尉', txt:'（军区档案室外的走廊，他拦住你）我就知道你会来。第七区、自由港、录音带……你查得越深，死得越快。', opts:[
+    {txt:'【问】EIGHT计划到底是什么？', next:1},
+    {txt:'【威胁】让开，或者让路。', fx:'fight:elite,1', next:2}
+  ]},
+  {who:'杜上尉', txt:'（他压低声音）EIGHT计划，五十年前南北联合的"秘密武器"项目。目的不是打赢战争——是让战争永远打不完。而你就是那个武器，EIGHT。我们造了你，就是为了让"结局"永远不出现。', opts:[{txt:'（你如遭雷击）……你们，造了我？', fx:'set:ch6_2', next:3}]},
+  {who:'杜上尉', txt:'（他退后半步，声音很轻）去看看档案吧。看完，你想杀我，我不拦你。', opts:[{txt:'（你走进档案室）', fx:'set:ch6_done', next:'end'}]}
+];
+
+/* ============ 第七章《停火日的钟声》 ============ */
+D.dlg.ch7_du = [
+  {who:'杜上尉', txt:'（和谈传闻满天飞，他难得没穿军装）听着，南方要和北方和谈了。EIGHT计划是"历史遗留问题"——只要没人翻旧账，两边都能睡个好觉。', opts:[
+    {txt:'【交出证据】我给你一切，给我一个新身份。', fx:'set:ch7_side_du|gold:300', next:1},
+    {txt:'【拒绝】五十年前的账，凭什么我来还。', next:2}
+  ]},
+  {who:'杜上尉', txt:'识相。南联盟会给你一个新身份、一笔钱、一间安全屋。你不再是EIGHT，你只是一个普通人。', opts:[{txt:'（你把档案袋递过去，转身）', fx:'set:ch7_done', next:'end'}]},
+  {who:'杜上尉', txt:'（他沉默片刻）那你自己保重。和谈文件里，有一页是专门为你准备的——你自己去看。', opts:[{txt:'（你记住了他的话）', fx:'set:ch7_done', next:'end'}]}
+];
+D.dlg.ch7_ruanmei = [
+  {who:'阮梅', txt:'（她擦着枪，头也不抬）和谈？狗屁和谈。五十年前他们就是这么谈的——谈出来的东西叫EIGHT计划。', opts:[
+    {txt:'【站在真相一边】我会公开它。', fx:'set:ch7_side_ruan', next:1},
+    {txt:'【犹豫】公开它，会死很多人。', next:2}
+  ]},
+  {who:'阮梅', txt:'（她抬头看你）好。山雨跟你干。公开EIGHT计划，让这五十年的鬼账晒晒太阳。', opts:[{txt:'（你伸手，她握上来）', fx:'set:ch7_done', next:'end'}]},
+  {who:'阮梅', txt:'死的人还少吗？五十年来，界河两岸死了多少人？EIGHT计划要是真能"终结战争"，它就不会是秘密武器，而是和平鸽了。', opts:[{txt:'（你无言以对）', fx:'set:ch7_done', next:'end'}]}
+];
+D.dlg.ch7_li = [
+  {who:'李·少校', txt:'（他在野猫镇的屋顶上等你）听说你想去北方？巧了，我也有批东西要送回去。', opts:[
+    {txt:'【合作】我需要一张通行证。', fx:'set:ch7_side_li', next:1},
+    {txt:'【拒绝】我不信任北方。', next:2}
+  ]},
+  {who:'李·少校', txt:'通行证我给你。条件是——EIGHT计划的档案，你带到北方来。南方要销毁它，北方要研究它。你选吧。', opts:[{txt:'（你接过通行证）我会去的。', fx:'give:pass,1|set:ch7_done', next:'end'}]},
+  {who:'李·少校', txt:'（他笑了）不信任？也对。不过记住——EIGHT计划启动文件上的推荐人签名，是你自己的笔迹。这一点，南方和北方都替你瞒着。', opts:[{txt:'（你瞳孔一缩）……什么？', fx:'set:ch7_done', next:'end'}]}
+];
+
+/* ============ 第八章《铁幕之后》 ============ */
+D.dlg.ch8_laosong = [
+  {who:'老宋', txt:'（他数着钱，头也不抬）通行证是真的，假得不能再真。但你要进红城，得帮我带一箱货——别问是什么，问就是粮食。', opts:[
+    {txt:'【接货】好，箱子我扛。', fx:'give:crate,1|set:ch8_1', next:1}
+  ]},
+  {who:'老宋', txt:'红城规矩：见红就躲，见旗就停，见巡逻队——低头走路。祝你好运。', opts:[{txt:'（你把箱子扛上肩）', fx:'set:ch8_done', next:'end'}]}
+];
+D.dlg.ch8_li2 = [
+  {who:'李·少校', txt:'（红城，军情局办公室，他终于脱下伪装）欢迎来到铁幕的另一边。你查得对——北方也有"第八小队"，番号EIGHT，全部特训战士，只有代号，没有名字。', opts:[
+    {txt:'队长代号是ONE？', next:1}
+  ]},
+  {who:'李·少校', txt:'（他打开保险柜，抽出一份档案，摊在你面前）实验体一号，状态：活跃。当前身份：南方军情局杜上尉的副官。——你猜，他现在叫什么？', opts:[
+    {txt:'（你看着档案上的照片，瞳孔骤缩）……和我，同一张脸。', fx:'set:ch8_2', next:2}
+  ]},
+  {who:'李·少校', txt:'（他合上档案）EIGHT计划的精髓，不是造一个士兵——是造一个"无法被消灭的对手"。南方的EIGHT，北方的ONE。只要你们俩都活着，战争就永远需要"下一次"。你们，是那台机器里咬合的齿轮。', opts:[
+    {txt:'（你转身，声音很哑）……我不是齿轮。', fx:'set:ch8_done', next:'end'}
+  ]}
+];
+
+/* ============ 第九章《双生档案》 ============ */
+D.dlg.ch9_laosong = [
+  {who:'老宋', txt:'（他给自己倒了一杯酒，手很稳）摊牌吧。我是EIGHT计划的联络员——负责销毁痕迹的那种。五十年前，南北谈判桌底下，两家握手，共同启动了EIGHT计划。', opts:[
+    {txt:'人造战士？', next:1}
+  ]},
+  {who:'老宋', txt:'对。战争打到一半，双方都怕"真的打完了"——打完了，武器卖给谁？于是他们造了两个永远不会死、永远不会被消灭的"战士"：南方的EIGHT，北方的ONE。你，是EIGHT。', opts:[
+    {txt:'（你握着铜牌，指节发白）我的记忆呢？', next:2}
+  ]},
+  {who:'老宋', txt:'（他垂下眼）你的记忆，是战后植入的"和平叙事"。你记得的童年、你记得的名字、你记得的一切温暖——都是编剧写的。你醒来那天，格式化你记忆的人，是玛雅。', opts:[
+    {txt:'（你的世界在崩塌）……为什么？', fx:'set:ch9_1', next:3}
+  ]},
+  {who:'老宋', txt:'因为不格式化，你会疯。EIGHT计划里最恶毒的一笔，就是让实验体"知道自己是实验体"。你是第一个撑了十年的。', opts:[{txt:'（你站起来，走了出去）', fx:'set:ch9_done', next:'end'}]}
+];
+D.dlg.ch9_maya = [
+  {who:'玛雅', txt:'（她在港口，海风把她的头发吹得凌乱）老宋都告诉你了？……对不起。格式化你记忆的人，是我。', opts:[
+    {txt:'（你看着她，没说话）', next:1}
+  ]},
+  {who:'玛雅', txt:'十年前，你被从第七区抬出来的时候，已经疯了——你在录音带里那句话，就是疯话。上面说，要么格式化你，要么销毁你。我选了格式化。', opts:[
+    {txt:'我原始的记忆，还有碎片留下来吗？', next:2}
+  ]},
+  {who:'玛雅', txt:'有。三块碎片，散在自由港、野猫镇和旧基地——那是你真正的记忆，我没舍得删干净。找到它们，你就知道那一夜，你究竟做了什么。', opts:[{txt:'（你点点头）我会找到的。', fx:'set:ch9_2', next:'end'}]}
+];
+D.dlg.ch9_frag = [
+  {who:'（记忆碎片·其一）', txt:'枪声。河。雨。你端着枪，瞄准河中央那个和你一模一样的身影——"实验体一号"。上级的命令是：终止。你扣下扳机。子弹偏了半寸。他沉下去之前，睁着眼看你，嘴在动。', opts:[{txt:'（你攥紧拳头）', next:'end'}]}
+];
+D.dlg.ch9_frag2 = [
+  {who:'（记忆碎片·其二）', txt:'手术台。无影灯。你听见两个声音："EIGHT计划不能输，输了战争就结束了。""实验体八号，编号确认，记忆封存待命。"——你在手术台上睁开眼睛，又闭上了。', opts:[{txt:'（你的太阳穴突突地跳）', next:'end'}]}
+];
+D.dlg.ch9_frag3 = [
+  {who:'（记忆碎片·其三）', txt:'会议室。五十年前。一个穿灰西装的人把文件推到你面前："签字。签了它，战争就不会结束，和平就不会来。我们只要它——永远差一点点。"你签了。字迹，和你现在写的一模一样。', opts:[{txt:'（你看着自己的手，它在抖）', fx:'set:ch9_done', next:'end'}]}
+];
+
+/* ============ 第十章《雨林之火》 ============ */
+D.dlg.ch10_du = [
+  {who:'杜上尉', txt:'（军区指挥部，电台里全是杂音）铁塔的军阀联合北边的散兵，全线开火了！界河大桥失守，山雨营地被围，自由港的海上也被封锁了！', opts:[
+    {txt:'（你拿起枪）我去山雨营地。', next:1},
+    {txt:'（你拿起枪）我去自由港。', next:2},
+    {txt:'（你拿起枪）我去农场。', next:3}
+  ]},
+  {who:'杜上尉', txt:'（他敬了个礼）南方军情局欠你的。活着回来。', opts:[{txt:'（你冲进雨里）', fx:'set:ch10_side|quest:q_defense1', next:'end'}]},
+  {who:'杜上尉', txt:'自由港要是丢了，南方的补给线就断了。你欠老宋的，这次还上。', opts:[{txt:'（你冲进雨里）', fx:'set:ch10_side|quest:q_defense2', next:'end'}]},
+  {who:'杜上尉', txt:'（他顿了顿）农场的百姓……拜托了。', opts:[{txt:'（你冲进雨里）', fx:'set:ch10_side|quest:q_defense3', next:'end'}]}
+];
+D.dlg.ch10_tieta = [
+  {who:'铁塔', txt:'（他坐在弹药箱上，机枪的枪管还烫着）EIGHT？哈！五十年前的老古董也来凑热闹？告诉你，老子只是拿钱办事——出钱的人，在天上！', opts:[
+    {txt:'（你举起了枪）那就让你的"天上"，下来跟我谈。', fx:'fight:boss,1', next:1}
+  ]},
+  {who:'铁塔', txt:'（他倒下之前，指了指夜空）……看见那些无人机了吗？不是我的……也不是南北任何一家的……是灰隼的！下棋的人……从来……不是我们……', opts:[{txt:'（你抬头，夜空中十几架无人机列队飞过）', fx:'set:ch10_done|gold:200', next:'end'}]}
+];
+
+/* ============ 第十一章《十七度线》 ============ */
+D.dlg.ch11_laosong = [
+  {who:'老宋', txt:'（他第一次没有笑）灰隼集团。五十年前EIGHT计划的真正出资人。他们表面是航运财团，背地里给南北两边同时供货——战争打得越久，他们赚得越多。', opts:[
+    {txt:'无人机是他们放的？', next:1}
+  ]},
+  {who:'老宋', txt:'（他点头）铁塔只是被雇的。灰隼想让两边"永远打不完"——EIGHT计划是他们最大的投资：两个永远打不死的战士，等于永远开不完的战争。', opts:[
+    {txt:'他们的核心档案在哪？', next:2}
+  ]},
+  {who:'老宋', txt:'自由港南岸的仓库区，第三号库——那栋挂着"航运办事处"牌子的楼。灰隼的核心档案就在地下金库里。但那里有十台无人机守着，你进去，等于送死。', opts:[{txt:'（你把枪别在腰间）那就让它成灰。', fx:'set:ch11_1', next:'end'}]}
+];
+D.dlg.ch11_choice = [
+  {who:'（金库的灯光下，档案摊了一地）', txt:'你面前是三份选择。EIGHT计划的全部真相，就在这三扇门后面——', opts:[
+    {txt:'【公开】把一切公之于众，让和谈在真相中重启。', fx:'set:ch11_open|set:ch11_done', next:1},
+    {txt:'【焚毁】炸掉数据中心，让棋手失去棋子。', fx:'set:ch11_burn|set:ch11_done', next:2},
+    {txt:'【夺权】坐进棋手的位置，用系统逼双方停火。', fx:'set:ch11_seize|set:ch11_done', next:3}
+  ]},
+  {who:'（档案的末页，夹着一封泛黄的信）', txt:'推荐信。计划启动人，汉伯·EIGHT·本人。字迹，和你写的一模一样。五十年前，是你亲手启动了这场永不完结的战争——而现在，你握着它的结局。', opts:[{txt:'（你把信折好，收进口袋）', next:'end'}]}
+];
+
+/* ============ 第十二章《新世界的黎明》（结局章） ============ */
+D.dlg.ch12_open = [
+  {who:'（和谈会场，红城）', txt:'你把EIGHT计划的档案摊在谈判桌上。全场死寂。五十年的谎言，被一页页纸照得雪亮。', opts:[
+    {txt:'（你开口，声音很稳）"这场战争，该结束了。"', next:1}
+  ]},
+  {who:'（界河两岸，停火生效）', txt:'炮声停了。五十年来，界河第一次安静下来。你站在十七度线的桥上，看着两岸的人开始互相招手。', opts:[
+    {txt:'（你听见远处传来歌声——是玛雅在唱）', fx:'set:end_open', next:'end'}
+  ]}
+];
+D.dlg.ch12_burn = [
+  {who:'（灰隼数据中心，引线冒着烟）', txt:'你按下起爆器。灰隼的"棋局"在火光中化为灰烬——但失去棋手的棋子们，开始各自为战。', opts:[
+    {txt:'（你走进雨林，身后是燃烧的城市）', next:1}
+  ]},
+  {who:'（一年后，界河两岸）', txt:'战争没有结束，只是换了打法。但至少——再没有无人机在天上，替谁下棋。', opts:[{txt:'（你隐入丛林，再无踪迹）', fx:'set:end_burn', next:'end'}]}
+];
+D.dlg.ch12_seize = [
+  {who:'（灰隼系统，最高权限）', txt:'你坐进那把椅子。系统里，两国的指挥部、无人机群、和谈时间表——全部听命于你。', opts:[
+    {txt:'（你输入指令：双方立即停火，重组南方与北方的边界）', next:1}
+  ]},
+  {who:'（新世界的黎明）', txt:'你以"棋手"的身份，按下了战争的暂停键。和平来了——但这一次，是握在你手里。', opts:[{txt:'（你望着屏幕上的新地图）', fx:'set:end_seize', next:'end'}]}
+];
+D.dlg.ch12_tail = [
+  {who:'（一年后·自由港的酒馆）', txt:'通缉令已经泛黄。你推开酒馆的门，老板娘抬头——是玛雅，她笑了笑："活着回来了？"你点头，坐下来，要了一杯米酒。', opts:[
+    {txt:'（门外，雨里，一个穿风衣的人站在路灯下）', next:1}
+  ]},
+  {who:'（穿风衣的人推开门，帽檐很低）', txt:'他走到吧台前，也要了一杯酒。酒保问他叫什么，他掀起帽檐——那是一张和你一模一样的脸。他笑笑，露出胸口的一块铜牌，上面刻着："ONE"。', opts:[
+    {txt:'（他朝你举起杯）"好久不见，EIGHT。"', fx:'set:end_done', next:'end'}
+  ]}
+];
+
+/* ---- 自由模式/支线对话 ---- */
+D.dlg.q_boar = [
+  {who:'老枪', txt:'营地的肉不够了。丛林里野猪多得成灾——打三头回来，我给你工钱。', opts:[{txt:'接了。', fx:'quest:q_boar', next:'end'}]}
+];
+D.dlg.q_boar_done = [
+  {who:'老枪', txt:'（他掂了掂肉，满意地点头）够弟兄们吃两天的。拿着。', opts:[{txt:'（你收下报酬）', fx:'reward:q_boar', next:'end'}]}
+];
+D.dlg.q_python = [
+  {who:'老枪', txt:'界河边有条巨蟒，咬死我们两个哨兵。敢不敢去收拾它？两条蟒皮，换医药包。', opts:[{txt:'接了。', fx:'quest:q_python', next:'end'}]}
+];
+D.dlg.q_python_done = [
+  {who:'老枪', txt:'（他看着蟒皮，咂咂嘴）好手艺。蟒肉我留着，钱你拿着。', opts:[{txt:'（你收下报酬）', fx:'reward:q_python', next:'end'}]}
+];
+D.dlg.q_water = [
+  {who:'春嫂', txt:'城里的水太贵了，农场的水又浑。孩子，帮婶子跑一趟野猫镇，带三瓶干净水回来，行不？', opts:[{txt:'接了。', fx:'quest:q_water', next:'end'}]}
+];
+D.dlg.q_water_done = [
+  {who:'春嫂', txt:'（她接过水，眼圈红了）好孩子……这些拿着，是婶子的一点心意。', opts:[{txt:'（你收下报酬）', fx:'reward:q_water', next:'end'}]}
+];
+D.dlg.q_radio = [
+  {who:'玛雅', txt:'电台的零件坏了一半。帮我弄两个零件、两节电池——港口那群维修匠黑得很，还是你靠谱。', opts:[{txt:'接了。', fx:'quest:q_radio', next:'end'}]}
+];
+D.dlg.q_radio_done = [
+  {who:'玛雅', txt:'（她装上零件，电台滋滋响起来）成了！这些是给你的——对了，刚才电台收到一段怪信号，念的是个编号……EIGHT？', opts:[{txt:'（你笑了笑）大概是重名。', fx:'reward:q_radio', next:'end'}]}
+];
+D.dlg.q_bounty = [
+  {who:'杜上尉', txt:'南方军区开出悬赏：清剿六个土匪，拿人头换钱。干不干？', opts:[{txt:'接了。', fx:'quest:q_bounty', next:'end'}]}
+];
+D.dlg.q_bounty_done = [
+  {who:'杜上尉', txt:'（他数了数，点头）干净。悬赏归你——顺便送你一句：界河最近不太平，小心。', opts:[{txt:'（你收下报酬）', fx:'reward:q_bounty', next:'end'}]}
+];
+D.dlg.q_meds = [
+  {who:'陈医生', txt:'诊所缺抗生素，缺得紧。你要是能弄到两支，我出高价收。', opts:[{txt:'接了。', fx:'quest:q_meds', next:'end'}]}
+];
+D.dlg.q_meds_done = [
+  {who:'陈医生', txt:'（他看着药瓶，长出一口气）救命的药啊……钱你拿着，再带上这卷绷带。', opts:[{txt:'（你收下报酬）', fx:'reward:q_meds', next:'end'}]}
+];
+D.dlg.q_smuggle = [
+  {who:'老宋', txt:'野猫镇有箱货要运到自由港——路上会有人查，你机灵点。运费先付一半，到了结清。', opts:[{txt:'接了。', fx:'quest:q_smuggle', next:'end'}]}
+];
+D.dlg.q_smuggle_done = [
+  {who:'老宋', txt:'（他验了货，点头）货不错，你也不错。这是尾款——以后有活还找你。', opts:[{txt:'（你收下报酬）', fx:'reward:q_smuggle', next:'end'}]}
+];
+D.dlg.q_scrap = [
+  {who:'老宋', txt:'我这缺废铁，收八块。城里城外翻翻垃圾堆就有。', opts:[{txt:'接了。', fx:'quest:q_scrap', next:'end'}]}
+];
+D.dlg.q_scrap_done = [
+  {who:'老宋', txt:'（他掂了掂废铁）成色不错。拿着，下次有货还找我。', opts:[{txt:'（你收下报酬）', fx:'reward:q_scrap', next:'end'}]}
+];
+D.dlg.q_escort = [
+  {who:'白帆', txt:'船上的水手不够了，我得往野猫镇送批货，路上怕劫道的。你跟着跑一趟，当保镖。', opts:[{txt:'接了。', fx:'quest:q_escort', next:'end'}]}
+];
+D.dlg.q_escort_done = [
+  {who:'白帆', txt:'（他拍着你的肩）一路平安，全亏了你。船上的粮食分你一份——还有这个，港口老吴欠的账，他托我还你。', opts:[{txt:'（你收下报酬）', fx:'reward:q_escort', next:'end'}]}
+];
+D.dlg.q_bridge = [
+  {who:'白帆', txt:'界河第二桥的木梁被雨水泡烂了，来往的船都堵在港口。帮我弄六根木材来修桥，工钱好说。', opts:[{txt:'接了。', fx:'quest:q_bridge', next:'end'}]}
+];
+D.dlg.q_bridge_done = [
+  {who:'白帆', txt:'（他看着新木梁，咧嘴笑了）桥修好了，船通了。这是工钱，还有港口酒馆的免费酒券——我请。', opts:[{txt:'（你收下报酬）', fx:'reward:q_bridge', next:'end'}]}
+];
+D.dlg.q_diary = [
+  {who:'春嫂', txt:'我家那口子十年前失踪在第七区……前两天有人带话，说那儿有本日记，写着他的名字。孩子，帮婶子找找吧。', opts:[{txt:'接了。', fx:'quest:q_diary', next:'end'}]}
+];
+D.dlg.q_diary_done = [
+  {who:'春嫂', txt:'（她捧着日记，哭得说不出话）是他……是他的字……这些银器你拿着，是当年陪嫁的，婶子没别的了。', opts:[{txt:'（你接过银项链，没说话）', fx:'reward:q_diary', next:'end'}]}
+];
+D.dlg.q_drone = [
+  {who:'老宋', txt:'（他盯着桌上的残骸，目光发直）无人机残骸？哪儿捡的？……这是灰隼的型号。这东西，不该出现在战区。', opts:[{txt:'它意味着什么？', next:1}]},
+  {who:'老宋', txt:'意味着有人在监视这场战争——而且已经监视了很多年。你拿着这东西，迟早会引来麻烦。给我，我替你处理。', opts:[{txt:'（你递过去）谢了。', fx:'quest:q_drone', next:2}]},
+  {who:'老宋', txt:'（他把残骸锁进柜台下）记住，别跟任何人提这茬。', opts:[{txt:'（你点点头，转身离开）', fx:'reward:q_drone', next:'end'}]}
+];
+
+/* ============ 主线章节定义 ============ */
+D.chapters = [
+  {
+    id:1, title:'灰烬与编号', month:'第1月', loc:'新西贡',
+    intro:[
+      '枪声。雨。铁锈味的黑暗。\n你醒来的地方，是一张咯吱作响的行军床。天花板上吊着一盏昏黄的灯泡，窗外是新西贡永远下不完的雨。',
+      '你身上缠着绷带，胸口放着一块冰冷的铜牌。\n上面刻着——"第八小队 · EIGHT"。',
+      '这是一九七五年没有发生"结局"的另一个世界。\n印支半岛南北分治五十年，十七度线的界河，把两个国家连同两种未来，劈成了两半。',
+      '而你，第八侦察小队最后的编号，将在灰烬中醒来。\n活下去，或者——找出真相。'
+    ],
+    objectives:[
+      {kind:'talk', who:'chen', hint:'和陈医生谈谈'},
+      {kind:'talk', who:'ali', hint:'在街头找阿黎问问'},
+      {kind:'collect', item:'can', n:3, hint:'弄到3个战备罐头（拾荒/购买）'},
+      {kind:'talk', who:'chen', hint:'把东西带回诊所'}
+    ],
+    startDlg:'ch1_chen_a', midDlg:{ali:'ch1_ali_a'}, endDlg:'ch1_chen_b',
+    teaser:'你把铜牌翻到背面——那儿还有一行字，刻得又深又急：\n"第八小队，无人生还。"\n\n那你，是谁？\n【第2章《十七度线的雨》：你带着唯一的线索走向野猫镇，而界河的雨，正在涨。】'
+  },
+  {
+    id:2, title:'十七度线的雨', month:'第2月', loc:'野猫镇 → 界河大桥',
+    intro:[
+      '你沿着破败的公路往野猫镇走。雨没有停过，路边的战争残骸被泡成了铁锈色。',
+      '算命陈死了。他留给你一句话："牌背面，看水的倒影。"\n而阿黎，在野猫镇的酒馆里，等着一单"过河生意"。',
+      '界河对面，就是北方。五十年来，那条河涨涨落落，淹掉过无数人的名字。',
+      '你站在河边，摸了摸胸口的铜牌。\n水面的倒影里，你看见一张陌生的脸——你自己的脸。'
+    ],
+    objectives:[
+      {kind:'goto', area:'wildcat', hint:'前往野猫镇'},
+      {kind:'talk', who:'ali', hint:'找阿黎接护送差事'},
+      {kind:'goto', area:'bridge1', hint:'把货送到十七度线大桥'},
+      {kind:'talk', who:'ali', hint:'和北岸的阿黎碰头'}
+    ],
+    startDlg:'ch2_ali_a', midDlg:{ali:'ch2_bridge'}, endDlg:'ch2_ali_b',
+    teaser:'夜里宿在野猫镇，那台北方制电台自己响了——\n一段密电文，反复念着四个字："EIGHT……EIGHT……"\n\n有人在用你的编号，呼叫十年不散的幽灵。\n【第3章《红河情报》：密电文指向旧基地档案室，而山雨和北方，都在路上。】'
+  },
+  {
+    id:3, title:'红河情报', month:'第3月', loc:'旧基地废墟',
+    intro:[
+      '旧基地藏在西边的丛林深处，铁丝网早就锈穿了。十年没人来，墙上的弹孔和标语，还保持着撤退那天的样子。',
+      '你到的时候，山雨的人也到了。\n阮梅站在塌了一半的档案室门口，看着你："答案好像自己走来了。"',
+      '铁柜里，半焦的卷宗还留着火燎的痕迹。\n第一页写着——"EIGHT计划 · 双方特别委员会"。',
+      '你刚把档案塞进怀里，阴影里就响起一个声音：\n"那卷宗，归北方了。"'
+    ],
+    objectives:[
+      {kind:'goto', area:'oldbase', hint:'前往第八基地废墟'},
+      {kind:'talk', who:'ruanmei', hint:'和山雨的阮梅交涉'},
+      {kind:'collect', item:'folder', n:1, hint:'从档案室铁柜里拿到档案卷宗'},
+      {kind:'talk', who:'du', hint:'回到新西贡，面对军情局的杜上尉'}
+    ],
+    startDlg:'ch3_ruanmei', midDlg:{li:'ch3_li', du:'ch3_du'}, endDlg:null,
+    teaser:'深夜，你借着油灯翻档案。\n页首一行小字，刺得你眼睛生疼——\n"EIGHT计划 · 实验体八号"。\n\n实验体八号。不是士兵编号，是实验体编号。\n【第4章《自由港之夜》：能读懂这堆纸的人，在自由港。而自由港的墙上，正贴着你的画像。】'
+  },
+  {
+    id:4, title:'自由港之夜', month:'第4月', loc:'龙湾自由港',
+    intro:[
+      '自由港在海岸线上，鱼龙混杂，灯红酒绿。黑旗船夜里卸货，白天的码头则挤满水手和骗子。',
+      '你刚走进港口广场，就看见公告栏前围了一堆人。\n一张通缉令，画像和你一模一样——名字却写着"HanBer ONE"，悬赏十万南元。',
+      '落款：南方军情局。签发日期：你醒来的那天。\n你摸了摸胸口的铜牌——EIGHT。\n为什么，是ONE？',
+      '老宋的当铺在深巷里。他看完卷宗，手抖得点不着烟：\n"这东西，该烧掉。"'
+    ],
+    objectives:[
+      {kind:'goto', area:'freeport', hint:'前往龙湾自由港'},
+      {kind:'talk', who:'laosong', hint:'找情报贩子老宋解读档案'},
+      {kind:'talk', who:'maya', hint:'在酒馆后台找歌女玛雅'}
+    ],
+    startDlg:'ch4_laosong', midDlg:{maya:'ch4_maya'}, endDlg:null,
+    teaser:'通缉令的落款处，盖着南方军情局的章。\n签发人签名潦草，只认得出一个字——"杜"。\n\n而玛雅说：八号，你不该活着。\n【第5章《丛林法则》：第七区。十年前。"八号"死在那里。而你还活着。】'
+  },
+  {
+    id:5, title:'丛林法则', month:'第5月', loc:'第七区',
+    intro:[
+      '第七区在界河以东的丘陵里，十年前是南方最机密的军事区，现在是拾荒者和猛虎的地盘。',
+      '山雨的人给你开路。阮梅说，十年前那七具尸体，就埋在这里——八块碑，七个名字，一块空碑。',
+      '空碑上没有名字，只刻了一行字：\n"EIGHT，卒于战役结束前夜。"',
+      '你蹲下来，用手去摸那行字。\n字是新的。石头还白着。有人在你醒来之前，刚刚来过。'
+    ],
+    objectives:[
+      {kind:'goto', area:'sector7', hint:'前往第七区'},
+      {kind:'talk', who:'ruanmei', hint:'在山雨营地领取开路任务'},
+      {kind:'collect', item:'diary', n:1, hint:'在地堡中找到泛黄的日记'}
+    ],
+    startDlg:'ch5_ruanmei', midDlg:{}, endDlg:'ch5_diary',
+    teaser:'碑是新的，字是新的。\n有人在你醒来之前，刚刚来过。\n\n日记的最后几页，被人撕掉了。\n【第6章《第七区的幽灵》：录音带里，七个声音在倒数。最后一个声音说——"如果我不存在，谁在说话？"】'
+  },
+  {
+    id:6, title:'第七区的幽灵', month:'第6月', loc:'第七区 → 南方军区',
+    intro:[
+      '录音带是第七区地堡深处找到的。\n你按下播放键，七个声音依次响起，倒数着——"七、六、五、四、三、二、一。"',
+      '最后一个声音说："出卖我们的，是我们自己人。他们从北边来，也从南边来。"',
+      '录音的最后两秒，是一阵电流杂音。\n然后，一个你无比熟悉的声音开口了：\n"如果我不存在，谁在说话？"',
+      '你握着录音带，站在地堡的黑暗里，浑身发冷。\n那是你的声音。'
+    ],
+    objectives:[
+      {kind:'collect', item:'tape', n:1, hint:'取得录音带（玛雅处或地堡）'},
+      {kind:'talk', who:'maya', hint:'让玛雅解读录音带'},
+      {kind:'goto', area:'military', hint:'潜入南方军区档案室'},
+      {kind:'talk', who:'du', hint:'面对守在走廊的杜上尉'}
+    ],
+    startDlg:'ch6_maya', midDlg:{du:'ch6_du2'}, endDlg:null,
+    teaser:'军区档案里，一行修改过的记录：\n"实验体八号：已确认死亡。"\n——原记录被划掉，边上写着："转入休眠。"\n\n你终于明白：在你醒来之前，有人先你一步，看过那块铜牌。\n【第7章《停火日的钟声》：和谈传闻传遍印支。而和谈附件里，藏着EIGHT计划的编号。】'
+  },
+  {
+    id:7, title:'停火日的钟声', month:'第7月', loc:'各方势力',
+    intro:[
+      '停火和谈的传闻，像野火一样烧遍印支半岛。\n南方要销毁EIGHT计划，北方要研究它，山雨要公开它。',
+      '而杜上尉告诉你：和谈文件里，有一页是专门为你准备的。',
+      '李·少校告诉你：EIGHT计划启动文件上的推荐人签名，是你自己的笔迹。',
+      '你站在十七度线的桥上，看着两岸的探照灯。\n五十年来，这场战争第一次有了"结束"的选项——\n而你，是那个选项本身。'
+    ],
+    objectives:[
+      {kind:'talk', who:'du', hint:'听杜上尉开出条件'},
+      {kind:'talk', who:'ruanmei', hint:'听阮梅的立场'},
+      {kind:'talk', who:'li', hint:'见李·少校的最后一面'}
+    ],
+    startDlg:'ch7_du', midDlg:{ruanmei:'ch7_ruanmei', li:'ch7_li'}, endDlg:null,
+    teaser:'和谈提案的附件第41页，印着一行小字：\n"EIGHT计划，由双方特别委员会共同管理。"\n\n两边都知道。从头到尾，两边都知道。\n【第8章《铁幕之后》：你决定亲自去北方看一眼。那里的档案，写着另一份真相。】'
+  },
+  {
+    id:8, title:'铁幕之后', month:'第8月', loc:'红城·越北',
+    intro:[
+      '红城是铁幕的另一面：灰色建筑，广播喇叭，三步一岗。\n李·少校在这里脱下伪装，露出北方军情局少校的身份。',
+      '档案局的卷宗里，你找到了北方的"第八小队"——\n番号EIGHT，全部特训战士，只有代号，没有名字。队长代号：ONE。',
+      '李打开保险柜，抽出一份档案：\n"实验体一号，状态：活跃。当前身份：南方军情局，杜上尉副官。"',
+      '档案上的照片，和你长着同一张脸。\n落款签名，是你的老熟人：杜。'
+    ],
+    objectives:[
+      {kind:'talk', who:'laosong', hint:'从老宋处取得通行证'},
+      {kind:'goto', area:'redcity', hint:'潜入红城'},
+      {kind:'talk', who:'li', hint:'见李·少校，看他打开保险柜'}
+    ],
+    startDlg:'ch8_laosong', midDlg:{li:'ch8_li2'}, endDlg:null,
+    teaser:'南方的EIGHT，北方的ONE。\n同一张脸，两个编号，一场横跨五十年的骗局。\n\n而李说：你们是那台机器里，咬合的齿轮。\n【第9章《双生档案》：你的记忆是编剧写的。那个"格式化你"的人，是玛雅。】'
+  },
+  {
+    id:9, title:'双生档案', month:'第9月', loc:'自由港 → 各地',
+    intro:[
+      '老宋摊牌了。EIGHT计划——五十年前，南北谈判桌底下，两家握手，共同启动的"人造战士"项目。',
+      '目的不是打赢战争，是让战争永远打不完。\n南方的EIGHT，北方的ONE。两个永远不会消失的战士，等于永远开不完的战争。',
+      '你的记忆，是战后植入的"和平叙事"。\n而格式化你记忆的人——是玛雅。',
+      '她留着三块碎片。\n那是你真正的记忆，散落在自由港、野猫镇和旧基地。\n找到它们，你就知道那一夜，你究竟做了什么。'
+    ],
+    objectives:[
+      {kind:'talk', who:'laosong', hint:'让老宋摊牌'},
+      {kind:'talk', who:'maya', hint:'听玛雅说出格式化真相'},
+      {kind:'collect', item:'fragment', n:3, hint:'收集3块记忆碎片（自由港/野猫镇/旧基地拾荒点）'}
+    ],
+    startDlg:'ch9_laosong', midDlg:{maya:'ch9_maya'}, endDlg:null,
+    teaser:'你终于想起枪响那一夜。\n河面上漂着的人，睁着眼睛，和你一模一样。\n他开口说了句话——现在你听清了：\n"我会回来的，八号。"\n\n【第10章《雨林之火》：铁塔军阀起兵，边境全线开火。而你，还没想好要站在哪一边。】'
+  },
+  {
+    id:10, title:'雨林之火', month:'第10月', loc:'全线战场',
+    intro:[
+      '铁塔的军阀联合北边的散兵，一夜之间全线开火。\n界河大桥失守，山雨营地被围，自由港海上封锁，农场火光冲天。',
+      '杜上尉在指挥部把枪塞进你手里：\n"南方军情局欠你的。活着回来。"',
+      '你冲进雨里。身后是燃烧的印支。\n而夜空中，十几架不属于任何阵营的无人机，静静列队飞过。',
+      '下棋的人，终于开始收网了。'
+    ],
+    objectives:[
+      {kind:'talk', who:'du', hint:'到军区指挥部接战令'},
+      {kind:'kill', type:'bandit', n:8, hint:'在战场上清剿8个敌人'},
+      {kind:'goto', area:'b5', hint:'突袭铁塔老巢'},
+      {kind:'talk', who:'tieta', hint:'直面军阀铁塔'}
+    ],
+    startDlg:'ch10_du', midDlg:{}, endDlg:'ch10_tieta',
+    teaser:'铁塔倒下前指了指夜空：\n"看见那些无人机了吗？是灰隼的！下棋的人，从来不是我们！"\n\n你抬头——夜空中，十几架无人机排成阵列，机身印着同一只灰隼。\n【第11章《十七度线》：五十年前，就是他们在和谈桌上，递出了EIGHT计划的第一页。】'
+  },
+  {
+    id:11, title:'十七度线', month:'第11月', loc:'自由港 → 灰隼金库',
+    intro:[
+      '老宋终于说出全部：灰隼集团，五十年前EIGHT计划的真正出资人。\n他们表面是航运财团，背地里给南北两边同时供货——战争打得越久，他们赚得越多。',
+      '灰隼的核心档案，在自由港南岸仓库区的地下金库里。\n十台无人机守着。',
+      '你站在金库的灯光下，看着摊了一地的真相。\n档案末页夹着一封泛黄的信——推荐信。',
+      '计划启动人：汉伯·EIGHT·本人。\n字迹，和你现在写的一模一样。'
+    ],
+    objectives:[
+      {kind:'talk', who:'laosong', hint:'让老宋说出灰隼集团的底细'},
+      {kind:'collect', item:'drone', n:1, hint:'取得无人机残骸证据'},
+      {kind:'goto', area:'freeport', hint:'潜入自由港南岸灰隼办事处'},
+      {kind:'talk', who:'laosong', hint:'做出最终抉择'}
+    ],
+    startDlg:'ch11_laosong', midDlg:{}, endDlg:'ch11_choice',
+    teaser:'你握着那封五十年前的推荐信。\n信纸泛黄，字迹却和你现在写的一模一样。\n你终于明白——这场战争，从第一天起，就是写给"你"看的剧本。\n\n而剧本，还差最后一页。\n【最终章《新世界的黎明》：三个结局，三条十七度线。】'
+  },
+  {
+    id:12, title:'新世界的黎明', month:'第12月', loc:'结局',
+    intro:[
+      '这一年，你从灰烬中醒来，走遍了印支的雨林、港口与铁幕。\n你找到真相，也找到了自己。',
+      '现在，十七度线在你脚下。\n五十年的谎言，五十年的战争，五十年的"永远差一点点"——\n都该有个结局了。',
+      '你伸出手，推开了那扇门。\n'
+    ],
+    objectives:[
+      {kind:'talk', who:'laosong', hint:'根据你的抉择进入对应结局'},
+      {kind:'talk', who:'maya', hint:'与玛雅道别'}
+    ],
+    startDlg:'ch12_open', midDlg:{}, endDlg:'ch12_tail',
+    teaser:'自由港的酒馆，雨夜。\n穿风衣的人推门进来，掀起帽檐——那是一张和你一模一样的脸。\n他胸口的铜牌，刻着："ONE"。\n他朝你举起杯："好久不见，EIGHT。"\n\n【HanBer EIGHT · 未完待续。新的编号，正在苏醒。】'
+  }
+];
+
+/* ---- 章节结束跳转表（按抉择进入结局） ---- */
+D.ch12Flow = {
+  open: {dlg:'ch12_open', flag:'end_open'},
+  burn: {dlg:'ch12_burn', flag:'end_burn'},
+  seize:{dlg:'ch12_seize', flag:'end_seize'}
+};
+
+/* ============ 支线任务（15个） ============ */
+D.sideQuests = [
+  {id:'q_boar',  name:'猎野猪', giver:'laoqiang', desc:'在山雨营地附近猎杀3头野猪，把肉带回来。', objs:[{kind:'collect', item:'rawmeat', n:3}], reward:{gold:60}, dlgDone:'q_boar_done'},
+  {id:'q_python',name:'捕蛇', giver:'laoqiang', desc:'收拾界河边伤人的巨蟒，带回2条蟒肉。', objs:[{kind:'collect', item:'rawmeat', n:2, killCheck:'python'}], reward:{gold:80, items:{bandage:1}}, dlgDone:'q_python_done'},
+  {id:'q_water', name:'送水', giver:'chunsao', desc:'帮春嫂从野猫镇带3瓶干净水回农场。', objs:[{kind:'collect', item:'water', n:3}], reward:{gold:40, items:{rice:1}}, dlgDone:'q_water_done'},
+  {id:'q_radio', name:'收音机零件', giver:'maya', desc:'帮玛雅搞到2个零件和2节电池修电台。', objs:[{kind:'collect', item:'part', n:2},{kind:'collect', item:'battery', n:2}], reward:{gold:70, items:{coffee:1}}, dlgDone:'q_radio_done'},
+  {id:'q_bounty',name:'清剿悬赏', giver:'du', desc:'南方军区悬赏：清剿6个土匪。', objs:[{kind:'kill', type:'bandit', n:6}], reward:{gold:150, items:{ammo9:12}}, repeat:true, dlgDone:'q_bounty_done'},
+  {id:'q_meds',  name:'救命药', giver:'chen', desc:'诊所缺抗生素，弄2支回来。', objs:[{kind:'collect', item:'abx', n:2}], reward:{gold:120, items:{bandage:1}}, dlgDone:'q_meds_done'},
+  {id:'q_smuggle',name:'走私一箱', giver:'laosong', desc:'把货箱从野猫镇送到自由港老宋处。', objs:[{kind:'goto', area:'wildcat'},{kind:'collect', item:'crate', n:1},{kind:'goto', area:'freeport'}], reward:{gold:120}, dlgDone:'q_smuggle_done'},
+  {id:'q_scrap', name:'拾荒挑战', giver:'laosong', desc:'收集8块废铁回来。', objs:[{kind:'collect', item:'scrap', n:8}], reward:{gold:40}, repeat:true, dlgDone:'q_scrap_done'},
+  {id:'q_escort',name:'护送商队', giver:'baifan', desc:'护送白帆的货从农场到野猫镇。', objs:[{kind:'goto', area:'farm'},{kind:'goto', area:'wildcat'}], reward:{gold:150, items:{cooked:2}}, dlgDone:'q_escort_done'},
+  {id:'q_bridge',name:'修桥', giver:'baifan', desc:'收集6根木材修界河第二桥。', objs:[{kind:'collect', item:'wood', n:6}], reward:{gold:120}, dlgDone:'q_bridge_done'},
+  {id:'q_diary', name:'失落的日记', giver:'chunsao', desc:'去第七区找春嫂丈夫的日记。', objs:[{kind:'goto', area:'sector7'},{kind:'collect', item:'diary', n:1}], reward:{gold:60, items:{silver:1}}, dlgDone:'q_diary_done'},
+  {id:'q_drone', name:'无人机残骸', giver:'laosong', desc:'把捡到的无人机残骸交给老宋。', objs:[{kind:'collect', item:'drone', n:1}], reward:{gold:80, items:{cigs:1}}, dlgDone:'q_drone'},
+  {id:'q_photo', name:'界河侦察', giver:'du', desc:'摸到界河北岸，确认北方哨所布防。', objs:[{kind:'goto', area:'northbank'}], reward:{gold:90, items:{ammo9:6}}, repeat:true, dlgDone:'q_photo_done'},
+  {id:'q_hunt',  name:'狩猎野味', giver:'laoqiang', desc:'打一头鹿或野猪，带肉回营地。', objs:[{kind:'collect', item:'rawmeat', n:1}], reward:{gold:30}, repeat:true, dlgDone:'q_boar_done'},
+  {id:'q_defense1', name:'守山雨', giver:'du', desc:'守住山雨营地，击退进攻的土匪。', objs:[{kind:'kill', type:'bandit', n:6},{kind:'goto', area:'guerrilla'}], reward:{gold:200, items:{ammo7:10}}, special:true, dlgDone:'q_boar_done'}
+];
+/* 结局专属支线（触发型，不占列表） */
+D.sideQuests.push({id:'q_defense2', name:'守自由港', giver:'du', desc:'守住自由港码头。', objs:[{kind:'kill', type:'bandit', n:6},{kind:'goto', area:'freeport'}], reward:{gold:200, items:{ammo12:8}}, special:true, dlgDone:'q_boar_done'});
+D.sideQuests.push({id:'q_defense3', name:'守农场', giver:'du', desc:'守住难民农场。', objs:[{kind:'kill', type:'bandit', n:6},{kind:'goto', area:'farm'}], reward:{gold:200, items:{cooked:4}}, special:true, dlgDone:'q_boar_done'});
+
+/* ---- 支线完成对话 ---- */
+D.dlg.q_photo_done = [
+  {who:'杜上尉', txt:'（他看完你的口述，点点头）北岸布防确认了。侦察费收好——下次别死在半路上。', opts:[{txt:'（你收下报酬）', fx:'reward:q_photo', next:'end'}]}
+];
+
+/* ============================================================
+   HanBer EIGHT · 章节流程结构修正（覆盖版）
+   说明：talkOrder = 同一NPC按顺序播放的对话；areaDlg = 进入区域触发；
+   startDlg = 章节开场自动对话；endDlg = 全部目标完成后自动播放。
+   ============================================================ */
+
+/* 第4章 自由港通缉令过场 */
+D.dlg.ch4_poster = [
+  {who:'（自由港·公告栏）', txt:'通缉令被雨水泡得卷边，但画像仍然清晰——那分明是你的脸。\n名字写着："HanBer ONE"，悬赏：十万南元。', opts:[
+    {txt:'（你凑近细看落款）', next:1}
+  ]},
+  {who:'（自由港·公告栏）', txt:'落款：南方军情局。签发日期——你醒来的那天。\n你摸了摸胸口的铜牌：EIGHT。\n为什么，是ONE？', opts:[
+    {txt:'（你撕下半张通缉令，转身离开）', fx:'set:ch4_poster_seen', next:'end'}
+  ]}
+];
+
+/* 第6章 玛雅对话补：交付录音带 */
+D.dlg.ch6_maya = [
+  {who:'玛雅', txt:'（自由港，她听完录音，手在发抖）这盘带子……是十年前那个护士录的。她录完就死了，死在回南方的路上，档案写"交通意外"。', opts:[
+    {txt:'录音最后，是八号的声音。', next:1}
+  ]},
+  {who:'玛雅', txt:'（她捂着脸）我知道。八号没死。或者说——八号死了，又活了。你听过那句话吗："如果我不存在，谁在说话？"……这话，就是八号说的。', opts:[
+    {txt:'（你忽然觉得头皮发麻）……他说的，是我。', fx:'give:tape,1|set:ch6_1', next:2}
+  ]},
+  {who:'玛雅', txt:'（她抬起头，眼泪干在脸上）别再查了。查到底，你会发现自己不是自己。去南方军区吧——那里的档案室，有EIGHT计划的完整记录。如果你非要一个答案，那就去偷。', opts:[{txt:'（你点点头）我会去的。', fx:'set:ch6_done', next:'end'}]}
+];
+
+/* ---- 主线章节（流程修正版） ---- */
+D.chapters = [
+  {
+    id:1, title:'灰烬与编号', month:'第1月', loc:'新西贡',
+    intro:[
+      '枪声。雨。铁锈味的黑暗。\n你醒来的地方，是一张咯吱作响的行军床。天花板上吊着一盏昏黄的灯泡，窗外是新西贡永远下不完的雨。',
+      '你身上缠着绷带，胸口放着一块冰冷的铜牌。\n上面刻着——"第八小队 · EIGHT"。',
+      '这是一九七五年没有发生"结局"的另一个世界。\n印支半岛南北分治五十年，十七度线的界河，把两个国家连同两种未来，劈成了两半。',
+      '而你，第八侦察小队最后的编号，将在灰烬中醒来。\n活下去，或者——找出真相。'
+    ],
+    objectives:[
+      {kind:'talk', who:'ali', hint:'在街头找阿黎打听第八小队'},
+      {kind:'collect', item:'can', n:3, hint:'弄到3个战备罐头（拾荒/购买）'}
+    ],
+    startDlg:'ch1_chen_a',
+    talkOrder:{ali:['ch1_ali_a']},
+    endDlg:'ch1_chen_b',
+    teaser:'你把铜牌翻到背面——那儿还有一行字，刻得又深又急：\n"第八小队，无人生还。"\n\n那你，是谁？\n【第2章《十七度线的雨》：你带着唯一的线索走向野猫镇，而界河的雨，正在涨。】'
+  },
+  {
+    id:2, title:'十七度线的雨', month:'第2月', loc:'野猫镇 → 界河大桥',
+    intro:[
+      '你沿着破败的公路往野猫镇走。雨没有停过，路边的战争残骸被泡成了铁锈色。',
+      '算命陈死了。他留给你一句话："牌背面，看水的倒影。"\n而阿黎，在野猫镇的酒馆里，等着一单"过河生意"。',
+      '界河对面，就是北方。五十年来，那条河涨涨落落，淹掉过无数人的名字。',
+      '你站在河边，摸了摸胸口的铜牌。\n水面的倒影里，你看见一张陌生的脸——你自己的脸。'
+    ],
+    objectives:[
+      {kind:'goto', area:'wildcat', hint:'前往野猫镇'},
+      {kind:'talk', who:'ali', hint:'找阿黎接护送差事'},
+      {kind:'goto', area:'bridge1', hint:'把货送到十七度线大桥'}
+    ],
+    startDlg:null,
+    talkOrder:{ali:['ch2_ali_a']},
+    areaDlg:{area:'bridge1', key:'ch2_bridge'},
+    endDlg:'ch2_ali_b',
+    teaser:'夜里宿在野猫镇，那台北方制电台自己响了——\n一段密电文，反复念着四个字："EIGHT……EIGHT……"\n\n有人在用你的编号，呼叫十年不散的幽灵。\n【第3章《红河情报》：密电文指向旧基地档案室，而山雨和北方，都在路上。】'
+  },
+  {
+    id:3, title:'红河情报', month:'第3月', loc:'旧基地废墟',
+    intro:[
+      '旧基地藏在西边的丛林深处，铁丝网早就锈穿了。十年没人来，墙上的弹孔和标语，还保持着撤退那天的样子。',
+      '你到的时候，山雨的人也到了。\n阮梅站在塌了一半的档案室门口，看着你："答案好像自己走来了。"',
+      '铁柜里，半焦的卷宗还留着火燎的痕迹。\n第一页写着——"EIGHT计划 · 双方特别委员会"。',
+      '你刚把档案塞进怀里，阴影里就响起一个声音：\n"那卷宗，归北方了。"'
+    ],
+    objectives:[
+      {kind:'goto', area:'oldbase', hint:'前往第八基地废墟'},
+      {kind:'collect', item:'folder', n:1, hint:'从档案室铁柜里拿到档案卷宗'},
+      {kind:'talk', who:'li', hint:'面对拦路的北方特工'},
+      {kind:'talk', who:'du', hint:'回到新西贡，面对军情局的杜上尉'}
+    ],
+    startDlg:'ch3_ruanmei',
+    talkOrder:{li:['ch3_li'], du:['ch3_du']},
+    endDlg:null,
+    teaser:'深夜，你借着油灯翻档案。\n页首一行小字，刺得你眼睛生疼——\n"EIGHT计划 · 实验体八号"。\n\n实验体八号。不是士兵编号，是实验体编号。\n【第4章《自由港之夜》：能读懂这堆纸的人，在自由港。而自由港的墙上，正贴着你的画像。】'
+  },
+  {
+    id:4, title:'自由港之夜', month:'第4月', loc:'龙湾自由港',
+    intro:[
+      '自由港在海岸线上，鱼龙混杂，灯红酒绿。黑旗船夜里卸货，白天的码头则挤满水手和骗子。',
+      '你刚走进港口广场，就看见公告栏前围了一堆人。\n一张通缉令，画像和你一模一样——名字却写着"HanBer ONE"，悬赏十万南元。',
+      '落款：南方军情局。签发日期：你醒来的那天。\n你摸了摸胸口的铜牌——EIGHT。\n为什么，是ONE？',
+      '老宋的当铺在深巷里。他看完卷宗，手抖得点不着烟：\n"这东西，该烧掉。"'
+    ],
+    objectives:[
+      {kind:'goto', area:'freeport', hint:'前往龙湾自由港'},
+      {kind:'talk', who:'laosong', hint:'找情报贩子老宋解读档案'},
+      {kind:'talk', who:'maya', hint:'在酒馆后台找歌女玛雅'}
+    ],
+    startDlg:null,
+    talkOrder:{laosong:['ch4_laosong'], maya:['ch4_maya']},
+    areaDlg:{area:'freeport', key:'ch4_poster'},
+    endDlg:null,
+    teaser:'通缉令的落款处，盖着南方军情局的章。\n签发人签名潦草，只认得出一个字——"杜"。\n\n而玛雅说：八号，你不该活着。\n【第5章《丛林法则》：第七区。十年前。"八号"死在那里。而你还活着。】'
+  },
+  {
+    id:5, title:'丛林法则', month:'第5月', loc:'第七区',
+    intro:[
+      '第七区在界河以东的丘陵里，十年前是南方最机密的军事区，现在是拾荒者和猛虎的地盘。',
+      '山雨的人给你开路。阮梅说，十年前那七具尸体，就埋在这里——八块碑，七个名字，一块空碑。',
+      '空碑上没有名字，只刻了一行字：\n"EIGHT，卒于战役结束前夜。"',
+      '你蹲下来，用手去摸那行字。\n字是新的。石头还白着。有人在你醒来之前，刚刚来过。'
+    ],
+    objectives:[
+      {kind:'goto', area:'sector7', hint:'前往第七区'},
+      {kind:'talk', who:'ruanmei', hint:'在山雨营地领取开路任务'},
+      {kind:'collect', item:'diary', n:1, hint:'在地堡中找到泛黄的日记'}
+    ],
+    startDlg:'ch5_ruanmei',
+    talkOrder:{ruanmei:['ch5_ruanmei']},
+    endDlg:'ch5_diary',
+    teaser:'碑是新的，字是新的。\n有人在你醒来之前，刚刚来过。\n\n日记的最后几页，被人撕掉了。\n【第6章《第七区的幽灵》：录音带里，七个声音在倒数。最后一个声音说——"如果我不存在，谁在说话？"】'
+  },
+  {
+    id:6, title:'第七区的幽灵', month:'第6月', loc:'第七区 → 南方军区',
+    intro:[
+      '录音带是第七区地堡深处找到的。\n你按下播放键，七个声音依次响起，倒数着——"七、六、五、四、三、二、一。"',
+      '最后一个声音说："出卖我们的，是我们自己人。他们从北边来，也从南边来。"',
+      '录音的最后两秒，是一阵电流杂音。\n然后，一个你无比熟悉的声音开口了：\n"如果我不存在，谁在说话？"',
+      '你握着录音带，站在地堡的黑暗里，浑身发冷。\n那是你的声音。'
+    ],
+    objectives:[
+      {kind:'talk', who:'maya', hint:'让玛雅解读录音带'},
+      {kind:'goto', area:'military', hint:'潜入南方军区档案室'},
+      {kind:'talk', who:'du', hint:'面对守在走廊的杜上尉'}
+    ],
+    startDlg:null,
+    talkOrder:{maya:['ch6_maya'], du:['ch6_du2']},
+    endDlg:null,
+    teaser:'军区档案里，一行修改过的记录：\n"实验体八号：已确认死亡。"\n——原记录被划掉，边上写着："转入休眠。"\n\n你终于明白：在你醒来之前，有人先你一步，看过那块铜牌。\n【第7章《停火日的钟声》：和谈传闻传遍印支。而和谈附件里，藏着EIGHT计划的编号。】'
+  },
+  {
+    id:7, title:'停火日的钟声', month:'第7月', loc:'各方势力',
+    intro:[
+      '停火和谈的传闻，像野火一样烧遍印支半岛。\n南方要销毁EIGHT计划，北方要研究它，山雨要公开它。',
+      '而杜上尉告诉你：和谈文件里，有一页是专门为你准备的。',
+      '李·少校告诉你：EIGHT计划启动文件上的推荐人签名，是你自己的笔迹。',
+      '你站在十七度线的桥上，看着两岸的探照灯。\n五十年来，这场战争第一次有了"结束"的选项——\n而你，是那个选项本身。'
+    ],
+    objectives:[
+      {kind:'talk', who:'du', hint:'听杜上尉开出条件'},
+      {kind:'talk', who:'ruanmei', hint:'听阮梅的立场'},
+      {kind:'talk', who:'li', hint:'见李·少校的最后一面'}
+    ],
+    startDlg:null,
+    talkOrder:{du:['ch7_du'], ruanmei:['ch7_ruanmei'], li:['ch7_li']},
+    endDlg:null,
+    teaser:'和谈提案的附件第41页，印着一行小字：\n"EIGHT计划，由双方特别委员会共同管理。"\n\n两边都知道。从头到尾，两边都知道。\n【第8章《铁幕之后》：你决定亲自去北方看一眼。那里的档案，写着另一份真相。】'
+  },
+  {
+    id:8, title:'铁幕之后', month:'第8月', loc:'红城·越北',
+    intro:[
+      '红城是铁幕的另一面：灰色建筑，广播喇叭，三步一岗。\n李·少校在这里脱下伪装，露出北方军情局少校的身份。',
+      '档案局的卷宗里，你找到了北方的"第八小队"——\n番号EIGHT，全部特训战士，只有代号，没有名字。队长代号：ONE。',
+      '李打开保险柜，抽出一份档案：\n"实验体一号，状态：活跃。当前身份：南方军情局，杜上尉副官。"',
+      '档案上的照片，和你长着同一张脸。\n落款签名，是你的老熟人：杜。'
+    ],
+    objectives:[
+      {kind:'talk', who:'laosong', hint:'从老宋处取得通行证'},
+      {kind:'goto', area:'redcity', hint:'潜入红城'},
+      {kind:'talk', who:'li', hint:'见李·少校，看他打开保险柜'}
+    ],
+    startDlg:null,
+    talkOrder:{laosong:['ch8_laosong'], li:['ch8_li2']},
+    endDlg:null,
+    teaser:'南方的EIGHT，北方的ONE。\n同一张脸，两个编号，一场横跨五十年的骗局。\n\n而李说：你们是那台机器里，咬合的齿轮。\n【第9章《双生档案》：你的记忆是编剧写的。那个"格式化你"的人，是玛雅。】'
+  },
+  {
+    id:9, title:'双生档案', month:'第9月', loc:'自由港 → 各地',
+    intro:[
+      '老宋摊牌了。EIGHT计划——五十年前，南北谈判桌底下，两家握手，共同启动的"人造战士"项目。',
+      '目的不是打赢战争，是让战争永远打不完。\n南方的EIGHT，北方的ONE。两个永远不会消失的战士，等于永远开不完的战争。',
+      '你的记忆，是战后植入的"和平叙事"。\n而格式化你记忆的人——是玛雅。',
+      '她留着三块碎片。\n那是你真正的记忆，散落在自由港、野猫镇和旧基地。\n找到它们，你就知道那一夜，你究竟做了什么。'
+    ],
+    objectives:[
+      {kind:'talk', who:'laosong', hint:'让老宋摊牌'},
+      {kind:'talk', who:'maya', hint:'听玛雅说出格式化真相'},
+      {kind:'collect', item:'fragment', n:3, hint:'收集3块记忆碎片（自由港/野猫镇/旧基地拾荒点）'}
+    ],
+    startDlg:null,
+    talkOrder:{laosong:['ch9_laosong'], maya:['ch9_maya']},
+    endDlg:null,
+    teaser:'你终于想起枪响那一夜。\n河面上漂着的人，睁着眼睛，和你一模一样。\n他开口说了句话——现在你听清了：\n"我会回来的，八号。"\n\n【第10章《雨林之火》：铁塔军阀起兵，边境全线开火。而你，还没想好要站在哪一边。】'
+  },
+  {
+    id:10, title:'雨林之火', month:'第10月', loc:'全线战场',
+    intro:[
+      '铁塔的军阀联合北边的散兵，一夜之间全线开火。\n界河大桥失守，山雨营地被围，自由港海上封锁，农场火光冲天。',
+      '杜上尉在指挥部把枪塞进你手里：\n"南方军情局欠你的。活着回来。"',
+      '你冲进雨里。身后是燃烧的印支。\n而夜空中，十几架不属于任何阵营的无人机，静静列队飞过。',
+      '下棋的人，终于开始收网了。'
+    ],
+    objectives:[
+      {kind:'kill', type:'bandit', n:8, hint:'在战场上清剿8个敌人'},
+      {kind:'goto', area:'b5', hint:'突袭铁塔老巢'},
+      {kind:'talk', who:'tieta', hint:'直面军阀铁塔'}
+    ],
+    startDlg:'ch10_du',
+    talkOrder:{},
+    endDlg:'ch10_tieta',
+    teaser:'铁塔倒下前指了指夜空：\n"看见那些无人机了吗？是灰隼的！下棋的人，从来不是我们！"\n\n你抬头——夜空中，十几架无人机排成阵列，机身印着同一只灰隼。\n【第11章《十七度线》：五十年前，就是他们在和谈桌上，递出了EIGHT计划的第一页。】'
+  },
+  {
+    id:11, title:'十七度线', month:'第11月', loc:'自由港 → 灰隼金库',
+    intro:[
+      '老宋终于说出全部：灰隼集团，五十年前EIGHT计划的真正出资人。\n他们表面是航运财团，背地里给南北两边同时供货——战争打得越久，他们赚得越多。',
+      '灰隼的核心档案，在自由港南岸仓库区的地下金库里。\n十台无人机守着。',
+      '你站在金库的灯光下，看着摊了一地的真相。\n档案末页夹着一封泛黄的信——推荐信。',
+      '计划启动人：汉伯·EIGHT·本人。\n字迹，和你现在写的一模一样。'
+    ],
+    objectives:[
+      {kind:'talk', who:'laosong', hint:'让老宋说出灰隼集团的底细'},
+      {kind:'collect', item:'drone', n:1, hint:'找到无人机残骸作为证据'},
+      {kind:'goto', area:'freeport', hint:'潜入自由港南岸灰隼办事处'}
+    ],
+    startDlg:null,
+    talkOrder:{laosong:['ch11_laosong']},
+    endDlg:'ch11_choice',
+    teaser:'你握着那封五十年前的推荐信。\n信纸泛黄，字迹却和你现在写的一模一样。\n你终于明白——这场战争，从第一天起，就是写给"你"看的剧本。\n\n而剧本，还差最后一页。\n【最终章《新世界的黎明》：三个结局，三条十七度线。】'
+  },
+  {
+    id:12, title:'新世界的黎明', month:'第12月', loc:'结局',
+    intro:[
+      '这一年，你从灰烬中醒来，走遍了印支的雨林、港口与铁幕。\n你找到真相，也找到了自己。',
+      '现在，十七度线在你脚下。\n五十年的谎言，五十年的战争，五十年的"永远差一点点"——\n都该有个结局了。',
+      '你伸出手，推开了那扇门。\n'
+    ],
+    objectives:[
+      {kind:'talk', who:'maya', hint:'去自由港，与玛雅道别'}
+    ],
+    startDlg:null,
+    talkOrder:{maya:['ch12_tail']},
+    endDlg:null,
+    teaser:'自由港的酒馆，雨夜。\n穿风衣的人推门进来，掀起帽檐——那是一张和你一模一样的脸。\n他胸口的铜牌，刻着："ONE"。\n他朝你举起杯："好久不见，EIGHT。"\n\n【HanBer EIGHT · 未完待续。新的编号，正在苏醒。】'
+  }
+];
+
+/* ---- 数据归一化：单节点对话统一包装为数组；缺失的基础对话兜底 ---- */
+Object.keys(D.dlg).forEach(function(k){
+  if(!(D.dlg[k] instanceof Array)) D.dlg[k] = [D.dlg[k]];
+});
+['chen','ali','laosong','maya','ruanmei','li','du','chunsao','baifan','laoqiang','xiaoman'].forEach(function(n){
+  if(!D.dlg['base_'+n]) D.dlg['base_'+n] = [{who:D.npcs[n]?D.npcs[n].name:n, txt:(D.npcs[n]?D.npcs[n].name:'陌生人')+'看了你一眼，没说话。', opts:[{txt:'（离开）', next:'end'}]}];
+});
+
+</script>
+<script>
+/* ============================================================
+   HanBer EIGHT · 引擎：世界生成 / 渲染 / 相机 / 输入 / 天气
+   ============================================================ */
+
+var W = { w: CFG.mapW, h: CFG.mapH, tiles:null, solid:null, decor:null, loot:null };
+
+function mulberry32(seed){
+  var a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+var RNG = mulberry32(20261017);
+
+/* ---- 瓦片定义 ---- */
+var TILE = {
+  0:  {name:'深水', solid:true},
+  1:  {name:'浅滩', solid:true},
+  2:  {name:'草地', solid:false},
+  3:  {name:'丛林', solid:false},
+  4:  {name:'密林', solid:false},
+  5:  {name:'山地', solid:true},
+  6:  {name:'丘陵', solid:false},
+  7:  {name:'道路', solid:false},
+  8:  {name:'城区地面', solid:false},
+  9:  {name:'城区墙壁', solid:true},
+  10: {name:'门', solid:false},
+  11: {name:'营地地面', solid:false},
+  12: {name:'营地墙', solid:true},
+  13: {name:'农田', solid:false},
+  14: {name:'屋内地面', solid:false},
+  15: {name:'桥梁', solid:false},
+  16: {name:'废墟', solid:false},
+  17: {name:'北方城区地面', solid:false},
+  18: {name:'北方墙壁', solid:true},
+  19: {name:'北方门', solid:false},
+  20: {name:'河岸', solid:false}
+};
+
+/* ---- 世界构建 ---- */
+function buildWorld(){
+  W.tiles = new Uint8Array(W.w * W.h);
+  W.solid = new Uint8Array(W.w * W.h);
+  W.decor = new Uint8Array(W.w * W.h); // 0无 1树 2灌木 3残骸 4灯柱
+  var cs = D.cellSize;
+  var i, x, y, cx, cy, code;
+  for(y=0;y<W.h;y++){
+    for(x=0;x<W.w;x++){
+      cx = Math.floor(x/cs); cy = Math.floor(y/cs);
+      code = D.coarse[cy].charAt(cx);
+      var t = 2; // 草地默认
+      if(code==='M') t = (RNG()<0.55)?5:6;
+      else if(code==='N') t = 2;
+      else if(code==='J') t = (RNG()<0.7)?3:4;
+      else if(code==='H') t = 6;
+      else if(code==='W') t = 0;
+      // 海岸线：陆地邻水做浅滩/河岸
+      if(t!==0){
+        var nearW = code!=='W' && (x+1<W.w && D.coarse[cy].charAt(Math.min(19,(x+1)/cs|0))==='W');
+        if(!nearW && y+1<W.h && D.coarse[Math.min(13,(y+1)/cs|0)].charAt(cx)==='W') nearW = true;
+        if(nearW && (t===2||t===6)) t = 20;
+      }
+      setTile(x,y,t);
+    }
+  }
+  /* 界河（17度线）：横穿第5粗格 (y 80~95)，桥位留白 */
+  for(y=80;y<96;y++) for(x=0;x<W.w;x++) setTile(x,y,0);
+  for(y=80;y<96;y++){
+    for(x=128;x<146;x++) setTile(x,y,15);          // 西桥
+    for(x=206;x<224;x++) setTile(x,y,15);          // 东桥
+  }
+  /* 北方城区（红城） */
+  paintTown(D.towns.filter(function(t){return t.id==='redcity';})[0], 17, 18, 19);
+  /* 南方城市与港口 */
+  paintTown(D.towns.filter(function(t){return t.id==='saigon';})[0], 8, 9, 10);
+  paintTown(D.towns.filter(function(t){return t.id==='freeport';})[0], 8, 9, 10);
+  paintTown(D.towns.filter(function(t){return t.id==='wildcat';})[0], 11, 12, 10);
+  paintTown(D.towns.filter(function(t){return t.id==='farm';})[0], 13, 9, 10);
+  paintTown(D.towns.filter(function(t){return t.id==='guerrilla';})[0], 11, 12, 10);
+  paintTown(D.towns.filter(function(t){return t.id==='oldbase';})[0], 16, 12, 10);
+  paintTown(D.towns.filter(function(t){return t.id==='sector7';})[0], 16, 12, 10);
+  paintTown(D.towns.filter(function(t){return t.id==='outpost';})[0], 16, 12, 10);
+  paintTown(D.towns.filter(function(t){return t.id==='military';})[0], 11, 12, 10);
+  D.towns.forEach(function(t){
+    if(t.kind==='camp') paintTown(t, 11, 12, 10);
+  });
+  /* 道路 */
+  D.roads.forEach(function(seg){
+    for(i=0;i<seg.length-1;i++){
+      drawRoad(seg[i][0], seg[i][1], seg[i+1][0], seg[i+1][1]);
+    }
+  });
+  /* 装饰 */
+  for(y=0;y<W.h;y++) for(x=0;x<W.w;x++){
+    var tv = W.tiles[y*W.w+x];
+    if(tv===3 && RNG()<0.16) W.decor[y*W.w+x] = 1;
+    else if(tv===4 && RNG()<0.30) W.decor[y*W.w+x] = 1;
+    else if(tv===3 && RNG()<0.12) W.decor[y*W.w+x] = 2;
+    else if((tv===8||tv===11||tv===16||tv===17) && RNG()<0.05) W.decor[y*W.w+x] = 3;
+  }
+  /* 拾荒点 */
+  W.loot = [];
+  D.towns.forEach(function(t){
+    var n = D.lootCount[t.kind]||8;
+    var attempts = n*6, made = 0;
+    while(attempts-- > 0 && made < n){
+      var lx = Math.floor(t.cx - t.w/2 + RNG()*t.w);
+      var ly = Math.floor(t.cy - t.h/2 + RNG()*t.h);
+      if(lx<2||ly<2||lx>W.w-2||ly>W.h-2) continue;
+      var tv2 = W.tiles[ly*W.w+lx];
+      if(tv2===9||tv2===12||tv2===18||tv2===0||tv2===5) continue;
+      W.loot.push({x:lx, y:ly, kind:t.kind, done:false, t:0});
+      made++;
+    }
+  });
+  /* 撒少量野外拾荒点 */
+  for(i=0;i<60;i++){
+    var rx = 4 + (RNG()*(W.w-8))|0, ry = 4 + (RNG()*(W.h-8))|0;
+    var tv3 = W.tiles[ry*W.w+rx];
+    if(tv3===3||tv3===4||tv3===16||tv3===11){
+      W.loot.push({x:rx, y:ry, kind:'wild', done:false, t:0}); i+=0;
+    }
+  }
+  W.loot.sort(function(a,b){return a.kind!=='wild'?0:0});
+}
+function setTile(x,y,t){
+  if(x<0||y<0||x>=W.w||y>=W.h) return;
+  W.tiles[y*W.w+x] = t;
+  W.solid[y*W.w+x] = TILE[t].solid?1:0;
+}
+function paintTown(t, floor, wall, door){
+  var x0 = Math.max(1, Math.floor(t.cx - t.w/2)), y0 = Math.max(1, Math.floor(t.cy - t.h/2));
+  var x1 = Math.min(W.w-1, Math.floor(t.cx + t.w/2)), y1 = Math.min(W.h-1, Math.floor(t.cy + t.h/2));
+  var x, y, i;
+  for(y=y0;y<y1;y++) for(x=x0;x<x1;x++) setTile(x,y,floor);
+  /* 建筑网格：街宽2，楼宽4x3 */
+  var bx, by;
+  for(by=y0+2; by<y1-2; by+=5){
+    for(bx=x0+2; bx<x1-2; bx+=6){
+      var bw = 4 + (RNG()*3|0), bh = 3 + (RNG()*2|0);
+      for(y=by; y<Math.min(by+bh,y1-1); y++){
+        for(x=bx; x<Math.min(bx+bw,x1-1); x++){
+          if(x===bx||x===bx+bw-1||y===by||y===by+bh-1) setTile(x,y,wall);
+        }
+      }
+      /* 门朝街 */
+      var doorX = bx + (bw/2|0);
+      if(by+bh < y1-1) setTile(doorX, by+bh-1, door);
+    }
+  }
+  /* 城镇广场 */
+  var mx = (x0+x1)/2|0, my = (y0+y1)/2|0;
+  for(y=my-1;y<=my+1;y++) for(x=mx-2;x<=mx+2;x++) setTile(x,y,floor);
+}
+function drawRoad(x0,y0,x1,y1){
+  var steps = Math.max(Math.abs(x1-x0), Math.abs(y1-y0));
+  for(var i=0;i<=steps;i++){
+    var x = Math.round(x0 + (x1-x0)*i/steps);
+    var y = Math.round(y0 + (y1-y0)*i/steps);
+    if(x<0||y<0||x>=W.w||y>=W.h) continue;
+    var tv = W.tiles[y*W.w+x];
+    if(tv===0){ setTile(x,y,15); continue; } // 架桥
+    if(tv===5||tv===9||tv===12||tv===18) continue;
+    setTile(x,y,7);
+    /* 路宽 */
+    if(x>0 && W.tiles[y*W.w+x-1]!==9 && W.tiles[y*W.w+x-1]!==0 && W.tiles[y*W.w+x-1]!==5) setTile(x-1,y,7);
+  }
+}
+function tileAt(x,y){
+  x = Math.floor(x); y = Math.floor(y);
+  if(x<0||y<0||x>=W.w||y>=W.h) return 5;
+  return W.tiles[y*W.w+x];
+}
+function solidAt(x,y){
+  if(x<0||y<0||x>=W.w||y>=W.h) return true;
+  return W.solid[y*W.w+x]===1;
+}
+function solidAtF(px,py){
+  return solidAt(Math.floor(px), Math.floor(py));
+}
+
+/* ---- 相机 ---- */
+var CAM = {x:0, y:0, shake:0};
+function camFollow(px,py){
+  var vw = CVW/CFG.tile, vh = CVH/CFG.tile;
+  CAM.x = clamp(px - vw/2, 0, W.w - vw);
+  CAM.y = clamp(py - vh/2, 0, W.h - vh);
+}
+
+/* ---- 渲染：世界 ---- */
+var TILE_COLORS = {
+  0:'#1E3A4A', 1:'#2E4A5A', 2:'#3E5230', 3:'#2F4426', 4:'#23391C',
+  5:'#5A5548', 6:'#5F6740', 7:'#8A7650', 8:'#6E6252', 9:'#8F7A5C',
+  10:'#5C4313',11:'#5E5240',12:'#6B5A44',13:'#7A6A3A',14:'#4A4034',
+  15:'#7A6850',16:'#524A3C',17:'#5A5A5A',18:'#6E6E6E',19:'#4E4E4E',20:'#2E4A3A'
+};
+function drawWorld(ctx){
+  var t = CFG.tile;
+  var x0 = Math.max(0, Math.floor(CAM.x)), y0 = Math.max(0, Math.floor(CAM.y));
+  var x1 = Math.min(W.w-1, Math.ceil(CAM.x + CVW/t));
+  var y1 = Math.min(W.h-1, Math.ceil(CAM.y + CVH/t));
+  var ox = -Math.floor(CAM.x)*t, oy = -Math.floor(CAM.y)*t;
+  var x, y, idx, tv, col;
+  for(y=y0;y<=y1;y++){
+    for(x=x0;x<=x1;x++){
+      idx = y*W.w+x;
+      tv = W.tiles[idx];
+      col = TILE_COLORS[tv];
+      if(tv===0){
+        var sh = ((x*7+y*13 + Math.floor(G.time*2))%4===0);
+        ctx.fillStyle = sh ? '#245060' : col;
+      } else if(tv===3 && (x*3+y*5)%7===0){
+        ctx.fillStyle = '#2A3D22';
+      } else {
+        ctx.fillStyle = col;
+      }
+      ctx.fillRect(ox + x*t, oy + y*t, t, t);
+      /* 装饰 */
+      var dc = W.decor[idx];
+      if(dc===1){
+        ctx.fillStyle = '#1B2E14';
+        ctx.beginPath(); ctx.arc(ox+x*t+t/2, oy+y*t+t/2, t*0.38, 0, 6.283); ctx.fill();
+        ctx.fillStyle = '#2A4420';
+        ctx.beginPath(); ctx.arc(ox+x*t+t/2, oy+y*t+t*0.38, t*0.26, 0, 6.283); ctx.fill();
+      } else if(dc===2){
+        ctx.fillStyle = '#3A5230';
+        ctx.beginPath(); ctx.arc(ox+x*t+t/2, oy+y*t+t/2, t*0.2, 0, 6.283); ctx.fill();
+      } else if(dc===3){
+        ctx.fillStyle = '#3A3A30';
+        ctx.fillRect(ox+x*t+4, oy+y*t+8, 8, 6);
+        ctx.fillRect(ox+x*t+12, oy+y*t+12, 6, 4);
+      }
+    }
+  }
+  /* 建筑阴影/屋顶强调：墙壁上方加亮条 */
+  for(y=y0;y<=y1;y++){
+    for(x=x0;x<=x1;x++){
+      tv = W.tiles[y*W.w+x];
+      if(tv===9||tv===12||tv===18){
+        ctx.fillStyle = 'rgba(0,0,0,.18)';
+        ctx.fillRect(ox+x*t, oy+y*t+ t*0.66, t, t*0.34);
+      }
+    }
+  }
+}
+/* 拾荒点 */
+function drawLootSpots(ctx){
+  var t = CFG.tile;
+  W.loot.forEach(function(l){
+    if(l.done) return;
+    var sx = l.x*t - CAM.x*t, sy = l.y*t - CAM.y*t;
+    if(sx<-t||sy<-t||sx>CVW+t||sy>CVH+t) return;
+    ctx.fillStyle = '#C9B98A';
+    ctx.fillRect(sx+6, sy+10, t-12, t-16);
+    ctx.strokeStyle = '#6E6250'; ctx.lineWidth = 1;
+    ctx.strokeRect(sx+6, sy+10, t-12, t-16);
+    ctx.fillStyle = '#8A7650';
+    ctx.fillRect(sx+12, sy+14, t-24, 5);
+  });
+}
+/* 小地图 */
+var mmCanvas = null;
+function buildMinimap(){
+  mmCanvas = document.createElement('canvas');
+  mmCanvas.width = W.w; mmCanvas.height = W.h;
+  var ctx = mmCanvas.getContext('2d');
+  for(var y=0;y<W.h;y++){
+    for(var x=0;x<W.w;x++){
+      var tv = W.tiles[y*W.w+x];
+      ctx.fillStyle = TILE_COLORS[tv]||'#333';
+      ctx.fillRect(x,y,1,1);
+    }
+  }
+}
+function drawMinimap(){
+  var mc = $('mm');
+  if(!mc) return;
+  var ctx = mc.getContext('2d');
+  ctx.drawImage(mmCanvas, 0, 0, 176, 124);
+  /* 视口框 */
+  var sx = (CAM.x/W.w)*176, sy = (CAM.y/W.h)*124;
+  var sw = (CVW/(CFG.tile*W.w))*176, sh = (CVH/(CFG.tile*W.h))*124;
+  ctx.strokeStyle = '#E8DCC0'; ctx.lineWidth = 1;
+  ctx.strokeRect(sx, sy, sw, sh);
+  /* 玩家 */
+  var px = (P.x/W.w)*176, py = (P.y/W.h)*124;
+  ctx.fillStyle = '#9C3324';
+  ctx.beginPath(); ctx.arc(px,py,2,0,6.283); ctx.fill();
+}
+
+/* ---- 输入 ---- */
+var KEYS = {};
+var MOUSE = {x:0, y:0, down:false};
+var DPAD = {up:false,down:false,left:false,right:false};
+function bindInput(){
+  window.addEventListener('keydown', function(e){
+    var k = e.key.toLowerCase();
+    KEYS[k] = true;
+    if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','e','i','j','m','shift','escape'].indexOf(k)>=0){
+      e.preventDefault();
+    }
+    if(G.audio && !G.audioStarted){ G.audioStarted = true; G.audio.resume && G.audio.resume(); }
+  });
+  window.addEventListener('keyup', function(e){ KEYS[e.key.toLowerCase()] = false; });
+  var cv = $('cv');
+  cv.addEventListener('mousemove', function(e){
+    var r = cv.getBoundingClientRect();
+    MOUSE.x = (e.clientX - r.left) * (CVW/r.width);
+    MOUSE.y = (e.clientY - r.top) * (CVH/r.height);
+  });
+  cv.addEventListener('mousedown', function(e){
+    MOUSE.down = true;
+    if(G.audio && !G.audioStarted){ G.audioStarted = true; G.audio.resume && G.audio.resume(); }
+  });
+  window.addEventListener('mouseup', function(){ MOUSE.down = false; });
+  /* 虚拟方向键 */
+  document.querySelectorAll('#dpad button').forEach(function(b){
+    var d = b.getAttribute('data-d');
+    b.addEventListener('pointerdown', function(e){ e.preventDefault(); DPAD[d] = true; });
+    b.addEventListener('pointerup', function(e){ e.preventDefault(); DPAD[d] = false; });
+    b.addEventListener('pointerleave', function(){ DPAD[d] = false; });
+  });
+}
+function isRun(){ return KEYS['shift']; }
+function moveVec(){
+  var dx=0, dy=0;
+  if(KEYS['a']||KEYS['arrowleft']||DPAD.left) dx -= 1;
+  if(KEYS['d']||KEYS['arrowright']||DPAD.right) dx += 1;
+  if(KEYS['w']||KEYS['arrowup']||DPAD.up) dy -= 1;
+  if(KEYS['s']||KEYS['arrowdown']||DPAD.down) dy += 1;
+  if(dx!==0||dy!==0){
+    var l = Math.hypot(dx,dy); dx/=l; dy/=l;
+  }
+  return {dx:dx, dy:dy};
+}
+
+/* ---- 粒子 ---- */
+var parts = [];
+function spawnParticle(x,y,vx,vy,life,color,size){
+  parts.push({x:x,y:y,vx:vx,vy:vy,life:life,max:life,color:color,size:size||2});
+}
+function updateParticles(dt){
+  for(var i=parts.length-1;i>=0;i--){
+    var p = parts[i];
+    p.x += p.vx*dt; p.y += p.vy*dt; p.vx *= 0.9; p.vy *= 0.9;
+    p.life -= dt;
+    if(p.life<=0) parts.splice(i,1);
+  }
+}
+function drawParticles(ctx){
+  parts.forEach(function(p){
+    ctx.globalAlpha = clamp(p.life/p.max,0,1);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x- p.size/2, p.y - p.size/2, p.size, p.size);
+  });
+  ctx.globalAlpha = 1;
+}
+
+/* ---- 天气 ---- */
+var WEATHER = {type:'clear', timer:0, rain:[]};
+var WEATHER_NAMES = {clear:'晴', rain:'雨', storm:'雷暴'};
+function weatherTick(dt){
+  WEATHER.timer -= dt;
+  if(WEATHER.timer<=0){
+    var r = RNG();
+    WEATHER.type = r<0.5?'clear':(r<0.8?'rain':'storm');
+    WEATHER.timer = rand(60, 160);
+  }
+  if(WEATHER.type!=='clear' && P && Math.random()<0.5){
+    WEATHER.rain.push({x:rand(0,CVW), y:rand(-40,0), v:rand(220,320)});
+  }
+  for(var i=WEATHER.rain.length-1;i>=0;i--){
+    var ra = WEATHER.rain[i];
+    ra.y += ra.v*dt;
+    if(WEATHER.type==='storm') ra.x -= 40*dt;
+    if(ra.y>CVH) WEATHER.rain.splice(i,1);
+  }
+  if(WEATHER.rain.length>140) WEATHER.rain.length = 140;
+}
+function drawWeather(ctx){
+  if(WEATHER.type==='clear') return;
+  var a = WEATHER.type==='storm'?0.22:0.12;
+  ctx.strokeStyle = 'rgba(140,160,190,'+a+')';
+  ctx.lineWidth = 1;
+  WEATHER.rain.forEach(function(ra){
+    ctx.beginPath();
+    ctx.moveTo(ra.x, ra.y);
+    ctx.lineTo(ra.x-2, ra.y-8);
+    ctx.stroke();
+  });
+}
+
+/* ---- 昼夜 ---- */
+/* 时间：G.day 天数，G.clock 秒(游戏内) 一天=CFG.dayLen 秒 */
+var DAY_START = 6*60; // 游戏内"分"制：一天=1440分
+function nightAlpha(){
+  var t = G.dayTime; // 0..1440
+  var a = 0;
+  if(t<360 || t>1320) a = 0.72;
+  else if(t<420) a = 0.72 - (420-t)*0.012;
+  else if(t>1260) a = (t-1260)*0.012;
+  return clamp(a,0,0.72);
+}
+function drawDarkness(ctx){
+  var a = nightAlpha();
+  if(a<=0 || !P) return;
+  var px = (P.x - CAM.x)*CFG.tile, py = (P.y - CAM.y)*CFG.tile;
+  var lamp = 170;
+  if(WEATHER.type!=='clear') lamp = 120;
+  var g = ctx.createRadialGradient(px, py, 30, px, py, lamp);
+  g.addColorStop(0, 'rgba(2,4,10,0)');
+  g.addColorStop(1, 'rgba(2,4,10,'+a+')');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,CVW,CVH);
+}
+
+</script>
+<script>
+
+</script>
+<script>
+/* ============================================================
+   HanBer EIGHT · 实体：玩家 / NPC / 敌人 / 野兽 / 战斗 / AI
+   ============================================================ */
+
+var ENT = [];            // 全部实体
+var ENT_ID = 1;
+var P = null;            // 玩家
+
+/* ---- BFS 寻路（粗网格，带时间戳避免清空） ---- */
+var _vis = new Uint8Array(CFG.mapW*CFG.mapH);
+var _stamp = 0;
+function findStep(sx, sy, tx, ty, maxDepth){
+  _stamp++;
+  if(_stamp>2000000000) _stamp = 1;
+  var q = [[Math.floor(sx), Math.floor(sy), null]];
+  var head = 0;
+  _vis[Math.floor(sy)*W.w+Math.floor(sx)] = _stamp;
+  var gtx = Math.floor(tx), gty = Math.floor(ty);
+  var depth = 0;
+  var dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  while(head < q.length && depth < maxDepth){
+    var cur = q[head++];
+    depth++;
+    if(cur[0]===gtx && cur[1]===gty) return cur[2];
+    for(var i=0;i<4;i++){
+      var nx = cur[0]+dirs[i][0], ny = cur[1]+dirs[i][1];
+      if(nx<0||ny<0||nx>=W.w||ny>=W.h) continue;
+      if(solidAt(nx,ny) && !(nx===gtx&&ny===gty)) continue;
+      var idx = ny*W.w+nx;
+      if(_vis[idx]===_stamp) continue;
+      _vis[idx] = _stamp;
+      q.push([nx,ny, cur[2]?cur[2]:[nx,ny]]);
+    }
+  }
+  return null;
+}
+function losClear(x0,y0,x1,y1){
+  var dist = Math.hypot(x1-x0, y1-y0);
+  var steps = Math.ceil(dist*2);
+  for(var i=1;i<steps;i++){
+    var fx = x0 + (x1-x0)*i/steps, fy = y0 + (y1-y0)*i/steps;
+    if(solidAtF(fx,fy)) return false;
+  }
+  return true;
+}
+
+/* ---- 实体创建 ---- */
+function makeEnt(o){
+  o.id = ENT_ID++;
+  o.hp = o.hp || o.maxhp || 10;
+  o.maxhp = o.maxhp || o.hp;
+  o.t = 0;
+  o.state = o.state || 'idle';
+  o.dir = Math.random()<0.5?1:-1;
+  o.cd = 0;
+  o.wx = o.x; o.wy = o.y;
+  o.dead = false;
+  ENT.push(o);
+  return o;
+}
+function newNPC(def){
+  var town = D.towns.filter(function(t){return t.id===def.town;})[0];
+  var x = town.cx + (def.ox||0) + rand(-2,2);
+  var y = town.cy + (def.oy||0) + rand(-2,2);
+  return makeEnt({
+    type:'npc', name:def.name, role:def.role,
+    x:x, y:y, town:def.town,
+    faction:def.faction, color:def.color||D.factions[def.faction].color,
+    npcId:def.id, shop:def.shop, healCost:def.healCost,
+    hp:100, maxhp:100, dmg:0, speed:1.1, range:1,
+    state:'idle', aggro:0, hostile:false
+  });
+}
+function spawnNamed(){
+  Object.keys(D.npcs).forEach(function(k){
+    newNPC(D.npcs[k]);
+  });
+}
+function spawnGeneric(){
+  /* 平民/守卫/商人 per town */
+  Object.keys(D.townPop).forEach(function(tid){
+    var pop = D.townPop[tid];
+    var town = D.towns.filter(function(t){return t.id===tid;})[0];
+    if(!town) return;
+    var i;
+    for(i=0;i<(pop.civ||0);i++){
+      makeEnt({
+        type:'npc',
+        name: pick(D.npcPools.names.civ), role: pick(D.npcPools.roles.civ),
+        x: rand(town.cx-town.w/2+2, town.cx+town.w/2-2),
+        y: rand(town.cy-town.h/2+2, town.cy+town.h/2-2),
+        town: tid, faction:'civ', color:D.factions.civ.color,
+        hp:50, maxhp:50, dmg:0, speed:0.9, range:1, state:'idle'
+      });
+    }
+    for(i=0;i<(pop.guard||0);i++){
+      makeEnt({
+        type:'npc', name: pick(D.npcPools.names.sa), role:'守卫',
+        x: rand(town.cx-town.w/2+2, town.cx+town.w/2-2),
+        y: rand(town.cy-town.h/2+2, town.cy+town.h/2-2),
+        town: tid, faction:'sa', color:D.factions.sa.color,
+        hp:80, maxhp:80, dmg:8, speed:1.4, range:1.2, state:'patrol',
+        guard:true, aggro:8
+      });
+    }
+    for(i=0;i<(pop.north||0);i++){
+      makeEnt({
+        type:'npc', name: pick(D.npcPools.names.north), role: pick(D.npcPools.roles.north),
+        x: rand(town.cx-town.w/2+2, town.cx+town.w/2-2),
+        y: rand(town.cy-town.h/2+2, town.cy+town.h/2-2),
+        town: tid, faction:'north', color:D.factions.north.color,
+        hp:70, maxhp:70, dmg:12, speed:1.5, range:8, state:'patrol',
+        guard:true, aggro:9, gun:'pistol'
+      });
+    }
+    for(i=0;i<(pop.guer||0);i++){
+      makeEnt({
+        type:'npc', name: pick(D.npcPools.names.guer), role: pick(D.npcPools.roles.guer),
+        x: rand(town.cx-town.w/2+2, town.cx+town.w/2-2),
+        y: rand(town.cy-town.h/2+2, town.cy+town.h/2-2),
+        town: tid, faction:'guer', color:D.factions.guer.color,
+        hp:90, maxhp:90, dmg:14, speed:1.4, range:1.4, state:'patrol', guard:true, aggro:8
+      });
+    }
+    for(i=0;i<(pop.merchant||0);i++){
+      makeEnt({
+        type:'npc', name: pick(D.npcPools.names.free), role:'店主',
+        x: town.cx + rand(-4,4), y: town.cy + rand(-4,4),
+        town: tid, faction:'free', color:D.factions.free.color,
+        hp:50, maxhp:50, dmg:0, speed:0.4, range:1, state:'stand', shop: merchantStock()
+      });
+    }
+    for(i=0;i<(pop.bandit||0);i++){
+      spawnEnemyAt('bandit', rand(town.cx-town.w/2+2, town.cx+town.w/2-2), rand(town.cy-town.h/2+2, town.cy+town.h/2-2));
+    }
+  });
+  /* 野外刷怪 */
+  D.wildSpawns.forEach(function(sp){
+    for(var i=0;i<sp.n;i++){
+      var a = rand(0, 6.283);
+      var d = rand(0, sp.r);
+      var ex = sp.x + Math.cos(a)*d, ey = sp.y + Math.sin(a)*d;
+      if(ex<2||ey<2||ex>W.w-2||ey>W.h-2) continue;
+      if(solidAtF(ex,ey)) continue;
+      if(sp.type==='deer') spawnAnimal('deer', ex, ey);
+      else if(sp.type==='tiger') spawnAnimal('tiger', ex, ey);
+      else if(sp.type==='python') spawnAnimal('python', ex, ey);
+      else if(sp.type==='boar') spawnAnimal('boar', ex, ey);
+      else spawnEnemyAt(sp.type, ex, ey);
+    }
+  });
+}
+function merchantStock(){
+  var pool = ['bandage','pain','water','wine','coffee','biscuit','can','rice','cigs','ammo9','ammo12','ammo7','scrap','cloth','wire','battery','part','watch','eswatch'];
+  var stock = {};
+  var n = rndi(6,9);
+  for(var i=0;i<n;i++){
+    var it = pick(pool);
+    stock[it] = (stock[it]||0) + rndi(1,4);
+  }
+  return stock;
+}
+function spawnEnemyAt(type, x, y){
+  var d = D.enemies[type];
+  var isBoss = type==='boss';
+  return makeEnt({
+    type:'enemy', name: d.name, enType: type,
+    x:x, y:y, faction: d.faction, color: isBoss?'#2A2A2A':'#4A4438',
+    hp: d.hp, maxhp: d.hp, dmg: d.dmg, speed: d.speed,
+    range: d.melee?1.1:8, aggro: d.aggro, melee: d.melee,
+    gun: d.melee?null:'pistol', hostile:true, state:'idle', xp:d.xp,
+    drop: d.drop||[], dropGold:d.dropGold||[0,0]
+  });
+}
+function spawnAnimal(type, x, y){
+  var d = D.enemies[type];
+  return makeEnt({
+    type:'animal', name: d.name, enType: type,
+    x:x, y:y, faction: d.faction, color: type==='tiger'?'#C0562A':(type==='python'?'#4A7A3A':(type==='boar'?'#6E523A':'#8A7A5C')),
+    hp: d.hp, maxhp: d.hp, dmg: d.dmg, speed: d.speed,
+    range: 1.1, aggro: d.aggro, melee:true, hostile: d.prey?false:true, state:'idle',
+    xp: d.xp, drop:d.drop||[], dropGold:d.dropGold||[0,0], prey:d.prey
+  });
+}
+
+/* ---- 玩家 ---- */
+function createPlayer(x,y){
+  P = {
+    type:'player', name:'HanBer · EIGHT',
+    x:x, y:y, dir:1,
+    hp:100, maxhp:CFG.capHp,
+    hunger:100, thirst:100, eng:100,
+    money:CFG.startMoney, lv:1, xp:0, xpNext:100,
+    weapon:'fists', inv:{}, equip:{},
+    carry:0, atkCd:0, regenT:0,
+    dead:false, mode:null, day:1, aliveDays:0
+  };
+}
+function invWeight(){
+  var w = 0;
+  Object.keys(P.inv).forEach(function(k){ w += (D.items[k]?D.items[k].w:0.5)*P.inv[k]; });
+  Object.keys(P.equip).forEach(function(k){
+    var id = P.equip[k];
+    if(id && D.weapons[id]) w += D.weapons[id].w||0;
+  });
+  return w;
+}
+function addItem(id, n){
+  n = n||1;
+  if(!D.items[id]) return false;
+  var max = D.items[id].stack || 99;
+  if(!P.inv[id]) P.inv[id] = 0;
+  var room = max - P.inv[id];
+  var add = Math.min(room, n);
+  P.inv[id] += add;
+  if(P.inv[id]<=0) delete P.inv[id];
+  return add;
+}
+function removeItem(id, n){
+  n = n||1;
+  if(!P.inv[id] || P.inv[id]<n) return false;
+  P.inv[id] -= n;
+  if(P.inv[id]<=0) delete P.inv[id];
+  return true;
+}
+function hasItem(id, n){ return (P.inv[id]||0) >= (n||1); }
+function addXp(n){
+  P.xp += n;
+  while(P.xp >= P.xpNext){
+    P.xp -= P.xpNext;
+    P.lv++;
+    P.xpNext = Math.floor(P.xpNext*1.35);
+    P.maxhp += 8; P.hp = Math.min(P.maxhp, P.hp+20);
+    toast('等级提升！ Lv.'+P.lv+'（生命上限+8）');
+  }
+}
+function equipWeapon(id){
+  if(!D.weapons[id]) return;
+  var old = P.weapon;
+  P.weapon = id;
+  P.equip.weapon = id;
+  toast('装备了'+D.weapons[id].name);
+  sfx('equip');
+}
+
+/* ---- 战斗 ---- */
+function playerAttack(){
+  if(P.atkCd>0 || !P || P.dead) return;
+  var w = D.weapons[P.weapon];
+  if(!w) return;
+  if(w.type==='ranged'){
+    if(!hasItem(w.ammo?('ammo'+(w.ammo==='9mm'?'9':w.ammo==='12g'?'12':'7')):null,1) && w.ammo){
+      toast('没有弹药：'+w.ammo);
+      return;
+    }
+    if(w.ammo) removeItem(w.ammo==='9mm'?'ammo9':(w.ammo==='12g'?'ammo12':'ammo7'),1);
+  }
+  P.atkCd = 1/w.speed;
+  var tgt = nearestHostile();
+  if(w.type==='melee'){
+    if(tgt && distP(tgt) < w.range+0.6){
+      hitEntity(tgt, w.dmg + (P.lv-1)*1, P);
+      P.dir = tgt.x>P.x?1:-1;
+      sfx('hit');
+    } else {
+      P.dir = 1;
+      sfx('swing');
+    }
+  } else {
+    shootWeapon(w, tgt);
+  }
+}
+function shootWeapon(w, tgt){
+  var mx = MOUSE.x/CFG.tile + CAM.x, my = MOUSE.y/CFG.tile + CAM.y;
+  var sx = P.x, sy = P.y;
+  var tx = tgt? tgt.x : mx, ty = tgt? tgt.y : my;
+  var d = Math.hypot(tx-sx, ty-sy);
+  if(d > w.range) { tx = sx + (tx-sx)/d*w.range; ty = sy + (ty-sy)/d*w.range; }
+  P.dir = tx>P.x?1:-1;
+  var hit = false;
+  for(var i=0;i<ENT.length;i++){
+    var e = ENT[i];
+    if(e===P || e.dead) continue;
+    if(e.faction===P.faction || (!e.hostile && !e.prey)) continue;
+    var ed = dist(e, P);
+    if(ed > w.range+1) continue;
+    /* 与射线距离 */
+    var seg = Math.abs((ty-sy)*e.x - (tx-sx)*e.y + tx*sy - ty*sx) / Math.max(0.001, d);
+    if(seg < 1.0 && ed < w.range+0.8){
+      var dmg = w.dmg;
+      if(w.pellets){ dmg = 0; for(var p=0;p<w.pellets;p++) dmg += (w.dmg*rand(0.4,1.2))|0; }
+      else dmg = (dmg*rand(0.8,1.25))|0;
+      hitEntity(e, dmg, P);
+      hit = true;
+      break;
+    }
+  }
+  sfx(w.type==='ranged'?'shot':'hit');
+  spawnParticle((sx*CFG.tile - CAM.x*CFG.tile), (sy*CFG.tile - CAM.y*CFG.tile),
+    (tx-sx)*3, (ty-sy)*3, 0.18, '#FFD77A', 3);
+  CAM.shake = Math.min(8, CAM.shake + (w.type==='ranged'?3:1));
+  if(w.pellets) for(var k=0;k<6;k++) spawnParticle(P.x*CFG.tile - CAM.x*CFG.tile, P.y*CFG.tile - CAM.y*CFG.tile, rand(-80,80), rand(-80,80), 0.3, '#C0562A', 2);
+}
+function nearestHostile(){
+  var best = null, bd = 999;
+  for(var i=0;i<ENT.length;i++){
+    var e = ENT[i];
+    if(e===P || e.dead) continue;
+    if(e.hostile || e.prey || (e.guard && e.aggro>0 && hostileTo(e.faction))) {
+      var d = dist(e,P);
+      if(d < bd){ bd = d; best = e; }
+    }
+  }
+  return best;
+}
+function hostileTo(f){
+  return F_HOSTILE[f]===true || (f==='bandit'&&true) || (f==='north'&&!G.passNorth);
+}
+var F_HOSTILE = {};
+function hitEntity(e, dmg, by){
+  if(e.dead) return;
+  e.hp -= dmg;
+  e.hp = Math.max(0, e.hp);
+  e.t = 0;
+  e.lastHit = by;
+  spawnParticle(e.x*CFG.tile - CAM.x*CFG.tile, e.y*CFG.tile - CAM.y*CFG.tile, rand(-30,30), rand(-40,10), 0.3, '#D04040', 3);
+  if(e.guard && by===P){ setHostile(e.faction); }
+  if(e.hp<=0) killEntity(e, by);
+}
+function setHostile(f){
+  if(f==='sa'||f==='civ'||f==='free') { F_HOSTILE[f]=true; toast('你触怒了'+D.factions[f].name+'！'); }
+  else F_HOSTILE[f] = true;
+}
+function killEntity(e, by){
+  if(e.dead) return;
+  e.dead = true;
+  var i = ENT.indexOf(e);
+  if(i>=0) ENT.splice(i,1);
+  sfx('kill');
+  /* 掉落 */
+  if(by===P){
+    if(e.drop) e.drop.forEach(function(id){ addItem(id, rndi(1,2)); });
+    if(e.dropGold) addItem('silver',0), P.money += rndi(e.dropGold[0], e.dropGold[1]);
+    if(e.xp) addXp(e.xp);
+    if(e.enType) G.stats['kill_'+e.enType] = (G.stats['kill_'+e.enType]||0)+1;
+    if(e.type==='enemy') G.stats.kills++;
+    if(e.npcId) toast('你杀害了'+e.name);
+    emitEvent({type:'kill', target:e});
+  }
+  if(e.enType==='boss'){
+    setTimeout(function(){ runFx('set:ch10_boss'); }, 300);
+  }
+}
+function dist(e1, e2){ return Math.hypot(e1.x-e2.x, e1.y-e2.y); }
+function distP(e){ return Math.hypot(e.x-P.x, e.y-P.y); }
+
+/* ---- 敌对NPC攻击玩家 ---- */
+function enemyAttack(e){
+  if(!P || P.dead) return;
+  if(e.cd>0) return;
+  if(e.melee){
+    if(distP(e) < e.range+0.7){
+      e.cd = 1.2;
+      var dmg = Math.max(1, (e.dmg*G.diff)|0);
+      P.hp -= dmg;
+      CAM.shake = Math.min(8, CAM.shake+4);
+      spawnParticle(P.x*CFG.tile - CAM.x*CFG.tile, P.y*CFG.tile - CAM.y*CFG.tile, 0, -20, 0.3, '#D04040', 4);
+      sfx('hit');
+      if(P.hp<=0){ P.hp = 0; playerDie(); }
+    }
+  } else {
+    if(distP(e) < e.range+1 && losClear(e.x,e.y,P.x,P.y)){
+      e.cd = 2.2;
+      var dmg = Math.max(1, (e.dmg*G.diff)|0);
+      if(P && !P.dead){
+        P.hp -= dmg;
+        spawnParticle(P.x*CFG.tile - CAM.x*CFG.tile, P.y*CFG.tile - CAM.y*CFG.tile, 0, -20, 0.3, '#D04040', 3);
+        sfx('shot');
+        if(P.hp<=0){ P.hp=0; playerDie(); }
+      }
+    }
+  }
+}
+
+/* ---- AI 更新 ---- */
+function updateEntities(dt){
+  var i, e;
+  for(i=ENT.length-1;i>=0;i--){
+    e = ENT[i];
+    if(e.dead) continue;
+    e.cd -= dt;
+    e.t += dt;
+    var near = distP(e) < 26;
+    if(!near && e.type!=='npc') continue; // 远处只更新NPC(它们需要对话)
+    if(e.type==='npc') updateNpc(e, dt);
+    else if(e.type==='enemy'||e.type==='animal') updateFoe(e, dt);
+  }
+}
+function updateNpc(e, dt){
+  var d = distP(e);
+  e.dir = P && P.x > e.x ? 1 : -1;
+  if(e.npcId && e.state!=='dead'){
+    /* 命名NPC站在位置，若玩家接近则面向玩家 */
+    if(d < 1.6) e.dir = P.x>e.x?1:-1;
+    return;
+  }
+  if(e.state==='stand') return;
+  if(d < 1.4){ e.dir = P.x>e.x?1:-1; return; }
+  /* 守卫巡逻 */
+  if(e.guard){
+    e.t2 = (e.t2||0) + dt;
+    if(e.t2 > 3){
+      e.t2 = 0;
+      e.tx = e.x + rand(-4,4); e.ty = e.y + rand(-4,4);
+    }
+  } else {
+    e.t2 = (e.t2||0) + dt;
+    if(e.t2 > 5){
+      e.t2 = 0;
+      e.tx = e.x + rand(-5,5); e.ty = e.y + rand(-5,5);
+    }
+  }
+  if(e.tx!==undefined && Math.hypot(e.tx-e.x, e.ty-e.y) > 0.5){
+    moveToward(e, e.tx, e.ty, e.speed*0.5, dt);
+  }
+}
+function updateFoe(e, dt){
+  if(!P || P.dead){ return; }
+  var d = distP(e);
+  /* 猎物逃跑 */
+  if(e.prey){
+    if(d < 5){ e.tx = e.x + (e.x-P.x)*3; e.ty = e.y + (e.y-P.y)*3; }
+    else if(!e.tx || Math.hypot(e.tx-e.x,e.ty-e.y)<1){ e.tx = e.x+rand(-6,6); e.ty = e.y+rand(-6,6); }
+    moveToward(e, e.tx, e.ty, e.speed, dt);
+    return;
+  }
+  var hostile = e.hostile || (e.faction==='north' && !G.passNorth);
+  if(hostile && d < e.aggro + (G.night?2:0) && losClear(e.x,e.y,P.x,P.y)){
+    e.chasing = true;
+    if(e.melee){
+      if(d < e.range+0.8){ enemyAttack(e); }
+      else {
+        var step = findStep(e.x,e.y,P.x,P.y, 40);
+        if(step) moveToward(e, step[0]+0.5, step[1]+0.5, e.speed, dt);
+        else moveToward(e, P.x, P.y, e.speed, dt);
+      }
+    } else {
+      if(d < e.range && d > 2){ enemyAttack(e); }
+      else if(d > e.range*0.8){ moveToward(e, P.x, P.y, e.speed, dt); }
+      else { moveToward(e, e.x - (P.x-e.x)*2, e.y - (P.y-e.y)*2, e.speed*0.8, dt); }
+    }
+  } else {
+    e.chasing = false;
+    e.t2 = (e.t2||0) + dt;
+    if(e.t2 > 4){
+      e.t2 = 0;
+      e.tx = e.x + rand(-4,4); e.ty = e.y + rand(-4,4);
+    }
+    if(e.tx!==undefined) moveToward(e, e.tx, e.ty, e.speed*0.6, dt);
+  }
+  /* 低血量逃跑(非Boss) */
+  if(!e.prey && e.hp < e.maxhp*0.25 && !e.melee && Math.random()<0.01){
+    moveToward(e, e.x+(e.x-P.x)*4, e.y+(e.y-P.y)*4, e.speed*1.2, dt);
+  }
+}
+function moveToward(e, tx, ty, spd, dt){
+  var dx = tx - e.x, dy = ty - e.y;
+  var d = Math.hypot(dx,dy);
+  if(d < 0.05) return;
+  var nx = e.x + dx/d*spd*dt, ny = e.y + dy/d*spd*dt;
+  if(!solidAtF(nx, e.y)) e.x = nx;
+  else e.x = e.x;
+  if(!solidAtF(e.x, ny)) e.y = ny;
+  if(e.x!==undefined) e.dir = dx>0?1:-1;
+  e.x = clamp(e.x, 0.5, W.w-0.5);
+  e.y = clamp(e.y, 0.5, W.h-0.5);
+}
+
+/* ---- 交互 ---- */
+function nearestInteract(radius){
+  radius = radius||1.5;
+  var best = null, bd = radius;
+  ENT.forEach(function(e){
+    if(e===P || e.dead) return;
+    var d = distP(e);
+    if(d < bd && (e.type==='npc'||(e.type==='enemy'&&e.guard))){
+      bd = d; best = e;
+    }
+  });
+  return best;
+}
+function nearestLoot(radius){
+  radius = radius||1.6;
+  var best = null, bd = radius;
+  W.loot.forEach(function(l){
+    if(l.done) return;
+    var d = Math.hypot(l.x+0.5-P.x, l.y+0.5-P.y);
+    if(d < bd){ bd = d; best = l; }
+  });
+  return best;
+}
+function doInteract(){
+  var e = nearestInteract(1.5);
+  if(e && e.type==='npc'){
+    if(e.npcId) startNpcDlg(e);
+    else startGenericDlg(e);
+    return;
+  }
+  var l = nearestLoot(1.6);
+  if(l){ scavenge(l); return; }
+  toast('附近没什么可互动的');
+}
+/* 拾荒 */
+function scavenge(l){
+  l.done = true;
+  l.t = G.day; // 重置日
+  var kind = l.kind;
+  var table = {};
+  if(kind==='wild') table = {scrap:0.5, cloth:0.3, wire:0.2, wood:0.3, can:0.25, part:0.15};
+  else if(kind==='city'||kind==='village') table = {scrap:0.5, cloth:0.35, wire:0.25, can:0.4, biscuit:0.3, battery:0.2, part:0.25, eswatch:0.08};
+  else if(kind==='ruins') table = {scrap:0.6, wire:0.3, battery:0.3, part:0.4, can:0.35, bandage:0.25, ammo9:0.2, silver:0.08, watch:0.06, diary:0.05, tape:0.04, folder:0.02, drone:0.02};
+  else if(kind==='camp'||kind==='base'||kind==='outpost') table = {scrap:0.5, ammo9:0.3, ammo12:0.2, ammo7:0.25, bandage:0.3, can:0.3, part:0.2, stim:0.1, pain:0.15};
+  else if(kind==='port') table = {scrap:0.4, wire:0.3, battery:0.25, cigs:0.25, wine:0.2, silver:0.12, eswatch:0.12, part:0.3, can:0.3};
+  else if(kind==='farm') table = {wood:0.5, rawmeat:0.3, banana:0.4, rice:0.3, cloth:0.3, water:0.2};
+  else table = {scrap:0.5, cloth:0.3, wood:0.4, can:0.3};
+  /* 记忆碎片(第9章) */
+  if(G.chapter===9 && G.flags.ch9_2 && !G.flags.frag_done && Math.random()<0.5){
+    addItem('fragment',1);
+    toast('你找到一块【记忆碎片】');
+    emitEvent({type:'collect', item:'fragment', n:1});
+    if((P.inv.fragment||0)>=3){ G.flags.frag_done = true; }
+    return;
+  }
+  var roll = Math.random(), acc = 0, got = null;
+  Object.keys(table).forEach(function(k){
+    if(got) return;
+    acc += table[k];
+    if(roll < acc) got = k;
+  });
+  if(got){
+    var n = (got==='scrap')? rndi(1,3) : 1;
+    var added = addItem(got, n);
+    if(added>0) toast('拾荒获得：'+D.items[got].name+'×'+added);
+    emitEvent({type:'collect', item:got, n:added});
+  } else {
+    toast('这堆垃圾里什么也没有');
+  }
+}
+
+/* ---- 渲染实体 ---- */
+function drawEntities(ctx){
+  var t = CFG.tile;
+  var list = ENT.concat([]);
+  list.sort(function(a,b){ return a.y - b.y; });
+  list.forEach(function(e){
+    var sx = e.x*t - CAM.x*t, sy = e.y*t - CAM.y*t;
+    if(sx<-t*2||sy<-t*2||sx>CVW+t*2||sy>CVH+t*2) return;
+    /* 阴影 */
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    ctx.beginPath(); ctx.ellipse(sx+t/2, sy+t-3, t*0.34, t*0.16, 0, 0, 6.283); ctx.fill();
+    var bob = Math.sin(e.t*3)*1.5;
+    var bodyColor = e.color||'#8A7A5C';
+    var isEnemy = e.type==='enemy';
+    var isAnimal = e.type==='animal';
+    var r = isEnemy? t*0.30 : t*0.26;
+    var cx = sx + t/2, cy = sy + t/2 + bob;
+    /* 身体 */
+    ctx.fillStyle = bodyColor;
+    if(isAnimal){
+      ctx.beginPath();
+      if(e.enType==='deer'){ ctx.ellipse(cx, cy, r*1.1, r*0.7, 0, 0, 6.283); }
+      else if(e.enType==='python'){ ctx.ellipse(cx, cy, r*1.4, r*0.5, e.dir, 0, 6.283); }
+      else ctx.ellipse(cx, cy, r*1.2, r*0.8, 0, 0, 6.283);
+      ctx.fill();
+      if(e.enType==='tiger'){
+        ctx.fillStyle = '#3A2418';
+        ctx.fillRect(cx-r*0.6, cy-3, r*1.2, 3);
+        ctx.fillRect(cx-r*0.9, cy-7, r*1.8, 3);
+      }
+    } else {
+      ctx.beginPath();
+      ctx.roundRect(cx - r, cy - r*0.9, r*2, r*1.8, 4);
+      ctx.fill();
+      /* 头 */
+      ctx.fillStyle = '#D9C9A8';
+      ctx.beginPath(); ctx.arc(cx + e.dir*r*0.55, cy - r*0.75, r*0.42, 0, 6.283); ctx.fill();
+      /* 帽子/特征 */
+      if(e.guard || (e.faction==='north')){
+        ctx.fillStyle = e.faction==='north'?'#6E6E6E':'#8F6A22';
+        ctx.fillRect(cx - r*0.55, cy - r*1.45, r*1.1, r*0.5);
+      } else if(e.npcId){
+        ctx.fillStyle = 'rgba(0,0,0,.3)';
+        ctx.fillRect(cx - r*0.5, cy + r*0.3, r, r*0.25);
+      }
+      if(e.role==='店主'||e.shop){
+        ctx.fillStyle = '#B98A2F';
+        ctx.fillRect(cx - r*0.7, cy - r*0.3, r*0.7, r*0.6);
+      }
+    }
+    /* 血条 */
+    if((isEnemy||e.guard||e.npcId) && e.hp < e.maxhp){
+      ctx.fillStyle = 'rgba(0,0,0,.5)';
+      ctx.fillRect(cx-r, cy-r*1.6, r*2, 4);
+      ctx.fillStyle = '#7BC07B';
+      ctx.fillRect(cx-r, cy-r*1.6, r*2*(e.hp/e.maxhp), 4);
+    }
+    /* 名称 */
+    if(e.npcId){
+      ctx.fillStyle = '#F2E8CE';
+      ctx.font = '600 11px "Noto Serif SC",serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(e.name, cx, cy - r*1.5);
+    }
+    /* 武器(敌对) */
+    if(e.melee && isEnemy && e.chasing){
+      ctx.fillStyle = '#3A3A3A';
+      ctx.fillRect(cx + e.dir*r*0.8, cy, r*0.7, 3);
+    }
+  });
+  /* 玩家 */
+  if(P && !P.dead){
+    var px = P.x*t - CAM.x*t, py = P.y*t - CAM.y*t;
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.beginPath(); ctx.ellipse(px+t/2, py+t-3, t*0.36, t*0.16, 0, 0, 6.283); ctx.fill();
+    var bob = Math.sin(G.time*4)*1.5;
+    var cx = px+t/2, cy = py+t/2+bob;
+    ctx.fillStyle = '#2E5A6E'; // 青色夹克
+    ctx.beginPath(); ctx.roundRect(cx-9, cy-9, 18, 20, 5); ctx.fill();
+    ctx.fillStyle = '#D9C9A8';
+    ctx.beginPath(); ctx.arc(cx+P.dir*5, cy-8, 6, 0, 6.283); ctx.fill();
+    ctx.fillStyle = '#1E3A4A';
+    ctx.fillRect(cx-9, cy-12, 18, 4);
+    /* 武器 */
+    var w = D.weapons[P.weapon];
+    if(w){
+      ctx.fillStyle = '#6E6250';
+      if(w.type==='ranged'){
+        ctx.fillRect(cx + P.dir*8, cy-2, 12, 3);
+      } else {
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(P.dir*0.7);
+        ctx.fillRect(4, -1, 10, 2);
+        ctx.restore();
+      }
+    }
+    /* 面向标记(交互目标高亮) */
+    if(G.showHint){
+      ctx.fillStyle = 'rgba(255,215,122,.9)';
+      ctx.font = '12px serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('E', px+t/2, py-18);
+    }
+  }
+}
+
+</script>
+<script>
+/* ============================================================
+   HanBer EIGHT · 系统：生存 / 对话引擎 / 任务 / 章节 / 存档 / 音效
+   ============================================================ */
+
+var G = {
+  state:'boot',          // boot/menu/play/dlg/cut/chapter/pop/dead/end
+  mode:'story',          // story / free
+  chapter:1,
+  flags:{},
+  quests:{},             // id -> {state:'active'|'done', objs:[{cur,n}]}
+  day:1, clock:0,        // 游戏内
+  time:0,                // 现实累计秒
+  night:false,
+  diff:1,
+  audio:null, audioStarted:false, muted:false,
+  lastArea:'',
+  showHint:false,
+  paused:false,
+  saveTimer:0,
+  uiLock:false,
+  stats:{kills:0, scav:0, bounties:0, questsDone:0, daysSurvived:0}
+};
+
+/* ---- 音效（WebAudio 合成） ---- */
+function initAudio(){
+  try{
+    var AC = window.AudioContext||window.webkitAudioContext;
+    if(!AC) return;
+    G.audio = new AC();
+    G.master = G.audio.createGain();
+    G.master.gain.value = 0.5;
+    G.master.connect(G.audio.destination);
+  }catch(e){}
+}
+function sfx(type){
+  if(!G.audio || G.muted || !G.audioStarted) return;
+  var ctx = G.audio, t = ctx.currentTime;
+  var osc, gain, noise, filter;
+  switch(type){
+    case 'shot':
+      noise = ctx.createBufferSource();
+      var buf = ctx.createBuffer(1, ctx.sampleRate*0.12, ctx.sampleRate);
+      var d = buf.getChannelData(0);
+      for(var i=0;i<d.length;i++) d[i] = (Math.random()*2-1)*Math.pow(1-i/d.length, 2);
+      noise.buffer = buf;
+      filter = ctx.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value=1600;
+      gain = ctx.createGain(); gain.gain.setValueAtTime(0.5, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t+0.12);
+      noise.connect(filter); filter.connect(gain); gain.connect(G.master);
+      noise.start();
+      break;
+    case 'hit':
+      osc = ctx.createOscillator(); osc.type='square'; osc.frequency.setValueAtTime(120,t);
+      osc.frequency.exponentialRampToValueAtTime(50, t+0.1);
+      gain = ctx.createGain(); gain.gain.setValueAtTime(0.25,t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t+0.12);
+      osc.connect(gain); gain.connect(G.master); osc.start(); osc.stop(t+0.13);
+      break;
+    case 'swing':
+      noise = ctx.createBufferSource();
+      var buf2 = ctx.createBuffer(1, ctx.sampleRate*0.15, ctx.sampleRate);
+      var d2 = buf2.getChannelData(0);
+      for(var j=0;j<d2.length;j++) d2[j] = Math.sin(j/8)*0.3*Math.pow(1-j/d2.length,2);
+      noise.buffer = buf2;
+      gain = ctx.createGain(); gain.gain.setValueAtTime(0.15,t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t+0.15);
+      noise.connect(gain); gain.connect(G.master); noise.start();
+      break;
+    case 'kill':
+      osc = ctx.createOscillator(); osc.type='triangle';
+      osc.frequency.setValueAtTime(400,t); osc.frequency.exponentialRampToValueAtTime(80,t+0.15);
+      gain = ctx.createGain(); gain.gain.setValueAtTime(0.2,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.15);
+      osc.connect(gain); gain.connect(G.master); osc.start(); osc.stop(t+0.16);
+      break;
+    case 'pickup':
+      osc = ctx.createOscillator(); osc.type='sine';
+      osc.frequency.setValueAtTime(520,t); osc.frequency.setValueAtTime(780,t+0.06);
+      gain = ctx.createGain(); gain.gain.setValueAtTime(0.15,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+      osc.connect(gain); gain.connect(G.master); osc.start(); osc.stop(t+0.13);
+      sfx('ui2');
+      break;
+    case 'ui':
+      osc = ctx.createOscillator(); osc.type='square'; osc.frequency.value=640;
+      gain = ctx.createGain(); gain.gain.setValueAtTime(0.08,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.07);
+      osc.connect(gain); gain.connect(G.master); osc.start(); osc.stop(t+0.08);
+      break;
+    case 'ui2':
+      osc = ctx.createOscillator(); osc.type='sine'; osc.frequency.value=900;
+      gain = ctx.createGain(); gain.gain.setValueAtTime(0.06,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+      osc.connect(gain); gain.connect(G.master); osc.start(); osc.stop(t+0.07);
+      break;
+    case 'equip':
+      osc = ctx.createOscillator(); osc.type='sawtooth'; osc.frequency.setValueAtTime(200,t);
+      osc.frequency.exponentialRampToValueAtTime(400,t+0.1);
+      gain = ctx.createGain(); gain.gain.setValueAtTime(0.12,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+      osc.connect(gain); gain.connect(G.master); osc.start(); osc.stop(t+0.13);
+      break;
+    case 'heal':
+      osc = ctx.createOscillator(); osc.type='sine';
+      osc.frequency.setValueAtTime(500,t); osc.frequency.setValueAtTime(700,t+0.1);
+      gain = ctx.createGain(); gain.gain.setValueAtTime(0.15,t);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+0.18);
+      osc.connect(gain); gain.connect(G.master); osc.start(); osc.stop(t+0.2);
+      break;
+  }
+}
+
+/* ---- 生存 ---- */
+function survivalTick(dt){
+  if(!P || P.dead) return;
+  var spd = 1;
+  P.hunger -= 0.12*spd*dt;
+  P.thirst -= 0.15*spd*dt;
+  P.eng -= 0.03*spd*dt;
+  if(isRun() && !G.uiLock) P.eng -= 0.35*dt;
+  /* 饿/渴掉血 */
+  if(P.hunger<=0){ P.hp -= 2.0*dt; P.hunger = 0; }
+  if(P.thirst<=0){ P.hp -= 3.0*dt; P.thirst = 0; }
+  if(P.hp<=0 && !P.dead){ P.hp = 0; playerDie(); return; }
+  /* 缓慢回血 */
+  if(P.hunger>60 && P.thirst>60 && P.eng>25 && P.hp>0 && P.hp<P.maxhp && !isRun()){
+    P.hp = Math.min(P.maxhp, P.hp + 0.8*dt);
+  }
+  P.hunger = clamp(P.hunger, 0, CFG.capHunger);
+  P.thirst = clamp(P.thirst, 0, CFG.capThirst);
+  P.eng = clamp(P.eng, 0, CFG.capEng);
+  P.regenT = (P.regenT||0) + dt;
+}
+function useItem(id){
+  var it = D.items[id];
+  if(!it || !P.inv[id]) return;
+  var used = false;
+  if(it.food){ P.hunger = clamp(P.hunger+it.food, 0, 100); used = true; }
+  if(it.thirst){ P.thirst = clamp(P.thirst+it.thirst, 0, 100); used = true; }
+  if(it.eng){ P.eng = clamp(P.eng+it.eng, 0, 100); used = true; }
+  if(it.hp){ P.hp = clamp(P.hp+it.hp, 0, P.maxhp); used = true; }
+  if(!used){ toast(D.items[id].name+'不能直接使用'); return; }
+  removeItem(id, 1);
+  sfx('pickup');
+  var s = [];
+  if(it.food) s.push('饱食+'+(it.food>0?'':'')+it.food);
+  if(it.thirst) s.push('水分+'+(it.thirst>0?'':'')+it.thirst);
+  if(it.eng) s.push('体力+'+(it.eng>0?'':'')+it.eng);
+  if(it.hp) s.push('生命+'+(it.hp>0?'':'')+it.hp);
+  toast('使用'+it.name+'：'+s.join(' '));
+}
+/* 烹饪：篝火/炉灶——把生肉/生鱼变烤肉 */
+function cookFood(){
+  var raw = 0;
+  if(P.inv.rawmeat) raw += P.inv.rawmeat;
+  if(P.inv.fish) raw += P.inv.fish;
+  if(raw<=0){ toast('没有可烹饪的生肉/生鱼'); return; }
+  removeItem('rawmeat', 1) || removeItem('fish', 1);
+  addItem('cooked', 1);
+  toast('烤熟了一份肉');
+  sfx('heal');
+}
+function sleep6h(){
+  var enemies = ENT.some(function(e){
+    return (e.hostile && distP(e) < 10) || (e.guard && e.aggro>0 && hostileTo(e.faction) && distP(e)<10);
+  });
+  if(enemies){ toast('附近有敌人，无法安心休息！'); return; }
+  advanceTime(60); // 游戏内6小时（一天=240现实秒）
+  P.hp = Math.min(P.maxhp, P.hp + 25);
+  P.eng = 100;
+  P.hunger = Math.max(0, P.hunger-8);
+  P.thirst = Math.max(0, P.thirst-10);
+  toast('你睡了6个小时，恢复了体力');
+  sfx('heal');
+}
+function advanceTime(sec){
+  G.clock += sec;
+  while(G.clock >= CFG.dayLen){
+    G.clock -= CFG.dayLen;
+    G.day++;
+    G.stats.daysSurvived++;
+    if(G.mode==='free') freeDayEvent();
+    /* 拾荒点重置 */
+    W.loot.forEach(function(l){ if(l.done && G.day > l.t+1) l.done = false; });
+    /* 营地敌人重生 */
+    if(G.day % 2 === 0) respawnCamp();
+  }
+}
+function respawnCamp(){
+  D.wildSpawns.forEach(function(sp){
+    if(sp.type!=='bandit') return;
+    var count = ENT.filter(function(e){ return e.type==='enemy' && e.enType==='bandit'; }).length;
+    if(count < 30){
+      spawnEnemyAt('bandit', sp.x + rand(-sp.r,sp.r), sp.y + rand(-sp.r,sp.r));
+    }
+  });
+}
+
+/* ---- 玩家死亡 ---- */
+function playerDie(){
+  if(!P || P.dead) return;
+  P.dead = true;
+  sfx('kill');
+  G.state = 'dead';
+  G.uiLock = true;
+  uiShowDeath();
+}
+function respawnPlayer(){
+  var t = D.towns.filter(function(x){return x.id==='saigon';})[0];
+  var lose = Math.floor(P.money*0.2);
+  P.money -= lose;
+  P.hp = Math.max(30, P.maxhp*0.5);
+  P.hunger = Math.max(30, P.hunger*0.7);
+  P.thirst = Math.max(30, P.thirst*0.7);
+  P.dead = false;
+  P.x = t.cx; P.y = t.cy;
+  G.state = 'play';
+  G.uiLock = false;
+  toast('你被送回了新西贡诊所，损失了 '+lose+' 南元');
+  sfx('heal');
+}
+
+/* ---- 对话引擎 ---- */
+var DLG = null; // {key, nodes, idx, ent, busy}
+function getDlgKey(npcId){
+  var ch = G.chapter;
+  if(G.mode==='free') return 'base_'+npcId;
+  if(G.flags['dlgd_'+ch+'_'+npcId]) return 'base_'+npcId;
+  return 'base_'+npcId;
+}
+/* 按章节 talkOrder 顺序取下一个待播放的对话 */
+function dlgForObjective(npcId){
+  var ch = D.chapters[G.chapter-1];
+  if(!ch || G.mode==='free' || !ch.talkOrder) return null;
+  var order = ch.talkOrder[npcId];
+  if(!order || !order.length) return null;
+  var cnt = G.flags['dlgCnt_'+npcId] || 0;
+  if(cnt < order.length) return order[cnt];
+  return null;
+}
+function startNpcDlg(ent){
+  if(!ent || !ent.npcId) return;
+  var key = dlgForObjective(ent.npcId);
+  if(!key){
+    if(G.chapter===12 && (G.flags.ch11_open||G.flags.ch11_burn||G.flags.ch11_seize)){
+      if(ent.npcId==='maya') key = 'ch12_tail';
+      else key = 'base_'+ent.npcId;
+    } else {
+      key = 'base_'+ent.npcId;
+      /* 支线交付：giver 已完成任务 → 交付对话 */
+      var q = activeQuestByGiver(ent.npcId);
+      if(q && questObjsDone(q) && !G.flags['qrew_'+q.id]){
+        var dq = findDlg(q.id);
+        if(dq){ key = dq; }
+      }
+    }
+  }
+  if(!D.dlg[key]){ key = 'base_'+ent.npcId; }
+  if(!D.dlg[key]){ startGenericDlg(ent); return; }
+  DLG = {key:key, nodes:D.dlg[key], idx:0, ent:ent};
+  G.state = 'dlg';
+  G.uiLock = true;
+  sfx('ui');
+  showDlgNode();
+}
+function activeQuestByGiver(npcId){
+  var q = null;
+  D.sideQuests.forEach(function(def){
+    if(def.giver!==npcId) return;
+    if(!q && G.quests[def.id] && G.quests[def.id].state==='active') q = G.quests[def.id];
+  });
+  return q;
+}
+function findDlg(qid){
+  /* 交付对话键：q_{id}_done? 约定 dlgs 键名与 quest dlgDone 字段一致 */
+  var q = D.sideQuests.filter(function(x){return x.id===qid;})[0];
+  return q ? q.dlgDone : null;
+}
+function startGenericDlg(ent){
+  var faction = ent.faction;
+  var lines = [];
+  var r = Math.random();
+  if(r < 0.45) lines = D.ambient.civ_greet;
+  else if(faction==='civ') lines = r<0.6? D.ambient.civ_greet : D.ambient.civ_rumor;
+  else if(faction==='sa') lines = r<0.6? D.ambient.sa_greet : D.ambient.sa_rumor;
+  else if(faction==='north') lines = D.ambient.north_greet;
+  else if(faction==='guer') lines = D.ambient.guer_greet;
+  else if(faction==='free') lines = r<0.6? D.ambient.free_greet : D.ambient.free_greet;
+  else lines = D.ambient.bandit_greet;
+  var text = pick(lines);
+  if(G.night && r>0.75) text = pick(D.ambient.night);
+  var opts = [];
+  if(ent.shop) opts.push({txt:'【交易】看看你有什么货', fx:'trade'});
+  if(ent.healCost) opts.push({txt:'【治疗】请帮我处理伤口', fx:'heal'});
+  opts.push({txt:'（离开）', next:'end'});
+  DLG = {key:'generic', nodes:[{who:ent.name, txt:text, opts:opts}], idx:0, ent:ent};
+  G.state = 'dlg';
+  G.uiLock = true;
+  sfx('ui');
+  showDlgNode();
+}
+function dlgPick(idx){
+  if(!DLG) return;
+  var node = DLG.nodes[DLG.idx];
+  var opt = node.opts[idx];
+  if(!opt) return;
+  if(opt.cond && !condOk(opt.cond)) return;
+  sfx('ui');
+  if(opt.fx) runFx(opt.fx);
+  var nxt = opt.next;
+  if(nxt==='end' || nxt===undefined){
+    closeDlg();
+  } else if(typeof nxt==='number'){
+    DLG.idx = nxt;
+    showDlgNode();
+  } else if(typeof nxt==='string'){
+    var k = findNodeId(nxt);
+    if(k>=0){ DLG.idx = k; showDlgNode(); }
+    else if(D.dlg[nxt]){
+      var ent = DLG.ent;
+      DLG = {key:nxt, nodes:D.dlg[nxt], idx:0, ent:ent};
+      showDlgNode();
+    }
+    else closeDlg();
+  }
+}
+function findNodeId(id){
+  for(var i=0;i<DLG.nodes.length;i++) if(DLG.nodes[i].id===id) return i;
+  return -1;
+}
+function dlgContinue(){
+  if(!DLG) return;
+  var node = DLG.nodes[DLG.idx];
+  if(!node.opts || node.opts.length===0){
+    sfx('ui');
+    if(node.fx) runFx(node.fx);
+    if(node.next!==undefined){
+      if(node.next==='end'){ closeDlg(); return; }
+      if(typeof node.next==='number'){ DLG.idx = node.next; showDlgNode(); return; }
+      var k = findNodeId(node.next);
+      if(k>=0){ DLG.idx = k; showDlgNode(); }
+      else if(D.dlg[node.next]){
+        var ent = DLG.ent;
+        DLG = {key:node.next, nodes:D.dlg[node.next], idx:0, ent:ent};
+        showDlgNode();
+      }
+      else closeDlg();
+    } else closeDlg();
+  }
+}
+function closeDlg(){
+  var ent = DLG && DLG.ent;
+  DLG = null;
+  if(G.state==='dlg') G.state = 'play';
+  G.uiLock = false;
+  if(ent && ent.npcId && G.mode==='story'){
+    emitEvent({type:'talk', who:ent.npcId});
+    G.flags['dlgCnt_'+ent.npcId] = (G.flags['dlgCnt_'+ent.npcId]||0)+1;
+  }
+}
+/* 条件 */
+function condOk(c){
+  var parts = c.split(':');
+  var k = parts[0];
+  if(k==='flag') return G.flags[parts[1]]===true;
+  if(k==='not') return !G.flags[parts[1]];
+  if(k==='item') return hasItem(parts[1], parseInt(parts[2])||1);
+  if(k==='gold') return P && P.money >= parseInt(parts[1]);
+  if(k==='chapter') return G.chapter === parseInt(parts[1]);
+  if(k==='level') return P && P.lv >= parseInt(parts[1]);
+  return true;
+}
+/* 执行动作 */
+function runFx(fx){
+  if(!fx) return;
+  fx.split('|').forEach(function(a){
+    a = a.trim();
+    if(!a) return;
+    var p = a.split(':');
+    var k = p[0], v = p[1];
+    switch(k){
+      case 'set': G.flags[v] = true; break;
+      case 'unset': G.flags[v] = false; break;
+      case 'gold': P.money += parseInt(v); sfx('pickup'); break;
+      case 'give': {
+        var gp = v.split(',');
+        var n = parseInt(gp[1])||1;
+        if(addItem(gp[0], n)) toast('获得：'+D.items[gp[0]].name+'×'+n);
+        emitEvent({type:'collect', item:gp[0], n:n});
+        break;
+      }
+      case 'take': {
+        var tp = v.split(',');
+        removeItem(tp[0], parseInt(tp[1])||1);
+        break;
+      }
+      case 'heal':
+        if(v==='full'){ P.hp = P.maxhp; toast('治疗完成'); }
+        else if(DLG && DLG.ent && DLG.ent.healCost){
+          var cost = DLG.ent.healCost;
+          if(P.money >= cost){ P.money -= cost; P.hp = P.maxhp; toast('治疗完成（-'+cost+'南元）'); sfx('heal'); }
+          else toast('钱不够治疗');
+        }
+        break;
+      case 'trade': if(DLG && DLG.ent && DLG.ent.shop) openShop(DLG.ent); break;
+      case 'quest': startQuest(v); break;
+      case 'reward': completeQuestDirect(v); break;
+      case 'fight': {
+        var fp = v.split(',');
+        var type = fp[0], n = parseInt(fp[1])||1;
+        for(var i=0;i<n;i++){
+          spawnEnemyAt(type, P.x + rand(-3,3), P.y + rand(-3,3));
+        }
+        toast('战斗爆发！');
+        break;
+      }
+      case 'pos': {
+        var pp = v.split(',');
+        var town = D.towns.filter(function(t){return t.id===pp[1];})[0];
+        var ent = ENT.filter(function(e){return e.npcId===pp[0];})[0];
+        if(ent && town){ ent.x = town.cx; ent.y = town.cy; ent.town = pp[1]; }
+        break;
+      }
+      case 'addXp': addXp(parseInt(v)); break;
+      case 'chapterEnd': finishChapter(); break;
+      case 'sound': sfx(v); break;
+      case 'hostile': setHostile(v); break;
+      case 'reposition': if(DLG&&DLG.ent){ DLG.ent.x = P.x + rand(2,4); DLG.ent.y = P.y + rand(-2,2);} break;
+    }
+  });
+}
+
+/* ---- 任务引擎 ---- */
+function startQuest(id){
+  if(G.quests[id] && G.quests[id].state==='active'){ toast('任务已在进行中'); return; }
+  if(G.quests[id] && G.quests[id].state==='done'){ toast('任务已完成'); return; }
+  var def = D.sideQuests.filter(function(q){return q.id===id;})[0];
+  if(!def) return;
+  G.quests[id] = {state:'active', objs: def.objs.map(function(o){ return {cur:0, n:o.n||1}; })};
+  toast('新任务：【'+def.name+'】');
+  sfx('ui2');
+}
+function completeQuestDirect(id){
+  var def = D.sideQuests.filter(function(q){return q.id===id;})[0];
+  if(!def) return;
+  var q = G.quests[id];
+  if(q && q.state==='active'){
+    q.state = 'done';
+    G.stats.questsDone++;
+    if(def.reward){
+      if(def.reward.gold) P.money += def.reward.gold;
+      if(def.reward.items) Object.keys(def.reward.items).forEach(function(k){ addItem(k, def.reward.items[k]); });
+    }
+    G.flags['qrew_'+id] = true;
+    toast('任务完成：【'+def.name+'】 获得报酬');
+    sfx('heal');
+  }
+}
+function questObjsDone(q){
+  return q.objs.every(function(o){ return o.cur >= o.n; });
+}
+function emitEvent(ev){
+  /* 支线 */
+  Object.keys(G.quests).forEach(function(id){
+    var q = G.quests[id];
+    if(q.state!=='active') return;
+    var def = D.sideQuests.filter(function(x){return x.id===id;})[0];
+    if(!def) return;
+    var all = true;
+    def.objs.forEach(function(o, i){
+      var obj = q.objs[i];
+      if(ev.type==='talk' && o.kind==='talk' && ev.who===o.who) obj.cur++;
+      if(ev.type==='kill' && o.kind==='kill' && (o.type==='any'||ev.target.enType===o.type)) obj.cur++;
+      if(ev.type==='collect' && o.kind==='collect' && ev.item===o.item && (!o.killCheck || ev.target)) {
+        if(!o.killCheck) obj.cur = Math.min(obj.n, obj.cur + ev.n||1);
+      }
+      if(ev.type==='collect' && o.kind==='collect' && o.killCheck && ev.type==='kill' && ev.target.enType===o.killCheck){
+        /* 捕蛇类：用击杀计数 */
+      }
+      if(ev.type==='goto' && o.kind==='goto' && ev.area===o.area) obj.cur++;
+      if(obj.cur < obj.n) all = false;
+    });
+    /* killCheck 处理 */
+    if(ev.type==='kill' && ev.target){
+      def.objs.forEach(function(o,i){
+        if(o.kind==='collect' && o.killCheck && ev.target.enType===o.killCheck){
+          q.objs[i].cur++;
+        }
+      });
+    }
+    if(questObjsDone(q)){
+      /* 自动完成（无交付对话的）或提示去交付 */
+      var gmap = {};
+      D.sideQuests.forEach(function(sq){ gmap[sq.id] = sq.giver; });
+      var giver = gmap[id];
+      var hasDelivery = def.dlgDone && giver;
+      if(hasDelivery && !def.special){
+        toast('任务目标完成，去找'+giverName(giver)+'交付');
+      } else {
+        completeQuestDirect(id);
+      }
+    }
+  });
+  /* 主线章节目标 */
+  if(G.mode==='story' && G.state==='play' && !G.paused){
+    chapterEmit(ev);
+  }
+}
+function giverName(npcId){
+  var n = D.npcs[npcId];
+  return n ? n.name : '交付人';
+}
+
+/* ---- 章节引擎 ---- */
+var CH_OBJS = [];
+function currentChapter(){ return D.chapters[G.chapter-1]; }
+function startChapter(n){
+  G.chapter = n;
+  var ch = currentChapter();
+  if(!ch) return;
+  CH_OBJS = ch.objectives.map(function(o){ return {def:o, cur:0}; });
+  /* 过场 */
+  uiCutscene(ch.intro, function(){
+    if(G.chapter===12){
+      var path = null;
+      if(G.flags.ch11_open) path = 'ch12_open';
+      else if(G.flags.ch11_burn) path = 'ch12_burn';
+      else if(G.flags.ch11_seize) path = 'ch12_seize';
+      if(path && D.dlg[path]){
+        DLG = {key:path, nodes:D.dlg[path], idx:0, ent:null};
+        G.state='dlg'; G.uiLock = true; showDlgNode();
+        return;
+      }
+    }
+    if(ch.startDlg && D.dlg[ch.startDlg]){
+      DLG = {key:ch.startDlg, nodes:D.dlg[ch.startDlg], idx:0, ent:null};
+      G.state='dlg'; G.uiLock = true; showDlgNode();
+    } else {
+      G.state = 'play';
+      G.uiLock = false;
+      updateObjective();
+    }
+  });
+}
+function chapterEmit(ev){
+  var all = CH_OBJS.length>0;
+  var ch = currentChapter();
+  if(!ch) return;
+  CH_OBJS.forEach(function(o){
+    var d = o.def;
+    if(ev.type==='talk' && d.kind==='talk' && ev.who===d.who){
+      if(o.cur<1) o.cur = 1;
+    }
+    if(ev.type==='goto' && d.kind==='goto' && ev.area===d.area){
+      if(o.cur<1) o.cur = 1;
+      /* 章节区域事件（进入即播对话） */
+      if(ch.areaDlg && ch.areaDlg.area===d.area && !G.flags['aread_'+G.chapter+'_'+d.area]){
+        G.flags['aread_'+G.chapter+'_'+d.area] = true;
+        if(D.dlg[ch.areaDlg.key]){
+          DLG = {key:ch.areaDlg.key, nodes:D.dlg[ch.areaDlg.key], idx:0, ent:null};
+          G.state='dlg'; G.uiLock=true; showDlgNode();
+        }
+      }
+    }
+    if(ev.type==='collect' && d.kind==='collect' && ev.item===d.item){
+      var need = d.n||1;
+      var have = Math.min(need, (P.inv[d.item]||0));
+      if(o.cur < have) o.cur = have;
+    }
+    if(ev.type==='kill' && d.kind==='kill'){
+      if(d.type==='any' || (ev.target && ev.target.enType===d.type)) o.cur++;
+    }
+    if(ev.type==='level' && d.kind==='level') o.cur = P.lv;
+    if(o.cur < (d.n||1)) all = false;
+  });
+  /* 特例：第10章 击杀铁塔完成"直面铁塔" */
+  if(G.chapter===10 && ev.type==='kill' && ev.target && ev.target.enType==='boss'){
+    CH_OBJS.forEach(function(o){
+      if(o.def.kind==='talk' && o.def.who==='tieta') o.cur = 1;
+    });
+  }
+  /* 第10章：进入铁塔老巢 → 刷Boss */
+  if(G.chapter===10 && ev.type==='goto' && ev.area==='b5' && !G.flags.boss_spawned){
+    G.flags.boss_spawned = true;
+    spawnEnemyAt('boss', 252, 180);
+    toast('铁塔的老巢就在前方！');
+  }
+  /* 第9章：记忆碎片过场 */
+  if(G.chapter===9 && ev.type==='collect' && ev.item==='fragment'){
+    var have = P.inv.fragment||0;
+    var key = have===1?'ch9_frag':(have===2?'ch9_frag2':'ch9_frag3');
+    if(!G.flags['fragDlg_'+have] && D.dlg[key]){
+      G.flags['fragDlg_'+have] = true;
+      DLG = {key:key, nodes:D.dlg[key], idx:0, ent:null};
+      G.state='dlg'; G.uiLock=true; showDlgNode();
+    }
+  }
+  if(all) finishChapterObjs();
+  updateObjective();
+}
+function finishChapterObjs(){
+  if(G.flags.ch_finished) return;
+  var ch = currentChapter();
+  if(!ch) return;
+  G.flags.ch_finished = true;
+  if(ch.endDlg && D.dlg[ch.endDlg]){
+    DLG = {key:ch.endDlg, nodes:D.dlg[ch.endDlg], idx:0, ent:null};
+    G.state='dlg'; G.uiLock=true; showDlgNode();
+  } else {
+    finishChapter();
+  }
+}
+function finishChapter(){
+  var ch = currentChapter();
+  var next = G.chapter+1;
+  if(G.chapter===12){
+    /* 结局 */
+    uiEndCard();
+    save();
+    return;
+  }
+  uiChapterCard(ch, next);
+}
+function chapterNext(){
+  G.flags.ch_finished = false;
+  G.state = 'play';
+  G.uiLock = false;
+  G.flags['ch'+G.chapter+'_cleared'] = true;
+  save();
+  startChapter(G.chapter+1);
+}
+function updateObjective(){
+  var el = $('objective');
+  if(!el) return;
+  if(G.mode==='story'){
+    var ch = currentChapter();
+    if(!ch){ el.classList.add('hidden'); return; }
+    var lines = [];
+    CH_OBJS.forEach(function(o){
+      var d = o.def;
+      var ok = o.cur >= (d.n||1);
+      var hint = d.hint || '';
+      var progress = '';
+      if(d.kind==='collect') progress = '（'+o.cur+'/'+(d.n||1)+'）';
+      if(d.kind==='kill') progress = '（'+o.cur+'/'+(d.n||1)+'）';
+      lines.push((ok?'✅ ':'▢ ')+hint+progress);
+    });
+    el.textContent = '【第'+G.chapter+'章 · '+ch.title+'】\n'+lines.join('\n');
+    el.classList.remove('hidden');
+  } else {
+    el.textContent = '【自由模式】目标：活下去。已生存 '+G.stats.daysSurvived+' 天';
+    el.classList.remove('hidden');
+  }
+}
+
+/* ---- 自由模式随机事件 ---- */
+function freeDayEvent(){
+  var r = Math.random();
+  if(r < 0.3) return;
+  if(r < 0.45){
+    /* 难民求助 */
+    toast('路边难民向你讨水。');
+    setTimeout(function(){
+      if(P && !P.dead){
+        openFreeEvent('难民饿得发抖："好心人，给口水吧……"',
+          [{txt:'【给水】给她一瓶水', fx:'take:water,1|give:silver,1|set:free_event_water'},
+           {txt:'【拒绝】走开', fx:'set:free_event_none'}]);
+      }
+    }, 600);
+  } else if(r < 0.6){
+    var bandit = rndi(1,3);
+    for(var i=0;i<bandit;i++) spawnEnemyAt('bandit', P.x+rand(-6,6), P.y+rand(-6,6));
+    toast('伏击！土匪从树丛里冲出来！');
+  } else if(r < 0.75){
+    toast('夜空中，一架无人机无声掠过——机身上印着一只灰隼。');
+  } else {
+    toast('界河对岸响了一夜的枪声。');
+  }
+}
+
+/* ---- 存档 ---- */
+function save(){
+  try{
+    var st = {
+      v:1, mode:G.mode, chapter:G.chapter, flags:G.flags,
+      day:G.day, clock:G.clock,
+      x:P.x, y:P.y,
+      hp:P.hp, hunger:P.hunger, thirst:P.thirst, eng:P.eng,
+      money:P.money, lv:P.lv, xp:P.xp, xpNext:P.xpNext, maxhp:P.maxhp,
+      weapon:P.weapon, inv:P.inv,
+      quests:G.quests, stats:G.stats, hostile:F_HOSTILE,
+      endCard:G.flags.end_done?1:0
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(st));
+  }catch(e){}
+}
+function hasSave(){
+  try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; }
+}
+function loadState(st){
+  G.mode = st.mode||'free';
+  G.chapter = st.chapter||1;
+  G.flags = st.flags||{};
+  G.day = st.day||1;
+  G.clock = st.clock||0;
+  G.quests = st.quests||{};
+  G.stats = st.stats||{kills:0,scav:0,bounties:0,questsDone:0,daysSurvived:0};
+  P.x = st.x||P.x; P.y = st.y||P.y;
+  P.hp = st.hp||P.maxhp; P.hunger = st.hunger||100; P.thirst = st.thirst||100; P.eng = st.eng||100;
+  P.money = st.money||CFG.startMoney;
+  P.lv = st.lv||1; P.xp = st.xp||0; P.xpNext = st.xpNext||100;
+  P.maxhp = st.maxhp||100;
+  P.weapon = st.weapon||'fists';
+  P.inv = st.inv||{};
+  Object.keys(F_HOSTILE).forEach(function(k){ delete F_HOSTILE[k]; });
+  Object.keys(st.hostile||{}).forEach(function(k){ F_HOSTILE[k] = true; });
+  if(G.chapter>12) G.chapter = 12;
+}
+function rebuildWorld(){
+  /* 清空实体，重建世界（读取后） */
+  ENT.length = 0;
+  spawnNamed();
+  spawnGeneric();
+  respawnCamp();
+}
+function loadGame(continueMode){
+  try{
+    var raw = localStorage.getItem(SAVE_KEY);
+    if(!raw){ toast('没有找到存档'); return false; }
+    var st = JSON.parse(raw);
+    if(st.v!==1){ toast('存档版本不兼容'); return false; }
+    initWorld();
+    if(!P) createPlayer(0,0);
+    loadState(st);
+    rebuildWorld();
+    G.state = 'play';
+    G.uiLock = false;
+    G.paused = false;
+    CH_OBJS = currentChapter()? currentChapter().objectives.map(function(o){return {def:o, cur:0};}) : [];
+    CH_OBJS.forEach(function(o){
+      var d = o.def;
+      if(d.kind==='talk' && (G.flags['dlgCnt_'+d.who]||0)>0) o.cur = 1;
+      if(d.kind==='collect') o.cur = Math.min(d.n||1, P.inv[d.item]||0);
+      if(d.kind==='goto') o.cur = (G.flags['go_'+d.area])?1:0;
+      if(d.kind==='kill' && G.stats['kill_'+d.type]) o.cur = Math.min(d.n||1, G.stats['kill_'+d.type]||0);
+    });
+    uiHudShow();
+    $('boot').classList.add('hidden');
+    updateObjective();
+    toast('存档已读取，欢迎回来，EIGHT');
+    return true;
+  }catch(e){ toast('存档损坏：'+e.message); return false; }
+}
+function exportSave(){
+  save();
+  try{
+    var raw = localStorage.getItem(SAVE_KEY);
+    var blob = new Blob([raw], {type:'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'HanBerEIGHT_存档_'+ (G.day||1) +'日.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 100);
+    toast('存档已导出为文件');
+  }catch(e){ toast('导出失败：'+e.message); }
+}
+function importSave(file){
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var st = JSON.parse(reader.result);
+      if(!st.v){ toast('这不是有效的存档文件'); return; }
+      localStorage.setItem(SAVE_KEY, reader.result);
+      toast('存档已导入，回到主菜单读取即可');
+      sfx('pickup');
+    }catch(e){ toast('导入失败：'+e.message); }
+  };
+  reader.readAsText(file);
+}
+
+/* ---- 自由模式随机小事件（对话） ---- */
+function openFreeEvent(text, opts){
+  DLG = {key:'freeev', nodes:[{who:'（路边）', txt:text, opts:opts}], idx:0, ent:null};
+  G.state='dlg'; G.uiLock=true; showDlgNode();
+}
+
+</script>
+<script>
+/* ============================================================
+   HanBer EIGHT · UI：HUD / 对话 / 过场 / 章节卡 / 商店 / 面板
+   ============================================================ */
+
+/* ---- Toast ---- */
+function toast(msg){
+  var box = $('ui');
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  box.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 2600);
+}
+
+/* ---- HUD ---- */
+function uiHudShow(){ $('hud').classList.remove('hidden'); }
+function updateHud(){
+  if(!P || G.state==='boot'||G.state==='menu'||G.state==='dead') return;
+  setGauge('gHp', P.hp/P.maxhp);
+  setGauge('gHunger', P.hunger/100);
+  setGauge('gThirst', P.thirst/100);
+  setGauge('gEng', P.eng/100);
+  $('vHp').textContent = Math.ceil(P.hp);
+  $('vHunger').textContent = Math.ceil(P.hunger);
+  $('vThirst').textContent = Math.ceil(P.thirst);
+  $('vEng').textContent = Math.ceil(P.eng);
+  $('vMoney').textContent = P.money;
+  $('vLv').textContent = P.lv;
+  var hm = Math.floor(G.dayTime/60), mm = Math.floor(G.dayTime%60);
+  $('vClock').textContent = G.day+'日 '+(hm<10?'0':'')+hm+':'+(mm<10?'0':'')+mm;
+  $('vWeather').textContent = WEATHER_NAMES[WEATHER.type]||'';
+  $('vDays').textContent = G.mode==='free' ? '生存'+G.stats.daysSurvived+'天' : '';
+  var area = currentArea();
+  if(area) $('vLoc').textContent = area;
+}
+function setGauge(id, p){
+  var g = $(id);
+  if(!g) return;
+  var fill = g.querySelector('i');
+  p = clamp(p, 0, 1);
+  fill.style.width = Math.round(p*100)+'%';
+  fill.className = p>0.5?'':(p>0.25?'mid':'low');
+  if(id==='gThirst') fill.className = p>0.5?'water':(p>0.25?'water':'low');
+  if(id==='gEng') fill.className = p>0.5?'eng':(p>0.25?'eng':'low');
+}
+function currentArea(){
+  if(!P) return '';
+  var best = null, bd = 9999;
+  Object.keys(D.areas).forEach(function(k){
+    var a = D.areas[k];
+    if(P.x>=a.x && P.x<=a.x+a.w && P.y>=a.y && P.y<=a.y+a.h){
+      if(a.w*a.h < bd){ bd = a.w*a.h; best = a.name; }
+    }
+  });
+  if(best) return best;
+  /* 城镇附近 */
+  var t = nearestTownName();
+  return t||'荒野';
+}
+function nearestTownName(){
+  var best = '', bd = 999;
+  D.towns.forEach(function(t){
+    var d = Math.hypot(P.x-t.cx, P.y-t.cy);
+    if(d<bd){ bd=d; best=t.name; }
+  });
+  return bd<18? best : '';
+}
+
+/* ---- 对话渲染 ---- */
+function showDlgNode(){
+  var dlg = $('dlg');
+  if(!DLG){ dlg.classList.add('hidden'); return; }
+  var node = DLG.nodes[DLG.idx];
+  if(!node){ closeDlg(); return; }
+  dlg.innerHTML = '';
+  var sp = document.createElement('div');
+  sp.className = 'speaker' + (node.who==='你'?' me':'');
+  sp.textContent = node.who;
+  var body = document.createElement('div'); body.className = 'body';
+  var tx = document.createElement('div'); tx.className = 'text';
+  tx.textContent = node.txt;
+  body.appendChild(tx);
+  if(node.opts && node.opts.length){
+    var ch = document.createElement('div'); ch.className = 'choices';
+    node.opts.forEach(function(o, i){
+      var b = document.createElement('button'); b.className = 'btn';
+      b.textContent = o.txt;
+      if(o.cond && !condOk(o.cond)){ b.disabled = true; b.style.opacity = 0.45; }
+      b.onclick = function(){ dlgPick(i); };
+      ch.appendChild(b);
+    });
+    body.appendChild(ch);
+  } else {
+    var c = document.createElement('button'); c.className = 'btn';
+    c.textContent = '继续 ▸';
+    c.onclick = function(){ dlgContinue(); };
+    body.appendChild(c);
+  }
+  dlg.appendChild(sp); dlg.appendChild(body);
+  dlg.classList.remove('hidden');
+}
+
+/* ---- 过场（打字机） ---- */
+function uiCutscene(lines, cb){
+  var div = $('cutscene') || makeCut();
+  div.classList.remove('hidden');
+  var idx = 0;
+  var body = div.querySelector('.cutBody');
+  var title = div.querySelector('.cutTitle');
+  title.textContent = G.mode==='story' ? '第'+G.chapter+'章 · '+(D.chapters[G.chapter-1]?D.chapters[G.chapter-1].title:'') : '自由模式';
+  body.textContent = '';
+  var btn = div.querySelector('.cutBtn');
+  btn.textContent = '下一页 ▸';
+  function showLine(){
+    if(idx < lines.length){
+      body.textContent = lines[idx];
+      idx++;
+      btn.textContent = idx < lines.length ? '下一页 ▸' : '继续 ▸';
+    } else {
+      div.classList.add('hidden');
+      if(cb) cb();
+    }
+  }
+  btn.onclick = showLine;
+  showLine();
+}
+function makeCut(){
+  var div = document.createElement('div');
+  div.id = 'cutscene';
+  div.style.cssText = 'position:absolute;inset:0;z-index:44;background:radial-gradient(ellipse at 50% 40%,#20260F 0%,#121608 70%,#060805 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;';
+  var t = document.createElement('div'); t.className = 'cutTitle'; t.style.color = '#B98A2F';
+  var b = document.createElement('div'); b.className = 'cutBody cutSceneText'; b.style.cssText = 'max-width:680px;padding:0 26px;color:#E8DCC0;min-height:120px;';
+  var btn = document.createElement('button'); btn.className = 'btn cutBtn'; btn.style.marginTop = '28px';
+  div.appendChild(t); div.appendChild(b); div.appendChild(btn);
+  document.getElementById('ui').appendChild(div);
+  return div;
+}
+
+/* ---- 章节卡 ---- */
+function uiChapterCard(ch, next){
+  var div = $('chapter');
+  div.classList.remove('hidden');
+  div.innerHTML = '';
+  var no = document.createElement('div'); no.className = 'no';
+  no.textContent = '第'+(next-1)+'章 · '+ch.title+' · 完结';
+  var t = document.createElement('div'); t.className = 't';
+  t.textContent = '待 续';
+  var sub = document.createElement('div'); sub.className = 'sub';
+  sub.textContent = ch.month+'的雨，下进了下一章';
+  var lines = document.createElement('div'); lines.className = 'lines';
+  lines.textContent = ch.teaser||'';
+  var sus = document.createElement('div'); sus.className = 'suspense';
+  sus.textContent = '【悬念已存档】在继续前，建议先保存进度。';
+  var btn = document.createElement('button'); btn.className = 'btn';
+  btn.textContent = '进入第'+next+'章 ▸';
+  btn.onclick = function(){ div.classList.add('hidden'); chapterNext(); };
+  div.appendChild(no); div.appendChild(t); div.appendChild(sub);
+  div.appendChild(lines); div.appendChild(sus); div.appendChild(btn);
+}
+
+/* ---- 结局卡 ---- */
+function uiEndCard(){
+  var div = $('chapter');
+  div.classList.remove('hidden');
+  div.innerHTML = '';
+  var ep = '';
+  var title = '新世界的黎明';
+  if(G.flags.end_open){
+    ep = '你公开了一切。和谈在真相中重启，界河两岸的炮声第一次安静下来。\n没人知道未来会怎样——但至少，这一次，它不再由"永远不会死的战士"决定。';
+    title = '结局·和 平';
+  } else if(G.flags.end_burn){
+    ep = '你炸掉了数据中心。棋手失去了棋子，战争变成了无数场混乱的散打。\n你走进雨林，再也没有人找到你。而天上的无人机，第一次消失了。';
+    title = '结局·灰 烬';
+  } else if(G.flags.end_seize){
+    ep = '你坐进棋手的位置，按下了战争的暂停键。\n和平来了——这一次，握在你手里。只是你不知道，自己还能不能走回人间。';
+    title = '结局·执 剑';
+  } else {
+    ep = '一年后的自由港，酒馆的雨夜。\n穿风衣的人推开门，胸前铜牌刻着"ONE"。\n他朝你举起杯："好久不见，EIGHT。"';
+    title = '第 二 季 · 预 告';
+  }
+  var no = document.createElement('div'); no.className='no';
+  no.textContent = 'HanBer EIGHT · 主线完结';
+  var t = document.createElement('div'); t.className='t'; t.textContent = title;
+  var sub = document.createElement('div'); sub.className='sub'; sub.textContent = '十七度线，终有一线';
+  var lines = document.createElement('div'); lines.className='lines'; lines.textContent = ep;
+  var sus = document.createElement('div'); sus.className='suspense';
+  sus.textContent = '第二季预告：《新的编号正在苏醒》。存档已保存，你可以继续自由探索这个世界，等待下一季更新。';
+  var row = document.createElement('div'); row.style.marginTop='26px';
+  var b1 = document.createElement('button'); b1.className='btn'; b1.textContent='继续自由探索';
+  b1.onclick = function(){ div.classList.add('hidden'); switchToFree(); };
+  var b2 = document.createElement('button'); b2.className='btn ghost'; b2.textContent='回到主菜单';
+  b2.onclick = function(){ div.classList.add('hidden'); backToMenu(); };
+  row.appendChild(b1); row.appendChild(b2);
+  div.appendChild(no); div.appendChild(t); div.appendChild(sub);
+  div.appendChild(lines); div.appendChild(sus); div.appendChild(row);
+  G.flags.end_done = true;
+  save();
+}
+
+/* ---- 死亡 ---- */
+function uiShowDeath(){
+  var pop = $('pop');
+  pop.classList.remove('hidden');
+  pop.innerHTML = '';
+  var p = document.createElement('div'); p.className='panel'; p.style.maxWidth='420px';
+  p.innerHTML = '<h2 class="pTitle">你 死 了</h2>' +
+    '<p class="mute" style="line-height:1.8">胸口一片冰凉。意识沉进雨里——<br>你听到有人喊你的编号："EIGHT……"</p><div class="sep"></div>';
+  var b1 = document.createElement('button'); b1.className='btn'; b1.textContent='在诊所醒来（损失20%金钱）';
+  b1.onclick = function(){ pop.classList.add('hidden'); respawnPlayer(); };
+  var b2 = document.createElement('button'); b2.className='btn ghost'; b2.textContent='读取最近的存档';
+  b2.onclick = function(){ pop.classList.add('hidden'); loadGame(true); };
+  var b3 = document.createElement('button'); b3.className='btn danger'; b3.textContent='回到主菜单';
+  b3.onclick = function(){ pop.classList.add('hidden'); backToMenu(); };
+  p.appendChild(b1); p.appendChild(b2); p.appendChild(b3);
+  pop.appendChild(p);
+}
+
+/* ---- 商店 ---- */
+function openShop(ent){
+  if(DLG) DLG = null;
+  G.state = 'pop';
+  G.uiLock = true;
+  var pop = $('pop');
+  pop.classList.remove('hidden');
+  pop.classList.add('wide');
+  pop.innerHTML = '';
+  var p = document.createElement('div'); p.className='panel';
+  p.innerHTML = '<h2 class="pTitle">'+ent.name+' · 交易</h2>' +
+    '<p class="mute" style="margin-bottom:8px">你有 '+money(P.money)+'</p>';
+  var grid = document.createElement('div'); grid.className='grid2';
+  /* 买入 */
+  var buy = document.createElement('div');
+  buy.innerHTML = '<h3 class="pTitle">购买</h3>';
+  Object.keys(ent.shop||{}).forEach(function(id){
+    var n = ent.shop[id];
+    var it = D.items[id];
+    var row = document.createElement('div'); row.className='listItem';
+    row.innerHTML = '<div><div class="nm">'+it.icon+' '+it.name+' ×'+n+'</div>' +
+      '<div class="ds">'+it.desc+'</div></div>' +
+      '<button class="btn small" data-buy="'+id+'">'+money(it.price)+'</button>';
+    buy.appendChild(row);
+  });
+  /* 卖出 */
+  var sell = document.createElement('div');
+  sell.innerHTML = '<h3 class="pTitle">卖出</h3>';
+  var any = false;
+  Object.keys(P.inv).forEach(function(id){
+    var it = D.items[id];
+    if(!it || it.cat==='quest' || it.price<=0) return;
+    any = true;
+    var row = document.createElement('div'); row.className='listItem';
+    row.innerHTML = '<div><div class="nm">'+it.icon+' '+it.name+' ×'+P.inv[id]+'</div>' +
+      '<div class="ds">'+it.desc+'</div></div>' +
+      '<button class="btn small olive" data-sell="'+id+'">'+money(Math.floor(it.price*0.55))+'</button>';
+    sell.appendChild(row);
+  });
+  if(!any) sell.innerHTML += '<p class="mute">没有可卖的东西。</p>';
+  grid.appendChild(buy); grid.appendChild(sell);
+  p.appendChild(grid);
+  var close = document.createElement('button'); close.className='btn ghost'; close.textContent='离开';
+  close.style.marginTop='14px';
+  close.onclick = function(){ pop.classList.add('hidden'); pop.classList.remove('wide'); G.state='play'; G.uiLock=false; };
+  p.appendChild(close);
+  pop.appendChild(p);
+  pop.querySelectorAll('[data-buy]').forEach(function(b){
+    b.onclick = function(){
+      var id = b.getAttribute('data-buy');
+      var it = D.items[id];
+      if(P.money < it.price){ toast('钱不够'); return; }
+      P.money -= it.price;
+      addItem(id, 1);
+      sfx('pickup');
+      toast('买入：'+it.name);
+      openShop(ent);
+    };
+  });
+  pop.querySelectorAll('[data-sell]').forEach(function(b){
+    b.onclick = function(){
+      var id = b.getAttribute('data-sell');
+      var it = D.items[id];
+      removeItem(id, 1);
+      P.money += Math.floor(it.price*0.55);
+      sfx('pickup');
+      toast('卖出：'+it.name);
+      openShop(ent);
+    };
+  });
+}
+
+/* ---- 背包 ---- */
+function uiInventory(){
+  G.state = 'pop';
+  G.uiLock = true;
+  var pop = $('pop');
+  pop.classList.remove('hidden');
+  pop.classList.add('wide');
+  pop.innerHTML = '';
+  var p = document.createElement('div'); p.className='panel';
+  p.innerHTML = '<h2 class="pTitle">背 包</h2>' +
+    '<div class="row"><span class="mute">负重：<b>'+invWeight().toFixed(1)+'</b>/'+CFG.carryLimit+'kg</span>' +
+    '<span class="tag gold">装备：'+D.weapons[P.weapon].name+'</span></div>';
+  var grid = document.createElement('div'); grid.className='invGrid';
+  Object.keys(P.inv).forEach(function(id){
+    var it = D.items[id];
+    var cell = document.createElement('div'); cell.className='iv';
+    cell.innerHTML = '<span class="ic">'+it.icon+'</span><span class="in">'+it.name+'</span><span class="icn">×'+P.inv[id]+'</span>';
+    cell.onclick = function(){
+      uiItemMenu(id, cell);
+    };
+    grid.appendChild(cell);
+  });
+  p.appendChild(grid);
+  var row = document.createElement('div'); row.className='row';
+  var b1 = document.createElement('button'); b1.className='btn ghost'; b1.textContent='关闭';
+  b1.onclick = function(){ pop.classList.add('hidden'); pop.classList.remove('wide'); G.state='play'; G.uiLock=false; };
+  var b2 = document.createElement('button'); b2.className='btn olive'; b2.textContent='烹饪（生肉→烤肉）';
+  b2.onclick = function(){ cookFood(); uiInventory(); };
+  var b3 = document.createElement('button'); b3.className='btn river'; b3.textContent='休息6小时';
+  b3.onclick = function(){ sleep6h(); pop.classList.add('hidden'); pop.classList.remove('wide'); G.state='play'; G.uiLock=false; };
+  row.appendChild(b2); row.appendChild(b3); row.appendChild(b1);
+  p.appendChild(row);
+  pop.appendChild(p);
+}
+function uiItemMenu(id, cell){
+  var it = D.items[id];
+  var sel = document.createElement('div');
+  sel.className = 'panel'; sel.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,460px);z-index:35';
+  sel.innerHTML = '<h3 class="pTitle">'+it.icon+' '+it.name+'</h3>' +
+    '<p class="mute">'+it.desc+'</p><div class="sep"></div>';
+  var usable = it.food||it.thirst||it.eng||it.hp;
+  if(usable){
+    var b1 = document.createElement('button'); b1.className='btn'; b1.textContent='使用';
+    b1.onclick = function(){ useItem(id); sel.remove(); uiInventory(); };
+    sel.appendChild(b1);
+  }
+  if(D.weapons[id]){
+    var b2 = document.createElement('button'); b2.className='btn'; b2.textContent='装备';
+    b2.onclick = function(){ equipWeapon(id); sel.remove(); uiInventory(); };
+    sel.appendChild(b2);
+  }
+  if(it.cat==='food' && (id==='rawmeat'||id==='fish')){
+    var b3 = document.createElement('button'); b3.className='btn olive'; b3.textContent='烹饪';
+    b3.onclick = function(){ cookFood(); sel.remove(); uiInventory(); };
+    sel.appendChild(b3);
+  }
+  var b4 = document.createElement('button'); b4.className='btn danger'; b4.textContent='丢弃';
+  b4.onclick = function(){ removeItem(id,1); sel.remove(); uiInventory(); };
+  var b5 = document.createElement('button'); b5.className='btn ghost'; b5.textContent='返回';
+  b5.onclick = function(){ sel.remove(); };
+  sel.appendChild(b4); sel.appendChild(b5);
+  document.getElementById('ui').appendChild(sel);
+}
+
+/* ---- 日志 ---- */
+function uiJournal(){
+  G.state='pop'; G.uiLock=true;
+  var pop = $('pop');
+  pop.classList.remove('hidden');
+  pop.innerHTML = '';
+  var p = document.createElement('div'); p.className='panel';
+  var html = '<h2 class="pTitle">行 军 日 志</h2>';
+  /* 主线 */
+  html += '<h3 class="pTitle" style="margin-top:6px">主线（'+G.mode+'）</h3>';
+  if(G.mode==='story'){
+    D.chapters.forEach(function(ch){
+      var done = G.flags['ch'+ch.id+'_cleared'];
+      var cur = ch.id===G.chapter;
+      html += '<div class="listItem"><div><div class="nm">'+(done?'✔':'')+(cur?'▶':'')+' 第'+ch.id+'章 · '+ch.title+'</div>' +
+        '<div class="ds">'+ch.month+' · '+ch.loc+'</div></div>' +
+        (done?'<span class="tag ok">已完结</span>':(cur?'<span class="tag gold">进行中</span>':'<span class="tag">未解锁</span>'))+'</div>';
+    });
+  } else {
+    html += '<div class="listItem"><div class="nm">自由模式</div><div class="ds">目标：活下去。已生存 '+G.stats.daysSurvived+' 天。</div></div>';
+  }
+  /* 支线 */
+  html += '<h3 class="pTitle" style="margin-top:10px">支线任务</h3>';
+  D.sideQuests.forEach(function(q){
+    var st = G.quests[q.id];
+    var label = !st?'未接取':(st.state==='active'?'进行中':'已完成');
+    var tag = !st?'<span class="tag">未接取</span>':(st.state==='active'?'<span class="tag gold">进行中</span>':'<span class="tag ok">已完成</span>');
+    html += '<div class="listItem"><div><div class="nm">'+q.name+'</div><div class="ds">'+q.desc+'</div></div>'+tag+'</div>';
+  });
+  /* 传说碎片（剧情收集） */
+  html += '<h3 class="pTitle" style="margin-top:10px">剧情线索</h3>';
+  var clues = [
+    ['chen_met','你在诊所醒来，胸牌刻着EIGHT'],
+    ['ch2_3','截获了一段呼叫"EIGHT"的密电文'],
+    ['ch3_2','EIGHT计划·实验体八号'],
+    ['ch4_poster_seen','自由港通缉令：HanBer ONE'],
+    ['ch5_2','第七区日记：他们从北边来，也从南边来'],
+    ['ch6_1','录音带：如果我不存在，谁在说话？'],
+    ['ch8_2','北方也有第八小队，队长ONE'],
+    ['ch9_1','EIGHT计划：人造战士，记忆是编剧写的'],
+    ['ch9_2','三块记忆碎片散落在自由港/野猫镇/旧基地'],
+    ['ch10_boss','灰隼集团的无人机在监视战争'],
+    ['ch11_1','推荐信：你亲手启动了这个计划'],
+    ['end_open','结局·和平'],['end_burn','结局·灰烬'],['end_seize','结局·执剑']
+  ];
+  clues.forEach(function(c){
+    if(G.flags[c[0]]) html += '<div class="listItem"><div class="nm small">📌 '+c[1]+'</div></div>';
+  });
+  html += '<div class="sep"></div>';
+  html += '<div class="row"><button class="btn ghost" id="jrClose">关闭</button></div>';
+  p.innerHTML = html;
+  pop.appendChild(p);
+  $('jrClose').onclick = function(){ pop.classList.add('hidden'); G.state='play'; G.uiLock=false; };
+}
+
+/* ---- 菜单（游戏内暂停） ---- */
+function uiPauseMenu(){
+  G.state='pop'; G.uiLock=true;
+  var pop = $('pop');
+  pop.classList.remove('hidden');
+  pop.innerHTML = '';
+  var p = document.createElement('div'); p.className='panel'; p.style.maxWidth='520px';
+  p.innerHTML = '<h2 class="pTitle">作 战 菜 单</h2><div class="mute" style="text-align:center;margin-bottom:8px">'+(G.mode==='story'?'主线模式 · 第'+G.chapter+'章':'自由模式')+'</div>';
+  var mk = function(label, cls, fn){
+    var b = document.createElement('button'); b.className='btn '+(cls||''); b.textContent=label;
+    b.style.minWidth='220px';
+    b.onclick = fn;
+    p.appendChild(b);
+  };
+  mk('继续游戏', '', function(){ pop.classList.add('hidden'); G.state='play'; G.uiLock=false; });
+  mk('保存进度', 'olive', function(){ save(); toast('进度已保存'); });
+  mk('导出存档（下载文件）', 'river', exportSave);
+  mk('导入存档', 'river', function(){ var inp=document.createElement('input'); inp.type='file'; inp.accept='.json'; inp.onchange=function(){ if(inp.files[0]) importSave(inp.files[0]); }; inp.click(); });
+  mk('音效：'+(G.muted?'关':'开'), '', function(){ G.muted=!G.muted; uiPauseMenu(); });
+  mk('帮助', 'ghost', uiHelp);
+  mk('回到主菜单', 'danger', backToMenu);
+  pop.appendChild(p);
+}
+function backToMenu(){
+  save();
+  $('pop').classList.add('hidden');
+  $('hud').classList.add('hidden');
+  $('minimap').classList.add('hidden');
+  $('dock').classList.add('hidden');
+  $('objective').classList.add('hidden');
+  G.state='menu';
+  G.uiLock=true;
+  uiBoot();
+}
+
+/* ---- 帮助 ---- */
+function uiHelp(){
+  var pop = $('pop');
+  pop.classList.remove('hidden');
+  pop.innerHTML = '';
+  var p = document.createElement('div'); p.className='panel';
+  p.innerHTML = '<h2 class="pTitle">玩 法 手 册</h2>' +
+  '<div class="col small" style="line-height:1.9">' +
+  '<div><span class="helpKey">W A S D</span> 移动　<span class="helpKey">Shift</span> 疾跑</div>' +
+  '<div><span class="helpKey">E</span> 互动（对话/拾荒/治疗）</div>' +
+  '<div><span class="helpKey">空格</span> / 鼠标左键 攻击（近战/射击）</div>' +
+  '<div><span class="helpKey">I</span> 背包　<span class="helpKey">J</span> 日志　<span class="helpKey">M</span> 小地图　<span class="helpKey">Esc</span> 菜单</div>' +
+  '<div><span class="helpKey">1~8</span> 快捷使用物品</div>' +
+  '<div class="sep"></div>' +
+  '<div>生存：饱食/水分归零会掉血，注意吃喝；受伤后保持饱食水分可缓慢回血。</div>' +
+  '<div>拾荒：城郊、废墟、营地的杂物堆按 <span class="helpKey">E</span> 可搜出物资（每天重置）。</div>' +
+  '<div>战斗：近战近身挥砍，枪械消耗弹药；野兽和土匪会追击，夜里视野很差。</div>' +
+  '<div>存档：菜单可手动保存；每30秒自动保存；可导出/导入存档文件。</div>' +
+  '<div>剧情：主线12章全部收录（每月一章的量），每章结尾有悬念，可等后续更新。</div>' +
+  '<div class="sep"></div>' +
+  '<div class="mute">自由模式没有主线，只有一个目标：活下去。可以去任何地方，做任何事——接支线、剿匪、走私、护送、猎猛虎。</div>' +
+  '</div><div class="sep"></div>';
+  var b = document.createElement('button'); b.className='btn ghost'; b.textContent='关闭';
+  b.onclick = function(){ pop.classList.add('hidden'); if(G.state==='pop'){G.state='play'; G.uiLock=false;} };
+  p.appendChild(b);
+  pop.appendChild(p);
+}
+
+/* ---- 快捷栏 ---- */
+function buildDock(){
+  var dock = $('dock');
+  dock.classList.remove('hidden');
+  dock.innerHTML = '';
+  for(var i=0;i<8;i++){
+    var s = document.createElement('div'); s.className='slot';
+    s.dataset.i = i;
+    s.title = '快捷键 '+(i+1);
+    s.onclick = function(){
+      var idx = parseInt(this.dataset.i);
+      var items = Object.keys(P.inv);
+      var id = items[idx];
+      if(id) useItem(id);
+    };
+    dock.appendChild(s);
+  }
+}
+function updateDock(){
+  var dock = $('dock');
+  if(!dock || !P) return;
+  var slots = dock.querySelectorAll('.slot');
+  var items = Object.keys(P.inv).filter(function(k){ return D.items[k].food||D.items[k].thirst||D.items[k].eng||D.items[k].hp; });
+  slots.forEach(function(s, i){
+    var id = items[i];
+    s.textContent = id ? D.items[id].icon : '';
+    s.style.opacity = id?1:0.25;
+    if(id) s.innerHTML = D.items[id].icon+'<span class="n">'+(i+1)+'</span>';
+    else s.innerHTML = '<span class="n">'+(i+1)+'</span>';
+  });
+}
+
+/* ---- 主菜单（标题） ---- */
+function uiBoot(){
+  var boot = $('boot');
+  boot.classList.remove('hidden');
+  boot.innerHTML = '';
+  var rains = document.createElement('div'); rains.className='rains';
+  for(var i=0;i<26;i++){
+    var m = document.createElement('div'); m.className='mistline';
+    m.style.cssText = 'position:absolute;height:26px;left:-10%;right:-10%;animation:mistDrift 9s linear infinite;animation-delay:'+(i*0.35)+'s;opacity:'+rand(0.06,0.2);
+    rains.appendChild(m);
+  }
+  var t = document.createElement('div'); t.className='titleT'; t.textContent='HanBer EIGHT';
+  var e = document.createElement('div'); e.className='titleE'; e.textContent='十 七 度 线';
+  var s = document.createElement('div'); s.className='titleS'; s.textContent='· 架空印支 · 战争档案 · 生存冒险 ·';
+  var sub = document.createElement('div'); sub.className='titleSub';
+  sub.textContent = '1975 年的结局没有到来。南北分治五十年，你是第八小队最后的编号。\n活下去，或者——找出真相。';
+  var menu = document.createElement('div'); menu.className='menu';
+  var mk = function(label, cls, fn){
+    var b = document.createElement('button'); b.className='btn '+(cls||'');
+    b.textContent = label;
+    b.onclick = fn;
+    menu.appendChild(b);
+    return b;
+  };
+  var has = hasSave();
+  mk('主线模式 · 新故事', 'blood', function(){ newGame('story'); });
+  if(has) mk('主线模式 · 继续（第'+(G.chapter||1)+'章）', '', function(){ loadGame('story'); });
+  mk('自由模式 · 新档案', 'olive', function(){ newGame('free'); });
+  if(has) mk('自由模式 · 继续生存', 'olive', function(){ loadGame('free'); });
+  mk('读取/导入存档', 'river', function(){
+    var inp = document.createElement('input'); inp.type='file'; inp.accept='.json';
+    inp.onchange = function(){ if(inp.files[0]) importSave(inp.files[0]); };
+    inp.click();
+  });
+  mk('世界观与更新日志', 'ghost', uiLore);
+  mk('玩法手册', 'ghost', uiHelp);
+  var ver = document.createElement('div'); ver.className='ver'; ver.textContent = VER;
+  var warn = document.createElement('div'); warn.className='warnBar';
+  warn.textContent = '架空虚构世界观 · 与任何现实国家、事件、人物无关 · 存档保存在本地浏览器';
+  boot.appendChild(rains); boot.appendChild(t); boot.appendChild(e);
+  boot.appendChild(s); boot.appendChild(sub); boot.appendChild(menu);
+  boot.appendChild(ver); boot.appendChild(warn);
+  if(!G.audio) initAudio();
+}
+function uiLore(){
+  var pop = $('pop');
+  pop.classList.remove('hidden');
+  pop.innerHTML = '';
+  var p = document.createElement('div'); p.className='panel';
+  var html = '<h2 class="pTitle">世 界 观 · 更新日志</h2>' +
+  '<div class="small" style="line-height:1.95">' +
+  '<p style="margin-bottom:8px">一九七五年，那场改变一切的战役，以另一种方式结束了——没有赢家，只有停火。</p>' +
+  '<p>南方联盟守住西贡，越北共和国扼住红河，十七度线的界河把半岛劈成两半，僵持五十年。</p>' +
+  '<p>冷战没有结束，它只是换了战场：无人机、雇佣兵、走私船、情报贩子，在这片雨林里各怀心事。</p>' +
+  '<p style="margin-bottom:10px">而五十年前的谈判桌底下，藏着一个代号"EIGHT"的秘密。你，就是那个秘密。</p></div><div class="sep"></div>';
+  html += '<h3 class="pTitle">剧情更新日志</h3>';
+  D.chapters.forEach(function(ch){
+    var cleared = G.flags['ch'+ch.id+'_cleared'];
+    html += '<div class="listItem"><div class="nm">'+ch.month+' · 第'+ch.id+'章《'+ch.title+'》</div>' +
+      (cleared?'<span class="tag ok">已完结</span>':'<span class="tag gold">已收录</span>')+'</div>';
+  });
+  html += '<div class="listItem"><div class="nm">第二季《新的编号》</div><span class="tag blood">预告</span></div>';
+  html += '<div class="sep"></div><div class="mute">全部12章剧情已一次性收录，每月一章的量。开发者可在后续版本继续追加章节。</div>';
+  var b = document.createElement('button'); b.className='btn ghost'; b.textContent='关闭';
+  b.onclick = function(){ pop.classList.add('hidden'); };
+  p.innerHTML = html;
+  p.appendChild(b);
+  pop.appendChild(p);
+}
+
+</script>
+<script>
+/* ============================================================
+   HanBer EIGHT · 主入口：启动 / 帧循环 / 更新 / 渲染 / 按键
+   ============================================================ */
+
+var CVW = 1280, CVH = 720;
+var CV = $('cv');
+var CTX = CV.getContext('2d');
+CV.width = CVW; CV.height = CVH;
+
+var worldReady = false;
+
+function initWorld(){
+  if(worldReady) return;
+  buildWorld();
+  buildMinimap();
+  worldReady = true;
+}
+
+/* ---- 新游戏 ---- */
+function newGame(mode){
+  initWorld();
+  ENT.length = 0;
+  G.mode = mode;
+  G.chapter = 1;
+  G.flags = {};
+  G.quests = {};
+  G.day = 1; G.clock = 0;
+  G.stats = {kills:0, scav:0, bounties:0, questsDone:0, daysSurvived:0};
+  G.night = false;
+  G.paused = false;
+  Object.keys(F_HOSTILE).forEach(function(k){ delete F_HOSTILE[k]; });
+  var sa = D.towns.filter(function(t){return t.id==='saigon';})[0];
+  createPlayer(sa.cx, sa.cy);
+  spawnNamed();
+  spawnGeneric();
+  buildDock();
+  $('boot').classList.add('hidden');
+  uiHudShow();
+  G.state = 'play';
+  G.uiLock = false;
+  if(mode==='story'){
+    startChapter(1);
+  } else {
+    toast('自由模式：活下去。世界完全开放，没有主线。');
+    updateObjective();
+  }
+  save();
+}
+function switchToFree(){
+  G.mode = 'free';
+  G.flags.end_done = true;
+  G.state = 'play';
+  G.uiLock = false;
+  toast('你转入自由模式，继续在这个世界活下去。');
+  updateObjective();
+  save();
+}
+
+/* ---- 主循环 ---- */
+var lastT = 0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  var dt = Math.min(0.05, (ts - lastT)/1000 || 0.016);
+  lastT = ts;
+  G.time += dt;
+  if(G.state==='play'){
+    update(dt);
+  }
+  render();
+  updateHud();
+  if(G.state==='play' && !G.paused) updateDock();
+  updateMinimapVis();
+}
+function update(dt){
+  if(P.dead) return;
+  /* 时间推进 */
+  G.clock += dt;
+  G.dayTime = (G.clock/CFG.dayLen)*1440;
+  G.night = G.dayTime < 360 || G.dayTime > 1320;
+  advanceTime(dt);
+  survivalTick(dt);
+  weatherTick(dt);
+  updateEntities(dt);
+  /* 玩家移动 */
+  if(!G.uiLock){
+    var mv = moveVec();
+    if(mv.dx||mv.dy){
+      var run = isRun() && P.eng > 5;
+      var spd = run ? 4.6 : 3.0;
+      var nx = P.x + mv.dx*spd*dt, ny = P.y + mv.dy*spd*dt;
+      if(!solidAtF(nx, P.y)) P.x = nx;
+      if(!solidAtF(P.x, ny)) P.y = ny;
+      P.x = clamp(P.x, 0.6, W.w-0.6);
+      P.y = clamp(P.y, 0.6, W.h-0.6);
+      if(mv.dx !== 0) P.dir = mv.dx > 0 ? 1 : -1;
+    }
+    /* 攻击 */
+    P.atkCd -= dt;
+    if((KEYS[' '] || MOUSE.down) && P.atkCd<=0 && !isOverUi()){
+      playerAttack();
+    }
+  }
+  /* 交互 */
+  var near = nearestInteract(1.6) || nearestLoot(1.8);
+  G.showHint = near && !G.uiLock && G.state==='play';
+  /* 区域追踪 */
+  var area = areaAt(P.x, P.y);
+  if(area !== G.lastArea){
+    G.lastArea = area;
+    if(area){
+      G.flags['go_'+area] = true;
+      emitEvent({type:'goto', area:area});
+    }
+  }
+  /* 自动存档 */
+  G.saveTimer += dt;
+  if(G.saveTimer > 30){
+    G.saveTimer = 0;
+    save();
+  }
+}
+function isOverUi(){
+  /* 鼠标是否在UI按钮上（粗略：dialog/pop 打开时禁止攻击） */
+  return G.uiLock || G.state!=='play';
+}
+function areaAt(x,y){
+  var best = null, bd = 99999;
+  Object.keys(D.areas).forEach(function(k){
+    var a = D.areas[k];
+    if(x>=a.x && x<=a.x+a.w && y>=a.y && y<=a.y+a.h){
+      if(a.w*a.h < bd){ bd = a.w*a.h; best = k; }
+    }
+  });
+  return best;
+}
+
+/* ---- 渲染 ---- */
+function render(){
+  CTX.fillStyle = '#0E120D';
+  CTX.fillRect(0,0,CVW,CVH);
+  if(!worldReady) return;
+  var shx = 0, shy = 0;
+  if(CAM.shake > 0.2){
+    shx = rand(-CAM.shake, CAM.shake);
+    shy = rand(-CAM.shake, CAM.shake);
+    CAM.shake *= 0.85;
+  } else CAM.shake = 0;
+  CTX.save();
+  CTX.translate(Math.round(shx), Math.round(shy));
+  if(P && P.x!==undefined) camFollow(P.x, P.y);
+  drawWorld(CTX);
+  drawLootSpots(CTX);
+  drawEntities(CTX);
+  drawParticles(CTX);
+  drawWeather(CTX);
+  drawDarkness(CTX);
+  CTX.restore();
+}
+var mmVisible = true;
+function updateMinimapVis(){
+  var mm = $('minimap');
+  if(G.state==='play' && mmVisible && !mm.classList.contains('hidden')){
+    drawMinimap();
+  }
+}
+function toggleMinimap(){
+  mmVisible = !mmVisible;
+  var mm = $('minimap');
+  if(mmVisible) mm.classList.remove('hidden');
+  else mm.classList.add('hidden');
+}
+
+/* ---- 按键 ---- */
+function handleKey(k){
+  if(G.state==='boot') return;
+  if(G.state==='dlg'){
+    if(!DLG) return;
+    var node = DLG.nodes[DLG.idx];
+    if(node.opts && node.opts.length){
+      var n = parseInt(k);
+      if(n>=1 && n<=node.opts.length){
+        var opt = node.opts[n-1];
+        if(!(opt.cond && !condOk(opt.cond))) dlgPick(n-1);
+      } else if(k==='escape'){
+        closeDlg();
+      }
+    } else {
+      if(k==='e'||k===' '||k==='enter') dlgContinue();
+      else if(k==='escape') closeDlg();
+    }
+    return;
+  }
+  if(G.state==='pop'){
+    if(k==='escape'){ closeTopPop(); }
+    return;
+  }
+  if(G.state==='dead'){ return; }
+  if(G.state!=='play') return;
+  if(k==='e'){ doInteract(); }
+  else if(k==='i'){ uiInventory(); }
+  else if(k==='j'){ uiJournal(); }
+  else if(k==='m'){ toggleMinimap(); }
+  else if(k==='escape'){ uiPauseMenu(); }
+  else if(k>='1' && k<='8'){
+    var items = Object.keys(P.inv).filter(function(id){ return D.items[id].food||D.items[id].thirst||D.items[id].eng||D.items[id].hp; });
+    var id = items[parseInt(k)-1];
+    if(id) useItem(id);
+  }
+}
+function closeTopPop(){
+  var pop = $('pop');
+  if(!pop.classList.contains('hidden')){
+    pop.classList.add('hidden');
+    pop.classList.remove('wide');
+    if(G.state==='pop'){ G.state='play'; G.uiLock=false; }
+  }
+}
+
+/* ---- 启动 ---- */
+function boot(){
+  initAudio();
+  initWorld();
+  /* 预载存档元信息（用于菜单显示章节） */
+  try{
+    var raw = localStorage.getItem(SAVE_KEY);
+    if(raw){
+      var st = JSON.parse(raw);
+      G.mode = st.mode||'free';
+      G.chapter = st.chapter||1;
+      G.flags = st.flags||{};
+      G.day = st.day||1;
+    }
+  }catch(e){}
+  G.state = 'menu';
+  G.uiLock = true;
+  uiBoot();
+  bindInput();
+  /* HUD按钮 */
+  $('btnInv').onclick = function(){ if(G.state==='play') uiInventory(); };
+  $('btnJournal').onclick = function(){ if(G.state==='play') uiJournal(); };
+  $('btnMenu').onclick = function(){ if(G.state==='play') uiPauseMenu(); };
+  /* 按键分发 */
+  window.addEventListener('keydown', function(e){
+    var k = e.key.toLowerCase();
+    /* 过场/章节卡回车推进 */
+    if(k==='enter'){
+      var cut = $('cutscene');
+      if(cut && !cut.classList.contains('hidden')){
+        var cb = cut.querySelector('.cutBtn');
+        if(cb) cb.click();
+        return;
+      }
+      var ch = $('chapter');
+      if(ch && !ch.classList.contains('hidden')){
+        var b = ch.querySelector('.btn');
+        if(b) b.click();
+        return;
+      }
+    }
+    handleKey(k);
+  });
+  requestAnimationFrame(function(ts){ lastT = ts; loop(ts); });
+}
+boot();
+
+</script>
+<script>
+
+</script>
+</body>
+</html>

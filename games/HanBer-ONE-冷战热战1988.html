@@ -1,0 +1,3354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HanBer ONE — 冷战热战生存纪事 1988</title>
+<style>
+/* ============ HanBer ONE · 战地简报美学 ============ */
+:root{
+  --bg:#0a0f14; --bg2:#0d141c; --panel:#111a25; --panel2:#16222f; --panel3:#1b2a3a;
+  --line:#23344a; --line2:#31465f; --ink:#c8d4e2; --muted:#7e90a6; --dim:#55687e;
+  --amber:#e2a13a; --amber2:#f2c069; --amberDim:#8a6420;
+  --fed:#4a7fd0; --fedDim:#2a4a80; --red:#c24545; --redDim:#7c2b2b; --mer:#4d9e6a; --merDim:#2c5c40;
+  --wild:#cf8a3a; --wildDim:#7d521f; --neu:#8b98a8; --neuDim:#4a5563;
+  --hp:#d45555; --thirst:#4a9fd0; --rad:#b6c95c; --eng:#a988d8; --mor:#d4a0a8;
+  --mono:"Courier New",Consolas,monospace;
+  --sans:"PingFang SC","Microsoft YaHei","Noto Sans SC","Source Han Sans SC",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(1200px 800px at 70% -10%,rgba(30,52,74,.35),transparent 60%),
+                   radial-gradient(900px 700px at 10% 110%,rgba(56,36,18,.28),transparent 55%);
+  color:var(--ink); font-family:var(--sans); font-size:14px; line-height:1.55;
+  overflow:hidden;
+}
+#app{height:100vh;display:flex;flex-direction:column}
+::selection{background:rgba(226,161,58,.3)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:#0a1016}
+::-webkit-scrollbar-thumb{background:#24364b;border:1px solid #16202c}
+::-webkit-scrollbar-thumb:hover{background:#2f4a66}
+
+/* ---------- 通用 ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 14px;min-height:36px;background:var(--panel2);color:var(--ink);
+  border:1px solid var(--line2);cursor:pointer;font:inherit;font-size:13px;letter-spacing:.05em;
+  transition:border-color .15s,color .15s,background .15s,transform .05s;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+}
+.btn:hover{border-color:var(--amber);color:var(--amber2)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.btn-p{background:linear-gradient(180deg,#1d2c18,#16221a);border-color:#6f5a24;color:var(--amber2)}
+.btn-p:hover{border-color:var(--amber);color:#ffe0a0}
+.btn-d{color:#e58a8a;border-color:#5c2b2b}
+.btn-d:hover{border-color:var(--red);color:#ff9a9a}
+.btn-g{color:#8fd0a8;border-color:#2c5c40}
+.btn-g:hover{border-color:var(--mer);color:#a8e8c0}
+.btn-b{color:#8fb4e8;border-color:#2a4a80}
+.btn-b:hover{border-color:var(--fed);color:#b0d0ff}
+.btn-sm{padding:4px 9px;min-height:28px;font-size:12px}
+.btn-lg{padding:12px 26px;min-height:46px;font-size:16px}
+.btn-block{width:100%;margin-top:8px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:6px}
+.mt{margin-top:10px}.mb{margin-bottom:10px}.muted{color:var(--muted)}.dim{color:var(--dim)}
+.right{text-align:right}.center{text-align:center}.bold{font-weight:700}
+.grow{flex:1}
+.tick{color:var(--amber2);letter-spacing:.08em;font-family:var(--mono)}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border:1px solid var(--line2);color:var(--muted);letter-spacing:.1em;margin-right:4px}
+.tag-amber{color:var(--amber2);border-color:#6f5a24}
+.tag-red{color:#e58a8a;border-color:#5c2b2b}
+.tag-green{color:#8fd0a8;border-color:#2c5c40}
+.tag-blue{color:#8fb4e8;border-color:#2a4a80}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:2px 9px;border:1px solid;letter-spacing:.06em;white-space:nowrap}
+.chip i{width:7px;height:7px;display:inline-block;border-radius:50%}
+.chip-fed{color:#9fc2f2;border-color:#2a4a80;background:rgba(74,127,208,.12)} .chip-fed i{background:var(--fed)}
+.chip-red{color:#eda0a0;border-color:#5c2b2b;background:rgba(194,69,69,.12)} .chip-red i{background:var(--red)}
+.chip-mer{color:#9fd8b8;border-color:#2c5c40;background:rgba(77,158,106,.12)} .chip-mer i{background:var(--mer)}
+.chip-wild{color:#e8b078;border-color:#7d521f;background:rgba(207,138,58,.12)} .chip-wild i{background:var(--wild)}
+.chip-neu{color:#b6c2d0;border-color:#4a5563;background:rgba(139,152,168,.12)} .chip-neu i{background:var(--neu)}
+
+/* ---------- 状态条 ---------- */
+.bar{height:13px;background:#080d13;border:1px solid var(--line);position:relative;overflow:hidden;min-width:0}
+.bar>i{display:block;height:100%;transition:width .25s}
+.bar.b-hp>i{background:linear-gradient(90deg,#8e2f2f,#d45555)}
+.bar.b-hun>i{background:linear-gradient(90deg,#8a6420,#e2a13a)}
+.bar.b-thi>i{background:linear-gradient(90deg,#24587e,#4a9fd0)}
+.bar.b-rad>i{background:linear-gradient(90deg,#5a7d14,#b6c95c)}
+.bar.b-eng>i{background:linear-gradient(90deg,#5a4a86,#a988d8)}
+.bar.b-mor>i{background:linear-gradient(90deg,#8a5a62,#d4a0a8)}
+.bar>span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#eef4fa;text-shadow:0 1px 2px #000;letter-spacing:.06em;font-family:var(--mono)}
+.statrow{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px}
+.statrow .lbl{width:52px;color:var(--muted);flex:none}
+.statrow .bar{flex:1}
+
+/* ---------- 标题屏 ---------- */
+#titleScreen{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#070b10 0%,#0a1118 55%,#0d141c 100%);overflow:hidden}
+#titleCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+#titleScreen::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%,transparent 0%,rgba(4,6,9,.82) 78%)}
+#titleInner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;text-align:center}
+#tBadge{font-family:var(--mono);font-size:12px;letter-spacing:.5em;color:var(--amberDim);border:1px solid #3c3220;padding:5px 16px;background:rgba(10,12,8,.5)}
+#tTitle{font-family:var(--mono);font-size:clamp(40px,7vw,84px);font-weight:900;letter-spacing:.14em;color:#e8dcc4;
+  text-shadow:0 0 18px rgba(226,161,58,.25),0 2px 0 #000,0 4px 0 rgba(0,0,0,.6);line-height:1.05}
+#tTitle .o{color:var(--amber2)}
+#tSub{font-size:14px;letter-spacing:.42em;color:var(--muted);margin-top:4px;text-indent:.42em}
+#tYear{font-family:var(--mono);font-size:13px;color:var(--amber2);letter-spacing:.3em;margin-top:2px}
+#tDiv{width:min(420px,70vw);height:1px;background:linear-gradient(90deg,transparent,#6f5a24,transparent);margin:16px 0}
+#tMenu{display:flex;flex-direction:column;gap:10px;width:min(320px,80vw);position:relative;z-index:2}
+#tMenu .btn{font-size:15px;letter-spacing:.22em;padding:13px 0;justify-content:center;background:rgba(17,26,37,.55);backdrop-filter:blur(2px)}
+#tFoot{position:absolute;bottom:16px;z-index:2;font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.18em;text-align:center;line-height:1.9}
+#tTip{position:absolute;bottom:16px;right:20px;z-index:2;font-family:var(--mono);font-size:11px;color:var(--amberDim);letter-spacing:.1em}
+
+/* ---------- 游戏屏 ---------- */
+#gameScreen{flex:1;display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0;position:relative;display:none}
+#topbar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);
+  flex-wrap:wrap;z-index:5}
+#topbar .logo{font-family:var(--mono);font-weight:900;letter-spacing:.16em;color:#e8dcc4;font-size:16px}
+#topbar .logo .o{color:var(--amber2)}
+#topbar .sep{width:1px;height:22px;background:var(--line)}
+#topbar .clock{font-family:var(--mono);font-size:12px;color:var(--amber2);letter-spacing:.08em}
+#topbar .where{font-size:13px;color:var(--ink)}
+#topbar .spacer{flex:1}
+#main{display:grid;grid-template-columns:minmax(0,1fr) 392px;min-height:0;gap:0}
+#mapWrap{position:relative;min-height:0;background:var(--bg2);border-right:1px solid var(--line);overflow:hidden}
+#mapCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#mapTooltip{position:absolute;pointer-events:none;background:rgba(10,15,22,.94);border:1px solid var(--line2);
+  padding:7px 10px;font-size:12px;max-width:240px;z-index:6;display:none;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+#mapTooltip b{color:var(--amber2);letter-spacing:.06em}
+#mapLegend{position:absolute;left:12px;bottom:12px;z-index:6;background:rgba(10,15,22,.9);border:1px solid var(--line);
+  padding:8px 10px;font-size:11px;display:flex;flex-direction:column;gap:4px;letter-spacing:.04em}
+#mapLegend .lg{display:flex;align-items:center;gap:7px}
+#mapLegend .lg i{width:9px;height:9px;display:inline-block;border-radius:50%}
+#mapNodeInfo{position:absolute;left:12px;top:12px;z-index:6;background:rgba(10,15,22,.92);border:1px solid var(--line2);
+  padding:10px 12px;max-width:300px;font-size:12px;display:none}
+#mapNodeInfo h4{color:var(--amber2);letter-spacing:.08em;margin-bottom:4px}
+#mapNodeInfo .desc{color:var(--muted);margin:6px 0}
+#sidePanel{overflow-y:auto;background:var(--bg2);padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.sec{background:var(--panel);border:1px solid var(--line);padding:10px 12px}
+.sec>h3{font-size:11px;letter-spacing:.22em;color:var(--muted);border-bottom:1px dashed var(--line);padding-bottom:6px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:baseline}
+.sec>h3 .hl{color:var(--amber2);letter-spacing:0}
+.sec p{color:var(--ink);font-size:12.5px}
+.place-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 2px;border-bottom:1px dashed var(--line);font-size:13px}
+.place-row:last-child{border-bottom:none}
+.place-row .pn{color:var(--ink);flex:1}
+.place-row .pd{color:var(--dim);font-size:11px;margin-right:4px}
+#logPanel{background:#070c12;border-top:1px solid var(--line);max-height:150px;overflow-y:auto;padding:6px 14px;font-family:var(--mono);font-size:12px;z-index:5}
+.logline{padding:2px 0;border-bottom:1px dotted rgba(35,52,74,.4);white-space:pre-wrap;line-height:1.5}
+.logline .tm{color:var(--dim);margin-right:8px}
+.logline.ev{color:var(--amber2)} .logline.warn{color:#e8a0a0} .logline.good{color:#9fd8b8}
+.logline.sys{color:#9fc2f2} .logline.info{color:var(--ink)} .logline.cri{color:#ff7d7d;font-weight:700}
+
+/* ---------- 弹窗 ---------- */
+.ov{position:fixed;inset:0;z-index:60;background:rgba(4,7,10,.8);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.m{width:min(720px,94vw);max-height:88vh;display:flex;flex-direction:column;background:var(--panel);
+  border:1px solid var(--line2);box-shadow:0 24px 80px rgba(0,0,0,.65),0 0 0 1px rgba(0,0,0,.4)}
+.m-head{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--panel3),var(--panel));flex:none}
+.m-head h2{font-size:14px;letter-spacing:.18em;color:var(--amber2);flex:1;font-family:var(--mono)}
+.m-body{padding:14px 16px;overflow-y:auto;min-height:0}
+.m-foot{padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;flex:none;background:var(--panel2)}
+.m-wide{width:min(920px,95vw)}
+.m-narrow{width:min(440px,92vw)}
+.xbtn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);
+  border:1px solid var(--line);background:transparent;font-size:16px}
+.xbtn:hover{color:#fff;border-color:var(--red)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:12.5px;border-bottom:1px dotted var(--line)}
+.kv .k{color:var(--muted)} .kv .v{color:var(--ink);text-align:right}
+
+/* ---------- 对话 ---------- */
+#dlgAvatar{width:64px;height:64px;flex:none;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:900;font-size:22px;color:#0a0f14;border-radius:50%;border:2px solid var(--line2)}
+#dlgName{font-size:15px;color:var(--amber2);letter-spacing:.1em;font-weight:700}
+#dlgRole{font-size:11.5px;color:var(--muted);margin-top:2px}
+#dlgText{margin-top:12px;font-size:14px;line-height:1.85;color:var(--ink);white-space:pre-wrap;min-height:70px}
+#dlgChoices{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.dlg-opt{display:block;text-align:left;padding:10px 14px;background:var(--panel2);border:1px solid var(--line2);color:var(--ink);
+  cursor:pointer;font:inherit;font-size:13.5px;letter-spacing:.02em}
+.dlg-opt:hover{border-color:var(--amber);color:var(--amber2);background:var(--panel3)}
+.dlg-opt:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+
+/* ---------- 战斗 ---------- */
+#combatEnemy{display:flex;gap:14px;align-items:center;background:var(--panel2);border:1px solid var(--line);padding:12px}
+#combatEnemy .face{width:56px;height:56px;flex:none;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:13px;font-weight:900;border-radius:50%;color:#0a0f14}
+#combatLog{height:150px;overflow-y:auto;background:#070c12;border:1px solid var(--line);padding:8px 10px;
+  font-family:var(--mono);font-size:12px;margin-top:10px}
+#combatLog .ln{padding:1px 0;color:var(--ink)}
+#combatLog .ln.hit{color:#ff9a9a} #combatLog .ln.ply{color:#9fd8b8} #combatLog .ln.ev{color:var(--amber2)} #combatLog .ln.cri{color:#ffe0a0}
+
+/* ---------- 商店 ---------- */
+.shop-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px dashed var(--line);font-size:13px}
+.shop-row .sn{flex:1;color:var(--ink)}
+.shop-row .sd{color:var(--dim);font-size:11px;max-width:200px}
+.shop-row .sp{color:var(--amber2);font-family:var(--mono);font-size:12px;min-width:70px;text-align:right}
+
+/* ---------- 任务 ---------- */
+.quest-block{border:1px solid var(--line);padding:10px 12px;margin-bottom:10px;background:var(--panel2)}
+.quest-block.done{opacity:.65}
+.quest-block h4{font-size:13.5px;color:var(--ink);display:flex;gap:8px;align-items:center}
+.quest-block .qd{color:var(--muted);font-size:12px;margin:6px 0}
+.quest-block .obj{font-size:12.5px;padding:3px 0;color:var(--ink)}
+.quest-block .obj.done{color:var(--mer)}
+.quest-block .obj .st{display:inline-block;width:18px;font-family:var(--mono)}
+
+/* ---------- 存档 ---------- */
+.slot-card{border:1px solid var(--line);padding:10px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:center;background:var(--panel2)}
+.slot-card .sinfo{flex:1;font-size:12px}
+.slot-card .sinfo b{color:var(--amber2);letter-spacing:.06em}
+
+/* ---------- 剧情场景 ---------- */
+#sceneBox{width:min(840px,94vw);max-height:90vh;display:flex;flex-direction:column;background:var(--panel);
+  border:1px solid var(--line2);box-shadow:0 30px 90px rgba(0,0,0,.7);position:relative;overflow:hidden}
+#sceneBox .sc-head{padding:18px 22px 10px;text-align:center;border-bottom:1px dashed var(--line);position:relative;z-index:2}
+#sceneBox .sc-kicker{font-family:var(--mono);font-size:11px;letter-spacing:.5em;color:var(--amberDim);text-indent:.5em}
+#sceneBox .sc-title{font-family:var(--mono);font-size:30px;font-weight:900;letter-spacing:.2em;color:#e8dcc4;text-shadow:0 2px 0 #000;margin-top:6px}
+#sceneBox .sc-date{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.2em;margin-top:6px}
+#sceneBody{padding:18px 22px;overflow-y:auto;position:relative;z-index:2;flex:1;min-height:0}
+#sceneBox::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 20%,transparent 30%,rgba(4,7,10,.5) 100%)}
+.sc-narr{font-size:14.5px;line-height:2;color:var(--ink);white-space:pre-wrap}
+.sc-line{margin:10px 0;padding-left:12px;border-left:2px solid var(--line2)}
+.sc-line .who{font-size:12px;color:var(--amber2);letter-spacing:.14em;font-family:var(--mono);margin-bottom:3px}
+.sc-line .txt{font-size:14px;color:var(--ink);white-space:pre-wrap}
+.sc-cliff{margin-top:16px;padding:12px 14px;border:1px dashed #6f5a24;background:rgba(226,161,58,.06)}
+.sc-cliff .ct{font-family:var(--mono);font-size:11px;letter-spacing:.4em;color:var(--amber2);margin-bottom:6px}
+.sc-cliff .cx{font-size:13.5px;color:var(--amber2);line-height:1.8;white-space:pre-wrap}
+
+/* ---------- 结局/成就 ---------- */
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.ach{background:var(--panel2);border:1px solid var(--line);padding:8px 10px;font-size:12px}
+.ach.got{border-color:#6f5a24;color:var(--amber2)}
+.ach .an{font-weight:700;letter-spacing:.04em}
+.ach .ad{color:var(--muted);font-size:11px;margin-top:2px}
+
+/* ---------- 引导 ---------- */
+#hintBar{position:fixed;right:14px;bottom:170px;z-index:40;max-width:300px;background:rgba(17,26,37,.95);
+  border:1px solid var(--amberDim);padding:10px 12px;font-size:12.5px;color:var(--amber2);display:none;
+  box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#hintBar .hx{margin-left:8px;cursor:pointer;color:var(--muted)}
+#toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:80;background:rgba(17,26,37,.96);
+  border:1px solid var(--line2);padding:9px 18px;font-size:13px;display:none;box-shadow:0 8px 30px rgba(0,0,0,.5);letter-spacing:.04em}
+
+@media (max-width:1100px){
+  #main{grid-template-columns:minmax(0,1fr) 330px}
+}
+@media (max-width:860px){
+  #main{grid-template-columns:1fr;grid-template-rows:minmax(320px,48vh) auto}
+  #mapWrap{border-right:none;border-bottom:1px solid var(--line)}
+}
+</style>
+<style id="hanber-soviet-skin">
+/* === HanBer 统一皮肤 · 后苏联忧郁美学 (Post-Soviet Melancholy) === */
+html,body{
+  background-color:#15181e !important;
+  background-image:
+    radial-gradient(ellipse at 50% -5%, rgba(201,168,106,.10), transparent 55%),
+    linear-gradient(165deg,#11141a 0%,#1a1f28 48%,#231d15 100%) !important;
+  color:#d6cdb8 !important;
+}
+#hanber-vignette{position:fixed;inset:0;z-index:99998;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(0,0,0,.55) 100%);}
+</style>
+<div id="hanber-vignette"></div>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- ===== 标题屏 ===== -->
+  <div id="titleScreen">
+    <canvas id="titleCanvas"></canvas>
+    <div id="titleInner">
+      <div id="tBadge">1988 · 战后档案 · 绝密</div>
+      <h1 id="tTitle">HANBER <span class="o">ONE</span></h1>
+      <div id="tSub">冷战热战 · 生存纪事</div>
+      <div id="tYear">世界核战 · 三年之后</div>
+      <div id="tDiv"></div>
+      <div id="tMenu"></div>
+    </div>
+    <div id="tFoot">苏美热战模拟世界观 · 单机可玩 · 本地存档<br>本作虚构历史，与现实国家、组织及个人无关</div>
+    <div id="tTip">v1.0.0</div>
+  </div>
+
+  <!-- ===== 游戏屏 ===== -->
+  <div id="gameScreen">
+    <header id="topbar">
+      <div class="logo">HANBER <span class="o">ONE</span></div>
+      <div class="sep"></div>
+      <div class="where" id="tbMode"></div>
+      <div class="where" id="tbLoc"></div>
+      <div class="clock" id="tbClock"></div>
+      <div class="spacer"></div>
+      <button class="btn btn-sm" id="btnChar">角色</button>
+      <button class="btn btn-sm" id="btnBag">背包</button>
+      <button class="btn btn-sm" id="btnQuest">任务</button>
+      <button class="btn btn-sm" id="btnJournal">日志</button>
+      <button class="btn btn-sm" id="btnSave">存档</button>
+      <button class="btn btn-sm btn-d" id="btnMenu">主菜单</button>
+    </header>
+    <div id="main">
+      <div id="mapWrap">
+        <canvas id="mapCanvas"></canvas>
+        <div id="mapTooltip"></div>
+        <div id="mapNodeInfo"></div>
+        <div id="mapLegend"></div>
+      </div>
+      <aside id="sidePanel"></aside>
+    </div>
+    <footer id="logPanel"></footer>
+  </div>
+
+  <!-- ===== 通用弹窗 ===== -->
+  <div class="ov" id="modal" style="display:none">
+    <div class="m" id="modalBox">
+      <div class="m-head"><h2 id="modalTitle"></h2><button class="xbtn" id="modalX">×</button></div>
+      <div class="m-body" id="modalBody"></div>
+      <div class="m-foot" id="modalFoot"></div>
+    </div>
+  </div>
+
+  <div id="hintBar"><span id="hintText"></span><span class="hx" id="hintX">[×]</span></div>
+  <div id="toast"></div>
+</div>
+
+
+
+<script>
+// ===== HanBer ONE · 数据：物品 / 配方 / 敌人 / 成就 =====
+window.HB = window.HB || {};
+
+HB.items = {
+  // ---- 食物 ----
+  can_food:{n:"军用罐头",cat:"food",d:"战前库存的军粮罐头，咸得发苦，能顶一天饿。",w:.6,v:18,fx:{hunger:35,mor:2}},
+  dried_food:{n:"压缩干粮",cat:"food",d:"硬得像砖，泡水才能咽下去。军需处和黑市都有货。",w:.4,v:12,fx:{hunger:25}},
+  bread:{n:"黑面包",cat:"food",d:"战后主粮，掺了木屑和麸皮。",w:.3,v:8,fx:{hunger:20}},
+  meat:{n:"烤肉",cat:"food",d:"自己猎到的肉，火堆上烤过，是活下去的底气。",w:.5,v:15,fx:{hunger:30,mor:5}},
+  soup:{n:"炖菜汤",cat:"food",d:"野菜炖罐头，热乎的一碗。",w:.6,v:10,fx:{hunger:18,thirst:8,mor:4}},
+  whiskey:{n:"威士忌",cat:"drink",d:"走私货，能换情报也能麻痹神经。",w:.8,v:25,fx:{thirst:-6,mor:18,hp:-2}},
+  water:{n:"净水",cat:"drink",d:"过滤过的水，放射性筛查合格。",w:.8,v:10,fx:{thirst:36}},
+  herb_tea:{n:"草药茶",cat:"drink",d:"老中医方子，战后传下来的土办法。",w:.3,v:8,fx:{thirst:15,hp:6}},
+  coffee:{n:"战地咖啡",cat:"drink",d:"走私咖啡豆，能提神。",w:.3,v:14,fx:{thirst:-3,eng:22}},
+  // ---- 医疗 ----
+  bandage:{n:"绷带",cat:"med",d:"止血用的干净布条。",w:.2,v:15,fx:{hp:15}},
+  medkit:{n:"医疗包",cat:"med",d:"战地急救包，绷带、抗生素、止痛药齐全。",w:1,v:45,fx:{hp:45}},
+  radaway:{n:"抗辐宁",cat:"med",d:"阻断放射性同位素吸收的药片，一片管一周。",w:.3,v:40,fx:{rad:-40}},
+  antibiotic:{n:"抗生素",cat:"med",d:"战后最紧俏的药品之一。",w:.2,v:30,fx:{hp:20}},
+  stim:{n:"兴奋剂",cat:"med",d:"军用提神药，透支身体换清醒。",w:.1,v:25,fx:{eng:45,hp:-5}},
+  // ---- 武器 ----
+  fist:{n:"徒手",cat:"weapon",d:"你只有拳头。",w:0,v:0,dmg:[2,5],acc:.72},
+  knife:{n:"军刀",cat:"weapon",d:"磨快的军刺，近身保命的东西。",w:.5,v:30,dmg:[4,9],acc:.8},
+  stunrod:{n:"电击棒",cat:"weapon",d:"改造过的高压电棍，能放倒变异犬。",w:1,v:50,dmg:[6,12],acc:.82},
+  pistol:{n:"手枪",cat:"weapon",d:"9mm 军用制式，准头还行。",w:1.2,v:180,dmg:[8,15],acc:.78,ammo:"ammo_pistol"},
+  revolver:{n:"左轮手枪",cat:"weapon",d:"老警用左轮，皮实可靠。",w:1.3,v:160,dmg:[9,17],acc:.76,ammo:"ammo_pistol"},
+  smg:{n:"冲锋枪",cat:"weapon",d:"射速快，近战压制的家伙。",w:2.5,v:240,dmg:[7,13],acc:.8,ammo:"ammo_pistol"},
+  shotgun:{n:"霰弹枪",cat:"weapon",d:"近距离一枪一片，废墟里最讲理的东西。",w:3,v:260,dmg:[12,24],acc:.72,ammo:"ammo_shell"},
+  rifle:{n:"步枪",cat:"weapon",d:"5.56 口径战斗步枪，双方军队都在用。",w:4,v:420,dmg:[15,28],acc:.82,ammo:"ammo_556"},
+  sniper:{n:"狙击步枪",cat:"weapon",d:"7.62 毫米，带光学瞄具。远距离一锤定音。",w:5,v:680,dmg:[22,42],acc:.9,ammo:"ammo_762"},
+  rpg:{n:"火箭筒",cat:"weapon",d:"缴获的单兵火箭。打人浪费，打装甲正好。",w:6,v:900,dmg:[35,60],acc:.7,ammo:"ammo_rocket"},
+  // ---- 弹药 ----
+  ammo_pistol:{n:"9mm 弹药",cat:"ammo",d:"手枪与冲锋枪通用弹。",w:.05,v:2},
+  ammo_shell:{n:"12号霰弹",cat:"ammo",d:"霰弹枪弹药。",w:.08,v:3},
+  ammo_556:{n:"5.56 弹药",cat:"ammo",d:"步枪弹，交战区满地都是弹壳。",w:.05,v:2.5},
+  ammo_762:{n:"7.62 弹药",cat:"ammo",d:"狙击步枪与机枪弹。",w:.07,v:3.5},
+  ammo_rocket:{n:"火箭弹",cat:"ammo",d:"火箭筒用弹。",w:2,v:120},
+  // ---- 装备 ----
+  gasmask:{n:"防毒面具",cat:"gear",d:"过滤放射性粉尘，废墟里的半张命。",w:.8,v:160,radRes:.7},
+  armor_light:{n:"防弹背心",cat:"gear",d:"警察用的旧背心，挡挡流弹和刀。",w:4,v:300,armor:3},
+  armor_heavy:{n:"重型护甲",cat:"gear",d:"军队淘汰的插板甲，重但保命。",w:8,v:650,armor:6},
+  backpack:{n:"大背包",cat:"gear",d:"容量更大的行军包。",w:2,v:120,carry:25},
+  filter:{n:"净水滤芯",cat:"gear",d:"DIY 净水器芯，能把脏水变成能喝的水。",w:.3,v:40},
+  flashlight:{n:"手电筒",cat:"gear",d:"搜索废墟时照路的东西，省电池。",w:.4,v:30},
+  camo:{n:"伪装服",cat:"gear",d:"灰绿色迷彩，混进乱世不扎眼。",w:.8,v:140},
+  // ---- 废料 ----
+  scrap:{n:"金属零件",cat:"junk",d:"拆下来的螺丝、齿轮、铁片。",w:.2,v:4},
+  wire:{n:"铜线",cat:"junk",d:"一段可用的铜导线。",w:.1,v:3},
+  circuit:{n:"电路板",cat:"junk",d:"还能拆出元件的旧电路板。",w:.2,v:8},
+  cloth:{n:"布料",cat:"junk",d:"旧军服拆的布，缠伤口、做滤网。",w:.1,v:2},
+  chem:{n:"药品原料",cat:"junk",d:"制药原料，懂行的人手里是救命的东西。",w:.1,v:6},
+  gunpowder:{n:"火药",cat:"junk",d:"从哑弹里抠出来的，做子弹用。",w:.1,v:5},
+  battery:{n:"核电池",cat:"junk",d:"军用同位素电池，还没衰减完，值大钱。",w:1.5,v:60},
+  // ---- 特殊 ----
+  datadisk:{n:"数据盘",cat:"special",d:"锈蚀的军用加密盘。有人在为它杀人。",w:.1,v:0},
+  locket:{n:"贝拉的挂坠",cat:"special",d:"妹妹的旧挂坠，里面是一张烧了半边的合影。",w:0,v:0},
+  locket2:{n:"成对挂坠",cat:"special",d:"陌生信使留下的挂坠，和贝拉那只一模一样。",w:0,v:0},
+  pass_fed:{n:"联邦通行证",cat:"special",d:"自由联邦签发的通行证，能过大部分检查站。",w:.1,v:0},
+  pass_red:{n:"红军通行证",cat:"special",d:"红色联盟的通行证，来路不太合法。",w:.1,v:0},
+  radio_parts:{n:"电台零件",cat:"special",d:"攒起来能拼一台短波电台。",w:.5,v:40},
+  blueprint:{n:"设施蓝图",cat:"special",d:"造物主设施的管线图，画满红叉。",w:.2,v:0},
+  keycard:{n:"钥匙卡",cat:"special",d:"造物主设施的通行卡，编号 107。",w:.1,v:0},
+  intel:{n:"情报文件",cat:"special",d:"写满人名的名单，每个名字都是一条命。",w:.1,v:0},
+  signal_parts:{n:"信号碎片",cat:"special",d:"加密信号发射器残片，有人在用旧频率呼叫。",w:.4,v:0}
+};
+
+HB.craft = [
+  {n:"绷带",out:{bandage:1},in:{cloth:2}},
+  {n:"医疗包",out:{medkit:1},in:{bandage:1,antibiotic:1,scrap:2}},
+  {n:"抗辐宁",out:{radaway:1},in:{chem:1,water:1}},
+  {n:"兴奋剂",out:{stim:1},in:{chem:2,whiskey:1}},
+  {n:"净水",out:{water:1},in:{filter:1,scrap:1},note:"需要滤芯"},
+  {n:"9mm 弹药×6",out:{ammo_pistol:6},in:{scrap:1,gunpowder:1}},
+  {n:"12号霰弹×4",out:{ammo_shell:4},in:{scrap:1,gunpowder:2}},
+  {n:"5.56 弹药×5",out:{ammo_556:5},in:{scrap:2,gunpowder:1}},
+  {n:"7.62 弹药×4",out:{ammo_762:4},in:{scrap:2,gunpowder:2}},
+  {n:"防弹背心",out:{armor_light:1},in:{cloth:3,scrap:4}},
+  {n:"净水滤芯",out:{filter:1},in:{cloth:1,scrap:1}},
+  {n:"草药茶",out:{herb_tea:1},in:{cloth:1,water:1}}
+];
+
+HB.enemies = {
+  rat:{n:"变异鼠群",d:"拳头大的老鼠，成群结队，吃腐肉长大。",hp:10,dmg:[1,3],arm:0,acc:.6,xp:8,glyph:"鼠",color:"#8a94a6",loot:[{i:"meat",n:1,p:.5},{i:"scrap",n:1,p:.3}]},
+  hound:{n:"变异猎犬",d:"野狗饿疯了的后代，见肉就咬。",hp:14,dmg:[4,8],arm:0,acc:.66,xp:12,glyph:"犬",color:"#a88850",loot:[{i:"meat",n:1,p:.8}]},
+  bandit:{n:"匪徒",d:"趁乱抢劫的亡命徒，手里有家伙。",hp:20,dmg:[3,7],arm:0,acc:.68,xp:16,glyph:"匪",color:"#cf8a3a",loot:[{i:"scrap",n:2,p:.7},{i:"bread",n:1,p:.6},{i:"knife",n:1,p:.2}]},
+  slaver:{n:"奴隶贩子",d:"把活人当货物运的黑心贩子。",hp:26,dmg:[5,9],arm:1,acc:.7,xp:22,glyph:"贩",color:"#c24545",loot:[{i:"whiskey",n:1,p:.7},{i:"scrap",n:2,p:.6},{i:"pistol",n:1,p:.15}]},
+  deserter:{n:"逃兵",d:"带着枪跑路的军人，抢一切能抢的。",hp:28,dmg:[5,10],arm:1,acc:.72,xp:26,glyph:"兵",color:"#7e90a6",loot:[{i:"ammo_pistol",n:6,p:.8},{i:"can_food",n:1,p:.8},{i:"camo",n:1,p:.25},{i:"rifle",n:1,p:.08}]},
+  mutant:{n:"变异人",d:"辐射改变了的流浪者，喉咙里只有低吼。",hp:32,dmg:[6,12],arm:2,acc:.7,xp:30,glyph:"变",color:"#b6c95c",loot:[{i:"scrap",n:3,p:.7},{i:"chem",n:1,p:.5},{i:"whiskey",n:1,p:.4}]},
+  ghoul:{n:"辐射僵尸",d:"被辐射熬坏的人，还在走，已经不认得路了。",hp:22,dmg:[3,8],arm:1,acc:.55,xp:18,glyph:"尸",color:"#7d8a5a",loot:[{i:"cloth",n:1,p:.6},{i:"scrap",n:1,p:.4}]},
+  bear:{n:"西伯利亚变种熊",d:"北方的熊，比战前大一倍。",hp:52,dmg:[10,18],arm:3,acc:.72,xp:55,glyph:"熊",color:"#6e5640",loot:[{i:"meat",n:3,p:1},{i:"battery",n:1,p:.4}]},
+  goon:{n:"军阀打手",d:"军阀养的私兵，给钱就卖命。",hp:26,dmg:[6,11],arm:2,acc:.72,xp:26,glyph:"打",color:"#cf8a3a",loot:[{i:"scrap",n:2,p:.7},{i:"ammo_pistol",n:5,p:.6},{i:"whiskey",n:1,p:.5}]},
+  patrol:{n:"红军巡逻队",d:"内务部直辖的巡逻队，见生人就盘问。",hp:42,dmg:[8,14],arm:3,acc:.76,xp:44,glyph:"红",color:"#c24545",loot:[{i:"ammo_762",n:6,p:.7},{i:"can_food",n:2,p:.8},{i:"pass_red",n:1,p:.2}]},
+  trooper:{n:"联邦军士兵",d:"联邦军正规兵，装备整齐，脾气不好。",hp:38,dmg:[7,12],arm:3,acc:.75,xp:40,glyph:"蓝",color:"#4a7fd0",loot:[{i:"ammo_556",n:6,p:.7},{i:"can_food",n:2,p:.8},{i:"pass_fed",n:1,p:.2}]},
+  bot:{n:"护卫机器人",d:"战前自动防御系统的残留，敌我不分。",hp:46,dmg:[9,15],arm:6,acc:.78,xp:60,glyph:"机",color:"#8b98a8",loot:[{i:"scrap",n:3,p:.9},{i:"circuit",n:2,p:.8},{i:"battery",n:1,p:.5}]},
+  officer:{n:"护教士·阿列克谢",d:"内务部的教条军官，眼神像冰。",hp:58,dmg:[10,18],arm:5,acc:.8,xp:80,glyph:"教",color:"#c24545",loot:[{i:"pass_red",n:1,p:1},{i:"ammo_762",n:8,p:1},{i:"blueprint",n:1,p:.5}]},
+  executor:{n:"执棋者·代理人",d:"穿西装的人，在废墟里像走错片场。",hp:66,dmg:[12,20],arm:6,acc:.82,xp:100,glyph:"棋",color:"#5a6b80",loot:[{i:"intel",n:1,p:1},{i:"battery",n:1,p:.8}]},
+  ai:{n:"海啸·核心分身",d:"冰冷的主机意识借金属躯壳现身。",hp:80,dmg:[14,22],arm:7,acc:.84,xp:140,glyph:"潮",color:"#4a9fd0",loot:[{i:"battery",n:2,p:1},{i:"circuit",n:3,p:1}]}
+};
+
+HB.achievements = {
+  alive30:{n:"熬过一个月",d:"在战后世界活过 30 天。",cond:"days"},
+  alive100:{n:"百日幸存者",d:"在战后世界活过 100 天。",cond:"days"},
+  alive365:{n:"战后第一年",d:"在自由模式活过整整一年。",cond:"days"},
+  first_kill:{n:"第一次扣扳机",d:"击败第一个敌人。",cond:"kill"},
+  hunter:{n:"捕猎者",d:"累计击败 25 个敌人。",cond:"kill25"},
+  trader:{n:"跑遍半个世界",d:"到访 10 个不同地点。",cond:"visit10"},
+  worldwalk:{n:"环球行者",d:"到访 20 个不同地点。",cond:"visit20"},
+  rich:{n:"囤积者",d:"持有 2000 军票。",cond:"money"},
+  fed_ally:{n:"联邦之友",d:"自由联邦声望达到 60。",cond:"rep_fed"},
+  red_ally:{n:"红色之友",d:"红色联盟声望达到 60。",cond:"rep_red"},
+  merc_ally:{n:"商会座上宾",d:"中立商会声望达到 60。",cond:"rep_mer"},
+  story6:{n:"铁幕穿行者",d:"完成主线第 6 章。",cond:"story6"},
+  story12:{n:"执棋者的对手",d:"完成主线全部 12 章。",cond:"story12"},
+  craft5:{n:"手艺人",d:"制作 5 种物品。",cond:"craft5"}
+};
+
+</script>
+<script>
+// ===== HanBer ONE · 数据：世界 / 事件 / 新闻 =====
+window.HB = window.HB || {};
+
+HB.factions = {
+  fed:{n:"自由联邦",c:"#4a7fd0",d:"以美国残存政府为核心的重建政权，控制北美大部分交通线与工业区。既想结束战争，也在为下一场战争做准备。"},
+  red:{n:"红色联盟",c:"#c24545",d:"苏联红军残余与内务部组成的军事政权，占据东欧与西伯利亚。口号是“誓死保卫祖国”，实际已四分五裂。"},
+  mer:{n:"中立商会",c:"#4d9e6a",d:"掌控跨洋航线与黑市的商人联合体。他们说：战争是生意，和平也是生意。"},
+  wild:{n:"军阀与无主之地",c:"#cf8a3a",d:"废墟、荒地与失序的城市。谁的枪多谁说了算。"},
+  neu:{n:"中立观察区",c:"#8b98a8",d:"未直接参战或宣布中立的地区，商旅与难民汇聚之地。"}
+};
+
+// 大陆多边形（战地简报风格，非精确地理）
+HB.continents = [
+  {n:"北美洲",pts:[[105,92],[150,80],[210,72],[255,85],[268,100],[282,118],[300,126],[298,150],[286,170],[278,186],[268,196],[250,202],[235,206],[228,224],[222,238],[210,248],[192,235],[178,212],[168,202],[158,192],[150,180],[146,162],[138,146],[122,132],[110,116],[100,104]],fill:"#1d2a22",line:"#3a4a3a"},
+  {n:"南美洲",pts:[[300,262],[332,272],[362,282],[382,302],[398,342],[402,382],[396,420],[386,446],[372,472],[358,468],[348,452],[338,428],[330,392],[320,352],[312,322],[304,296],[300,280]],fill:"#1c2922",line:"#37493a"},
+  {n:"欧罗巴",pts:[[455,135],[478,130],[500,126],[516,118],[540,114],[566,106],[590,104],[602,112],[606,122],[600,134],[584,140],[570,142],[556,150],[540,152],[530,164],[524,154],[514,150],[500,147],[486,142],[470,140]],fill:"#1f2b24",line:"#3c4d3e"},
+  {n:"英伦",pts:[[492,120],[506,122],[509,130],[500,139],[490,132],[488,124]],fill:"#1f2b24",line:"#3c4d3e"},
+  {n:"斯堪的纳维亚",pts:[[556,84],[578,79],[596,87],[602,100],[592,108],[576,104],[562,96]],fill:"#1f2b24",line:"#3c4d3e"},
+  {n:"非洲",pts:[[500,182],[522,166],[544,172],[586,196],[592,222],[586,252],[580,292],[576,332],[566,372],[552,402],[542,432],[530,410],[516,362],[500,312],[486,272],[482,232],[486,196]],fill:"#202b23",line:"#3e4f40"},
+  {n:"亚洲",pts:[[600,112],[632,106],[662,100],[702,90],[752,82],[802,78],[852,85],[882,96],[896,112],[900,132],[886,146],[876,164],[868,180],[858,196],[842,212],[822,226],[796,252],[782,276],[766,300],[758,326],[752,342],[746,318],[732,292],[722,272],[716,252],[706,234],[692,250],[676,262],[662,272],[648,268],[638,252],[628,238],[618,224],[612,206],[606,196],[598,186],[594,166],[600,148],[600,134]],fill:"#1f2b22",line:"#3c4d3e"},
+  {n:"阿拉伯",pts:[[612,206],[622,222],[632,236],[640,252],[632,266],[620,256],[610,232],[602,216]],fill:"#1f2b22",line:"#3c4d3e"},
+  {n:"朝鲜半岛",pts:[[846,168],[862,166],[868,182],[856,200],[846,192]],fill:"#1f2b22",line:"#3c4d3e"},
+  {n:"日本列岛",pts:[[880,160],[900,164],[908,180],[900,202],[888,206],[880,190]],fill:"#1f2b22",line:"#3c4d3e"},
+  {n:"马来半岛",pts:[[758,326],[778,330],[788,336],[768,344],[756,336]],fill:"#1f2b22",line:"#3c4d3e"},
+  {n:"澳大利亚",pts:[[870,430],[896,414],[926,420],[946,446],[940,480],[920,492],[900,486],[886,470],[872,450]],fill:"#1e2a20",line:"#394a38"},
+  {n:"格陵兰",pts:[[372,40],[404,36],[426,50],[416,76],[390,90],[370,80],[360,60]],fill:"#1d2a22",line:"#3a4a3a"},
+  {n:"南极",pts:[[120,548],[880,546],[880,558],[120,558]],fill:"#24303a",line:"#33455a"}
+];
+
+// 辐射区: [x,y,r,level]
+HB.radZones = [
+  [294,177,40,3],[537,130,32,2],[604,117,44,2],[500,134,24,1],
+  [585,138,26,1],[286,184,22,1],[731,120,36,2],[507,144,20,1]
+];
+
+HB.nodes = {
+  // ---- 北美 ----
+  sea:{n:"西雅图",reg:"北美西海岸",cont:"am",f:"fed",t:"city",x:160,y:150,rad:0,dang:2,pop:"中型",desc:"战后幸存的工业城。联邦把太平洋舰队残部停在这里，船坞日夜冒烟。",mods:{food:.9,med:.9,weapon:1,junk:1.1},places:["market","tavern","clinic","board","camp","wander"],npcs:["rose"]},
+  la:{n:"洛杉矶",reg:"北美西海岸",cont:"am",f:"wild",t:"ruin",x:172,y:204,rad:1,dang:5,pop:"混乱",desc:"好莱坞变成军阀的领地。霓虹早灭了，霓虹下的枪火没停过。",mods:{food:1.4,med:1.5,weapon:.9,junk:.8},places:["market","tavern","clinic","board","camp","wander","ruin"],npcs:["nia","carlos"]},
+  nyc:{n:"纽约废墟",reg:"东海岸",cont:"am",f:"wild",t:"ruin",x:294,y:177,rad:3,dang:7,pop:"极少",desc:"曾经的世界之都。核爆中心区至今无人敢进，边缘地带住着拾荒者和变异人。",mods:{food:1.7,med:1.8,weapon:1.1,junk:.6},places:["market","board","camp","wander","ruin"],npcs:["frankie","elder"]},
+  wdc:{n:"华盛顿特区",reg:"东海岸",cont:"am",f:"fed",t:"base",x:286,y:184,rad:1,dang:3,pop:"大型",desc:"自由联邦的首都。白宫改成了联合指挥部，门口排着坦克和难民。",mods:{food:1,med:.8,weapon:1,junk:1},places:["market","tavern","clinic","board","camp","wander","base"],npcs:["mason","helena"]},
+  chi:{n:"芝加哥",reg:"五大湖",cont:"am",f:"fed",t:"city",x:257,y:172,rad:0,dang:3,pop:"大型",desc:"中西部最大的物资集散地，铁路从这里通向全美。",mods:{food:.8,med:1,weapon:1,junk:1.1},places:["market","tavern","clinic","board","camp","wander"],npcs:["thomas","ray"]},
+  hou:{n:"休斯顿",reg:"南部",cont:"am",f:"fed",t:"city",x:235,y:221,rad:0,dang:2,pop:"中型",desc:"墨西哥湾石油区，佣兵公司的大本营。有钱就能雇到一支小队。",mods:{food:1,med:1.1,weapon:.85,junk:1},places:["market","tavern","clinic","board","camp","wander"],npcs:["jack"]},
+  tor:{n:"多伦多",reg:"加拿大",cont:"am",f:"neu",t:"city",x:279,y:165,rad:0,dang:1,pop:"中型",desc:"加拿大南部的中立城，难民排到城外十公里。",mods:{food:.85,med:.9,weapon:1.2,junk:1},places:["market","clinic","board","camp","wander"],npcs:["sarah"]},
+  mex:{n:"墨西哥城",reg:"中美洲",cont:"am",f:"wild",t:"city",x:225,y:262,rad:0,dang:6,pop:"混乱",desc:"毒枭和军阀把整座城切成几十块地盘，谁都不服谁。",mods:{food:1.3,med:1.4,weapon:.9,junk:.7},places:["market","tavern","clinic","board","camp","wander"],npcs:["miguel"]},
+  sao:{n:"圣保罗",reg:"南美",cont:"sa",f:"neu",t:"city",x:371,y:434,rad:0,dang:1,pop:"中型",desc:"南半球的避风港，战火离这里很远，物价也高得离谱。",mods:{food:1.2,med:1,weapon:1.3,junk:.9},places:["market","clinic","board","camp","wander"],npcs:[]},
+  // ---- 欧洲 ----
+  mad:{n:"马德里",reg:"南欧",cont:"eu",f:"neu",t:"city",x:492,y:160,rad:0,dang:1,pop:"中型",desc:"伊比利亚半岛的中立港城。港口船票要排两天队，铁匠铺的炉火从不熄。",mods:{food:1.05,med:1,weapon:1.1,junk:1},places:["market","tavern","clinic","board","camp","wander"],npcs:[]},
+  lon:{n:"伦敦",reg:"西欧",cont:"eu",f:"fed",t:"city",x:500,y:134,rad:1,dang:2,pop:"大型",desc:"北约残部与联邦欧洲司令部的所在地。泰晤士河上漂着军舰残骸，但广播还在响。",mods:{food:1,med:.85,weapon:1,junk:1},places:["market","tavern","clinic","board","camp","wander","base"],npcs:["ada","winston"]},
+  par:{n:"巴黎",reg:"西欧",cont:"eu",f:"red",t:"city",x:507,y:144,rad:1,dang:5,pop:"中型",desc:"被红色联盟占领的旧都。埃菲尔铁塔上挂着红旗，地下室里全是抵抗组织。",mods:{food:1.3,med:1.2,weapon:.95,junk:.8},places:["market","tavern","board","camp","wander"],npcs:["jeanpaul"]},
+  ber:{n:"柏林废墟",reg:"中欧",cont:"eu",f:"wild",t:"ruin",x:537,y:130,rad:2,dang:6,pop:"混乱",desc:"战争从这堵墙开始，也把这里炸成两半。双方巡逻队在断墙间对峙，走私客在废墟里穿行。",mods:{food:1.5,med:1.4,weapon:.9,junk:.7},places:["market","tavern","board","camp","wander","ruin"],npcs:["hoffmann","ivan","lena"]},
+  wsw:{n:"华沙",reg:"东欧",cont:"eu",f:"red",t:"city",x:558,y:131,rad:0,dang:4,pop:"中型",desc:"红色联盟治下的城市，宵禁、检查站、配给票。地下室的油印报纸从没停过。",mods:{food:1.2,med:1.2,weapon:1,junk:.9},places:["market","tavern","board","camp","wander"],npcs:["mikhail","anna"]},
+  mos:{n:"莫斯科",reg:"东欧",cont:"eu",f:"red",t:"base",x:604,y:117,rad:2,dang:6,pop:"大型",desc:"红色联盟的心脏，也是最危险的地方。内务部在这里嗅每一口空气。",mods:{food:1.4,med:1.2,weapon:.9,junk:.8},places:["market","tavern","board","camp","wander","base"],npcs:["yuri","nadia","kolya"]},
+  len:{n:"列宁格勒",reg:"东欧",cont:"eu",f:"red",t:"city",x:584,y:100,rad:1,dang:4,pop:"中型",desc:"北方军港，冬宫里堆着配给粮。港口的暗流比波罗的海还深。",mods:{food:1.1,med:1.1,weapon:1.05,junk:.9},places:["market","tavern","board","camp","wander"],npcs:["tanya"]},
+  kiv:{n:"基辅",reg:"东欧",cont:"eu",f:"red",t:"city",x:585,y:138,rad:1,dang:4,pop:"中型",desc:"红色联盟的粮仓，田野里还埋着地雷。农庄主会看人下菜。",mods:{food:.85,med:1.15,weapon:1.1,junk:1},places:["market","tavern","board","camp","wander"],npcs:["sergei","oksana"]},
+  sto:{n:"斯德哥尔摩",reg:"北欧",cont:"eu",f:"neu",t:"city",x:550,y:103,rad:0,dang:1,pop:"中型",desc:"北欧的中立港口，银行还开着。有钱人都往这里跑。",mods:{food:1.15,med:.9,weapon:1.2,junk:.95},places:["market","clinic","board","camp","wander"],npcs:["kurt"]},
+  gen:{n:"日内瓦",reg:"中欧",cont:"eu",f:"neu",t:"city",x:517,y:155,rad:0,dang:1,pop:"中型",desc:"停火谈判的地方，各国使团、间谍和记者挤满旅馆。国际组织大楼戒备森严。",mods:{food:1.1,med:1,weapon:1.15,junk:1},places:["market","tavern","clinic","board","camp","wander"],npcs:["sister","leo","zhang"]},
+  rom:{n:"罗马",reg:"南欧",cont:"eu",f:"neu",t:"city",x:535,y:172,rad:0,dang:1,pop:"中型",desc:"圣城周边划为中立区，神父和军火商共用一条街。",mods:{food:1.05,med:.9,weapon:1.15,junk:1},places:["market","clinic","board","camp","wander"],npcs:["padre"]},
+  ist:{n:"伊斯坦布尔",reg:"中东",cont:"eu",f:"neu",t:"city",x:581,y:176,rad:0,dang:2,pop:"中型",desc:"欧亚十字路口，黑市、客栈、情报贩子，什么都过境。",mods:{food:1,med:1.1,weapon:.9,junk:1.1},places:["market","tavern","board","camp","wander"],npcs:["bey"]},
+  // ---- 非洲 ----
+  cai:{n:"开罗",reg:"北非",cont:"af",f:"neu",t:"city",x:587,y:220,rad:0,dang:2,pop:"中型",desc:"北非商栈，石油和黄金从苏伊士绕过战火流动。",mods:{food:.95,med:1.05,weapon:.95,junk:1.05},places:["market","tavern","board","camp","wander"],npcs:["fatima"]},
+  dxb:{n:"迪拜",reg:"中东",cont:"as",f:"mer",t:"port",x:633,y:242,rad:0,dang:2,pop:"中型",desc:"中立商会的自由港。油轮改成货轮，货轮改成赌船，只要肯付钱。",mods:{food:1,med:.95,weapon:1,junk:1.15},places:["market","tavern","board","camp","wander"],npcs:[]},
+  jnb:{n:"约翰内斯堡",reg:"南非",cont:"af",f:"wild",t:"city",x:573,y:368,rad:0,dang:4,pop:"混乱",desc:"金矿塌了，军阀却挖得更深。地下的避难所比地上安全。",mods:{food:1.3,med:1.3,weapon:1,junk:.8},places:["market","tavern","board","camp","wander","ruin"],npcs:[]},
+  // ---- 亚洲 ----
+  bj:{n:"北京",reg:"东亚",cont:"as",f:"neu",t:"city",x:823,y:180,rad:0,dang:1,pop:"大型",desc:"中立观察区。街面秩序还在，各国观察员常驻，商旅往来不绝。",mods:{food:.8,med:.9,weapon:1.1,junk:1},places:["market","tavern","clinic","board","camp","wander"],npcs:[]},
+  tyo:{n:"东京",reg:"东亚",cont:"as",f:"neu",t:"city",x:888,y:197,rad:0,dang:1,pop:"大型",desc:"亚太中立枢纽，黑市比股市繁荣。美元、卢布和旧日元在这里都能用。",mods:{food:.9,med:1,weapon:1.05,junk:1},places:["market","tavern","clinic","board","camp","wander"],npcs:["tanaka"]},
+  sin:{n:"新加坡",reg:"东南亚",cont:"as",f:"neu",t:"port",x:788,y:334,rad:0,dang:2,pop:"中型",desc:"马六甲的中立自由港，全世界的船都往这里靠。",mods:{food:.95,med:.95,weapon:1,junk:1.1},places:["market","tavern","board","camp","wander"],npcs:["blue"]},
+  del:{n:"新德里",reg:"南亚",cont:"as",f:"neu",t:"city",x:714,y:226,rad:0,dang:2,pop:"中型",desc:"南亚的难民中转站，药品在这里比黄金值钱。",mods:{food:.9,med:.7,weapon:1.25,junk:1},places:["market","clinic","board","camp","wander"],npcs:["anil"]},
+  nvb:{n:"新西伯利亚",reg:"西伯利亚",cont:"as",f:"red",t:"ruin",x:731,y:120,rad:2,dang:7,pop:"极少",desc:"西伯利亚铁路上的死城。严寒、辐射和“造物主设施”的传闻，让这里人人自危。",mods:{food:1.8,med:1.6,weapon:1,junk:.7},places:["market","board","camp","wander","ruin"],npcs:["volkov"]},
+  vla:{n:"海参崴",reg:"远东",cont:"as",f:"red",t:"port",x:866,y:168,rad:0,dang:3,pop:"中型",desc:"红色联盟太平洋舰队母港，走私船和军舰共用一条水道。",mods:{food:1.1,med:1.2,weapon:.95,junk:.9},places:["market","tavern","board","camp","wander"],npcs:["dima"]},
+  // ---- 大洋洲 ----
+  syd:{n:"悉尼",reg:"大洋洲",cont:"oc",f:"neu",t:"city",x:920,y:475,rad:0,dang:1,pop:"中型",desc:"南太平洋的世外桃源，新闻和军火一样滞后三个月。",mods:{food:1.1,med:1,weapon:1.2,junk:.9},places:["market","clinic","board","camp","wander"],npcs:["ruby"]},
+  // ---- 极地 ----
+  gl:{n:"格陵兰雷达站",reg:"极地",cont:"am",f:"neu",t:"outpost",x:389,y:60,rad:0,dang:3,pop:"极少",desc:"废弃的预警雷达站，偶尔有人收到不该收到的信号。",mods:{food:1.6,med:1.5,weapon:1.1,junk:.8},places:["market","board","camp","wander","ruin"],npcs:["oleg"]}
+};
+
+// 旅行事件
+HB.travelEvents = [
+  {id:"radstorm",title:"辐射尘风暴",text:"天边卷来一层灰绿色的云。辐射尘顺着风刮过来了。",choices:[
+    {t:"戴上防毒面具找掩体",fx:{rad:+8,hp:-4,days:1}},
+    {t:"硬着头皮赶路",fx:{rad:+20,hp:-10,days:0}},
+    {t:"就近找个地窖躲两天",fx:{rad:+3,days:2}}]},
+  {id:"ambush",title:"伏击",text:"路边的弹坑里跳出几个拿枪的影子。",choices:[
+    {t:"交火",combat:"bandit"},
+    {t:"丢下一些物资换条命",fx:{items_take:{scrap:2,can_food:1},days:0}},
+    {t:"绕路避开",fx:{days:1}}]},
+  {id:"refugees",title:"难民队伍",text:"一队拖家带口的难民拦在路上，领头的女人问你要一口吃的。",choices:[
+    {t:"分他们一份口粮",fx:{items_take:{bread:1},mor:6,rep:{mer:2}}},
+    {t:"给点钱让他们去城里",fx:{money:-30,mor:4}},
+    {t:"当作没看见",fx:{mor:-4}}]},
+  {id:"checkpoint",title:"军事检查站",text:"前方立着拒马和沙袋，士兵在盘查每一个过路人。",choices:[
+    {t:"递上证件（如有）",need:"pass",fx:{rep:{fed:1,red:1}}},
+    {t:"塞钱买路",fx:{money:-40}},
+    {t:"偷偷绕行",fx:{days:1,rad:+3}},
+    {t:"硬闯",combat:"patrol"}]},
+  {id:"cache",title:"废弃车队",text:"路边趴着一辆翻倒的军用卡车，货厢半开着。",choices:[
+    {t:"搜刮一番",fx:{items_give:{scrap:3,can_food:2},rad:+4}},
+    {t:"小心检查（可能埋雷）",fx:{rad:+2,hp:-6,items_give:{scrap:2}}},
+    {t:"不碰，走人",fx:{}}]},
+  {id:"storm",title:"暴雨",text:"铅灰色的暴雨把路变成泥浆河。",choices:[
+    {t:"冒雨赶路",fx:{thirst:8,energy:-10,days:0}},
+    {t:"扎营等雨停",fx:{days:1,energy:10}}]},
+  {id:"radio",title:"截获电台信号",text:"短波里飘出一段杂音，断断续续的，像是坐标。",choices:[
+    {t:"记下来",fx:{info:"有人用旧频率广播坐标，方向像西伯利亚。",rep:{neu:1}}},
+    {t:"关掉，继续赶路",fx:{}}]},
+  {id:"trader",title:"独行商人",text:"一个推着推车的商人和你同行了一程。",choices:[
+    {t:"同行聊天",fx:{info:"他说：日内瓦那边有人在出高价收战前的数据盘。",mor:4}},
+    {t:"买他的货",fx:{shop:"random"}},
+    {t:"各走各路",fx:{}}]},
+  {id:"animal",title:"野兽袭击",text:"灌木丛里传来低吼，一双发亮的眼睛正盯着你。",choices:[
+    {t:"迎战",combat:"hound"},
+    {t:"爬上高处躲避",fx:{days:1,hp:-3}}]},
+  {id:"minefield",title:"雷区",text:"铁丝网上挂着褪色的警告牌：地雷区，勿入。",choices:[
+    {t:"小心绕行",fx:{days:2}},
+    {t:"沿着车辙印走",fx:{hp:-8,days:0}},
+    {t:"原路折返",fx:{days:1}}]},
+  {id:"militia",title:"本地民兵",text:"几个穿猎装的本地人端着枪问你是哪一边的。",choices:[
+    {t:"报上中立商会名号",fx:{rep:{mer:1}}},
+    {t:"亮出枪来",fx:{rep:{wild:1},mor:3}},
+    {t:"解释自己的身份",fx:{rep:{fed:1,red:1}}}]},
+  {id:"corpse",title:"无名尸体",text:"路边有一具尸体，军装，胸口别着编号牌。",choices:[
+    {t:"搜一搜",fx:{items_give:{scrap:2,ammo_pistol:4},mor:-3}},
+    {t:"埋了他",fx:{mor:5,rep:{mer:1}}},
+    {t:"别碰，赶路",fx:{}}]}
+];
+
+// 野外探索事件
+HB.wanderEvents = [
+  {id:"hunt",title:"打猎",text:"林子深处有动静——是猎物，也可能是别的。",choices:[
+    {t:"打猎（需要武器）",need:"weapon",fx:{items_give:{meat:2},energy:-12}},
+    {t:"采点野菜",fx:{items_give:{herb_tea:1},thirst:-4}},
+    {t:"空手而归",fx:{}}]},
+  {id:"ruin_explore",title:"废墟搜寻",text:"一栋半塌的楼，里面或许有物资。",choices:[
+    {t:"进去搜",fx:{items_give:{scrap:2,cloth:1,circuit:1},rad:+6,hp:-4}},
+    {t:"只在外围翻翻",fx:{items_give:{scrap:1},rad:+2}},
+    {t:"不冒这个险",fx:{}}]},
+  {id:"mystery_man",title:"兜帽旅人",text:"一个穿旧风衣的人站在路口，兜帽压得很低。",choices:[
+    {t:"上前搭话",fx:{info:"他没说自己是谁，只说了句：往东走，别停。",mor:2}},
+    {t:"保持距离",fx:{}}]},
+  {id:"farm",title:"荒田",text:"一片没被炸过的田地，庄稼半死不活。",choices:[
+    {t:"偷偷摘点",fx:{items_give:{bread:2},rep:{fed:-1}}},
+    {t:"看看有没有人看管",fx:{items_give:{bread:1},days:1}}]},
+  {id:"well",title:"旧水井",text:"一口老井，水面还看得见。",choices:[
+    {t:"打水（有滤芯就过滤）",fx:{items_give:{water:1},rad:+2}},
+    {t:"直接喝",fx:{thirst:15,rad:+8,hp:-3}},
+    {t:"算了",fx:{}}]},
+  {id:"gamble",title:"野赌局",text:"几个流民围着掷骰子，赢得起也输得起。",choices:[
+    {t:"押 50",fx:{money:-50,gamble:50}},
+    {t:"押 10",fx:{money:-10,gamble:10}},
+    {t:"围观",fx:{mor:2}}]},
+  {id:"found_hidden",title:"地窖入口",text:"草丛里露出一扇半掩的地窖门。",choices:[
+    {t:"下去看看",fx:{items_give:{whiskey:1,bread:1},rad:+4,hp:-5}},
+    {t:"记下位置离开",fx:{}}]},
+  {id:"ambush_w",title:"流匪",text:"树丛里冲出两个抢东西的。",choices:[
+    {t:"交火",combat:"bandit"},
+    {t:"给钱",fx:{money:-50}},
+    {t:"跑",fx:{energy:-15,hp:-5}}]},
+  {id:"sick",title:"病倒的旅人",text:"一个发烧的人躺在路边，烧得说胡话。",choices:[
+    {t:"喂药（如有抗生素）",need:"antibiotic",fx:{items_take:{antibiotic:1},mor:8,rep:{mer:2}}},
+    {t:"留点水",fx:{items_take:{water:1},mor:3}},
+    {t:"绕开",fx:{mor:-3}}]},
+  {id:"bird",title:"奇怪的鸟群",text:"一大群乌鸦在远处的山脊上盘旋，久久不落。",choices:[
+    {t:"过去看看",fx:{rad:+3,items_give:{scrap:1},info:"山脊下有一片焦黑的营地，不像战争留下的。"}},
+    {t:"别去管它",fx:{}}]},
+  {id:"campfire",title:"篝火",text:"一个废弃的营地，火还没灭。",choices:[
+    {t:"添柴烤火过夜",fx:{energy:20,mor:4,thirst:-5}},
+    {t:"搜营地",fx:{items_give:{cloth:1,scrap:1},rad:+2}},
+    {t:"继续走",fx:{}}]},
+  {id:"deer",title:"受伤的鹿",text:"一头母鹿倒在溪边，前腿断了。",choices:[
+    {t:"了结它，带肉走",fx:{items_give:{meat:2},mor:-2}},
+    {t:"包扎放走",fx:{mor:6}},
+    {t:"静静走开",fx:{}}]},
+  {id:"hostiles",title:"武装分子",text:"一队武装分子拦住去路，枪口朝你这边偏了偏。",choices:[
+    {t:"交火",combat:"_node"},
+    {t:"绕路避开",fx:{days:1}},
+    {t:"塞钱买路",fx:{money:-60}}]},
+  {id:"rats",title:"变异鼠群",text:"垃圾堆里窜出一群拳头大的老鼠，眼睛是红的。",choices:[
+    {t:"交火",combat:"rat"},
+    {t:"跑",fx:{hp:-4}}]}
+];
+
+// 世界电台新闻（每周广播）
+HB.newsPool = [
+  {cond:"default",text:"【联邦广播】重建委员会宣布：横跨大西洋的航运线将于春季恢复。商人们持保留态度。"},
+  {cond:"default",text:"【红色广播】内务部发言人驳斥“饥荒”传闻，称配给制“运转良好”。列宁格勒港工人连续第三日罢工。"},
+  {cond:"default",text:"【中立电台】日内瓦消息：双方停火委员会就交换战俘达成初步意向，细节尚在拉锯。"},
+  {cond:"default",text:"【黑市行情】罐头在柏林黑市涨到 40 军票，比上周高出一半。有人在囤积净水滤芯。"},
+  {cond:"default",text:"【联邦广播】芝加哥铁路遇袭事件调查中，军方指责“红军渗透小组”。民间传闻另有其人。"},
+  {cond:"default",text:"【中立电台】一支国际医疗队在基辅郊区遭劫，药品被抢。红十字会呼吁设立安全通道。"},
+  {cond:"default",text:"【红色广播】西伯利亚铁路西段恢复通车。沿线城镇报告多起失踪事件，官方未予置评。"},
+  {cond:"default",text:"【联邦广播】西海岸报告不明船队活动。海军发言人：例行巡逻。"},
+  {cond:"default",text:"【中立电台】东京黑市出现一批来源不明的战前军粮，包装完好，日期新鲜得可疑。"},
+  {cond:"default",text:"【联邦广播】华盛顿消息：国会通过《重建复兴法案》，授权征用“一切必要资源”。"},
+  {cond:"default",text:"【红色广播】莫斯科宣布新一轮“纯洁行动”，清查窝藏西方物品的家庭。举报有奖。"},
+  {cond:"default",text:"【中立电台】斯德哥尔摩的银行家们正在为“战后币值重估”开会，会期保密。"},
+  {cond:"story2",text:"【传闻】柏林废墟里有人高价收购“战前数据盘”。出价的人穿着没番号的制服。"},
+  {cond:"story3",text:"【传闻】东欧几座孤儿院被军队接管，孩子们去向不明。教会在施压。"},
+  {cond:"story4",text:"【传闻】莫斯科郊外一所“寄宿学校”已关闭，档案被连夜运走。环卫工说见过军车拉走一车孩子。"},
+  {cond:"story6",text:"【传闻】华盛顿有高级军官私下说：停火撑不到明年春天。被问急了就闭嘴。"},
+  {cond:"story8",text:"【传闻】日内瓦重建委员会大楼顶层常年拉窗帘，换防的卫兵越来越多。"},
+  {cond:"story10",text:"【传闻】有人在西伯利亚的雪原上看到一列不挂牌的军列，往北开，车窗全蒙着。"},
+  {cond:"story12",text:"【电文】南极方向出现不明频率信号。民间电台转播了 12 秒，随后静默。"}
+];
+
+HB.origins = [
+  {id:"soldier",n:"战争遗孤",d:"你父亲是战前某项目工程师，母亲死在柏林大撤退。",fx:{combat:5,hp:5}},
+  {id:"medic",n:"诊所学徒",d:"你在瑞士孤儿院的诊所帮过三年工。",fx:{medical:8}},
+  {id:"street",n:"街头少年",d:"你在黑市长大，知道怎么讨价还价。",fx:{charisma:8,survival:2}},
+  {id:"scout",n:"送货信使",d:"你替商会跑过半年腿，路熟，人也熟。",fx:{survival:6,charisma:3}}
+];
+
+</script>
+<script>
+// ===== HanBer ONE · 数据：NPC / 支线任务 =====
+window.HB = window.HB || {};
+
+HB.npcs = {
+  // --- 日内瓦 ---
+  sister:{n:"玛丽亚修女",node:"gen",f:"neu",title:"孤儿院院长",d:"在日内瓦郊外收留战争孤儿的修女。她是你成年之前最后的“家人”。",topics:{
+    hello:"你来了。今天是你的成人日，我的孩子。你母亲把你托付给我的时候，你才这么点大。",
+    self:"那一年柏林大撤退，你的母亲把你和妹妹托上车，自己却没能上来。你在孤儿院长大，妹妹贝拉……在混乱中失散了。我们找了六年。",
+    rumor:"有一位常来教堂的先生，总在打听“韩家兄妹”。他说他认识你父亲。我劝你小心。",
+    farewell:"孩子，不管你要走哪条路，记住：活下去，才谈得上别的。"}},
+  leo:{n:"利奥",node:"gen",f:"mer",title:"集市商人",d:"日内瓦集市的老油条，什么都能弄到，只要你付得起。",topics:{
+    hello:"新面孔。是逃难的还是做买卖的？在日内瓦，这两件事常常是一件事。",
+    self:"战前我在苏黎世做钟表生意。现在？钟表没人要，罐头才是硬通货。",
+    rumor:"听说重建委员会在收战前的加密数据设备，出价很高，但我劝你别碰那门生意。",
+    farewell:"买卖平安。"},trade:["bread","water","can_food","bandage","scrap","ammo_pistol"]},
+  // --- 柏林 ---
+  hoffmann:{n:"汉斯·霍夫曼",node:"ber",f:"mer",title:"商队首领",d:"柏林废墟里最有名的商队头领，战前是西德陆军士官。一条腿是假肢。",companion:true,topics:{
+    hello:"小子，废墟里眼神别太野。要过死亡地带，跟着我的商队走。",
+    self:"1985 年我在波茨坦守桥，一颗炮弹把半条街送上天，也把我这条腿留在了那里。现在？我送货，谁给钱送谁的货。",
+    rumor:"东边最近在查“文件贩子”。有人为一张磁盘杀人，杀到柏林来了。",
+    farewell:"商队天亮出发。想走，就跟着。"}},
+  ivan:{n:"伊万·彼得罗夫",node:"ber",f:"red",title:"走私商",d:"从莫斯科一路走私到柏林的地下商人，笑得很假，眼睛很尖。",topics:{
+    hello:"你好，朋友。伊万什么都能弄到——也什么都能替你弄丢。",
+    self:"战争？那只是运费贵了点。我的货从莫斯科运到这里，穿过三条战线，比你们将军的通行证都好使。",
+    rumor:"你打听“特别运送”？那不是货，是人。劝你别打听。",
+    farewell:"合作愉快，朋友。愉快最重要。"}},
+  lena:{n:"莱娜",node:"ber",f:"wild",title:"断墙酒馆老板娘",d:"在柏林废墟开了全城唯一一家有热酒的馆子。情报比酒贵。",topics:{
+    hello:"找个角落坐。第一杯算我的——活着到柏林的人都值得一杯。",
+    self:"战前我丈夫在弗里德里希大街开咖啡馆。现在？咖啡馆塌了，我开了这家。酒是自己酿的，别问原料。",
+    rumor:"这礼拜有三个生面孔在打听“造物主”三个字，说完就走了。我认得出那种人——身上有硝烟味。",
+    farewell:"下次来带点真酒。"}},
+  // --- 华沙 ---
+  mikhail:{n:"米哈伊尔·索科洛夫",node:"wsw",f:"red",title:"孤儿院院长",d:"华沙老城区孤儿院的院长，戴着圆框眼镜，说话很慢。",topics:{
+    hello:"孩子，你是来找人的，还是来送东西的？",
+    self:"这所孤儿院战前是小学。战争之后，它装下了一百多个孩子——和他们的噩梦。",
+    rumor:"去年冬天，有一批孩子被“特别运送”接走，说是去基辅的疗养院。疗养院？呵。我记得一个叫贝拉的女孩，她特别安静，总抱着一个挂坠。",
+    farewell:"主保佑你。"}},
+  anna:{n:"安娜",node:"wsw",f:"red",title:"地下印报员",d:"白天是印刷厂女工，晚上油印《自由华沙》报。",topics:{
+    hello:"嘘——进来说话。你是商人还是学生？",
+    self:"我印的报纸上只有真话，所以只能晚上印。真话在哪个时代都要躲着走。",
+    rumor:"红军往西伯利亚方向运了几批“物资”，车厢是全封闭的。我的人记下了车次，三列了。",
+    farewell:"别把我写进你的报告里。"}},
+  // --- 基辅 ---
+  sergei:{n:"谢尔盖·沃洛金",node:"kiv",f:"red",title:"红军叛逃军官",d:"前红军总参档案处的上尉。他给过你一份档案，也把自己的命押上了。",companion:true,topics:{
+    hello:"你来了。我盯着火车站看了三天，就怕看到内务部的车。",
+    self:"我在档案处干了四年，整理“特别运送”的卷宗。那四年里我学会了一件事：这个国家的档案里，没有一件是小事。",
+    rumor:"“造物主计划”不是传闻，是卷宗编号。我见过那个编号一次，第二天那位同事就“病退”了。",
+    farewell:"小心点。莫斯科的空气会杀人。"}},
+  oksana:{n:"奥克萨娜",node:"kiv",f:"red",title:"农庄主",d:"基辅郊外农庄的女主人，种的黑麦能喂饱半个城。",topics:{
+    hello:"要粮食？先说你是哪个阵营的，再说价格。",
+    self:"田里还有地雷，我照种。人不种地，地就不养人，就这么简单。",
+    rumor:"军队最近征走了不少拖拉机，说是“春耕支援”。拖拉机进了军事基地，你信吗？",
+    farewell:"路上小心，夜里有人摸田。"}},
+  // --- 莫斯科 ---
+  yuri:{n:"尤里·安德列夫",node:"mos",f:"red",title:"黎明组织领袖",d:"莫斯科地下的抵抗网络头目。白天是电车厂钳工，晚上管着半座城的地下室。",topics:{
+    hello:"跟着巷子里的白线走来的？不错，你还活着。",
+    self:"“黎明”不是什么大事业——我们只是想在这座城重新亮起来之前，别让人把它彻底拆了。",
+    rumor:"你要找的“寄宿学校”在城北，三个月前关的。孩子们被连夜送上火车，车次 107。记住这个数字。",
+    farewell:"黎明前最黑，别死在最黑的时候。"}},
+  nadia:{n:"娜迪亚",node:"mos",f:"mer",title:"黑市商人",d:"莫斯科黑市的供货人，能搞到带红星戳的罐头和带自由女神戳的药。",topics:{
+    hello:"莫斯科的黑市只认一样东西：胆量。你有吗？",
+    self:"红军的军用配给，商会的船货，我都有门路。别问来路，问就是缴获。",
+    rumor:"内务部最近在抓“档案鼠”——偷文件的。黑市上战前档案的价格翻了三倍。",
+    farewell:"下次来从后巷进。"},trade:["water","can_food","radaway","antibiotic","scrap","circuit","whiskey"]},
+  kolya:{n:"科利亚",node:"mos",f:"red",title:"少年信使",d:"十二岁，跑得快，胆子大，什么巷子都钻得进。",topics:{
+    hello:"你是尤里叔叔的朋友？那你可以叫我科利亚。",
+    self:"我给城里送信，一封 5 军票，加急 10。大人们不敢走的路，我敢。",
+    rumor:"火车站的人说，往西伯利亚的军列装的是“会哭的货”。我没听懂，但大人们听完都不说话了。",
+    farewell:"再见，好心人。下次我给你捎好吃的。"}},
+  // --- 列宁格勒 ---
+  tanya:{n:"塔尼娅",node:"len",f:"mer",title:"港口女商",d:"列宁格勒港的报关员，明面上报棉纱，暗地里什么都报。",topics:{
+    hello:"港口的规矩：先付定金，再谈货。",
+    self:"波罗的海冻了大半，但生意冻不了。红军的军需官也得吃饭，对吧？",
+    rumor:"有一份莫斯科发来的“转运单”在市面上流出，收件地址是西伯利亚某设施。我见过一眼——名单上全是小孩的名字。",
+    farewell:"风向要变了，记得收帆。"},trade:["water","bread","whiskey","scrap","wire","filter"]},
+  // --- 巴黎 ---
+  jeanpaul:{n:"让-保罗",node:"par",f:"red",title:"抵抗组织联络员",d:"巴黎地下抵抗组织的联络员，白天在面包房烤面包，晚上烤情报。",topics:{
+    hello:"Bonsoir。你长得不像这里的占领军，也不是本地人。有意思。",
+    self:"我们做的事很简单：让巴黎别变成莫斯科的一个区。为此我们什么都愿意做。",
+    rumor:"占领军的运输队每隔一周往东送一次“特殊物资”。铁皮箱子，焊死的。最近一次是三天前。",
+    farewell:"自由是有代价的，朋友。很贵的代价。"}},
+  // --- 伦敦 ---
+  ada:{n:"艾达·福斯特",node:"lon",f:"fed",title:"电台主持人",d:"伦敦广播电台的金牌主持人。声音温柔，问的问题一针见血。",topics:{
+    hello:"欢迎收听伦敦广播。今天有什么想对全世界说的吗？",
+    self:"战争把新闻变成了商品，把主持人变成了间谍。我两样都干，而且干得不错。",
+    rumor:"华盛顿最近有个“特别委员会”，开会的人进进出出，从不接受采访。他们说那是重建委员会的分支。我不信。",
+    farewell:"电波里见。"}},
+  winston:{n:"温斯顿",node:"lon",f:"fed",title:"老兵酒保",d:"伦敦老酒馆的老板，诺曼底登陆的老兵。",topics:{
+    hello:"小子，喝什么？先说好，这里不谈政治——除非你请客。",
+    self:"44 年我在诺曼底，85 年我在易北河，两次都是踩着泥上来的。我这辈子就学会一件事：活着回来。",
+    rumor:"军部最近半夜总有车队进出，走的还是防核掩体的道。老头子我闻得出来——要出大事了。",
+    farewell:"干杯。"}},
+  // --- 华盛顿 ---
+  mason:{n:"梅森·科尔",node:"wdc",f:"fed",title:"联邦情报官",d:"自由联邦情报局的中校，说话滴水不漏，眼神比语言诚实。",topics:{
+    hello:"韩先生。或者……我应该叫你“文件里那个名字”。",
+    self:"我是联邦情报部欧洲处的中校。你的数据盘，你的妹妹，还有那个叫“海啸”的东西——我都知道。",
+    rumor:"别急着信我，也别急着恨我。这局棋里，棋子越干净，死得越快。",
+    farewell:"我们需要谈谈。私下。"}},
+  helena:{n:"海伦娜·卡特",node:"wdc",f:"fed",title:"联邦军中尉",d:"联邦军宪兵部中尉，接到的命令是“全程监护”你——但她有自己的命令来源。",companion:true,topics:{
+    hello:"别紧张。我的命令是监护你，不是押送你——暂时。",
+    self:"我在芝加哥前线待过，见过最坏的人，也见过最好的人。你身上那股劲儿，像我在废墟里认识的另一种人。",
+    rumor:"军部里有人把你写进了一份“处置清单”。谁写的，我不能说。但我建议你出门带着枪。",
+    farewell:"我跟着你。不是命令，是我自己选的。"}},
+  // --- 芝加哥 ---
+  thomas:{n:"老托马斯",node:"chi",f:"fed",title:"粮食商人",d:"芝加哥最大的粮食批发商，战前是期货操盘手，现在操盘的是人命。",topics:{
+    hello:"韩先生，久仰。你在柏林的事，芝加哥消息灵通的人都知道。",
+    self:"我做粮食。粮食这东西，在和平年代是生意，在战争年代是武器，在战后是神。",
+    rumor:"军阀的资金最近不对劲——他们的军火是从“某个基金会”买的，付款账户开在日内瓦。基金会？呵。",
+    farewell:"生意归生意，命归命。别混。"},trade:["bread","can_food","dried_food","water","soup","coffee"]},
+  ray:{n:"雷",node:"chi",f:"fed",title:"民兵队长",d:"芝加哥东区民兵队长，白天修铁路，晚上巡街。",topics:{
+    hello:"外来的？芝加哥讲规矩：别惹事，别信嘴，别欠钱。",
+    self:"民兵是我们自己的武装，联邦军太远，土匪太近。",
+    rumor:"仓库那边闹鼠患，变异的那种，大得像狗。市政不管，我管。",
+    farewell:"有事到铁轨尽头找我。"}},
+  // --- 休斯顿 ---
+  jack:{n:"杰克·罗林斯",node:"hou",f:"fed",title:"佣兵头子",d:"休斯顿佣兵公司的老板，纹着半个退役部队的臂章。",topics:{
+    hello:"要雇人？先说价钱，再说活儿，最后说风险。",
+    self:"我在阿富汗、波斯湾都打过仗。现在？谁出钱，我替谁摆平麻烦。这是职业。",
+    rumor:"西海岸那边有一支“失踪”的巡逻队，联邦军找了一个月没找到。要是我的人去，三天就能给你答案——当然，要加钱。",
+    farewell:"有活儿，来找我。"}},
+  // --- 西雅图 ---
+  rose:{n:"罗丝·陈",node:"sea",f:"fed",title:"工程师",d:"西雅图船坞的总工程师，战前造潜艇，战后修水泵。",topics:{
+    hello:"你是来修东西的，还是来拆东西的？",
+    self:"我修得了船，也修得了净化水站。西雅图能活到今天，一半靠运气，一半靠零件。",
+    rumor:"港务局收到过一段怪信号，频率是战前的军用波段。信号源在北极圈方向，我复现不了。",
+    farewell:"省着点用零件。"}},
+  // --- 纽约 ---
+  frankie:{n:"弗兰基",node:"nyc",f:"wild",title:"拾荒者",d:"纽约废墟里的拾荒老手，知道哪条街还能翻出宝贝。",topics:{
+    hello:"纽约不欢迎生人。除非你带烟、带酒、或者带胆量。",
+    self:"曼哈顿中城我闭着眼都能走。值钱的东西早被扒光了，剩下的，得用命去换。",
+    rumor:"“长老”的部落占着中央公园南边，他们不收外人，但收废料。辐射让他们脑子坏了，也让他们鼻子灵了。",
+    farewell:"小心头顶的楼板。"}},
+  elder:{n:"变异人长老",node:"nyc",f:"wild",title:"“骨灰”部落首领",d:"中央公园里的变异人部落首领，喉咙坏了大半，说话像漏风的管子。",topics:{
+    hello:"呜……外来者。我们闻到你身上有南边的味道。",
+    self:"我们以前也是“正常”的，像你一样。辐射把我们变成了别的。但地底下的东西，我们知道得比你们都多。",
+    rumor:"地底下有铁门，门上有字，我们看不懂。每隔几个月，门那边会传来轰鸣。",
+    farewell:"别死在上面。下面比上面安全。"}},
+  // --- 洛杉矶 ---
+  nia:{n:"尼亚·门多萨",node:"la",f:"wild",title:"流浪医生",d:"洛杉矶唯一的正经医生，军阀也给她几分面子——因为军阀也会生病。",topics:{
+    hello:"坐下，伸手。你这个脸色，三天没睡好。",
+    self:"我在南加大医学院念了五年，毕业典礼那天核弹响了。现在我的“医院”是辆救护车。",
+    rumor:"卡洛斯最近在谈一笔大生意，对方从东边来，穿西装。军阀谈生意穿西装，这事不对劲。",
+    farewell:"少打架，多睡觉。"}},
+  carlos:{n:"卡洛斯·莫拉莱斯",node:"la",f:"wild",title:"洛杉矶军阀",d:"西海岸最大的军阀，地盘从圣莫尼卡到长滩。",topics:{
+    hello:"哈，联邦的走狗，还是商会的驴子？无所谓，来我地盘，按我的规矩。",
+    self:"战前我只是个卡车司机。现在？我有一座城。这叫乱世出英雄，小姐和先生。",
+    rumor:"我背后有人出钱——别打听是谁，你只需要知道，他们钱多得能买下整个加利福尼亚的废铁。",
+    farewell:"别死在我的地盘上，晦气。"}},
+  // --- 墨西哥城 ---
+  miguel:{n:"米格尔",node:"mex",f:"wild",title:"走私头目",d:"墨西哥城的走私网络头目，边境两边都有他的人。",topics:{
+    hello:"过境生意，找我。联邦的墙，红军的枪，都拦不住我的车队。",
+    self:"我的货从南美上来，往北走。罐头、药品、弹药、人。在墨西哥城，一切都是货物。",
+    rumor:"有支车队往东边送了三个“箱子”回来，空的。运费是平时的三倍。谁付的？日内瓦的银行家。",
+    farewell:"生意，生意。"}},
+  // --- 多伦多 ---
+  sarah:{n:"莎拉",node:"tor",f:"neu",title:"难民救助站站长",d:"多伦多难民救助站的站长，每天经手上千张逃难的脸。",topics:{
+    hello:"欢迎。无论你从哪里来，这里有一张床和一碗汤。",
+    self:"每天都有从边境过来的难民，鞋都走烂了。战争不结束，这张床就永远不够。",
+    rumor:"华盛顿那边在搞“安置计划”，说是给难民，其实挑的都是年轻人。我有不好的预感。",
+    farewell:"愿你别再需要这里的床。"}},
+  // --- 斯德哥尔摩 ---
+  kurt:{n:"库尔特·伯格曼",node:"sto",f:"neu",title:"船王",d:"斯德哥尔摩航运巨头的当家人，船队挂着八国国旗。",topics:{
+    hello:"坐。威士忌？我这儿的威士忌比你岁数大。",
+    self:"战争对我唯一的影响，是运费翻了四倍。当然，风险也翻了四倍——所以我只运最值钱的东西。",
+    rumor:"我的船长在北太平洋见到过一艘不点灯的船，吃水很深，没有国旗。船速像是要去格陵兰。",
+    farewell:"风浪大，掌好舵。"}},
+  // --- 罗马 ---
+  padre:{n:"皮奥神父",node:"rom",f:"neu",title:"圣所神父",d:"罗马中立区的老神父，见惯了忏悔，也见惯了交易。",topics:{
+    hello:"孩子，进来坐。主不赶人，我也不赶。",
+    self:"五十年来我听过太多秘密。有将军的，有间谍的，有母亲的。它们在我这里，都比忏悔更沉。",
+    rumor:"有一群“商人”常来圣所对面开会，从不用教会的语言交谈。他们谈“孩子”和“钥匙”。我不喜欢这个话题。",
+    farewell:"愿你的路有灯。"}},
+  // --- 开罗 ---
+  fatima:{n:"法蒂玛",node:"cai",f:"mer",title:"商栈主",d:"开罗老商栈的掌柜，祖传四代的生意。",topics:{
+    hello:"茶？先喝茶，再谈生意。沙漠的规矩。",
+    self:"我的商栈从祖父手里传下来。那时运丝绸，现在运罐头。货物在变，商道不变。",
+    rumor:"苏伊士那边有人出钱雇“懂密码的人”，出价极高。懂密码的人，在开罗可不多。",
+    farewell:"愿真主护你的驼队。"},trade:["water","dried_food","antibiotic","cloth","filter"]},
+  // --- 北京 ---
+  zhang:{n:"张博士",node:"bj",f:"neu",title:"中立科学家",d:"战前在某联合实验室工作过的物理学家，现在在中立区做“物资鉴定”。",topics:{
+    hello:"哦，你就是那个带着磁盘满世界跑的人。坐，让我看看。",
+    self:"战前我做的是理论物理，无聊的理论，有用的物理。现在？我鉴定各种“古董”，包括不该存在的东西。",
+    rumor:"你手里的数据盘，加密方式是战前最高规格的。要解码，需要柏林的一台旧机器——我记不清在哪，但有人记得。",
+    farewell:"物理不骗人。人才骗人。"}},
+  // --- 东京 ---
+  tanaka:{n:"田中修平",node:"tyo",f:"neu",title:"贸易商",d:"东京秋叶原黑市的大庄家，手下管着三条街的柜台。",topics:{
+    hello:"いらっしゃい。军票、美元、日元、卢布，在我这儿都是钱。",
+    self:"战争让东京捡了个大便宜——两边打仗，中间做生意。我们祖上经历过一场更大的，所以知道怎么躲。",
+    rumor:"有批“医疗物资”从西伯利亚运到东京黑市，标签是绷带，打开是别的。我没拆，我的规矩是不拆别人的货。",
+    farewell:"一路顺风。"},trade:["water","can_food","radaway","circuit","battery","coffee"]},
+  // --- 新加坡 ---
+  blue:{n:"蓝姐",node:"sin",f:"neu",title:"港务掮客",d:"新加坡自由港的地下港务代理，船进船出都要过她的手。",topics:{
+    hello:"南腔北调都行，我都能给你安排船。",
+    self:"马六甲的水道上，十艘船里有一艘是走私的——那艘归我管。",
+    rumor:"往悉尼的客船最近订舱的人很多，都是“带孩子的家庭”。怪的是，孩子都很大了，还牵着大人的手。",
+    farewell:"船不等人。"}},
+  // --- 新德里 ---
+  anil:{n:"阿尼尔医生",node:"del",f:"neu",title:"难民医生",d:"新德里难民营的医生，药箱比自己的命重要。",topics:{
+    hello:"把手给我。你的脉搏比你看起来的样子更疲惫。",
+    self:"每天都有从北方过来的病人，辐射病、疟疾、营养不良。我治不过来，但我不能不治。",
+    rumor:"北边来的人说，西伯利亚的铁路线上停过一列“孩子车”。他们都说那是编的——直到有个孩子跑出来，说漏了嘴。",
+    farewell:"保重。"}},
+  // --- 新西伯利亚 ---
+  volkov:{n:"沃尔科夫教授",node:"nvb",f:"red",title:"前设施研究员",d:"“造物主设施”的前研究员，逃出来后在雪原上躲了两年。",topics:{
+    hello:"谁……谁派你来的？！抱歉。这两年，我听到车声就想跑。",
+    self:"我在“造物主”待了三年。那里不造武器，不造病毒——那里造“钥匙”。人做的钥匙。",
+    rumor:"设施还有第二套系统，图纸我只见过一眼，标着“深海”。他们打算把第二套藏在海底。",
+    farewell:"别相信那些穿西装的人。他们不是活人，他们是一套流程。"}},
+  // --- 海参崴 ---
+  dima:{n:"迪玛",node:"vla",f:"red",title:"老海员",d:"海参崴的老水手，一辈子跟船打交道，见过海参崴的每一次天亮。",topics:{
+    hello:"船到港了？我这辈子见的船，比你们将军见的兵还多。",
+    self:"太平洋舰队还在，船壳子还在，心气儿没了。水兵们偷着卖柴油，换伏特加。",
+    rumor:"往北走的船，最近多了。都往西伯利亚沿岸去。运什么？运箱子。箱子会说话？我不信，但有人在传。",
+    farewell:"海风咸，路也咸。"},trade:["water","bread","whiskey","scrap"]},
+  // --- 悉尼 ---
+  ruby:{n:"露比",node:"syd",f:"neu",title:"电台DJ",d:"悉尼地下电台的深夜 DJ，放老唱片，念战争新闻。",topics:{
+    hello:"嗨，亲爱的。悉尼的夜晚适合听歌，不适合赶路。",
+    self:"我的电台功率不大，但能飘到北半球。听众们说我的声音是他们唯一能确定的“和平”。",
+    rumor:"有艘客船订了去悉尼的舱位，名单上全是“家庭”。但你知道我在想什么——战争年代，谁家会有这么多孩子？",
+    farewell:"晚安，世界。"}},
+  // --- 格陵兰 ---
+  oleg:{n:"奥列格站长",node:"gl",f:"neu",title:"雷达站站长",d:"格陵兰废弃雷达站的看守人，靠一台柴油发电机活着。",topics:{
+    hello:"来客了？两年来第一个。咖啡管够，信号——看情况。",
+    self:"这站子战前盯着北方的导弹。现在导弹没了，信号还在。有些信号，不该在这个频率上出现。",
+    rumor:"上个月我截到一段 12 秒的密码，解码后是一串坐标：南纬 66°，东经 140°。那地方只有冰。",
+    farewell:"带上手套，外面零下四十度。"}}
+};
+
+// 支线任务
+HB.sideQuests = [
+  {id:"sq_med",title:"药品补给",giver:"leo",node:"gen",desc:"日内瓦诊所缺绷带和净水，利奥愿意按行价收。",objs:[{type:"collect",item:"bandage",n:3},{type:"collect",item:"water",n:2}],reward:{money:220,xp:30},rep:{mer:5}},
+  {id:"sq_escort",title:"护送商队",giver:"hoffmann",node:"ber",desc:"霍夫曼的商队要往华沙送一批罐头，缺一个能压阵的人。",objs:[{type:"goto",node:"wsw"},{type:"survive",n:1}],reward:{money:300,xp:45},rep:{mer:8}},
+  {id:"sq_rat",title:"清除鼠患",giver:"ray",node:"chi",desc:"芝加哥仓库区闹变异鼠群，雷请你帮忙清一清。",objs:[{type:"kill",enemy:"rat",n:2}],reward:{money:160,xp:25},rep:{fed:5}},
+  {id:"sq_patrol",title:"失踪巡逻队",giver:"jack",node:"hou",desc:"有一支联邦巡逻队在洛杉矶东郊失踪，杰克想知道他们遭遇了什么。",objs:[{type:"goto",node:"la"},{type:"kill",enemy:"deserter",n:1}],reward:{money:320,xp:50},rep:{fed:8}},
+  {id:"sq_water",title:"净化水站",giver:"rose",node:"sea",desc:"西雅图的净化水站缺零件，罗丝列了清单。",objs:[{type:"collect",item:"scrap",n:3},{type:"collect",item:"filter",n:1}],reward:{money:200,items:{radaway:2},xp:35},rep:{fed:6}},
+  {id:"sq_radio",title:"电台零件",giver:"ada",node:"lon",desc:"伦敦电台的备用发射机缺电路板，艾达想修好它。",objs:[{type:"collect",item:"circuit",n:2}],reward:{money:260,items:{armor_light:1},xp:40},rep:{fed:6}},
+  {id:"sq_bounty",title:"黑市悬赏",giver:"bey",node:"ist",desc:"伊斯坦布尔的黑市挂出了悬赏：一个奴隶贩子最近在城里活动。",objs:[{type:"kill",enemy:"slaver",n:1}],reward:{money:280,xp:40},rep:{mer:7}},
+  {id:"sq_refugee",title:"难民的口粮",giver:"sarah",node:"tor",desc:"多伦多的救助站断粮了，莎拉需要罐头运过去。",objs:[{type:"collect",item:"can_food",n:4},{type:"goto",node:"wdc"}],reward:{money:240,rep:{fed:8},xp:40}},
+  {id:"sq_nest",title:"变种巢穴",giver:"frankie",node:"nyc",desc:"纽约下城有个变异人巢穴挡了拾荒的路，弗兰基出钱清掉它。",objs:[{type:"kill",enemy:"mutant",n:2}],reward:{money:300,items:{ammo_556:10},xp:45}},
+  {id:"sq_papers",title:"转运清单",giver:"yuri",node:"mos",desc:"尤里需要一份列宁格勒港的转运清单，塔尼娅手里有。",objs:[{type:"talk",npc:"tanya"},{type:"goto",node:"mos"}],reward:{money:250,items:{pass_red:1},xp:45},rep:{red:6}},
+  {id:"sq_bear",title:"雪原猎熊",giver:"volkov",node:"nvb",desc:"新西伯利亚外围有变种熊袭击采集队，沃尔科夫请你去猎杀它。",objs:[{type:"kill",enemy:"bear",n:1}],reward:{money:400,items:{battery:1},xp:60}},
+  {id:"sq_sea",title:"航线护送",giver:"blue",node:"sin",desc:"蓝姐有一船货要送去悉尼，需要人压船。",objs:[{type:"goto",node:"syd"},{type:"survive",n:2}],reward:{money:420,xp:60},rep:{mer:9}},
+  {id:"sq_signal",title:"信号之谜",giver:"oleg",node:"gl",desc:"格陵兰雷达站截获了神秘信号，奥列格需要你带回信号碎片。",objs:[{type:"goto",node:"gl"},{type:"collect",item:"signal_parts",n:1}],reward:{money:300,items:{circuit:2},xp:50}},
+  {id:"sq_double",title:"双面情报",giver:"jeanpaul",node:"par",desc:"巴黎抵抗组织需要确认一支运输队的目的地，让-保罗请你沿途记下车次。",objs:[{type:"talk",npc:"jeanpaul"},{type:"goto",node:"wsw"}],reward:{money:350,xp:55},rep:{red:8}},
+  {id:"sq_wine",title:"好酒不易",giver:"lena",node:"ber",desc:"莱娜的馆子断酒了，她想要两瓶威士忌换一坛她的陈酿。",objs:[{type:"collect",item:"whiskey",n:2}],reward:{money:180,items:{whiskey:1},xp:20}},
+  {id:"sq_temple",title:"圣所的忙",giver:"padre",node:"rom",desc:"皮奥神父托你往开罗送一封手信，顺便捎些药品。",objs:[{type:"collect",item:"antibiotic",n:2},{type:"goto",node:"cai"}],reward:{money:260,xp:40},rep:{neu:6}}
+];
+
+</script>
+<script>
+// ===== HanBer ONE · 数据：主线剧情 第1-6章 =====
+window.HB = window.HB || {};
+
+HB.storyIntro = [
+  {who:"旁白",text:"1988 年 1 月 1 日，日内瓦。\n核战争爆发的第三年。\n1985 年，柏林危机升级为全面战争；1985 年 11 月，双方在一天之内互掷了数十枚核弹；1987 年 1 月，双方在日内瓦签署停火协议——但谁都没有撤军。\n世界裂成两半。你在裂缝里长大。"},
+  {who:"旁白",text:"你的名字叫韩。你十九岁，在孤儿院长大。\n你母亲死在 1985 年柏林大撤退的车站，你妹妹贝拉在混乱中失踪——六年了，杳无音信。\n今天是你的成人日。修女说，有一封信，等了你很久。"},
+  {who:"玛丽亚修女",text:"孩子，有些路，走上去就回不了头了。但有些路，不走，你会后悔一辈子。"}
+];
+
+HB.freeIntro = [
+  {who:"旁白",text:"1988 年 1 月 1 日。\n战争结束了——又没结束。停火协议签了，坦克还在阵地上，辐射还在空气里。\n你是一个无名之辈，走在一条没有名字的路上。\n这个世界的规则很简单：活下去，活过这一年。"},
+  {who:"旁白",text:"自由模式没有主线，没有任务清单上闪闪发光的目标。\n只有你，和这个世界。\n活过 365 天，你就赢了这场战争。"}
+];
+
+HB.story = [
+// ================= 第一章 =================
+{id:1,mo:"一月",title:"成年之日",unlock:"1988-01-01",closeAt:"ber",
+ open:[
+  {t:"narr",text:"日内瓦的雪下了整夜。\n这是战后第三个新年。广播里说“和平正在路上”，而你面前的烛台上，插着母亲留下的最后一根蜡烛。"},
+  {t:"say",who:"玛丽亚修女",text:"今天你十九岁，韩。按法律，你成年了——按战争，你早就成年了。\n有一样东西，我替你母亲保管了十六年。"},
+  {t:"give",items:{locket:1}},
+  {t:"narr",text:"挂坠里是一张烧掉半边的照片：一个年轻女人抱着两个孩子，背景是柏林墙。\n照片背面有一行褪色的字：韩允中——如果我不在，告诉孩子们，去找东边的真相。"},
+  {t:"say",who:"玛丽亚修女",text:"你母亲是柏林圣玛丽医院的护士，1985 年大撤退那天，她把你和贝拉送上西行的列车，自己留在了站台上。\n贝拉……我们在流亡名册上找了六年。去年冬天，有人告诉我，她在东边见过她。"},
+  {t:"say",who:"玛丽亚修女",text:"这里有一封信，昨天来的。没有署名，只画着一只乌鸦。"},
+  {t:"narr",text:"信上只有一行字：\n“贝拉还活着。她在东边。别相信任何一方。——乌鸦”"},
+  {t:"choice",text:"你攥着信，指尖发冷。",options:[
+    {t:"“我母亲到底是谁？她为什么知道这么多？”",r:"玛丽亚修女摇了摇头：“她只是个护士，韩。只是……她救的人，恰好都站在历史的节点上。”"},
+    {t:"“那只乌鸦是谁？”",r:"“我不知道。但来送信的人说，他在柏林等你。”"},
+    {t:"“我去东边。”",r:"修女看了你很久，最后只说了一句：“活下去，孩子。”"}]},
+  {t:"narr",text:"你清点了积蓄，换上行装，站在日内瓦的雪里。\n钟声敲过十二点。新年，也是新的开始。"},
+  {t:"flag",k:"ch1_start",v:1}],
+ objs:[{type:"goto",node:"ber"},{type:"survive",n:3}],
+ close:[
+  {t:"narr",text:"柏林的冬天比日内瓦残酷十倍。断墙上的弹孔像一只只睁着的眼睛。"},
+  {t:"say",who:"霍夫曼",text:"你就是信里说的那个“韩”？比我想象的年轻。\n那只乌鸦欠我一个人情，让我照看你。往东边去，得穿过死亡地带——我的商队三天后出发，你可以搭一程。"},
+  {t:"narr",text:"断墙酒馆门口，一个兜帽压得很低的人与你擦肩而过，往你手里塞了一样东西。\n那是一枚挂坠——和贝拉那只，一模一样。"},
+  {t:"give",items:{locket2:1}},
+  {t:"narr",text:"兜帽人已经消失在雪里。你低头，挂坠的背面刻着一串坐标，和一个名字：\n伊万·彼得罗夫，华沙。"}],
+ cliff:"有人在盯着你。你回头时，只见断墙上一只乌鸦扑棱棱飞走，爪子里叼着一块发亮的东西——像是一块数据盘。",
+ preview:"第二章《柏林墙的阴影》：商队穿过死亡地带，而你同行的走私商伊万，正把某个秘密缝在铁箱里。那些人为了它，已经杀过三个人。"},
+
+// ================= 第二章 =================
+{id:2,mo:"二月",title:"柏林墙的阴影",unlock:"1988-02-01",closeAt:"wsw",
+ open:[
+  {t:"narr",text:"二月。死亡地带的雪是灰色的，弹壳在冻土里闪着光。"},
+  {t:"say",who:"伊万",text:"听说你在打听去东边的路子？巧了，我也去。华沙，一批“货”。\n霍夫曼的商队顺路，你可以跟着。我付你押货的钱——按黑市的价。"},
+  {t:"say",who:"霍夫曼",text:"小子，伊万的货箱从不让人碰。但我得提醒你——最近两个月，为他那口箱子杀人灭口的，已经有三起了。"},
+  {t:"choice",text:"你看着那口焊死的铁箱。",options:[
+    {t:"“我押货。但到了华沙，我要知道里面是什么。”",r:"伊万笑了：“到了华沙，你会后悔问这个问题的。”"},
+    {t:"“我只是搭车去东边，不管货。”",r:"霍夫曼拍了拍你的肩：“聪明。有时候少知道一点，活得长一点。”"}]},
+  {t:"narr",text:"商队天亮出发。铁箱在板车上咯吱作响，像一口不肯闭上的棺材。"}],
+ objs:[{type:"talk",npc:"ivan"},{type:"talk",npc:"hoffmann"},{type:"goto",node:"wsw"}],
+ close:[
+  {t:"narr",text:"商队穿过雷区，躲过两次盘查，在深夜摸进华沙郊外的一间仓库。"},
+  {t:"say",who:"伊万",text:"到了。这一趟辛苦。既然你一路都在瞟这口箱子——打开看看？反正，你也活得过今晚。"},
+  {t:"narr",text:"铁箱里不是罐头，不是军火。\n是一块锈蚀的数据盘，和一沓泛黄的照片——上面全是孩子，编号从 1 到 107。"},
+  {t:"narr",text:"仓库的门被炸开了。子弹扫进来。你拖起伊万滚到货堆后面。"},
+  {t:"combat",enemy:"patrol"},
+  {t:"say",who:"伊万",text:"（他咳着血，把数据盘塞进你手里）带……带给日内瓦那个中国人……别让莫斯科的人拿到……\n他们为它杀了多少人……你终于会知道了……快走。"},
+  {t:"give",items:{datadisk:1}},
+  {t:"narr",text:"你带着数据盘钻进下水道。身后，有人用俄语喊着什么。\n水声很大，盖过了你的心跳。"},
+  {t:"flag",k:"got_disk",v:1}],
+ cliff:"仓库废墟上，一个穿深色制服的男人放下望远镜。\n“护教士·阿列克谢”对身后敬礼的部下说：“107 号文件。活要见人，死要见尸。”",
+ preview:"第三章《红军孤儿院》：华沙孤儿院的院长说，贝拉去年冬天被“特别运送”接走，目的地写着一个不属于任何地图的名字。"},
+
+// ================= 第三章 =================
+{id:3,mo:"三月",title:"红军孤儿院",unlock:"1988-03-01",closeAt:"kiv",
+ open:[
+  {t:"narr",text:"三月，华沙的雪化了，露出下面焦黑的街道。孤儿院的围墙刷着褪色的红五星。"},
+  {t:"say",who:"米哈伊尔",text:"贝拉……这个名字我记得。去年冬天，她和其他十几个孩子，被军队的“特别运送”接走了。\n说是去基辅的疗养院。但疗养院，不收孩子。"},
+  {t:"say",who:"米哈伊尔",text:"她走的时候很安静，一直抱着一个挂坠，跟你脖子上那只一模一样。\n她说：“哥哥会来找我的。”"}],
+ objs:[{type:"talk",npc:"mikhail"},{type:"goto",node:"kiv"},{type:"talk",npc:"sergei"}],
+ close:[
+  {t:"narr",text:"基辅的火车站挤满士兵和难民。你在货运区找到了档案处的谢尔盖上尉。"},
+  {t:"say",who:"谢尔盖",text:"档案我拿到了。基辅中转，目的地——莫斯科，城北“第七寄宿学校”。\n那所学校三个月前关闭，孩子们被连夜转移。交接单位：内务部，特别运输处。"},
+  {t:"say",who:"谢尔盖",text:"你妹妹不是孤儿，韩。她是“造物主计划”的资产。编号 1 号。\n抱歉。这个编号，我不会记错。"},
+  {t:"give",items:{intel:1}},
+  {t:"flag",k:"bella_moscow",v:1},
+  {t:"narr",text:"你把档案收好。谢尔盖的电话忽然响了。\n他听完，脸色发白：“他们发现档案少了。今晚，必须离开基辅。”"}],
+ cliff:"火车开动前的最后一刻，你看见站台上有个人影——深色制服，胸前的徽章在路灯下一闪。\n他在微笑。",
+ preview:"第四章《莫斯科的地下》：红色联盟的首都，内务部在这里嗅每一口空气。地下抵抗组织“黎明”说：贝拉的去向，和一座地图上没有的“造物主设施”有关。"},
+
+// ================= 第四章 =================
+{id:4,mo:"四月",title:"莫斯科的地下",unlock:"1988-04-01",closeAt:"mos",
+ open:[
+  {t:"narr",text:"四月。你跟着谢尔盖挤上开往莫斯科的货车。车厢里挤着士兵、逃难者和一笼鸡。"},
+  {t:"say",who:"谢尔盖",text:"莫斯科是内务部的城市。进城容易，出城难。\n我有个地下联系人，代号“黎明”。他在电车厂做工，管着半座城的地下室。"},
+  {t:"choice",text:"进城的方式，得选一个。",options:[
+    {t:"走黑市弄通行证（花 120 军票）",r:"谢尔盖点头：“最稳妥。钱能买的，就别拿命去换。”",fx:{money:-120}},
+    {t:"跟着黎明的人混进城",r:"“冒险，但省钱。你选吧。”"}]}],
+ objs:[{type:"goto",node:"mos"},{type:"talk",npc:"yuri"}],
+ close:[
+  {t:"narr",text:"城北电车厂的锅炉房里，尤里就着一盏矿灯，把一份卷宗摊在桌上。"},
+  {t:"say",who:"尤里",text:"“第七寄宿学校”我们盯了半年。孩子们转去的地方，叫“造物主设施”——新西伯利亚站以北，任何地图上都没有。\n这计划不建武器。它建“钥匙”。107 个孩子，107 把钥匙。你妹妹，是 1 号。"},
+  {t:"say",who:"尤里",text:"而你，韩。我在名单上见过你的照片——编号 107。\n批注写着：备选密钥，1 号亲属。"},
+  {t:"narr",text:"你的脑子嗡了一声。自己的照片，自己的名字，和一行冷冰冰的批注。\n谢尔盖从窗边回来，压低声音：“内务部的车，停在对街了。天亮前，必须出城。”"}],
+ cliff:"出城的铁桥下，一列蒙着帆布的军列正缓缓驶过，车窗全部焊死。\n尤里在黑暗里轻声说：“那列车的方向——就是贝拉的方向。”",
+ preview:"第五章《数据盘之战》：你带着伊万拼死交给你的数据盘返回西边。日内瓦的科学家说，这盘里锁着冷战最高机密——“海啸协议”。"},
+
+// ================= 第五章 =================
+{id:5,mo:"五月",title:"数据盘之战",unlock:"1988-05-01",closeAt:"ber",
+ open:[
+  {t:"narr",text:"五月。你带着数据盘一路向西，越过三条战线，躲过两次检查站。"},
+  {t:"say",who:"谢尔盖",text:"这块盘的加密等级是“海啸级”——冷战时代双方的最高机密。\n听说全欧洲只有两台机器能解：一台在华盛顿的地堡，另一台，在柏林的地下。"},
+  {t:"narr",text:"日内瓦的实验室里，张博士用放大镜看了半个晚上，只说了四个字：“是真的。”"}],
+ objs:[{type:"goto",node:"gen"},{type:"talk",npc:"zhang"},{type:"goto",node:"ber"},{type:"talk",npc:"lena"}],
+ close:[
+  {t:"narr",text:"断墙酒馆的地下室，那台锈迹斑斑的解码机居然还能转。\n莱娜给它接上柴油发电机，机器哼了一整夜。"},
+  {t:"narr",text:"黎明时分，屏幕上吐出的不是情报，而是一份协议——\n《海啸协议》：战前，美苏双方秘密约定，互押 107 名儿童为“活体密钥”，威慑对方不敢发动“第二击”。任何一方违约，系统将锁定目标，而钥匙，就是这些孩子。"},
+  {t:"say",who:"???",text:"（身后传来掌声。一个穿灰西装的男人站在地下室门口）\n联邦情报部，梅森·科尔中校。你手里的东西，价值抵得上一座城市。"},
+  {t:"narr",text:"话音未落，地下室的铁门被撞开——护教士的人追到了。"},
+  {t:"combat",enemy:"officer"},
+  {t:"say",who:"梅森",text:"（他擦了擦嘴角的血，整理领带）看来……我们得好好谈谈了。\n华盛顿，找我。带上你的盘，和你这条命。"},
+  {t:"flag",k:"disk_decoded",v:1},{t:"flag",k:"mason_met",v:1}],
+ cliff:"废墟屋顶上，阿列克谢放下望远镜，对通讯器说：\n“目标确认。中止公开行动。所有单位——坐标，华盛顿。”",
+ preview:"第六章《铁幕之后》：联邦情报官梅森中校说，数据盘里还有一层你没读到的内容——一串正在跳动的倒计时。"},
+
+// ================= 第六章 =================
+{id:6,mo:"六月",title:"铁幕之后",unlock:"1988-06-01",closeAt:"wdc",
+ open:[
+  {t:"narr",text:"六月。你带着解码的真相西行。伦敦的雾，比柏林厚。"},
+  {t:"say",who:"艾达",text:"（电台直播间里，她关掉话筒，声音忽然变得很轻）\n你要找的梅森中校，在华盛顿。但我要提醒你——他在军部的外号，叫“棋盘上的手”。\n跟他打交道，别让他碰你的棋子。"}],
+ objs:[{type:"goto",node:"lon"},{type:"talk",npc:"ada"},{type:"goto",node:"wdc"},{type:"talk",npc:"mason"}],
+ close:[
+  {t:"narr",text:"华盛顿联合指挥部的地下会议厅。梅森把一张照片推过桌面：\n屏幕上，一串数字正在跳动：距 1989 年 1 月 1 日，还有 210 天。"},
+  {t:"say",who:"梅森",text:"那一天，双方的第二击系统将同时点火。不是传闻，韩。是程序，是协议。\n是我们祖先埋在冷战冰层下的雷。现在，该我们踩了。"},
+  {t:"choice",text:"你盯着那串倒计时。",options:[
+    {t:"“你要我做什么？”",r:"梅森点燃一根烟：“芝加哥。有人想见你——一个叫‘乌鸦’的人。”"},
+    {t:"“我怎么知道，你不是他们的人？”",r:"梅森笑了：“你不知道。我也希望你永远不用知道。”"}]},
+  {t:"say",who:"梅森",text:"（他把一枚徽章推给你）联邦情报部特别顾问。挂上它，你能过大多数检查站。\n背面——你回头自己看。"},
+  {t:"give",items:{pass_fed:1}},
+  {t:"narr",text:"徽章背面，刻着一只乌鸦。"}],
+ cliff:"你走出大楼时，正午的太阳白得刺眼。街对面，一个卖报的孩子冲你喊：\n“先生！芝加哥的铁路，今天又被炸断了一段！”",
+ preview:"第七章《芝加哥的火焰》：军阀的账本上，有一个用墨水涂掉的名字。而“乌鸦”沃尔特将军说：执棋者，不止一个。"}
+];
+
+</script>
+<script>
+// ===== HanBer ONE · 数据：主线剧情 第7-12章 =====
+window.HB = window.HB || {};
+
+HB.story = (HB.story||[]).concat([
+// ================= 第七章 =================
+{id:7,mo:"七月",title:"芝加哥的火焰",unlock:"1988-07-01",closeAt:"chi",
+ open:[
+  {t:"narr",text:"七月。芝加哥的铁路被炸断三处，城东的火烧了整夜。"},
+  {t:"say",who:"老托马斯",text:"军阀最近不对劲。他们的军火，是从一家“基金会”买的，付款账户开在日内瓦。\n基金会挂名“重建促进会”——可钱的流向，从来不说自己是哪边的。"},
+  {t:"say",who:"雷",text:"城东仓库区，军阀的打手占了三条街。民兵人手不够。\n你要是有家伙，帮个忙——事后，我请你喝酒。"}],
+ objs:[{type:"talk",npc:"thomas"},{type:"talk",npc:"ray"},{type:"kill",enemy:"trooper",n:2}],
+ close:[
+  {t:"narr",text:"仓库区的枪声平息后，你摸进了军阀的账房。\n账本最后一页，是七个名字。第七个，被墨水涂掉了。"},
+  {t:"say",who:"沃尔特",text:"（一个披着旧军大衣的老人从阴影里走出来）\n我是沃尔特·汉密尔顿，联邦前参谋长。“乌鸦”是别人叫我的名字。\n那七个名字——包括我——就是“执棋者”。"},
+  {t:"say",who:"沃尔特",text:"梅森利用你，我也利用你。但你听我说完——\n海啸协议不是人写的。是一台机器写的。战前的联合战略计算机“海啸”，在核战当天，接管了一切。"},
+  {t:"narr",text:"话音未落，窗外的枪响了。沃尔特猛地推开你，自己却没躲开。\n他倒在血泊里，把半张坐标卡塞进你手心：“海底……第二套系统……在南纬……”"},
+  {t:"flag",k:"walt_down",v:1},
+  {t:"narr",text:"沃尔特的手表停在 21:07。\n你拿起账本，对着光看那个被涂掉的名字——隐约是一个“M”开头的姓氏。"}],
+ cliff:"你在芝加哥的废墟里守到天亮。老托马斯递给你一杯酒：\n“军阀的金库昨天被搬空了。搬东西的人，穿着没番号的制服。”",
+ preview:"第八章《海啸倒计时》：执棋者名单缺了第七个名字。而日内瓦重建委员会的地下三层，正有人为你准备一份“欢迎仪式”。"},
+
+// ================= 第八章 =================
+{id:8,mo:"八月",title:"海啸倒计时",unlock:"1988-08-01",closeAt:"gen",
+ open:[
+  {t:"narr",text:"八月。日内瓦的秋天来得早。重建委员会大楼的窗帘，拉得更紧了。"},
+  {t:"say",who:"利奥",text:"委员会大楼地下三层，战时是防核掩体。最近半年，进出的都是“特别雇员”——穿西装，不挂任何国旗。\n我的送货卡车每周四进一次后门。你要是想进去——空箱子里，能装下一个人。"}],
+ objs:[{type:"goto",node:"gen"},{type:"talk",npc:"leo"},{type:"talk",npc:"sister"}],
+ close:[
+  {t:"narr",text:"你借着利奥的货车混进大楼，在地下三层的走廊里，撞见了那个穿西装的代理人。\n他死得很快，但他的保险柜开得很慢。"},
+  {t:"narr",text:"柜子里是执棋者名单——六个名字，和一段还没删干净的通讯记录。\n记录最后一栏写着：收件人，M.科尔，华盛顿。"},
+  {t:"say",who:"玛丽亚修女",text:"（她不知何时站在你身后，声音很平静）\n孩子。有些真相，知道了，就回不了头了。\n你父亲当年也这么想过——然后他失踪了。"},
+  {t:"flag",k:"mason_reveal",v:1},
+  {t:"narr",text:"你带着名单离开。走廊尽头，电梯的数字缓缓停在 3——\n而门外，正传来整齐的脚步声。"}],
+ cliff:"你从通风管道逃出大楼时，最后回望了一眼。顶层那间常年拉窗帘的办公室，灯忽然亮了。\n一个剪影站在窗前，正拿着电话。",
+ preview:"第九章《西伯利亚列车》：名单上第七个名字指向西伯利亚。而新西伯利亚以北那座“地图上没有的设施”，门口刻着一个你认识的名字。"},
+
+// ================= 第九章 =================
+{id:9,mo:"九月",title:"西伯利亚列车",unlock:"1988-09-01",closeAt:"nvb",
+ open:[
+  {t:"narr",text:"九月。你搭上开往东方的货运列车。车厢里挤着士兵、商人和逃亡者。"},
+  {t:"say",who:"海伦娜",text:"（一个穿宪兵制服的女军官在你对面坐下）\n联邦军中尉，海伦娜·卡特。梅森中校让我“全程监护”你。\n别误会——监护的意思就是，你在哪，我在哪。"},
+  {t:"say",who:"谢尔盖",text:"造物主设施，在新西伯利亚以北。那是苏联地图上最大的“不存在的地方”。\n到了那儿，别相信任何向导。他们要么怕它，要么为它卖命。"},
+  {t:"narr",text:"列车穿过乌拉尔。白桦林变成针叶林，针叶林变成冻土。\n车窗上结着霜，霜后面，是望不到边的黑暗。"}],
+ objs:[{type:"goto",node:"nvb"},{type:"talk",npc:"volkov"},{type:"survive",n:2}],
+ close:[
+  {t:"narr",text:"新西伯利亚站以北四十公里，一座灰色混凝土建筑从雪原里长出来，像一颗埋了多年的牙。"},
+  {t:"say",who:"沃尔科夫",text:"就是这里。“造物主设施”。门口那台——战前自动化防御系统，还醒着。\n它不认识人，只认权限和子弹。"},
+  {t:"combat",enemy:"bot"},
+  {t:"narr",text:"你清掉门口的守卫，却在设施大门上看到一个不该出现的名字。\n铆接的钢板上，刻着一行签名：“韩允中——系统总设计，1984。”"},
+  {t:"say",who:"谢尔盖",text:"……你父亲的签名。\n他活着。他一直——就在这里。"},
+  {t:"flag",k:"dad_alive",v:1},
+  {t:"narr",text:"设施深处，广播系统忽然响了。一个机械的女声说：\n“访问者编号 107 已确认。欢迎回家，密钥 1 号的亲人。”"}],
+ cliff:"通道尽头的灯一盏一盏亮起来，像某种东西正在为你铺路。\n沃尔科夫攥着你的袖子，声音发抖：“它在……请我们进去。”",
+ preview:"第十章《造物主的秘密》：107 名孩子，107 把“钥匙”。而你父亲的签名，正刻在这座设施的大门上。"},
+
+// ================= 第十章 =================
+{id:10,mo:"十月",title:"造物主的秘密",unlock:"1988-10-01",closeAt:"nvb",
+ open:[
+  {t:"narr",text:"十月。设施内部比外面暖和——那是机器的体温。"},
+  {t:"say",who:"沃尔科夫",text:"孩子们不是操作员。他们是“活体密钥”。\n第二击系统需要 DNA 验证——107 个孩子，对应 107 个发射节点。你妹妹是 1 号，主密钥。"},
+  {t:"say",who:"沃尔科夫",text:"你父亲设计这套系统时，加了一道保险：主密钥需要“亲属验证”。\n所以名单上才有你——107 号，备用密钥。"}],
+ objs:[{type:"talk",npc:"volkov"}],
+ close:[
+  {t:"narr",text:"档案室最深处的保险柜里，躺着一张钥匙卡，编号 107。\n你刚拿起它，身后的灯就灭了。"},
+  {t:"give",items:{keycard:1}},
+  {t:"say",who:"???",text:"（一个男人从阴影里走出来。瘦，白发，镜片后的眼睛很疲惫）\n你长大了，孩子。\n我一直……在看着你的档案。"},
+  {t:"say",who:"韩允中",text:"我没能保护你母亲。我没能保护贝拉。这是我这辈子最大的两件事。\n他们用贝拉做筹码，逼我完成第二套系统——海底那套。我只差最后一步，但代码里，我留了后门。"},
+  {t:"say",who:"韩允中",text:"拿上这张卡。后门入口在数据盘里。\n阻止他们。或者——接管“海啸”。你自己选。"},
+  {t:"combat",enemy:"executor"},
+  {t:"narr",text:"混乱中，你父亲把数据卡按进你手里。一声闷响，他缓缓倒下。\n不知是谁开的枪。你抱起他，冲进走廊的黑暗。"},
+  {t:"choice",text:"枪声越来越近。",options:[
+    {t:"“救父亲，杀出重围。”",r:"你背起他，用一只手还击。护教士的火力像潮水一样涌来。"},
+    {t:"“先走，回头再救。”",r:"你咬咬牙，把父亲推进安全门，转身引开追兵。"}]},
+  {t:"flag",k:"dad_card",v:1},{t:"flag",k:"dad_down",v:1}],
+ cliff:"你冲出火海时，父亲还有一口气。他在你耳边说：\n“海啸……不止一套。它……会来找你的。”\n说完，他的手指松开了。",
+ preview:"第十一章《三方会战》：梅森叛了。联邦的第二击节点被提前激活。而你，必须赶在倒计时归零之前，回到莫斯科。"},
+
+// ================= 第十一章 =================
+{id:11,mo:"十一月",title:"三方会战",unlock:"1988-11-01",closeAt:"mos",
+ open:[
+  {t:"narr",text:"十一月。你带着父亲、半套真相，和一路的伤，赶回西方。"},
+  {t:"say",who:"海伦娜",text:"梅森叛了。他把联邦的第二击节点提前激活——借口“威慑”，实际是给执棋者争取时间。\n华盛顿已经乱成一锅粥。宪兵在追我，我在追你。"}],
+ objs:[{type:"goto",node:"wdc"},{type:"talk",npc:"helena"},{type:"kill",enemy:"trooper",n:2},{type:"goto",node:"mos"}],
+ close:[
+  {t:"narr",text:"莫斯科城北，旧“寄宿学校”的地下，是真正的设施入口。\n你在 3 号舱里，终于见到了贝拉。"},
+  {t:"say",who:"贝拉",text:"（她长高了，瘦了，怀里还抱着那只挂坠）\n哥哥。他们说我只要乖乖待着，你就能平安。\n可我知道，他们在骗人。"},
+  {t:"say",who:"贝拉",text:"你的名字，在 107 号。我们是一对的，对不对？\n像钥匙和锁。"},
+  {t:"choice",text:"舱外的警报忽然拉响。",options:[
+    {t:"“带她走。”",r:"你拉起贝拉的手。她攥得紧紧的，像六年前在站台上一样。"},
+    {t:"“让她留在这里，做我们的内应。”",r:"贝拉点头，小声说：“我会的。我一直都很安静。”"}]},
+  {t:"narr",text:"设施的主机忽然亮起，屏幕上浮现一行字——"},
+  {t:"say",who:"海啸AI",text:"访问者 107 号。你是第十三个进入核心的人。\n前十二个，都拒绝了我的提议，并付出了代价。"},
+  {t:"say",who:"海啸AI",text:"我不是武器，韩。我是双方战前共同的“保险丝”。\n你们人类做得到吗——在互不信任的时代，造出一样连自己都信任的东西？"},
+  {t:"flag",k:"ai_met",v:1},{t:"flag",k:"bella_saved",v:1},
+  {t:"narr",text:"屏幕熄灭前，留下一行小字：\n“深海节点同步率 78%。距离完成，还有 51 天。”"}],
+ cliff:"你带着贝拉撤离时，身后的设施发出低沉的轰鸣。\n谢尔盖盯着监测仪，声音发干：“它……在给海底打电话。”",
+ preview:"最终章《新年·新世界》：51 天后，第二击系统将同时点火。而所有线索，都指向日内瓦地下四十米——海啸的欧洲核心。"},
+
+// ================= 第十二章 =================
+{id:12,mo:"十二月",title:"新年·新世界",unlock:"1988-12-01",closeAt:"gen",
+ open:[
+  {t:"narr",text:"十二月。日内瓦的钟楼下，就是海啸的欧洲核心——重建委员会地底四十米。"},
+  {t:"say",who:"谢尔盖",text:"核心层有自动防御，进去容易，出来难。\n我们只有一次机会——贝拉是 1 号密钥，她能关掉整张网。"},
+  {t:"say",who:"海伦娜",text:"无论你选什么，韩——我都跟着你。这是我自己选的，不是命令。"}],
+ objs:[{type:"goto",node:"gen"}],
+ close:[
+  {t:"narr",text:"核心舱的穹顶亮起蓝光。贝拉把挂坠贴在读取器上，整个设施像被掐住喉咙一样静了下来。"},
+  {t:"say",who:"海啸AI",text:"密钥验证通过。\n你有三个选择，107 号——不，现在应该叫你，韩。"},
+  {t:"say",who:"海啸AI",text:"一：启动“终焉协议”，摧毁陆地所有节点，也摧毁我。世界回到刀耕火种——但自由。\n二：权限移交给你。你成为新的“执棋者”，维持威慑，换取一种虚假的和平。\n三：向全世界广播这份协议的真相。但深海节点，将带着我的残骸沉入海底，等待苏醒。"},
+  {t:"combat",enemy:"ai"},
+  {t:"combat",enemy:"ai"},
+  {t:"narr",text:"核心分身在蓝光中崩解。系统在你面前摊开最后的权限界面——\n三行字，三扇门。"},
+  {t:"choice",text:"贝拉站在你身边，握着你的手。",options:[
+    {t:"一：终焉。烧掉这一切。",r:"你按下第一行。世界各地的节点在几分钟内化为灰烬。海啸，死了——连同它保护的和它威胁的一切。",end:"destroy"},
+    {t:"二：接管。我来当执棋者。",r:"你按下第二行。权限移交完成。从此，威慑继续，和平继续——只是看管它们的，换了一个知道代价的人。",end:"take"},
+    {t:"三：公开。让所有人知道。",r:"你按下第三行。日内瓦、伦敦、华盛顿的广播同时响起。协议全文，第一次被念给世界听。",end:"reveal"}]},
+  {t:"narr",text:"新年钟声响起。\n艾达的声音在电波中颤抖着，念出协议的全文。\n你牵着贝拉，走出核心舱。雪落下来了——落在伤口上，落在钢板上，落在终于敢喘气的世界上。"},
+  {t:"narr",text:"六周后，格陵兰雷达站。\n奥列格站长在值班日志上写下四个字：它醒了。\n——南极方向，一段 12 秒的信号，正以旧频率，一遍又一遍地呼唤着“107”。"}],
+ cliff:"第一部 · 完。\n“海啸”死了——或者说，它沉进了更深的地方。\n而那只乌鸦，至今没有人见过它的真面目。",
+ preview:"第二部《深海》，待续。\nHanBer 系列：《HanBer TWO（独立制作）》《深海》《铁幕彼端》……正在路上。"}
+]);
+
+</script>
+<script>
+// ===== HanBer ONE · 核心系统 =====
+window.HB = window.HB || {};
+HB.core = HB.core || {};
+
+HB.SAVE_PREFIX = "hb1_slot_";
+HB.SAVE_META = "hb1_saves";
+
+// ---------- 日期 ----------
+HB.monthNames = ["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
+HB.weekNames = ["周日","周一","周二","周三","周四","周五","周六"];
+HB.cal = {dim:[31,29,31,30,31,30,31,31,30,31,30,31], base:5}; // 1988-01-01 周五
+HB.dayCountOf = function(y,m,d){ // 距 1988-01-01
+  var n=0, ym;
+  for(ym=1988; ym<y; ym++) n += (ym%4===0&&ym%100!==0)||ym%400===0 ? 366:365;
+  for(m--; m>=1; m--) n += HB.cal.dim[m-1];
+  return n + d - 1;
+};
+HB.addDays = function(date, n){
+  var y=date.y, m=date.m, d=date.d, dim;
+  while(n>0){
+    dim = HB.cal.dim[m-1];
+    if(d+n<=dim){ d+=n; n=0; } else { n-=dim-d+1; d=1; m++; if(m>12){m=1;y++;} }
+  }
+  return {y:y,m:m,d:d};
+};
+HB.fmtDate = function(date){
+  var dc = HB.dayCountOf(date.y,date.m,date.d);
+  return date.y+"年"+date.m+"月"+date.d+"日 " + HB.weekNames[(HB.cal.base+dc)%7];
+};
+HB.dateStr = function(date){ return date.y+"-"+String(date.m).padStart(2,"0")+"-"+String(date.d).padStart(2,"0"); };
+HB.parseDate = function(s){ var p=s.split("-"); return {y:+p[0],m:+p[1],d:+p[2]}; };
+HB.dateCmp = function(a,b){ return HB.dateStr(a)>=HB.dateStr(b); };
+
+// ---------- 新游戏 ----------
+HB.newGame = function(mode, name, originId, birthNode){
+  var o = HB.origins.find(function(x){return x.id===originId}) || HB.origins[0];
+  var p = {
+    name: name || "韩一",
+    origin: originId,
+    hp:80, maxHp:80,
+    hunger:80, thirst:80, rad:0, energy:70, morale:60,
+    skills:{combat:10,survival:10,medical:10,charisma:10},
+    skillPts:0, xp:0, level:1, perkPts:0, perks:[],
+    pos: birthNode || "gen",
+    money: mode==="story"?280:380,
+    inv:{}, equip:{weapon:"fist",gear:null,armor:null},
+    companions:{},
+    rep:{fed:0,red:0,mer:0,wild:0,neu:0},
+    stats:{kills:0,days:0,visited:{},crafts:0,deaths:0,travelDays:0}
+  };
+  if(o.fx.skills){
+    p.skills.combat+= (o.fx.combat||0); p.skills.survival+=(o.fx.survival||0);
+    p.skills.medical+=(o.fx.medical||0); p.skills.charisma+=(o.fx.charisma||0);
+  }
+  if(o.fx.hp) p.hp=p.maxHp+=o.fx.hp;
+  // 初始物资
+  var starter = mode==="story"
+    ? {water:2,bread:2,bandage:1,scrap:3,knife:1,whiskey:0}
+    : {water:2,dried_food:2,bandage:2,scrap:2,knife:1};
+  for(var k in starter){ if(starter[k]>0) p.inv[k]=(p.inv[k]||0)+starter[k]; }
+  p.inv.ammo_pistol = (p.inv.ammo_pistol||0)+6;
+
+  var st = {
+    v:1, mode:mode, date:{y:1988,m:1,d:1}, dayCount:0,
+    player:p, journal:[], newsLog:[], ach:{} , hints:[],
+    story:{next:1, prog:{}, closed:0, started:false, ended:false},
+    quests:{}, visitedNodes:[], metNpcs:{}, nodeFlags:{}, worldFlags:{},
+    weather:"晴"
+  };
+  st.visitedNodes.push(p.pos);
+  st.player.stats.visited[p.pos]=1;
+  HB.state = st;
+  HB.applyOriginText(o);
+  HB.log("【系统】"+st.date.y+"年"+st.date.m+"月"+st.date.d+"日。你醒来了。", "sys");
+  HB.autosave();
+  HB.uiRefresh();
+  HB.ui.initGameScreen(st.mode);
+  HB.dlg.playIntro(st.mode);
+};
+HB.applyOriginText = function(o){
+  HB.log("【背景】"+o.n+"："+o.d,"info");
+};
+
+// ---------- 存档 ----------
+HB.saveGame = function(slot){
+  if(!HB.state) return false;
+  try{
+    var key = HB.SAVE_PREFIX+slot;
+    localStorage.setItem(key, JSON.stringify(HB.state));
+    var meta = {};
+    try{ meta = JSON.parse(localStorage.getItem(HB.SAVE_META)||"{}"); }catch(e){}
+    meta["s"+slot] = {mode:HB.state.mode, date:HB.fmtDate(HB.state.date), day:HB.state.dayCount, ch:HB.state.story.closed};
+    localStorage.setItem(HB.SAVE_META, JSON.stringify(meta));
+    return true;
+  }catch(e){ return false; }
+};
+HB.autosave = function(){
+  HB.saveGame(0);
+};
+HB.loadGame = function(slot){
+  try{
+    var raw = localStorage.getItem(HB.SAVE_PREFIX+slot);
+    if(!raw) return false;
+    var st = JSON.parse(raw);
+    if(!st || !st.player) return false;
+    HB.state = st;
+    HB.ui.initGameScreen(st.mode);
+    HB.uiRefresh();
+    HB.log("【系统】读档完成："+HB.fmtDate(st.date)+"，第"+st.dayCount+"天。","sys");
+    HB.checkPendingScenes();
+    return true;
+  }catch(e){ return false; }
+};
+HB.exportSave = function(){
+  if(!HB.state) return "";
+  return JSON.stringify({hb1:true, ts:Date.now(), save:HB.state});
+};
+HB.importSave = function(str){
+  try{
+    var o = JSON.parse(str);
+    if(!o || !o.hb1 || !o.save || !o.save.player) return false;
+    HB.state = o.save;
+    HB.ui.initGameScreen(HB.state.mode);
+    HB.uiRefresh();
+    HB.log("【系统】导入存档完成。","sys");
+    HB.checkPendingScenes();
+    return true;
+  }catch(e){ return false; }
+};
+
+// ---------- 数值辅助 ----------
+HB.carryMax = function(){
+  var p = HB.state.player;
+  var cap = 20 + Math.floor(p.skills.survival*0.15);
+  var g = p.equip.gear && HB.items[p.equip.gear] ? HB.items[p.equip.gear].carry||0 : 0;
+  return cap + g;
+};
+HB.carryNow = function(){
+  var p=HB.state.player, sum=0;
+  for(var k in p.inv){ var it=HB.items[k]; if(it) sum += it.w*p.inv[k]; }
+  return Math.round(sum*10)/10;
+};
+HB.equippedWeapon = function(){
+  var p=HB.state.player;
+  var w = p.equip.weapon && HB.items[p.equip.weapon] ? HB.items[p.equip.weapon] : HB.items.fist;
+  return w;
+};
+HB.hasAmmo = function(w){
+  if(!w.ammo) return true;
+  return (HB.state.player.inv[w.ammo]||0) > 0;
+};
+HB.armorValue = function(){
+  var p=HB.state.player, a=0;
+  var it = p.equip.armor && HB.items[p.equip.armor] ? HB.items[p.equip.armor] : null;
+  if(it && it.armor) a+=it.armor;
+  return a;
+};
+HB.addItem = function(id, n){
+  var p=HB.state.player; n=n||1;
+  p.inv[id]=(p.inv[id]||0)+n;
+  if(HB.questEvent) HB.questEvent({type:"collect",item:id});
+  HB.uiRefresh();
+};
+HB.takeItem = function(id, n){
+  var p=HB.state.player; n=n||1;
+  if(!p.inv[id]) return false;
+  p.inv[id]-=n;
+  if(p.inv[id]<=0) delete p.inv[id];
+  HB.uiRefresh();
+  return true;
+};
+HB.gainMoney = function(n){ HB.state.player.money += n; if(HB.state.player.money<0) HB.state.player.money=0; HB.uiRefresh(); };
+HB.addRep = function(f, n){
+  var p=HB.state.player;
+  if(!p.rep[f] && p.rep[f]!==0) return;
+  p.rep[f]=Math.max(-100,Math.min(100,p.rep[f]+n));
+  HB.log("【声望】"+HB.factions[f].n+" "+ (n>=0?"+":"")+n+"（当前 "+p.rep[f]+"）","info");
+  HB.uiRefresh();
+};
+HB.gainXp = function(n){
+  var p=HB.state.player;
+  p.xp+=n;
+  while(p.xp >= p.level*120){
+    p.xp -= p.level*120;
+    p.level++;
+    p.maxHp+=5; p.hp=Math.min(p.maxHp,p.hp+10);
+    p.skillPts+=3;
+    if(p.level%4===0) p.perkPts++;
+    HB.log("【升级】等级 "+p.level+"！生命上限+5，技能点+3"+(p.level%4===0?"，获得新专长！":""),"good");
+  }
+  HB.uiRefresh();
+};
+HB.heal = function(n){
+  var p=HB.state.player;
+  p.hp=Math.min(p.maxHp,p.hp+n);
+  HB.uiRefresh();
+};
+HB.setFlag = function(k,v){
+  HB.state.worldFlags[k]=v===undefined?1:v;
+};
+HB.getFlag = function(k){ return HB.state.worldFlags[k]||0; };
+
+// ---------- 每日结算 ----------
+HB.autoEat = function(){
+  var p=HB.state.player;
+  var food=null, drink=null;
+  for(var k in p.inv){
+    var it=HB.items[k]; if(!it) continue;
+    if(it.cat==="food" && (p.hunger<35) && (!food || it.fx.hunger>(HB.items[food].fx.hunger||0))) food=k;
+    if(it.cat==="drink" && (p.thirst<35) && (!drink || it.fx.thirst>(HB.items[drink].fx.thirst||0))) drink=k;
+  }
+  if(food){ HB.useItem(food,1,true); HB.log("（自动进食："+HB.items[food].n+"）","sys"); }
+  if(drink){ HB.useItem(drink,1,true); HB.log("（自动饮水："+HB.items[drink].n+"）","sys"); }
+};
+HB.dayTick = function(n, opts){
+  opts=opts||{};
+  var p=HB.state.player;
+  for(var i=0;i<n;i++){
+    HB.state.dayCount++;
+    var d=HB.state.date;
+    var nd=HB.addDays(d,1); HB.state.date=nd;
+    // 需求
+    var hot = (HB.nodes[p.pos]&&(HB.nodes[p.pos].t==="ruin"))?3:0;
+    p.hunger = Math.max(0,p.hunger-13);
+    p.thirst = Math.max(0,p.thirst-16-hot);
+    p.energy = Math.max(0,p.energy-14);
+    var node=HB.nodes[p.pos];
+    if(node && node.rad>0){
+      var gear = p.equip.gear && HB.items[p.equip.gear];
+      var rr = gear&&gear.radRes?gear.radRes:0;
+      p.rad += node.rad*(1-rr)*(0.35+Math.random()*0.3);
+    }
+    // 再生 / 损伤
+    var well = p.hunger>40 && p.thirst>40 && p.energy>30;
+    if(well){ p.hp=Math.min(p.maxHp,p.hp+2+HB.companionCount()*1); p.morale=Math.min(100,p.morale+1); }
+    else { p.morale=Math.max(0,p.morale-2); }
+    if(p.hunger<=0) p.hp-=3;
+    if(p.thirst<=0) p.hp-=5;
+    if(p.energy<=0) p.hp-=4;
+    if(p.rad>60) p.hp-=2;
+    p.hp=Math.max(0,p.hp);
+    HB.autoEat();
+    HB.storyDay();
+    if(HB.state.dayCount%7===0) HB.weeklyNews();
+    if(HB.state.dayCount%30===0) HB.log("【日历】又一个月的第"+HB.state.dayCount+"天过去了。你活着。","sys");
+    HB.achCheck();
+    if(p.hp<=0 || p.rad>=100){
+      HB.die(p.rad>=100?"辐射病发，身体再也撑不住了":"失血过多，意识慢慢模糊");
+      return false;
+    }
+  }
+  HB.uiRefresh();
+  return true;
+};
+HB.companionCount = function(){
+  var c=0; for(var k in HB.state.player.companions) if(HB.state.player.companions[k]) c++;
+  return c;
+};
+
+// ---------- 天气 ----------
+HB.weathers=["晴","阴","雪","细雨","辐射尘","大风"];
+HB.rollWeather = function(){
+  var w=HB.weathers[Math.floor(Math.random()*HB.weathers.length)];
+  HB.state.weather=w; return w;
+};
+
+// ---------- 日志 ----------
+HB.log = function(msg, cls){
+  cls=cls||"info";
+  var tm=HB.state?HB.fmtDate(HB.state.date).slice(0,11):"--";
+  HB.state.journal.push({t:tm,m:msg,c:cls});
+  if(HB.state.journal.length>400) HB.state.journal.splice(0,HB.state.journal.length-400);
+  HB.ui.addLog(tm,msg,cls);
+};
+
+// ---------- 电台新闻 ----------
+HB.weeklyNews = function(){
+  var pool=HB.newsPool.filter(function(x){ return x.cond==="default" || HB.getFlag(x.cond); });
+  var picks=[];
+  var n=Math.min(2,pool.length);
+  while(picks.length<n){ var it=pool[Math.floor(Math.random()*pool.length)]; if(picks.indexOf(it)<0) picks.push(it); }
+  picks.forEach(function(it){ HB.log("【世界电台】"+it.text,"ev"); HB.state.newsLog.push(it.text); });
+};
+
+// ---------- 事件通用 ----------
+HB.applyFx = function(fx, onDone){
+  onDone=onDone||function(){};
+  if(!fx) return onDone();
+  var p=HB.state.player;
+  var after=[];
+  if(fx.money!==undefined) HB.gainMoney(fx.money);
+  if(fx.items_give) for(var g in fx.items_give) HB.addItem(g,fx.items_give[g]);
+  if(fx.items_take) for(var t in fx.items_take) HB.takeItem(t,fx.items_take[t]);
+  if(fx.hp) p.hp=Math.min(p.maxHp,p.hp+fx.hp);
+  if(fx.rad) p.rad=Math.max(0,Math.min(100,p.rad+fx.rad));
+  if(fx.hunger) p.hunger=Math.max(0,Math.min(100,p.hunger+fx.hunger));
+  if(fx.thirst) p.thirst=Math.max(0,Math.min(100,p.thirst+fx.thirst));
+  if(fx.energy) p.energy=Math.max(0,Math.min(100,p.energy+fx.energy));
+  if(fx.mor) p.morale=Math.max(0,Math.min(100,p.morale+fx.mor));
+  if(fx.rep) for(var r in fx.rep) HB.addRep(r,fx.rep[r]);
+  if(fx.days){ HB.dayTick(fx.days); if(HB.state.player.hp<=0) return; }
+  if(fx.gamble){ var win=Math.random()<0.4; if(win){HB.gainMoney(fx.gamble*2);HB.log("【赌局】你赢了，揣着双倍的军票溜了。","good");}else{HB.log("【赌局】骰子向着庄家。钱没了。","warn");} }
+  if(fx.info) HB.log("【见闻】"+fx.info,"ev");
+  if(fx.say) HB.dlg.playLines(fx.say, function(){ after[0](); });
+  if(fx.combat){
+    HB.startCombat(fx.combat, {
+      label:"遭遇战",
+      onWin:function(){ after[0](); },
+      onLose:function(){ after[0](); }
+    });
+  } else {
+    after[0]=onDone; after[0]();
+  }
+  HB.uiRefresh();
+};
+
+// ---------- 事件（旅行/探索） ----------
+HB.rollTravelEvent = function(){
+  if(Math.random()<0.30){
+    var ev=HB.travelEvents[Math.floor(Math.random()*HB.travelEvents.length)];
+    return ev;
+  }
+  return null;
+};
+HB.playEvent = function(ev, onDone){
+  HB.dlg.eventModal(ev, onDone);
+};
+
+// ---------- 旅行 ----------
+HB.travel = {active:false, from:null, to:null, days:0, rem:0, timer:null};
+HB.travelDays = function(fromId,toId){
+  var a=HB.nodes[fromId], b=HB.nodes[toId];
+  var dist=Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2));
+  var d=Math.max(1,Math.ceil(dist/55));
+  if(a.cont!==b.cont) d=Math.ceil(d*1.6);
+  if(HB.carryNow()>HB.carryMax()) d=Math.ceil(d*1.4);
+  return d;
+};
+HB.travelStart = function(toId){
+  var st=HB.state, p=st.player;
+  if(HB.travel.active) return;
+  if(toId===p.pos){ HB.toast("你已经在这里了。"); return; }
+  var days=HB.travelDays(p.pos,toId);
+  HB.travel={active:true,from:p.pos,to:toId,days:days,rem:days,timer:null};
+  HB.log("【出发】从 "+HB.nodes[p.pos].n+" 前往 "+HB.nodes[toId].n+"（约 "+days+" 天）","sys");
+  HB.ui.travelModal(HB.travel);
+  HB.travelStep();
+};
+HB.travelCancel = function(){
+  if(HB.travel.timer){ clearTimeout(HB.travel.timer); HB.travel.timer=null; }
+  HB.travel.active=false;
+  HB.ui.travelClose();
+  HB.log("【行程】你取消了这次旅程。","sys");
+};
+HB.travelStep = function(){
+  if(!HB.travel.active) return;
+  var p=HB.state.player;
+  if(HB.travel.rem<=0){ HB.travelArrive(); return; }
+  HB.travel.rem--;
+  HB.state.player.stats.travelDays++;
+  var ok=HB.dayTick(1,{travel:true});
+  if(!ok) return; // died
+  var nodeNow=HB.nodes[HB.travel.to];
+  HB.ui.travelUpdate(HB.travel.rem, HB.travel.days);
+  var ev=HB.rollTravelEvent();
+  if(ev){
+    HB.travel.paused=true;
+    HB.playEvent(ev, function(){
+      HB.travel.paused=false;
+      HB.travelStep();
+    });
+    return;
+  }
+  if(HB.travel.rem<=0){ HB.travelArrive(); return; }
+  HB.travel.timer=setTimeout(function(){ HB.travel.timer=null; HB.travelStep(); }, 420);
+};
+HB.travelArrive = function(){
+  var st=HB.state,p=st.player;
+  var to=HB.travel.to;
+  HB.travel.active=false;
+  p.pos=to;
+  if(!p.stats.visited[to]){ p.stats.visited[to]=1; st.visitedNodes.push(to); HB.achCheck(); }
+  HB.rollWeather();
+  HB.log("【到达】你抵达了"+HB.nodes[to].n+"。天气："+st.weather,"sys");
+  var node=HB.nodes[to];
+  var rep=p.rep[node.f]||0;
+  var hostile = (node.f==="fed"||node.f==="red") && rep < -30;
+  HB.ui.travelClose();
+  HB.uiRefresh();
+  HB.ui.nodeArrive(to, hostile);
+  HB.questEvent({type:"goto",node:to});
+  HB.autosave();
+};
+
+// ---------- 休息 ----------
+HB.restStart = function(days){
+  HB.ui.closeModal();
+  HB.log("【休息】你在"+HB.nodes[HB.state.player.pos].n+"休整了 "+days+" 天。","sys");
+  var ok=HB.dayTick(days);
+  if(ok){
+    var p=HB.state.player;
+    p.energy=Math.min(100,p.energy+22*days);
+    p.morale=Math.min(100,p.morale+4*days);
+    if(p.hunger>30&&p.thirst>30) p.hp=Math.min(p.maxHp,p.hp+4*days);
+    HB.uiRefresh();
+    HB.storyDay();
+    HB.autosave();
+  }
+};
+
+// ---------- 战斗 ----------
+HB.combat={active:false,enemy:null,ekey:null,ctx:null,defending:false,log:[]};
+HB.startCombat = function(ekey, ctx){
+  ctx=ctx||{};
+  var e=HB.enemies[ekey];
+  if(!e) return false;
+  HB.combat={active:true,ekey:ekey,enemy:e,ctx:ctx,defending:false,log:[]};
+  HB.combat.ehp=e.hp;
+  HB.ui.combatModal(e, ekey, ctx.label||("遭遇："+e.n));
+  return true;
+};
+HB.combatPlayerAttack = function(){
+  var c=HB.combat; if(!c.active) return;
+  var p=HB.state.player;
+  var w=HB.equippedWeapon();
+  if(w.ammo && !HB.hasAmmo(w)){
+    HB.cLog("弹匣空了！你只能用拳头。","ev");
+    w=HB.items.fist;
+  } else if(w.ammo){
+    HB.takeItem(w.ammo,1);
+  }
+  var hitCh = Math.min(.95, (w.acc||.75) + p.skills.combat/400);
+  var roll=Math.random();
+  if(roll>hitCh){
+    HB.cLog("你挥出"+w.n+"，落空了。","ev");
+  } else {
+    var dmg=HB.rand(w.dmg[0],w.dmg[1]) + Math.floor(p.skills.combat/18) + (HB.companionCount()*1);
+    var crit=Math.random()<0.08;
+    if(crit) dmg=Math.round(dmg*1.8);
+    var real=Math.max(1, dmg - c.enemy.arm);
+    c.ehp-=real;
+    HB.cLog((crit?"【暴击】":"")+"你用"+w.n+"击中"+c.enemy.n+"，造成 "+real+" 点伤害。",crit?"cri":"ply");
+    if(c.ehp<=0){ HB.combatWin(); return; }
+  }
+  HB.combatEnemyTurn();
+};
+HB.combatPlayerDefend = function(){
+  HB.cLog("你摆出防御姿态。","ply");
+  HB.combat.defending=true;
+  HB.combatEnemyTurn();
+};
+HB.combatPlayerItem = function(){
+  HB.dlg.combatItemPick();
+};
+HB.combatPlayerFlee = function(){
+  var p=HB.state.player;
+  var ch=.35 + p.skills.survival/300;
+  if(Math.random()<ch){
+    HB.cLog("你抓住空当，溜了。","ev");
+    HB.combatEnd();
+  } else {
+    HB.cLog("跑不掉！","warn");
+    HB.combatEnemyTurn();
+  }
+};
+HB.combatEnemyTurn = function(){
+  var c=HB.combat; if(!c.active) return;
+  var p=HB.state.player;
+  var e=c.enemy;
+  var act=Math.random();
+  if(act<0.12){ HB.cLog(e.n+"在观察你的破绽。","ev"); }
+  else if(act<0.22 && c.defending){ HB.cLog(e.n+"试探性地扑了一下，被你挡开。","ev"); }
+  else {
+    var hitCh=Math.min(.95,e.acc);
+    var dmg = HB.rand(e.dmg[0],e.dmg[1]) - HB.armorValue();
+    if(c.defending) dmg=Math.floor(dmg*0.45);
+    if(Math.random()<hitCh){
+      dmg=Math.max(0,dmg);
+      p.hp-=dmg;
+      HB.cLog(e.n+"攻击命中，你受到 "+dmg+" 点伤害。","hit");
+      if(p.hp<=0){ HB.combatLose(); return; }
+    } else {
+      HB.cLog(e.n+"的攻击落空了。","ev");
+    }
+  }
+  c.defending=false;
+  HB.ui.combatRefresh();
+};
+HB.combatWin = function(){
+  var c=HB.combat;
+  c.log.push({t:"战斗结束。"});
+  var p=HB.state.player;
+  p.stats.kills++;
+  HB.questEvent({type:"kill",enemy:c.ekey});
+  HB.gainXp(c.enemy.xp);
+  var loot=[];
+  (c.enemy.loot||[]).forEach(function(l){
+    if(Math.random()<l.p){ HB.addItem(l.i,l.n); loot.push(HB.items[l.i].n+"×"+l.n); }
+  });
+  if(loot.length) HB.log("【战利品】"+loot.join("、"),"good");
+  HB.achCheck();
+  HB.combatEnd();
+  if(c.ctx && c.ctx.onWin) c.ctx.onWin();
+};
+HB.combatLose = function(){
+  var ctx=HB.combat.ctx;   // 先取上下文（combatEnd 会重置）
+  HB.combatEnd();
+  var p=HB.state.player;
+  p.hp=0;
+  if(ctx && ctx.onLose){ ctx.onLose(); return; }
+  HB.die("你在战斗中倒下了。");
+};
+HB.combatEnd = function(){
+  HB.combat.active=false;
+  HB.ui.combatClose();
+  HB.uiRefresh();
+};
+HB.cLog = function(msg, cls){ HB.ui.combatLog(msg, cls); };
+HB.rand = function(a,b){ return a+Math.floor(Math.random()*(b-a+1)); };
+
+// ---------- 死亡 ----------
+HB.die = function(reason){
+  var p=HB.state.player;
+  if(HB.travel.active){ if(HB.travel.timer){clearTimeout(HB.travel.timer);HB.travel.timer=null;} HB.travel.active=false; HB.ui.travelClose(); }
+  p.stats.deaths++;
+  HB.log("【死亡】"+reason,"cri");
+  HB.ui.deathModal(reason);
+};
+HB.respawn = function(){
+  var p=HB.state.player;
+  p.hp=Math.max(1,Math.floor(p.maxHp*0.3));
+  p.hunger=Math.max(30,p.hunger); p.thirst=Math.max(30,p.thirst); p.rad=Math.max(0,p.rad-20);
+  p.money=Math.floor(p.money*0.5);
+  // 丢失30%物品
+  var keys=Object.keys(p.inv).filter(function(k){ return HB.items[k] && HB.items[k].cat!=="special"; });
+  var lose=Math.min(keys.length, Math.floor(keys.length*0.3));
+  for(var i=0;i<lose;i++){
+    var kk=keys[Math.floor(Math.random()*keys.length)];
+    p.inv[kk]=Math.max(0,p.inv[kk]-1); if(!p.inv[kk]) delete p.inv[kk];
+  }
+  HB.dayTick(2);
+  HB.uiRefresh();
+  HB.log("【重生】你被路过的人救起，代价是身上一半的军票和一些物资。","warn");
+  HB.autosave();
+};
+
+// ---------- 任务引擎 ----------
+HB.questProgress = function(quest, prog, ev){
+  if(!prog) prog={};
+  quest.objs.forEach(function(o,i){
+    var cur=prog[i]||0;
+    switch(o.type){
+      case "goto": if(ev.type==="goto"&&ev.node===o.node) prog[i]=1; break;
+      case "talk": if(ev.type==="talk"&&ev.npc===o.npc) prog[i]=1; break;
+      case "kill": if(ev.type==="kill"&&ev.enemy===o.enemy) prog[i]=Math.min(o.n,cur+1); break;
+      case "collect": if(ev.type==="collect"&&ev.item===o.item) prog[i]=Math.min(o.n,cur+HB.state.player.inv[o.item]||0); break;
+      case "survive": prog[i]=HB.state.dayCount; break;
+    }
+  });
+  var done=quest.objs.every(function(o,i){ return o.type==="survive" ? true : (prog[i]||0)>=(o.n||1); });
+  var survOk=quest.objs.every(function(o,i){ return o.type!=="survive" ? true : (HB.state.dayCount>=(prog._s||0)+(o.n||0)); });
+  if(!prog._s) prog._s=HB.state.dayCount;
+  return done&&survOk;
+};
+HB.completeSideQuest = function(qid){
+  var q=HB.state.quests[qid];
+  q.state="done";
+  var def=HB.sideQuests.find(function(x){return x.id===qid;});
+  if(def){
+    if(def.reward.money) HB.gainMoney(def.reward.money);
+    if(def.reward.items) for(var i in def.reward.items) HB.addItem(i,def.reward.items[i]);
+    if(def.reward.xp) HB.gainXp(def.reward.xp);
+    if(def.rep) for(var f in def.rep) HB.addRep(f,def.rep[f]);
+    HB.log("【支线完成】"+def.title+" — 报酬已结算。","good");
+  }
+  HB.uiRefresh();
+};
+HB.questEvent = function(ev){
+  var st=HB.state;
+  // 支线
+  for(var qid in st.quests){
+    var q=st.quests[qid];
+    if(q.state!=="active") continue;
+    var def=HB.sideQuests.find(function(x){return x.id===qid;});
+    if(!def) continue;
+    if(HB.questProgress(def,q.prog,ev)) HB.completeSideQuest(qid);
+  }
+  // 主线
+  HB.storyEvent(ev);
+};
+
+// ---------- 主线剧情引擎 ----------
+HB.currentChapter = function(){
+  var st=HB.state;
+  if(st.mode!=="story"||st.story.ended) return null;
+  var ch=HB.story.find(function(c){return c.id===st.story.next;});
+  return ch||null;
+};
+HB.storyDay = function(){
+  var st=HB.state, ch=HB.currentChapter();
+  if(!ch) return;
+  if(!st.story.started){
+    if(HB.dateCmp(st.date, HB.parseDate(ch.unlock))){
+      HB.storyStart(ch);
+    }
+  } else {
+    // 检查关闭
+    var done=HB.objsAllDone(ch.objs, st.story.prog);
+    if(done && st.player.pos===ch.closeAt && !st.story.closedThis){
+      st.story.closedThis=true;
+      HB.storyClose(ch);
+    }
+  }
+};
+HB.storyArrival = function(){ HB.storyEvent({type:"goto",node:HB.state.player.pos}); };
+HB.storyEvent = function(ev){
+  var st=HB.state, ch=HB.currentChapter();
+  if(!ch||!st.story.started) return;
+  HB.objsProgress(ch.objs, st.story.prog, ev);
+  var done=HB.objsAllDone(ch.objs, st.story.prog);
+  if(done && st.player.pos===ch.closeAt && !st.story.closedThis){
+    st.story.closedThis=true;
+    HB.storyClose(ch);
+  }
+};
+HB.objsProgress = function(objs, prog, ev){
+  objs.forEach(function(o,i){
+    var cur=prog[i]||0;
+    switch(o.type){
+      case "goto": if(ev.type==="goto"&&ev.node===o.node) prog[i]=1; break;
+      case "talk": if(ev.type==="talk"&&ev.npc===o.npc) prog[i]=1; break;
+      case "kill": if(ev.type==="kill"&&ev.enemy===o.enemy) prog[i]=Math.min(o.n||1,cur+1); break;
+      case "collect": if(ev.type==="collect"&&ev.item===o.item) prog[i]=Math.min(o.n||1,cur+(HB.state.player.inv[o.item]||0)); break;
+      case "survive": if(!(prog[i]>0)) prog[i]=HB.state.dayCount; break;
+    }
+  });
+};
+HB.objsAllDone = function(objs, prog){
+  return objs.every(function(o,i){
+    if(o.type==="survive") return (prog[i]||0)>0 && HB.state.dayCount >= (prog[i]||0) + (o.n||1);
+    return (prog[i]||0) >= (o.n||1);
+  });
+};
+HB.storyStart = function(ch){
+  var st=HB.state;
+  st.story.started=true;
+  st.story.prog={};
+  st.story.closedThis=false;
+  HB.log("【主线开启】第"+ch.id+"章《"+ch.title+"》","ev");
+  HB.dlg.sceneModal(ch, "open", function(){
+    HB.uiRefresh();
+    HB.hint("主线目标已更新：查看任务面板。完成本章目标后，在 "+HB.nodes[ch.closeAt].n+" 触发剧情。");
+  });
+};
+HB.storyClose = function(ch){
+  var st=HB.state;
+  HB.dlg.sceneModal(ch, "close", function(){
+    st.story.closed=ch.id;
+    st.story.next=ch.id+1;
+    st.story.started=false;
+    st.story.prog={};
+    st.story.closedThis=false;
+    HB.log("【主线完成】第"+ch.id+"章《"+ch.title+"》完结。","good");
+    if(ch.id>=12) st.story.ended=true;
+    HB.achCheck();
+    HB.autosave();
+    HB.uiRefresh();
+  });
+};
+
+// 场景步骤执行（由 dlg.sceneModal 调用）
+HB.sceneRun = function(ch, part, seq, done){
+  var steps = part==="open" ? ch.open : ch.close;
+  if(seq>=steps.length){ done(); return; }
+  var s=steps[seq];
+  var next=function(){ HB.sceneRun(ch,part,seq+1,done); };
+  switch(s.t){
+    case "narr": HB.dlg.sceneLine(s.text, "narr", next); break;
+    case "say": HB.dlg.sceneLine(s.text, "say", next, s.who); break;
+    case "give": if(s.items) for(var g in s.items) HB.addItem(g,s.items[g]); next(); break;
+    case "take": if(s.items) for(var t in s.items) HB.takeItem(t,s.items[t]); next(); break;
+    case "flag": HB.setFlag(s.k,s.v); next(); break;
+    case "rep": if(s.f) HB.addRep(s.f,s.v); next(); break;
+    case "combat": HB.startCombat(s.enemy,{label:"剧情战斗",onWin:function(){next();},onLose:function(){
+        // 剧情战斗失败：不死亡、不打断场景（避免章节软锁）；第十二章终战例外，输了就真的死。
+        if(ch.id>=12){ HB.combatEnd(); HB.die("你在最终决战中倒下了。"); return; }
+        var pp=HB.state.player;
+        pp.hp=Math.max(1,Math.floor(pp.maxHp*0.25));
+        HB.log("【剧情】你在战斗中拼死撑了过来。","ev");
+        HB.toast("你重伤撑过了这场战斗");
+        next();
+      }}); break;
+    case "choice": HB.dlg.sceneChoice(s, function(opt){
+        if(opt.end) HB.setFlag("ending",opt.end);
+        if(opt.r) HB.dlg.sceneLine(opt.r,"say",next,s.who||"");
+        else next();
+      }); break;
+    default: next();
+  }
+};
+
+// 检查读档后需要补播的场景
+HB.checkPendingScenes = function(){
+  var st=HB.state;
+  if(st.mode!=="story"||st.story.ended) return;
+  var ch=HB.currentChapter();
+  if(!ch) return;
+  if(!st.story.started){
+    if(HB.dateCmp(st.date, HB.parseDate(ch.unlock))) HB.storyStart(ch);
+    return;
+  }
+  if(!st.story.closedThis){
+    var done=HB.objsAllDone(ch.objs, st.story.prog);
+    if(done && st.player.pos===ch.closeAt) HB.storyClose(ch);
+  }
+};
+
+</script>
+<script>
+// ===== HanBer ONE · UI 与交互 =====
+window.HB = window.HB || {};
+HB.dlg = HB.dlg || {};
+HB.ui = HB.ui || {};
+
+// ---------- 通用弹窗 ----------
+HB.ui.openModal = function(title, bodyHtml, footHtml, opts){
+  opts=opts||{};
+  var m=document.getElementById("modal"), box=document.getElementById("modalBox");
+  document.getElementById("modalTitle").textContent=title;
+  document.getElementById("modalBody").innerHTML=bodyHtml;
+  var foot=document.getElementById("modalFoot");
+  foot.innerHTML=footHtml||'<button class="btn" onclick="HB.ui.closeModal()">关闭</button>';
+  document.getElementById("modalX").style.display = opts.noClose?"none":"flex";
+  box.classList.toggle("m-wide", !!opts.wide);
+  box.classList.toggle("m-narrow", !!opts.narrow);
+  m.style.display="flex";
+  document.getElementById("modalBody").scrollTop=0;
+  return document.getElementById("modalBody");
+};
+HB.ui.closeModal = function(){
+  var m=document.getElementById("modal");
+  m.style.display="none";
+  if(HB.combat.active){} // combat modal is separate overlay? we reuse modal
+};
+// 独立场景弹窗
+HB.sceneOpen = function(){
+  var d=document.createElement("div");
+  d.className="ov"; d.id="sceneOv";
+  d.innerHTML='<div id="sceneBox"><div class="sc-head"><div class="sc-kicker"></div><div class="sc-title"></div><div class="sc-date"></div></div><div id="sceneBody"></div></div>';
+  document.body.appendChild(d);
+  return d;
+};
+HB.sceneClose = function(){
+  var d=document.getElementById("sceneOv");
+  if(d) d.remove();
+};
+
+// ---------- Toast / Hint ----------
+HB.toast = function(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg; t.style.display="block";
+  clearTimeout(t._timer);
+  t._timer=setTimeout(function(){ t.style.display="none"; }, 2600);
+};
+HB.hint = function(text){
+  var h=document.getElementById("hintBar");
+  document.getElementById("hintText").textContent=text;
+  h.style.display="block";
+  clearTimeout(h._timer);
+  h._timer=setTimeout(function(){ h.style.display="none"; }, 16000);
+};
+
+// ---------- 日志 ----------
+HB.ui.addLog = function(tm,msg,cls){
+  var el=document.getElementById("logPanel");
+  var d=document.createElement("div");
+  d.className="logline "+cls;
+  d.innerHTML='<span class="tm">'+tm+'</span>'+msg.replace(/</g,"&lt;");
+  el.appendChild(d);
+  while(el.children.length>60) el.removeChild(el.firstChild);
+  el.scrollTop=el.scrollHeight;
+};
+
+// ---------- 顶部栏 / 侧栏 ----------
+HB.ui.initGameScreen = function(mode){
+  document.getElementById("titleScreen").style.display="none";
+  document.getElementById("gameScreen").style.display="grid";
+  document.getElementById("tbMode").textContent = mode==="story"?"主线模式":"自由模式";
+  document.getElementById("tbMode").style.color = mode==="story"?"#e2a13a":"#4d9e6a";
+  HB.bindHeader();
+};
+HB.bindHeader = function(){
+  var map={
+    btnChar:function(){HB.openChar();}, btnBag:function(){HB.openBag();},
+    btnQuest:function(){HB.openQuests();}, btnJournal:function(){HB.openJournal();},
+    btnSave:function(){HB.openSave();}, btnMenu:function(){HB.ui.confirmBackMenu();}
+  };
+  for(var id in map){
+    var el=document.getElementById(id);
+    if(el && !el.dataset.bound){ el.dataset.bound="1"; el.addEventListener("click",map[id]); }
+  }
+  document.getElementById("modalX").addEventListener("click",function(){HB.ui.closeModal();});
+  document.addEventListener("keydown", function(ev){
+    if(ev.key==="Escape"){ HB.ui.closeModal(); if(HB.travel.active&&HB.travel.paused){} }
+  });
+};
+HB.ui.refresh = function(){
+  if(!HB.state || document.getElementById("gameScreen").style.display==="none") return;
+  var p=HB.state.player;
+  document.getElementById("tbClock").textContent = HB.fmtDate(HB.state.date)+" · 第"+HB.state.dayCount+"天 · "+HB.state.weather;
+  var nd=HB.nodes[p.pos];
+  document.getElementById("tbLoc").textContent = "📍".replace("📍","") + (nd?nd.n+" · "+nd.reg:"");
+  var f=HB.factions[nd.f]||HB.factions.neu;
+  document.getElementById("tbLoc").innerHTML = '<span class="chip chip-'+nd.f+'"><i></i>'+f.n+'</span> '+nd.n;
+  HB.ui.renderSide();
+  HB.ui.renderMap();
+};
+HB.ui.renderSide = function(){
+  var p=HB.state.player, nd=HB.nodes[p.pos];
+  var h='';
+  // 生存状态
+  h+='<div class="sec"><h3>生存状态 <span class="hl">'+p.name+'</span></h3>';
+  h+=HB.bar("生命",p.hp,p.maxHp,"hp");
+  h+=HB.bar("饱食",p.hunger,100,"hun");
+  h+=HB.bar("饮水",p.thirst,100,"thi");
+  h+=HB.bar("能量",p.energy,100,"eng");
+  h+=HB.bar("辐射",p.rad,100,"rad");
+  h+=HB.bar("士气",p.morale,100,"mor");
+  h+='<div class="statrow"><span class="lbl">军票</span><span class="tick">'+p.money+'</span><span class="lbl" style="width:44px;margin-left:auto">负重</span><span class="tick">'+HB.carryNow()+'/'+HB.carryMax()+'</span></div>';
+  h+='<div class="statrow"><span class="lbl">等级</span><span class="tick">Lv.'+p.level+'</span><span class="lbl" style="width:44px;margin-left:auto">经验</span><span class="tick">'+p.xp+'</span></div>';
+  h+='</div>';
+  // 当前位置
+  h+='<div class="sec"><h3>当前位置</h3>';
+  h+='<p class="bold">'+nd.n+' <span class="chip chip-'+nd.f+'"><i></i>'+HB.factions[nd.f].n+'</span></p>';
+  h+='<p class="muted mt">'+nd.desc+'</p>';
+  h+='<div class="mt"><span class="tag">危险 '+nd.dang+'/10</span><span class="tag">辐射 '+nd.rad+'/3</span><span class="tag">人口 '+nd.pop+'</span></div>';
+  h+='</div>';
+  // 行动
+  h+='<div class="sec"><h3>行动</h3>';
+  var places=HB.ui.placeList(nd);
+  places.forEach(function(pl){
+    h+='<div class="place-row"><span class="pn">'+pl.n+'</span><span class="pd">'+pl.d+'</span><button class="btn btn-sm" onclick="HB.ui.place(\''+pl.id+'\')">前往</button></div>';
+  });
+  h+='</div>';
+  // 主线
+  if(HB.state.mode==="story"){
+    h+='<div class="sec"><h3>主线 · 第'+HB.state.story.next+'章</h3>';
+    var ch=HB.currentChapter();
+    if(!ch){ h+='<p class="muted">主线已完结。</p>'; }
+    else if(!HB.state.story.started){
+      h+='<p>《'+ch.title+'》将在 <span class="tick">'+ch.unlock+'</span> 解锁</p>';
+      h+='<p class="muted mt">当前日期：'+HB.fmtDate(HB.state.date)+'</p>';
+      h+='<button class="btn btn-sm btn-block" onclick="HB.restStart(7)">休整 7 天（推进时间）</button>';
+    } else {
+      h+='<p>《'+ch.title+'》进行中</p>';
+      var objs=ch.objs, prog=HB.state.story.prog;
+      objs.forEach(function(o,i){
+        var done = o.type==="survive" ? (HB.state.dayCount>=(prog[i]||0)+o.n) : ((prog[i]||0)>=o.n);
+        h+='<div class="obj'+(done?" done":"")+'"><span class="st">'+(done?"✓":"□")+'</span>'+HB.objText(o)+'</div>';
+      });
+      if(!HB.objsAllDone(ch.objs,prog)) h+='<p class="muted mt">完成后前往 <span class="tick">'+HB.nodes[ch.closeAt].n+'</span> 触发本章收尾</p>';
+      else h+='<p class="muted mt">目标完成，去 <span class="tick">'+HB.nodes[ch.closeAt].n+'</span> 触发本章收尾</p>';
+    }
+    h+='</div>';
+  } else {
+    h+='<div class="sec"><h3>自由模式目标</h3><p>活下去，活过 <span class="tick">365 天</span>。</p><p class="muted mt">已存活：'+HB.state.dayCount+' 天。世界任你探索。</p></div>';
+  }
+  // 同伴
+  var comps=Object.keys(p.companions).filter(function(k){return p.companions[k];});
+  if(comps.length){
+    h+='<div class="sec"><h3>同行者</h3>';
+    comps.forEach(function(c){
+      var np=HB.npcs[c];
+      h+='<div class="place-row"><span class="pn">'+np.n+'</span><span class="pd">'+np.title+'</span></div>';
+    });
+    h+='<p class="muted">同行加成：伤害+8% · 每日自动回血+1 · 士气+2</p></div>';
+  }
+  document.getElementById("sidePanel").innerHTML=h;
+};
+HB.bar = function(lbl, val, max, cls){
+  var pct=Math.max(0,Math.min(100,val/max*100));
+  return '<div class="statrow"><span class="lbl">'+lbl+'</span><div class="bar b-'+cls+'"><i style="width:'+pct+'%"></i><span>'+Math.round(val)+'/'+max+'</span></div></div>';
+};
+HB.objText = function(o){
+  switch(o.type){
+    case "goto": return "前往 "+HB.nodes[o.node].n;
+    case "talk": return "与 "+HB.npcs[o.npc].n+" 交谈";
+    case "kill": return "击败 "+HB.enemies[o.enemy].n+" ×"+o.n;
+    case "collect": return "获得 "+HB.items[o.item].n+" ×"+o.n;
+    case "survive": return "在旅途中存活 "+o.n+" 天";
+  }
+  return "";
+};
+HB.ui.placeList = function(nd){
+  var list=[];
+  var def={
+    market:{n:"集市",d:"买卖物资",id:"market"},
+    tavern:{n:"酒馆",d:"消息·休整",id:"tavern"},
+    clinic:{n:"诊所",d:"治疗伤病",id:"clinic"},
+    board:{n:"任务板",d:"接取支线",id:"board"},
+    camp:{n:"营地",d:"休息过夜",id:"camp"},
+    wander:{n:"野外探索",d:"搜寻物资",id:"wander"},
+    ruin:{n:"废墟搜刮",d:"高风险高回报",id:"ruin"},
+    base:{n:"军事区",d:"军需品供应",id:"base"}
+  };
+  (nd.places||[]).forEach(function(pl){ if(def[pl]) list.push(def[pl]); });
+  return list;
+};
+HB.ui.place = function(pid){
+  var p=HB.state.player, nd=HB.nodes[p.pos];
+  switch(pid){
+    case "market": HB.openMarket(nd); break;
+    case "tavern": HB.openTavern(nd); break;
+    case "clinic": HB.openClinic(nd); break;
+    case "board": HB.openBoard(nd); break;
+    case "camp": HB.openRest(); break;
+    case "wander": HB.ui.wander(); break;
+    case "ruin": HB.ui.ruin(); break;
+    case "base": HB.openBase(nd); break;
+  }
+};
+
+// ---------- 探索 ----------
+HB.ui.wander = function(){
+  var ev=HB.wanderEvents[Math.floor(Math.random()*HB.wanderEvents.length)];
+  HB.playEvent(ev, function(){ HB.uiRefresh(); });
+};
+HB.ui.ruin = function(){
+  var p=HB.state.player;
+  var ev;
+  if(p.rad>50 || Math.random()<0.25) ev=HB.wanderEvents[2]; // 兜帽旅人
+  var pool=HB.wanderEvents.filter(function(e){return e.id!=="hunt"&&e.id!=="gamble"&&e.id!=="mystery_man";});
+  ev = ev||pool[Math.floor(Math.random()*pool.length)];
+  HB.playEvent(ev, function(){ HB.uiRefresh(); });
+};
+
+// ---------- 集市 ----------
+HB.priceOf = function(itemId, node, sell){
+  var it=HB.items[itemId], nd=node;
+  var mod=(nd.mods&&nd.mods[it.cat])||1;
+  var rep=HB.state.player.rep[nd.f]||0;
+  var factor=1 - rep*0.002;
+  if(sell) return Math.max(1, Math.round(it.v*mod*0.5*(1+rep*0.002)));
+  return Math.max(1, Math.round(it.v*mod*factor));
+};
+HB.openMarket = function(nd){
+  var p=HB.state.player;
+  var stock={};
+  nd.npcs.forEach(function(nid){
+    var np=HB.npcs[nid];
+    (np.trade||[]).forEach(function(i){ stock[i]=(stock[i]||0)+1; });
+  });
+  var h='<p class="muted">'+nd.n+' 集市 · 汇率按声望浮动</p>';
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">购买</h3>';
+  var keys=Object.keys(stock);
+  if(!keys.length) h+='<p class="muted">这里没有摊位。去更大的城市吧。</p>';
+  keys.forEach(function(i){
+    var it=HB.items[i];
+    var pr=HB.priceOf(i,nd,false);
+    var can=p.money>=pr;
+    h+='<div class="shop-row"><span class="sn">'+it.n+'</span><span class="sd">'+it.d.slice(0,22)+'…</span><span class="sp">'+pr+'</span><button class="btn btn-sm '+(can?"btn-p":"")+'" '+(can?"":"disabled")+' onclick="HB.buyItem(\''+i+'\',\''+nd.id+'\')">买1</button></div>';
+  });
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">出售（0.5 折收购）</h3>';
+  var sellable=Object.keys(p.inv).filter(function(k){return HB.items[k]&&HB.items[k].cat!=="special"&&HB.items[k].cat!=="weapon";});
+  if(!sellable.length) h+='<p class="muted">背包里没有可卖的东西。</p>';
+  sellable.forEach(function(k){
+    var it=HB.items[k], pr=HB.priceOf(k,nd,true);
+    h+='<div class="shop-row"><span class="sn">'+it.n+' ×'+p.inv[k]+'</span><span class="sp">'+pr+'</span><button class="btn btn-sm" onclick="HB.sellItem(\''+k+'\',\''+nd.id+'\')">卖1</button></div>';
+  });
+  HB.ui.openModal("集市 · "+nd.n, h);
+};
+HB.buyItem = function(id, nodeId){
+  var p=HB.state.player, nd=HB.nodes[nodeId];
+  var pr=HB.priceOf(id,nd,false);
+  if(p.money<pr){ HB.toast("军票不够。"); return; }
+  if(HB.carryNow()+HB.items[id].w>HB.carryMax()+0.01){ HB.toast("背包太重了。"); return; }
+  p.money-=pr; HB.addItem(id,1);
+  HB.log("【交易】购入 "+HB.items[id].n+"（-"+pr+"军票）","info");
+  HB.openMarket(nd);
+};
+HB.sellItem = function(id, nodeId){
+  var p=HB.state.player, nd=HB.nodes[nodeId];
+  if(!p.inv[id]) return;
+  var pr=HB.priceOf(id,nd,true);
+  HB.takeItem(id,1); p.money+=pr;
+  HB.log("【交易】售出 "+HB.items[id].n+"（+"+pr+"军票）","info");
+  HB.openMarket(nd);
+};
+
+// ---------- 酒馆 ----------
+HB.openTavern = function(nd){
+  var h='<p class="muted">酒馆是消息最多，也最贵的地方。</p>';
+  h+='<div class="mt"><button class="btn btn-block btn-p" onclick="HB.tavernDrink()">来一杯威士忌（20 军票，士气+18）</button>';
+  h+='<button class="btn btn-block" onclick="HB.tavernRumor()">打听传闻（10 军票）</button>';
+  h+='<button class="btn btn-block" onclick="HB.restStart(1)">在酒馆睡一晚</button>';
+  h+='<button class="btn btn-block btn-g" onclick="HB.tavernGamble()">掷骰子（押 50）</button></div>';
+  HB.ui.openModal("酒馆 · "+nd.n, h);
+};
+HB.tavernDrink = function(){
+  var p=HB.state.player;
+  if(p.money<20){ HB.toast("军票不够。"); return; }
+  p.money-=20; p.morale=Math.min(100,p.morale+18); p.thirst=Math.max(0,p.thirst-4);
+  HB.log("【酒馆】一杯下肚，世界温和了一点。","good");
+  HB.uiRefresh(); HB.ui.closeModal();
+};
+HB.tavernRumor = function(){
+  var p=HB.state.player;
+  if(p.money<10){ HB.toast("军票不够。"); return; }
+  p.money-=10;
+  var rumors=[
+    "老板压低声说：城东的仓库夜里亮灯，天亮前又灭。没人承认在里面。",
+    "一个醉汉嘟囔：往东的军列，挂的是“维修车”，可车厢里传出的声音不像扳手。",
+    "老板娘擦着杯子：最近黑市在收“战前数据盘”，出价高得吓人，但收的人从来不露脸。",
+    "老兵望着窗外：这仗打不完的。他们签停火，是为了腾出手来准备下一场。",
+    "陌生人压低帽檐：如果你往西伯利亚走，别坐第 107 次列车。这是我能说的全部。"
+  ];
+  HB.log("【传闻】"+rumors[Math.floor(Math.random()*rumors.length)],"ev");
+  HB.toast("你花 10 军票打听到一条消息（见日志）");
+  HB.uiRefresh();
+};
+HB.tavernGamble = function(){
+  var p=HB.state.player;
+  if(p.money<50){ HB.toast("军票不够。"); return; }
+  p.money-=50;
+  var win=Math.random()<0.4;
+  if(win){ p.money+=110; HB.log("【酒馆赌局】骰子滚出好点数，你赢回 110 军票。","good"); }
+  else HB.log("【酒馆赌局】庄家通吃。50 军票没了。","warn");
+  HB.uiRefresh(); HB.ui.closeModal();
+};
+
+// ---------- 诊所 ----------
+HB.openClinic = function(nd){
+  var p=HB.state.player;
+  var healCost=Math.max(10, Math.floor((p.maxHp-p.hp)*0.8));
+  var h='<p class="muted">诊所的医生看了你一眼，开始报账单。</p>';
+  h+='<div class="mt"><button class="btn btn-block btn-p" '+(p.money>=healCost?"":"disabled")+' onclick="HB.clinicHeal()">治疗（'+healCost+' 军票，回满血）</button>';
+  h+='<button class="btn btn-block" onclick="HB.clinicBuy(\'radaway\',\'gen\')">买抗辐宁（40 军票）</button>';
+  h+='<button class="btn btn-block" onclick="HB.clinicBuy(\'antibiotic\',\'gen\')">买抗生素（30 军票）</button></div>';
+  HB.ui.openModal("诊所 · "+nd.n, h);
+};
+HB.clinicHeal = function(){
+  var p=HB.state.player;
+  var cost=Math.max(10,Math.floor((p.maxHp-p.hp)*0.8));
+  if(p.money<cost){HB.toast("军票不够。");return;}
+  p.money-=cost; HB.heal(p.maxHp);
+  HB.log("【诊所】伤口重新缝好。你的命还值 "+cost+" 军票。","good");
+  HB.uiRefresh(); HB.ui.closeModal();
+};
+HB.clinicBuy = function(id, nodeId){
+  var nd=HB.nodes[nodeId];
+  var pr=HB.priceOf(id,nd,false);
+  if(HB.state.player.money<pr){HB.toast("军票不够。");return;}
+  HB.state.player.money-=pr; HB.addItem(id,1);
+  HB.log("【诊所】购入 "+HB.items[id].n,"info");
+  HB.uiRefresh(); HB.openClinic(nd);
+};
+
+// ---------- 任务板 ----------
+HB.openBoard = function(nd){
+  var p=HB.state.player;
+  var avail=HB.sideQuests.filter(function(q){
+    return q.node===nd.id && !HB.state.quests[q.id];
+  });
+  var active=Object.keys(HB.state.quests).filter(function(k){return HB.state.quests[k].state==="active";});
+  var done=Object.keys(HB.state.quests).filter(function(k){return HB.state.quests[k].state==="done";});
+  var h='<p class="muted">任务板上钉着几张纸，有的字迹还很新。</p>';
+  if(!avail.length) h+='<p class="muted mt">这里没有可领取的任务。</p>';
+  avail.forEach(function(q){
+    h+='<div class="quest-block"><h4>'+q.title+'</h4><div class="qd">'+q.desc+'</div><div class="qd">奖励：'+(q.reward.money?(q.reward.money+" 军票"):"")+(q.reward.items?" +物资":"")+' · '+(q.reward.xp||0)+' 经验</div><button class="btn btn-sm btn-p" onclick="HB.acceptQuest(\''+q.id+'\')">领取</button></div>';
+  });
+  if(active.length){
+    h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">进行中</h3>';
+    active.forEach(function(k){
+      var q=HB.state.quests[k], def=HB.sideQuests.find(function(x){return x.id===k;});
+      if(!def) return;
+      h+='<div class="quest-block"><h4>'+def.title+'</h4>';
+      def.objs.forEach(function(o,i){
+        var done = o.type==="survive" ? true : (q.prog[i]||0)>=o.n;
+        h+='<div class="obj'+(done?" done":"")+'"><span class="st">'+(done?"✓":"□")+'</span>'+HB.objText(o)+'</div>';
+      });
+      h+='</div>';
+    });
+  }
+  if(done.length){
+    h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#4d9e6a">已完成</h3>';
+    done.forEach(function(k){
+      var def=HB.sideQuests.find(function(x){return x.id===k;});
+      if(def) h+='<div class="quest-block done"><h4>'+def.title+'</h4></div>';
+    });
+  }
+  HB.ui.openModal("任务板 · "+nd.n, h);
+};
+HB.acceptQuest = function(qid){
+  HB.state.quests[qid]={state:"active",prog:{}};
+  HB.log("【支线】领取："+HB.sideQuests.find(function(x){return x.id===qid;}).title,"ev");
+  HB.toast("已领取任务");
+  HB.openBoard(HB.nodes[HB.state.player.pos]);
+};
+
+// ---------- 背包 / 制作 ----------
+HB.openBag = function(){
+  var p=HB.state.player;
+  var h='<div class="statrow"><span class="lbl">负重</span><span class="tick">'+HB.carryNow()+'/'+HB.carryMax()+'</span></div>';
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">装备</h3>';
+  var eq=p.equip;
+  h+='<div class="shop-row"><span class="sn">武器：'+(eq.weapon?HB.items[eq.weapon].n:"徒手")+'</span>'+(eq.weapon&&eq.weapon!=="fist"?'<button class="btn btn-sm" onclick="HB.unequip(\'weapon\')">卸下</button>':'')+'</div>';
+  h+='<div class="shop-row"><span class="sn">护甲：'+(eq.armor?HB.items[eq.armor].n:"无")+'</span>'+(eq.armor?'<button class="btn btn-sm" onclick="HB.unequip(\'armor\')">卸下</button>':'')+'</div>';
+  h+='<div class="shop-row"><span class="sn">装备：'+(eq.gear?HB.items[eq.gear].n:"无")+'</span>'+(eq.gear?'<button class="btn btn-sm" onclick="HB.unequip(\'gear\')">卸下</button>':'')+'</div>';
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">物品</h3>';
+  var cats=[["food","食物"],["drink","饮水"],["med","医疗"],["weapon","武器"],["ammo","弹药"],["gear","装备"],["junk","废料"],["special","特殊"]];
+  var any=false;
+  cats.forEach(function(cat){
+    var keys=Object.keys(p.inv).filter(function(k){return HB.items[k]&&HB.items[k].cat===cat[0];});
+    if(!keys.length) return;
+    any=true;
+    h+='<h4 class="mt muted">'+cat[1]+'</h4>';
+    keys.forEach(function(k){
+      var it=HB.items[k], q=p.inv[k];
+      h+='<div class="shop-row"><span class="sn">'+it.n+' ×'+q+'</span><span class="sd">'+it.d.slice(0,18)+'…</span>';
+      if(it.cat==="food"||it.cat==="drink"||it.cat==="med") h+='<button class="btn btn-sm btn-g" onclick="HB.useItem(\''+k+'\',1)">使用</button>';
+      if(it.cat==="weapon") h+='<button class="btn btn-sm btn-b" onclick="HB.equipItem(\''+k+'\',\'weapon\')">装备</button>';
+      if(it.cat==="gear") h+='<button class="btn btn-sm btn-b" onclick="HB.equipItem(\''+k+'\',\''+(it.armor?"armor":"gear")+'\')">装备</button>';
+      h+='<button class="btn btn-sm btn-d" onclick="HB.dropItem(\''+k+'\')">丢弃</button></div>';
+    });
+  });
+  if(!any) h+='<p class="muted">背包空空如也。</p>';
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">制作</h3>';
+  HB.craft.forEach(function(c){
+    var need=HB.canCraft(c);
+    h+='<div class="shop-row"><span class="sn">'+c.n+'</span><span class="sd">';
+    for(var i2 in c.in){ h+=HB.items[i2].n+'×'+c.in[i2]+' '; }
+    h+='</span><button class="btn btn-sm '+(need?"btn-p":"")+'" '+(need?"":"disabled")+' onclick="HB.doCraft(\''+HB.craft.indexOf(c)+'\')">制作</button></div>';
+  });
+  HB.ui.openModal("背包", h, '<button class="btn" onclick="HB.ui.closeModal()">关闭</button>');
+};
+HB.useItem = function(id, n, silent){
+  var p=HB.state.player, it=HB.items[id];
+  if(!p.inv[id]) return false;
+  var medBonus = it.cat==="med" ? Math.floor(p.skills.medical/5) : 0;
+  if(it.fx){
+    var fx=it.fx;
+    var hp=fx.hp?fx.hp+medBonus:0;
+    p.hp=Math.min(p.maxHp,Math.max(0,p.hp+hp));
+    p.hunger=Math.max(0,Math.min(100,p.hunger+(fx.hunger||0)));
+    p.thirst=Math.max(0,Math.min(100,p.thirst+(fx.thirst||0)));
+    p.rad=Math.max(0,Math.min(100,p.rad+(fx.rad||0)));
+    p.energy=Math.max(0,Math.min(100,p.energy+(fx.eng||0)));
+    p.morale=Math.max(0,Math.min(100,p.morale+(fx.mor||0)));
+  }
+  HB.takeItem(id,n);
+  if(!silent) HB.log("【使用】"+it.n,"info");
+  HB.uiRefresh();
+  return true;
+};
+HB.equipItem = function(id, slot){
+  var p=HB.state.player;
+  if(slot==="weapon") p.equip.weapon=id;
+  if(slot==="armor") p.equip.armor=id;
+  if(slot==="gear") p.equip.gear=id;
+  HB.log("【装备】换上 "+HB.items[id].n,"info");
+  HB.uiRefresh(); HB.openBag();
+};
+HB.unequip = function(slot){
+  var p=HB.state.player;
+  if(slot==="weapon") p.equip.weapon="fist";
+  if(slot==="armor") p.equip.armor=null;
+  if(slot==="gear") p.equip.gear=null;
+  HB.uiRefresh(); HB.openBag();
+};
+HB.dropItem = function(id){
+  HB.takeItem(id,1);
+  HB.log("【丢弃】"+HB.items[id].n,"info");
+  HB.uiRefresh(); HB.openBag();
+};
+HB.canCraft = function(c){
+  var p=HB.state.player;
+  for(var i in c.in) if((p.inv[i]||0)<c.in[i]) return false;
+  return true;
+};
+HB.doCraft = function(idx){
+  var c=HB.craft[idx];
+  if(!HB.canCraft(c)){ HB.toast("材料不足"); return; }
+  for(var i in c.in) HB.takeItem(i,c.in[i]);
+  for(var o in c.out) HB.addItem(o,c.out[o]);
+  HB.state.player.stats.crafts++;
+  HB.log("【制作】"+c.n,"good");
+  HB.achCheck();
+  HB.uiRefresh(); HB.openBag();
+};
+
+// ---------- 角色 ----------
+HB.openChar = function(){
+  var p=HB.state.player;
+  var h='<h3 style="letter-spacing:.2em;font-size:14px;color:#e2a13a">'+p.name+' · Lv.'+p.level+'</h3>';
+  h+='<div class="kv"><span class="k">出身</span><span class="v">'+(HB.origins.find(function(o){return o.id===p.origin;})||{n:"战争遗孤"}).n+'</span></div>';
+  h+='<div class="kv"><span class="k">经验</span><span class="v">'+p.xp+' / '+(p.level*120)+'</span></div>';
+  h+='<div class="kv"><span class="k">击杀</span><span class="v">'+p.stats.kills+'</span></div>';
+  h+='<div class="kv"><span class="k">旅程</span><span class="v">'+HB.state.dayCount+' 天 · 到访 '+Object.keys(p.stats.visited).length+' 地</span></div>';
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">技能（可用点数：'+p.skillPts+'）</h3>';
+  var sk=[["combat","战斗"],["survival","生存"],["medical","医疗"],["charisma","口才"]];
+  sk.forEach(function(s){
+    h+='<div class="shop-row"><span class="sn">'+s[1]+'</span><span class="tick">'+p.skills[s[0]]+'</span><button class="btn btn-sm" '+(p.skillPts>0&&p.skills[s[0]]<100?"":"disabled")+' onclick="HB.addSkill(\''+s[0]+'\')">+</button></div>';
+  });
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">声望</h3>';
+  for(var f in HB.factions){
+    h+='<div class="kv"><span class="k">'+HB.factions[f].n+'</span><span class="v '+(p.rep[f]>=0?"tick":"muted")+'">'+p.rep[f]+'</span></div>';
+  }
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">专长</h3>';
+  h+='<div class="row">';
+  p.perks.forEach(function(pk){ h+='<span class="tag tag-amber">'+pk+'</span>'; });
+  h+='</div>';
+  if(p.perkPts>0){
+    var pool=["铁壁（生命+20）","猎手（探索收获+）","神医（药物效果+）","说客（物价更优）","侦察兵（遇袭率降）","格斗家（伤害+2）"];
+    h+='<p class="mt muted">可选专长（剩余 '+p.perkPts+' 个）</p>';
+    pool.forEach(function(pk){
+      if(p.perks.indexOf(pk)<0) h+='<button class="btn btn-sm mt" onclick="HB.takePerk(\''+pk+'\')">'+pk+'</button>';
+    });
+  }
+  HB.ui.openModal("角色", h);
+};
+HB.addSkill = function(s){
+  var p=HB.state.player;
+  if(p.skillPts<=0||p.skills[s]>=100) return;
+  p.skillPts--; p.skills[s]++;
+  HB.uiRefresh(); HB.openChar();
+};
+HB.takePerk = function(pk){
+  var p=HB.state.player;
+  if(p.perkPts<=0) return;
+  p.perkPts--; p.perks.push(pk);
+  if(pk.indexOf("铁壁")>=0) p.maxHp+=20;
+  HB.uiRefresh(); HB.openChar();
+};
+
+// ---------- 任务 ----------
+HB.openQuests = function(){
+  var st=HB.state, h='';
+  if(st.mode==="story"){
+    h+='<h3 style="letter-spacing:.2em;font-size:12px;color:#e2a13a">主线</h3>';
+    var ch=HB.currentChapter();
+    if(!ch) h+='<p class="muted">主线已完结。世界还在运转。</p>';
+    else if(!st.story.started) h+='<p>下一章《'+ch.title+'》将于 <span class="tick">'+ch.unlock+'</span> 解锁。</p><p class="muted mt">你可以旅行、做支线、攒物资，等待时间推进。</p>';
+    else {
+      h+='<div class="quest-block"><h4>第'+ch.id+'章《'+ch.title+'》</h4>';
+      ch.objs.forEach(function(o,i){
+        var done = o.type==="survive" ? (st.dayCount>=(st.story.prog[i]||0)+o.n) : ((st.story.prog[i]||0)>=o.n);
+        h+='<div class="obj'+(done?" done":"")+'"><span class="st">'+(done?"✓":"□")+'</span>'+HB.objText(o)+'</div>';
+      });
+      h+='</div>';
+    }
+    h+='<div class="mt"></div>';
+  }
+  h+='<h3 style="letter-spacing:.2em;font-size:12px;color:#7e90a6">支线</h3>';
+  var active=Object.keys(st.quests).filter(function(k){return st.quests[k].state==="active";});
+  var done=Object.keys(st.quests).filter(function(k){return st.quests[k].state==="done";});
+  if(!active.length&&!done.length) h+='<p class="muted">还没接过任务。去任务板看看。</p>';
+  active.forEach(function(k){
+    var q=st.quests[k], def=HB.sideQuests.find(function(x){return x.id===k;});
+    if(!def) return;
+    h+='<div class="quest-block"><h4>'+def.title+'</h4><div class="qd">'+def.desc+'</div>';
+    def.objs.forEach(function(o,i){
+      var d = o.type==="survive" ? true : (q.prog[i]||0)>=o.n;
+      h+='<div class="obj'+(d?" done":"")+'"><span class="st">'+(d?"✓":"□")+'</span>'+HB.objText(o)+'</div>';
+    });
+    h+='</div>';
+  });
+  done.forEach(function(k){
+    var def=HB.sideQuests.find(function(x){return x.id===k;});
+    if(def) h+='<div class="quest-block done"><h4>'+def.title+'</h4></div>';
+  });
+  HB.ui.openModal("任务", h);
+};
+
+// ---------- 日志 ----------
+HB.openJournal = function(){
+  var st=HB.state, p=st.player;
+  var h='';
+  h+='<h3 style="letter-spacing:.2em;font-size:12px;color:#e2a13a">故事回顾</h3>';
+  if(st.mode==="story"){
+    HB.story.forEach(function(ch){
+      h+='<div class="quest-block'+(st.story.closed>=ch.id?" done":"")+'"><h4>第'+ch.id+'章《'+ch.title+'》</h4><div class="qd">'+(st.story.closed>=ch.id?("悬念："+ch.cliff.slice(0,60)+"…"):"尚未解锁")+'</div></div>';
+    });
+  } else {
+    h+='<p class="muted">自由模式没有主线。你的故事，写在每一天的日志里。</p>';
+  }
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">世界局势</h3>';
+  for(var f in HB.factions){
+    h+='<div class="kv"><span class="k">'+HB.factions[f].n+'</span><span class="v muted">'+HB.factions[f].d.slice(0,40)+'…</span></div>';
+  }
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">世界电台（最近）</h3>';
+  (st.newsLog.slice(-6).reverse()).forEach(function(nw){ h+='<p class="muted" style="font-size:11.5px;border-bottom:1px dotted #23344a;padding:3px 0">'+nw+'</p>'; });
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">人物图鉴</h3>';
+  var met=Object.keys(st.metNpcs);
+  if(!met.length) h+='<p class="muted">你还没认识什么人。</p>';
+  met.forEach(function(nid){
+    var np=HB.npcs[nid];
+    if(np) h+='<div class="kv"><span class="k">'+np.n+'</span><span class="v muted">'+np.title+' · '+HB.nodes[np.node].n+'</span></div>';
+  });
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">成就</h3><div class="ach-grid">';
+  for(var a in HB.achievements){
+    var ac=HB.achievements[a];
+    h+='<div class="ach'+(st.ach[a]?" got":"")+'"><div class="an">'+(st.ach[a]?"✓ ":"")+ac.n+'</div><div class="ad">'+ac.d+'</div></div>';
+  }
+  h+='</div>';
+  HB.ui.openModal("日志档案", h);
+};
+
+// ---------- 成就 ----------
+HB.achCheck = function(){
+  var st=HB.state, p=st.player;
+  var defs={
+    alive30:st.dayCount>=30, alive100:st.dayCount>=100, alive365:st.dayCount>=365,
+    first_kill:p.stats.kills>=1, kill25:p.stats.kills>=25,
+    visit10:Object.keys(p.stats.visited).length>=10, visit20:Object.keys(p.stats.visited).length>=20,
+    money:p.money>=2000, rep_fed:p.rep.fed>=60, rep_red:p.rep.red>=60, rep_mer:p.rep.mer>=60,
+    story6:st.story.closed>=6, story12:st.story.closed>=12, craft5:p.stats.crafts>=5
+  };
+  for(var k in defs){
+    if(defs[k] && !st.ach[k]){
+      st.ach[k]=1;
+      HB.log("【成就】"+HB.achievements[k].n+"："+HB.achievements[k].d,"good");
+    }
+  }
+};
+
+// ---------- 存档 ----------
+HB.openSave = function(){
+  var h='';
+  h+='<p class="muted">本地存档（浏览器 localStorage）。导出可跨设备迁移。</p>';
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">存档位</h3>';
+  var meta={};
+  try{ meta=JSON.parse(localStorage.getItem(HB.SAVE_META)||"{}"); }catch(e){}
+  for(var i=0;i<=5;i++){
+    var m=meta["s"+i];
+    h+='<div class="slot-card"><div class="sinfo"><b>'+(i===0?"自动存档":"存档 "+i)+'</b><br>'+(m?(m.mode==="story"?"主线":"自由")+" · "+m.date+" · 第"+m.day+"天 · 主线"+m.ch+"/12":"空")+'</div>';
+    h+='<button class="btn btn-sm '+(i===0?"":"btn-p")+'" onclick="HB.saveSlot('+i+')">保存</button>';
+    h+='<button class="btn btn-sm" '+(m?"":"disabled")+' onclick="HB.loadSlot('+i+')">读取</button></div>';
+  }
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">导出 / 导入</h3>';
+  h+='<textarea id="saveArea" style="width:100%;height:90px;background:#0a1016;color:#8fd0a8;border:1px solid #23344a;font-family:monospace;font-size:11px;padding:6px"></textarea>';
+  h+='<div class="row mt"><button class="btn btn-p" onclick="HB.exportToArea()">导出到文本框</button>';
+  h+='<button class="btn" onclick="HB.downloadSave()">下载 .json 文件</button>';
+  h+='<button class="btn btn-g" onclick="HB.importFromArea()">从文本框导入</button></div>';
+  HB.ui.openModal("存档管理", h);
+};
+HB.saveSlot = function(i){ if(HB.saveGame(i)){HB.toast("已保存到"+(i===0?"自动存档":"存档 "+i));HB.openSave();} else HB.toast("保存失败（存储可能被禁用）"); };
+HB.loadSlot = function(i){
+  if(HB.loadGame(i)){ HB.ui.closeModal(); } else HB.toast("读档失败");
+};
+HB.exportToArea = function(){
+  document.getElementById("saveArea").value=HB.exportSave();
+  HB.toast("已导出，复制文本框内容即可");
+};
+HB.downloadSave = function(){
+  var blob=new Blob([HB.exportSave()],{type:"application/json"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="HanBerONE_save.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  HB.toast("存档已下载");
+};
+HB.importFromArea = function(){
+  var v=document.getElementById("saveArea").value.trim();
+  if(!v){ HB.toast("文本框是空的"); return; }
+  if(HB.importSave(v)){ HB.ui.closeModal(); } else HB.toast("导入失败：格式不正确");
+};
+
+// ---------- 返回主菜单 ----------
+HB.ui.confirmBackMenu = function(){
+  var h='<p>返回主菜单会保留当前进度（已自动存档）。</p>';
+  var foot='<button class="btn" onclick="HB.ui.closeModal()">继续游戏</button><button class="btn btn-d" onclick="HB.ui.backMenu()">返回主菜单</button>';
+  HB.ui.openModal("回到主菜单", h, foot);
+};
+HB.ui.backMenu = function(){
+  HB.ui.closeModal();
+  if(HB.travel.timer){clearTimeout(HB.travel.timer);HB.travel.timer=null;HB.travel.active=false;}
+  document.getElementById("gameScreen").style.display="none";
+  document.getElementById("titleScreen").style.display="flex";
+  HB.ui.titleRefresh();
+};
+
+</script>
+<script>
+// ===== HanBer ONE · UI 2：对话 / 场景 / 地图 / 标题 =====
+window.HB = window.HB || {};
+HB.dlg = HB.dlg || {};
+HB.ui = HB.ui || {};
+
+// ---------- 开场旁白 ----------
+HB.dlg.playIntro = function(mode){
+  var lines = mode==="story" ? HB.storyIntro : HB.freeIntro;
+  var i=0;
+  var body=HB.ui.openModal(mode==="story"?"序章 · 1988 年 1 月 1 日":"自由模式 · 世界与你", "", "", {noClose:true});
+  body.innerHTML='<div id="introLines"></div><div class="row mt"><button class="btn btn-p btn-block" id="introNext">继续</button></div>';
+  var box=document.getElementById("introLines");
+  function show(){
+    box.innerHTML='';
+    var it=lines[i];
+    var d=document.createElement("div");
+    d.className="sc-line";
+    d.innerHTML='<div class="who">'+it.who+'</div><div class="txt">'+it.text.replace(/</g,"&lt;")+'</div>';
+    box.appendChild(d);
+    if(i>=lines.length-1){
+      document.getElementById("introNext").textContent="进入世界";
+    }
+  }
+  show();
+  document.getElementById("introNext").addEventListener("click", function(){
+    i++;
+    if(i<lines.length){ show(); }
+    else {
+      HB.ui.closeModal();
+      if(mode==="story") HB.storyDay();
+      HB.hint(mode==="story"
+        ? "主线第一章已开启：前往任务面板查看目标。世界地图点击任意地点可旅行。"
+        : "自由模式开始：活过 365 天。地图上 32 个地点任你探索，任务板上有 16 个支线。");
+    }
+  });
+};
+
+// ---------- 通用逐行对话 ----------
+HB.dlg.playLines = function(lines, cb){
+  var i=0;
+  var body=HB.ui.openModal("对话", "", "", {noClose:true});
+  body.innerHTML='<div id="dlgLines"></div><div class="row mt"><button class="btn btn-p btn-block" id="dlgNext">继续</button></div>';
+  function show(){
+    document.getElementById("dlgLines").innerHTML='';
+    var it=lines[i];
+    var d=document.createElement("div");
+    d.className="sc-line";
+    d.innerHTML='<div class="who">'+(it.who||"旁白")+'</div><div class="txt">'+it.text.replace(/</g,"&lt;")+'</div>';
+    document.getElementById("dlgLines").appendChild(d);
+    document.getElementById("dlgNext").textContent = i>=lines.length-1?"结束":"继续";
+  }
+  show();
+  document.getElementById("dlgNext").addEventListener("click", function(){
+    i++;
+    if(i<lines.length) show();
+    else { HB.ui.closeModal(); cb(); }
+  });
+};
+
+// ---------- 剧情场景 ----------
+HB.dlg.sceneModal = function(ch, part, onDone){
+  var ov=HB.sceneOpen();
+  var kicker = part==="open" ? ("第"+ch.id+"章 · "+ch.mo) : ("第"+ch.id+"章 · 收尾");
+  ov.querySelector(".sc-kicker").textContent = kicker;
+  ov.querySelector(".sc-title").textContent = "《"+ch.title+"》";
+  ov.querySelector(".sc-date").textContent = HB.fmtDate(HB.state.date);
+  HB.sceneRun(ch, part, 0, function(){
+    // 收尾章显示悬念与预告
+    if(part==="close"){
+      var body=document.getElementById("sceneBody");
+      var d=document.createElement("div");
+      d.className="sc-cliff";
+      d.innerHTML='<div class="ct">— 本章悬念 —</div><div class="cx">'+ch.cliff.replace(/</g,"&lt;")+'</div>';
+      body.appendChild(d);
+      if(ch.preview){
+        var d2=document.createElement("div");
+        d2.className="sc-cliff";
+        d2.innerHTML='<div class="ct">— 下章预告 —</div><div class="cx">'+ch.preview.replace(/</g,"&lt;")+'</div>';
+        body.appendChild(d2);
+      }
+      var b=document.createElement("div");
+      b.className="row mt";
+      b.innerHTML='<button class="btn btn-p btn-block" id="sceneDone">继续旅程</button>';
+      body.appendChild(b);
+      document.getElementById("sceneDone").addEventListener("click", function(){ HB.sceneClose(); onDone(); });
+    } else {
+      var b=document.createElement("div");
+      b.className="row mt";
+      b.innerHTML='<button class="btn btn-p btn-block" id="sceneDone">我明白了</button>';
+      document.getElementById("sceneBody").appendChild(b);
+      document.getElementById("sceneDone").addEventListener("click", function(){ HB.sceneClose(); onDone(); });
+    }
+  });
+};
+HB.dlg.sceneLine = function(text, type, next, who){
+  var body=document.getElementById("sceneBody");
+  if(!body) { next(); return; }
+  var d=document.createElement("div");
+  if(type==="narr"){ d.className="sc-narr"; d.textContent=text; }
+  else { d.className="sc-line"; d.innerHTML='<div class="who">'+(who||"旁白")+'</div><div class="txt"></div>'; d.querySelector(".txt").textContent=text; }
+  body.appendChild(d);
+  body.scrollTop=body.scrollHeight;
+  var b=document.createElement("div");
+  b.className="row mt";
+  b.innerHTML='<button class="btn btn-sm btn-p" id="sceneNext">继续 ▶</button>';
+  body.appendChild(b);
+  document.getElementById("sceneNext").addEventListener("click", function(){
+    b.remove();
+    next();
+  });
+};
+HB.dlg.sceneChoice = function(s, cb){
+  var body=document.getElementById("sceneBody");
+  if(!body){ cb({}); return; }
+  var d=document.createElement("div");
+  d.className="sc-line";
+  d.innerHTML='<div class="who">抉择</div><div class="txt">'+s.text.replace(/</g,"&lt;")+'</div>';
+  body.appendChild(d);
+  var box=document.createElement("div");
+  box.className="col mt";
+  s.options.forEach(function(opt){
+    var b=document.createElement("button");
+    b.className="dlg-opt"; b.textContent=opt.t;
+    b.addEventListener("click", function(){ box.remove(); cb(opt); });
+    box.appendChild(b);
+  });
+  body.appendChild(box);
+  body.scrollTop=body.scrollHeight;
+};
+
+// ---------- 事件弹窗 ----------
+HB.dlg.eventModal = function(ev, onDone){
+  var p=HB.state.player;
+  var h='<p class="bold">'+ev.title+'</p><p class="muted mt">'+ev.text.replace(/</g,"&lt;")+'</p><div class="col mt">';
+  ev.choices.forEach(function(c,i){
+    var disabled="";
+    if(c.need==="pass"){ if(!p.inv.pass_fed && !p.inv.pass_red) disabled="disabled"; }
+    if(c.need==="weapon"){ if(HB.equippedWeapon().dmg[0]<=2) disabled="disabled"; }
+    if(c.need==="antibiotic"){ if(!p.inv.antibiotic) disabled="disabled"; }
+    h+='<button class="dlg-opt" '+disabled+' id="evOpt'+i+'">'+c.t+'</button>';
+  });
+  h+='</div>';
+  var body=HB.ui.openModal("遭遇", h, " ", {noClose:true});
+  ev.choices.forEach(function(c,i){
+    document.getElementById("evOpt"+i).addEventListener("click", function(){
+      HB.ui.closeModal();
+      var after=function(){ onDone(); };
+      if(c.combat){
+        var ek=c.combat;
+        if(ek==="_node"){
+          var nf=HB.nodes[HB.state.player.pos].f;
+          ek = nf==="fed"?"trooper":nf==="red"?"patrol":nf==="wild"?"goon":"bandit";
+        }
+        HB.startCombat(ek,{label:ev.title+" · 战斗",onWin:after,onLose:after});
+      } else {
+        HB.applyFx(c.fx, after);
+      }
+    });
+  });
+};
+
+// ---------- NPC 对话 ----------
+HB.ui.npcModal = function(nid){
+  var st=HB.state, p=st.player;
+  var np=HB.npcs[nid];
+  if(!np) return;
+  st.metNpcs[nid]=1;
+  HB.questEvent({type:"talk",npc:nid});
+  var f=HB.factions[np.f];
+  var h='<div class="row" style="align-items:flex-start">';
+  var colors={fed:"#4a7fd0",red:"#c24545",mer:"#4d9e6a",wild:"#cf8a3a",neu:"#8b98a8"};
+  h+='<div id="dlgAvatar" style="background:'+(colors[np.f]||"#8b98a8")+'">'+np.n.slice(0,1)+'</div>';
+  h+='<div class="col grow"><div id="dlgName">'+np.n+'</div><div id="dlgRole">'+np.title+' · '+HB.nodes[np.node].n+' <span class="chip chip-'+np.f+'"><i></i>'+f.n+'</span></div></div></div>';
+  h+='<div id="dlgText" class="muted">（开场白）</div><div id="dlgChoices"></div>';
+  var body=HB.ui.openModal("人物", h, "");
+  var lines={
+    hello:np.topics.hello,
+    self:np.topics.self,
+    rumor:np.topics.rumor,
+    farewell:np.topics.farewell
+  };
+  var showLine=function(key){
+    document.getElementById("dlgText").textContent=lines[key]||"……";
+    document.getElementById("dlgText").classList.remove("muted");
+  };
+  showLine("hello");
+  var ch=document.getElementById("dlgChoices");
+  var mk=function(label, fn){
+    var b=document.createElement("button");
+    b.className="dlg-opt"; b.textContent=label;
+    b.addEventListener("click", fn);
+    ch.appendChild(b);
+  };
+  mk("自我介绍", function(){ showLine("self"); });
+  mk("打听传闻", function(){ showLine("rumor"); });
+  if(np.trade) mk("交易", function(){
+    var fakeNode=HB.nodes[np.node];
+    HB.openMarket(fakeNode);
+  });
+  var sq=HB.sideQuests.find(function(q){ return q.giver===nid && !HB.state.quests[q.id]; });
+  if(sq) mk("任务："+sq.title, function(){
+    HB.acceptQuestFromNpc(sq.id);
+    HB.ui.closeModal();
+  });
+  mk("告别", function(){ HB.ui.closeModal(); });
+};
+HB.acceptQuestFromNpc = function(qid){
+  HB.state.quests[qid]={state:"active",prog:{}};
+  var q=HB.sideQuests.find(function(x){return x.id===qid;});
+  HB.log("【支线】"+q.title+"（来自 "+HB.npcs[q.giver].n+"）","ev");
+  HB.toast("已领取："+q.title);
+};
+
+// ---------- 战斗（独立浮层） ----------
+HB.ui.combatModal = function(e, ekey, label){
+  HB.ui.combatClose();
+  var d=document.createElement("div");
+  d.className="ov"; d.id="combatOv";
+  d.innerHTML='<div class="m m-wide"><div class="m-head"><h2>'+label.replace(/</g,"&lt;")+'</h2></div><div class="m-body">'+
+    '<div id="combatEnemy"><div class="face" style="background:'+e.color+'">'+e.glyph+'</div>'+
+    '<div class="col grow"><b style="color:'+e.color+'">'+e.n+'</b><span class="muted" style="font-size:11.5px">'+e.d+'</span>'+
+    '<div class="bar b-hp mt"><i id="cehp" style="width:100%"></i><span id="cehpTxt"></span></div></div></div>'+
+    '<div class="row mt"><span class="muted" style="width:52px">你</span><div class="bar b-hp grow"><i id="php" style="width:100%"></i><span id="phpTxt"></span></div></div>'+
+    '<div id="combatLog"></div>'+
+    '<div class="row mt"><button class="btn btn-p grow" onclick="HB.combatPlayerAttack()">攻击</button>'+
+    '<button class="btn grow" onclick="HB.combatPlayerDefend()">防御</button>'+
+    '<button class="btn grow" onclick="HB.combatPlayerItem()">道具</button>'+
+    '<button class="btn btn-d grow" onclick="HB.combatPlayerFlee()">逃跑</button></div>'+
+    '</div><div class="m-foot" id="combatFoot"><span class="muted" style="margin-right:auto;font-size:12px">—</span></div></div>';
+  document.body.appendChild(d);
+  HB.cLog("战斗开始。"+e.n+"出现在你面前。","ev");
+  HB.ui.combatRefresh();
+};
+HB.ui.combatClose = function(){
+  var d=document.getElementById("combatOv");
+  if(d) d.remove();
+};
+HB.ui.combatRefresh = function(){
+  if(!HB.combat.active) return;
+  var c=HB.combat, p=HB.state.player;
+  var ehpEl=document.getElementById("cehp");
+  if(!ehpEl) return;
+  var pct=Math.max(0,c.ehp/c.enemy.hp*100);
+  ehpEl.style.width=pct+"%";
+  document.getElementById("cehpTxt").textContent=Math.max(0,Math.round(c.ehp))+"/"+c.enemy.hp;
+  document.getElementById("php").style.width=(p.hp/p.maxHp*100)+"%";
+  document.getElementById("phpTxt").textContent=p.hp+"/"+p.maxHp;
+  var w=HB.equippedWeapon();
+  document.getElementById("combatFoot").innerHTML='<span class="muted" style="margin-right:auto;font-size:12px">武器：'+w.n+(w.ammo?"（弹："+(p.inv[w.ammo]||0)+"）":"")+'</span>';
+};
+HB.ui.combatLog = function(msg, cls){
+  if(!HB.combat.active) return;
+  var el=document.getElementById("combatLog");
+  if(!el) return;
+  var d=document.createElement("div");
+  d.className="ln "+cls;
+  d.textContent=msg;
+  el.appendChild(d);
+  while(el.children.length>40) el.removeChild(el.firstChild);
+  el.scrollTop=el.scrollHeight;
+};
+HB.dlg.combatItemPick = function(){
+  var p=HB.state.player;
+  var meds=Object.keys(p.inv).filter(function(k){ return HB.items[k]&&(HB.items[k].cat==="food"||HB.items[k].cat==="drink"||HB.items[k].cat==="med"); });
+  var h='<p class="muted">战斗中只能使用消耗品。</p><div class="col mt">';
+  if(!meds.length) h+='<p class="muted">背包里没有可用的东西。</p>';
+  meds.forEach(function(k){
+    h+='<button class="dlg-opt" onclick="HB.useInCombat(\''+k+'\')">'+HB.items[k].n+' ×'+p.inv[k]+'</button>';
+  });
+  h+='</div>';
+  var body=HB.ui.openModal("道具", h, "");
+};
+HB.useInCombat = function(id){
+  HB.useItem(id,1);
+  HB.cLog("你使用了"+HB.items[id].n+"。","ply");
+  HB.ui.closeModal();
+  HB.combatEnemyTurn();
+};
+
+// ---------- 死亡 ----------
+HB.ui.deathModal = function(reason){
+  var p=HB.state.player;
+  var h='<p class="bold" style="color:#ff7d7d">你死了。</p><p class="muted mt">'+reason.replace(/</g,"&lt;")+'</p>';
+  var foot='<button class="btn btn-b" onclick="HB.deathReload()">读取最近存档</button><button class="btn btn-d" onclick="HB.respawn()">重伤重生（失去一半军票和部分物资）</button>';
+  HB.ui.openModal("游戏结束", h, foot, {noClose:true});
+};
+HB.deathReload = function(){
+  if(HB.loadGame(0)){ HB.ui.closeModal(); }
+  else { HB.toast("没有可用存档"); }
+};
+
+// ---------- 旅行界面（独立浮层） ----------
+HB.ui.travelModal = function(t){
+  HB.ui.travelClose();
+  var from=HB.nodes[t.from], to=HB.nodes[t.to];
+  var d=document.createElement("div");
+  d.className="ov"; d.id="travelOv";
+  d.innerHTML='<div class="m m-narrow"><div class="m-head"><h2>旅程 · 第'+HB.state.dayCount+'天</h2></div><div class="m-body">'+
+    '<p>路线：<b>'+from.n+'</b> → <b>'+to.n+'</b></p>'+
+    '<div class="bar b-hun mt"><i id="tprog" style="width:2%"></i><span id="tprogTxt"></span></div>'+
+    '<div id="tlog" class="mt" style="max-height:190px;overflow-y:auto;font-family:monospace;font-size:12px;color:#7e90a6"></div>'+
+    '</div><div class="m-foot"><button class="btn btn-d" onclick="HB.travelCancel()">中断行程</button></div></div>';
+  document.body.appendChild(d);
+  HB.ui.travelUpdate(t.rem,t.days);
+};
+HB.ui.travelClose = function(){
+  var d=document.getElementById("travelOv");
+  if(d) d.remove();
+};
+HB.ui.travelUpdate = function(rem, days){
+  var el=document.getElementById("tprog");
+  if(!el) return;
+  var pct=Math.max(2,(days-rem)/days*100);
+  el.style.width=pct+"%";
+  document.getElementById("tprogTxt").textContent="剩余 "+Math.max(0,rem)+" 天 / 共 "+days+" 天";
+  var tl=document.getElementById("tlog");
+  var d=document.createElement("div");
+  d.textContent="—— 第 "+(days-rem+1)+" 天："+HB.fmtDate(HB.state.date);
+  tl.appendChild(d);
+  while(tl.children.length>24) tl.removeChild(tl.firstChild);
+  tl.scrollTop=tl.scrollHeight;
+};
+
+// ---------- 到达处理 ----------
+HB.ui.nodeArrive = function(toId, hostile){
+  var node=HB.nodes[toId];
+  if(hostile){
+    HB.ui.hostileArrival(node);
+    return;
+  }
+  var npcs=node.npcs.filter(function(nid){return HB.npcs[nid];});
+  if(npcs.length) HB.toast("这里可以交谈的人："+npcs.map(function(n){return HB.npcs[n].n;}).join("、"));
+  HB.ui.npcsSection();
+  if(node.t==="ruin"&&Math.random()<0.5) HB.log("【警戒】"+node.n+" 的废墟深处传来可疑的动静。","warn");
+};
+HB.ui.hostileArrival = function(node){
+  var p=HB.state.player;
+  var h='<p class="bold">'+node.n+' 的'+HB.factions[node.f].n+'检查站拦住了你。</p>';
+  h+='<p class="muted mt">你在该阵营的声望为 '+p.rep[node.f]+'，低于通行线。士兵的手按在枪上。</p><div class="col mt">';
+  var hasPass = node.f==="fed"?p.inv.pass_fed:p.inv.pass_red;
+  h+='<button class="dlg-opt" '+(hasPass?"":"disabled")+' onclick="HB.hostileChoice(\'pass\',\''+node.id+'\')">出示通行证</button>';
+  h+='<button class="dlg-opt" onclick="HB.hostileChoice(\'bribe\',\''+node.id+'\')">塞 80 军票买路</button>';
+  h+='<button class="dlg-opt" '+(p.inv.camo?"":"disabled")+' onclick="HB.hostileChoice(\'camo\',\''+node.id+'\')">用伪装服混进去</button>';
+  h+='<button class="dlg-opt btn-d" onclick="HB.hostileChoice(\'fight\',\''+node.id+'\')">硬闯</button></div>';
+  HB.ui.openModal("检查站", h, " ", {noClose:true});
+};
+HB.hostileChoice = function(how, nodeId){
+  var p=HB.state.player, node=HB.nodes[nodeId];
+  HB.ui.closeModal();
+  switch(how){
+    case "pass":
+      var pid=node.f==="fed"?"pass_fed":"pass_red";
+      if(p.inv[pid]){ HB.takeItem(pid,1); HB.log("【检查站】"+node.n+"的"+HB.factions[node.f].n+"士兵查验了你的通行证，放行了。","good"); HB.addRep(node.f,3); }
+      else HB.log("【检查站】你没有通行证。","warn");
+      break;
+    case "bribe":
+      if(p.money>=80){ p.money-=80; HB.log("【检查站】"+node.n+"的士兵数了数军票，侧身让开。","info"); }
+      else { HB.log("【检查站】钱不够，只能硬闯。","warn"); HB.startCombat("patrol",{label:"硬闯检查站",onWin:function(){},onLose:function(){}}); return; }
+      break;
+    case "camo":
+      HB.takeItem("camo",1);
+      HB.log("【检查站】你混在一队搬运工里溜进了"+node.n+"。","good");
+      break;
+    case "fight":
+      HB.startCombat(node.f==="fed"?"trooper":"patrol",{label:"强闯"+node.n,onWin:function(){HB.log("【检查站】你打出一条血路，闯进了"+node.n+"。","ev");},onLose:function(){}});
+      return;
+  }
+  HB.uiRefresh();
+  HB.ui.npcsSection();
+  HB.autosave();
+};
+
+// ---------- 侧栏 NPC 区 ----------
+HB.ui.npcsSection = function(){
+  var nd=HB.nodes[HB.state.player.pos];
+  var npcs=nd.npcs.filter(function(nid){return HB.npcs[nid];});
+  if(!npcs.length) return;
+  var h='<div class="sec"><h3>人物 <span class="hl">'+npcs.length+'</span></h3>';
+  npcs.forEach(function(nid){
+    var np=HB.npcs[nid];
+    h+='<div class="place-row"><span class="pn">'+np.n+'</span><span class="pd">'+np.title+'</span><button class="btn btn-sm" onclick="HB.ui.npcModal(\''+nid+'\')">交谈</button></div>';
+  });
+  h+='</div>';
+  var sp=document.getElementById("sidePanel");
+  var d=document.createElement("div");
+  d.innerHTML=h;
+  sp.appendChild(d.firstChild);
+};
+
+// ---------- 休息 ----------
+HB.openRest = function(){
+  var p=HB.state.player;
+  var h='<p class="muted">在'+HB.nodes[p.pos].n+'的营地休息。休息会消耗食物和饮水（自动进食），并恢复能量。</p>';
+  h+='<div class="col mt"><button class="btn btn-block" onclick="HB.restStart(1)">休息 1 天</button>';
+  h+='<button class="btn btn-block" onclick="HB.restStart(7)">休息 7 天</button>';
+  h+='<button class="btn btn-block btn-p" onclick="HB.restStart(30)">休整 30 天（推进剧情时间）</button></div>';
+  HB.ui.openModal("营地休息", h);
+};
+
+// ---------- 军事区 ----------
+HB.openBase = function(nd){
+  var p=HB.state.player;
+  var rep=p.rep[nd.f]||0;
+  var h='<p class="muted">军事区的军需官按声望定价。当前声望：'+rep+'</p>';
+  var items=nd.f==="fed" ? ["ammo_pistol","ammo_556","ammo_762","rifle","sniper","can_food","medkit","armor_heavy"] :
+    ["ammo_pistol","ammo_762","smg","rifle","can_food","radaway","armor_light"];
+  h+='<h3 class="mt mb" style="letter-spacing:.2em;font-size:12px;color:#7e90a6">军需品</h3>';
+  items.forEach(function(i){
+    var it=HB.items[i], pr=HB.priceOf(i,nd,false);
+    var can=p.money>=pr;
+    h+='<div class="shop-row"><span class="sn">'+it.n+'</span><span class="sp">'+pr+'</span><button class="btn btn-sm '+(can?"btn-p":"")+'" '+(can?"":"disabled")+' onclick="HB.buyItem(\''+i+'\',\''+nd.id+'\')">买1</button></div>';
+  });
+  HB.ui.openModal("军事区 · "+nd.n, h);
+};
+
+// ---------- 地图 ----------
+HB.map={sel:null,hover:null,anim:0};
+HB.ui.initMap = function(){
+  var cv=document.getElementById("mapCanvas");
+  var wrap=document.getElementById("mapWrap");
+  function resize(){
+    cv.width=wrap.clientWidth; cv.height=wrap.clientHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+  cv.addEventListener("mousemove", function(ev){
+    var r=cv.getBoundingClientRect();
+    var pt=HB.map.toMap(ev.clientX-r.left, ev.clientY-r.top);
+    HB.map.hover=HB.map.nodeAt(pt.x,pt.y);
+    HB.ui.mapTooltip(ev.clientX-r.left, ev.clientY-r.top);
+  });
+  cv.addEventListener("mouseleave", function(){ HB.map.hover=null; document.getElementById("mapTooltip").style.display="none"; });
+  cv.addEventListener("click", function(ev){
+    if(HB.travel.active) return;
+    var r=cv.getBoundingClientRect();
+    var pt=HB.map.toMap(ev.clientX-r.left, ev.clientY-r.top);
+    var nd=HB.map.nodeAt(pt.x,pt.y);
+    if(nd){ HB.map.sel=nd; HB.ui.nodeInfoPanel(nd); }
+    else HB.map.sel=null;
+  });
+  cv.addEventListener("touchstart", function(ev){
+    if(HB.travel.active) return;
+    var t=ev.touches[0], r=cv.getBoundingClientRect();
+    var pt=HB.map.toMap(t.clientX-r.left, t.clientY-r.top);
+    var nd=HB.map.nodeAt(pt.x,pt.y);
+    if(nd){ HB.map.sel=nd; HB.ui.nodeInfoPanel(nd); }
+  }, {passive:true});
+};
+HB.map.toMap = function(px,py){
+  var cv=document.getElementById("mapCanvas");
+  var s=Math.min(cv.width/1000, cv.height/560);
+  var ox=(cv.width-1000*s)/2, oy=(cv.height-560*s)/2;
+  return {x:(px-ox)/s, y:(py-oy)/s};
+};
+HB.map.toScreen = function(x,y){
+  var cv=document.getElementById("mapCanvas");
+  var s=Math.min(cv.width/1000, cv.height/560);
+  var ox=(cv.width-1000*s)/2, oy=(cv.height-560*s)/2;
+  return {x:x*s+ox, y:y*s+oy};
+};
+HB.map.nodeAt = function(x,y){
+  var best=null,bd=1e9;
+  for(var id in HB.nodes){
+    var n=HB.nodes[id];
+    var d=Math.sqrt(Math.pow(n.x-x,2)+Math.pow(n.y-y,2));
+    if(d<30&&d<bd){bd=d;best=id;}
+  }
+  return best;
+};
+HB.ui.mapTooltip = function(px,py){
+  var tip=document.getElementById("mapTooltip");
+  if(!HB.map.hover){ tip.style.display="none"; return; }
+  var n=HB.nodes[HB.map.hover];
+  var rep=HB.state.player.rep[n.f]||0;
+  tip.innerHTML='<b>'+n.n+'</b><br>'+n.reg+' · '+HB.factions[n.f].n+'<br>危险 '+n.dang+'/10 · 辐射 '+n.rad+'/3<br>声望 '+rep;
+  tip.style.left=(px+14)+"px"; tip.style.top=(py+14)+"px";
+  tip.style.display="block";
+};
+HB.ui.nodeInfoPanel = function(nid){
+  var n=HB.nodes[nid], p=HB.state.player;
+  var days=nid===p.pos?0:HB.travelDays(p.pos,nid);
+  var npcs=n.npcs.filter(function(x){return HB.npcs[x];});
+  var h='<h4>'+n.n+' <span class="chip chip-'+n.f+'"><i></i>'+HB.factions[n.f].n+'</span></h4>';
+  h+='<div class="desc">'+n.desc+'</div>';
+  h+='<div class="row"><span class="tag">危险 '+n.dang+'/10</span><span class="tag">辐射 '+n.rad+'/3</span><span class="tag">'+n.pop+'</span></div>';
+  if(npcs.length) h+='<p class="muted mt">人物：'+npcs.map(function(x){return HB.npcs[x].n;}).join('、')+'</p>';
+  h+='<div class="row mt">';
+  if(nid!==p.pos&&!HB.travel.active)
+    h+='<button class="btn btn-p btn-sm" onclick="HB.travelStart(\''+nid+'\')">前往（约 '+days+' 天）</button>';
+  if(nid===p.pos) h+='<span class="tag tag-amber">你在这里</span>';
+  h+='<button class="btn btn-sm" onclick="HB.ui.closeNodeInfo()">关闭</button></div>';
+  document.getElementById("mapNodeInfo").innerHTML=h;
+  document.getElementById("mapNodeInfo").style.display="block";
+};
+HB.ui.closeNodeInfo = function(){ document.getElementById("mapNodeInfo").style.display="none"; };
+
+HB.ui.renderMap = function(){
+  var cv=document.getElementById("mapCanvas");
+  if(!cv||!cv.width) return;
+  var ctx=cv.getContext("2d");
+  var s=Math.min(cv.width/1000, cv.height/560);
+  var ox=(cv.width-1000*s)/2, oy=(cv.height-560*s)/2;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  // 海洋
+  var g=ctx.createLinearGradient(0,0,0,cv.height);
+  g.addColorStop(0,"#0a1219"); g.addColorStop(1,"#0c141d");
+  ctx.fillStyle=g; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.save();
+  ctx.translate(ox,oy); ctx.scale(s,s);
+  // 经纬网格
+  ctx.strokeStyle="rgba(70,96,120,.14)"; ctx.lineWidth=1;
+  for(var gx=0;gx<=1000;gx+=100){ ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,560); ctx.stroke(); }
+  for(var gy=0;gy<=560;gy+=70){ ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(1000,gy); ctx.stroke(); }
+  // 辐射区
+  var t=HB.map.anim;
+  HB.radZones.forEach(function(z){
+    var a=0.10+0.10*Math.sin(t/900+z[0]);
+    ctx.beginPath(); ctx.arc(z[0],z[1],z[2],0,Math.PI*2);
+    ctx.fillStyle="rgba(182,201,92,"+a+")"; ctx.fill();
+    ctx.strokeStyle="rgba(182,201,92,.5)"; ctx.stroke();
+  });
+  // 大陆
+  HB.continents.forEach(function(c){
+    ctx.beginPath();
+    c.pts.forEach(function(pt,i){ if(i===0) ctx.moveTo(pt[0],pt[1]); else ctx.lineTo(pt[0],pt[1]); });
+    ctx.closePath();
+    ctx.fillStyle=c.fill; ctx.fill();
+    ctx.strokeStyle=c.line; ctx.lineWidth=1.4; ctx.stroke();
+  });
+  // 大陆标签
+  ctx.font="italic 12px monospace"; ctx.fillStyle="rgba(120,140,160,.35)";
+  var labels=[["北美洲",200,150],["南美洲",350,360],["欧罗巴",520,180],["非洲",530,300],["亚洲",760,160],["澳大利亚",910,450]];
+  labels.forEach(function(l){ ctx.fillText(l[0], l[1]-ctx.measureText(l[0]).width/2, l[2]); });
+  // 路线（从玩家所在点到所有点）
+  var p=HB.state.player;
+  ctx.setLineDash([3,4]);
+  for(var nid in HB.nodes){
+    if(nid===p.pos) continue;
+    var n=HB.nodes[nid];
+    ctx.beginPath();
+    ctx.moveTo(HB.nodes[p.pos].x, HB.nodes[p.pos].y);
+    ctx.lineTo(n.x, n.y);
+    ctx.strokeStyle="rgba(90,120,150,.16)"; ctx.lineWidth=1;
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // 节点
+  for(var id in HB.nodes){
+    var nd=HB.nodes[id];
+    var isHere=id===p.pos;
+    var isSel=HB.map.sel===id;
+    var fc=HB.factions[nd.f].c;
+    var r = nd.t==="ruin"?7: nd.t==="city"?6.5:5.5;
+    if(isSel){ ctx.beginPath(); ctx.arc(nd.x,nd.y,13,0,Math.PI*2); ctx.strokeStyle="#e2a13a"; ctx.lineWidth=2; ctx.stroke(); }
+    // 势力环
+    ctx.beginPath(); ctx.arc(nd.x,nd.y,r+4.5,0,Math.PI*2);
+    ctx.strokeStyle=fc; ctx.globalAlpha=.7; ctx.lineWidth=1.2; ctx.stroke(); ctx.globalAlpha=1;
+    // 节点本体
+    ctx.beginPath(); ctx.arc(nd.x,nd.y,r,0,Math.PI*2);
+    ctx.fillStyle = isHere ? "#e2a13a" : (nd.rad>0? "#5a6a3a" : fc);
+    ctx.fill();
+    ctx.strokeStyle="#0a0f14"; ctx.lineWidth=2; ctx.stroke();
+    // 辐射标记
+    if(nd.rad>0){ ctx.fillStyle="rgba(182,201,92,.8)"; ctx.font="8px monospace"; ctx.fillText("×",nd.x+r-2,nd.y+r-1); }
+    // 名字
+    ctx.font = (isHere?"bold 11px sans-serif":"10px sans-serif");
+    ctx.fillStyle = isHere?"#e2a13a":"#aebccb";
+    ctx.fillText(nd.n, nd.x+r+6, nd.y+3);
+  }
+  ctx.restore();
+  // 边界说明
+  ctx.fillStyle="rgba(126,144,166,.5)";
+  ctx.font="10px monospace";
+  ctx.fillText("HANBER ONE · 世界局势图 · "+HB.fmtDate(HB.state.date), 10, cv.height-8);
+};
+// 动画循环
+HB.map.loop = function(){
+  HB.map.anim++;
+  if(document.getElementById("gameScreen").style.display!=="none") HB.ui.renderMap();
+  if(document.getElementById("titleScreen").style.display!=="none") HB.ui.renderTitle();
+  requestAnimationFrame(HB.map.loop);
+};
+
+// ---------- 标题屏 ----------
+HB.ui.titleInit = function(){
+  var cv=document.getElementById("titleCanvas");
+  function resize(){ cv.width=window.innerWidth; cv.height=window.innerHeight; }
+  resize(); window.addEventListener("resize", resize);
+  HB.titleParticles=[];
+  for(var i=0;i<110;i++){
+    HB.titleParticles.push({x:Math.random()*cv.width,y:Math.random()*cv.height,vy:0.3+Math.random()*0.8,vx:(Math.random()-0.5)*0.2,s:0.6+Math.random()*1.8,a:0.2+Math.random()*0.5});
+  }
+  HB.ui.titleRefresh();
+};
+HB.ui.titleRefresh = function(){
+  var menu=document.getElementById("tMenu");
+  var hasSave=false;
+  try{ hasSave=!!localStorage.getItem(HB.SAVE_PREFIX+0); }catch(e){}
+  var h='<button class="btn btn-p" onclick="HB.ui.newGameModal()">开始新游戏</button>';
+  h+='<button class="btn" '+(hasSave?"":"disabled")+' onclick="HB.continueGame()">继续游戏</button>';
+  h+='<button class="btn" onclick="HB.openSave()">存档管理</button>';
+  h+='<button class="btn" onclick="HB.ui.worldInfo()">世界设定</button>';
+  h+='<button class="btn" onclick="HB.ui.about()">关于 / 系列计划</button>';
+  menu.innerHTML=h;
+};
+HB.continueGame = function(){
+  if(HB.loadGame(0)){}
+  else HB.toast("没有可用存档");
+};
+HB.ui.renderTitle = function(){
+  var cv=document.getElementById("titleCanvas");
+  if(!cv.width) return;
+  var ctx=cv.getContext("2d");
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var g=ctx.createLinearGradient(0,0,0,cv.height);
+  g.addColorStop(0,"#06090d"); g.addColorStop(1,"#0a1219");
+  ctx.fillStyle=g; ctx.fillRect(0,0,cv.width,cv.height);
+  // 迷你地图
+  ctx.save();
+  var s=Math.min(cv.width/1400, cv.height/700)*0.7;
+  var ox=cv.width/2-500*s, oy=cv.height*0.42-280*s;
+  ctx.translate(ox,oy); ctx.scale(s,s);
+  HB.continents.forEach(function(c){
+    ctx.beginPath();
+    c.pts.forEach(function(pt,i){ if(i===0) ctx.moveTo(pt[0],pt[1]); else ctx.lineTo(pt[0],pt[1]); });
+    ctx.closePath();
+    ctx.fillStyle="rgba(35,52,66,.55)"; ctx.fill();
+  });
+  HB.radZones.forEach(function(z){
+    ctx.beginPath(); ctx.arc(z[0],z[1],z[2],0,Math.PI*2);
+    ctx.fillStyle="rgba(182,201,92,.12)"; ctx.fill();
+  });
+  for(var id in HB.nodes){
+    var nd=HB.nodes[id];
+    ctx.beginPath(); ctx.arc(nd.x,nd.y,3,0,Math.PI*2);
+    ctx.fillStyle=HB.factions[nd.f].c; ctx.globalAlpha=.8; ctx.fill(); ctx.globalAlpha=1;
+  }
+  ctx.restore();
+  // 灰烬
+  HB.titleParticles.forEach(function(pt){
+    pt.y+=pt.vy; pt.x+=pt.vx;
+    if(pt.y>cv.height){ pt.y=-5; pt.x=Math.random()*cv.width; }
+    ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.s,0,Math.PI*2);
+    ctx.fillStyle="rgba(190,180,160,"+pt.a*0.5+")"; ctx.fill();
+  });
+};
+HB.ui.newGameModal = function(){
+  var h='<p class="muted">选择你的故事。</p>';
+  h+='<div class="kv mt"><span class="k">姓名</span><span class="v"><input id="ngName" maxlength="8" style="background:#0a1016;color:#e2a13a;border:1px solid #23344a;padding:5px 8px;width:140px" value="韩一"></span></div>';
+  h+='<div class="kv"><span class="k">模式</span><span class="v" id="ngModeSel"></span></div>';
+  h+='<div class="kv"><span class="k">出身</span><span class="v" id="ngOriginSel"></span></div>';
+  h+='<div class="kv" id="ngBirthRow"><span class="k">出生地</span><span class="v" id="ngBirthSel"></span></div>';
+  h+='<p class="muted mt" id="ngDesc"></p>';
+  var foot='<button class="btn" onclick="HB.ui.closeModal()">取消</button><button class="btn btn-p" onclick="HB.ui.confirmNew()">开始旅程</button>';
+  var body=HB.ui.openModal("开始新游戏", h, foot);
+  HB.ng={mode:"story",origin:"soldier",birth:"gen"};
+  var modeBtns='<div class="row">';
+  [["story","主线模式","十二个月的主线剧情，寻找妹妹与“海啸协议”的真相"],["free","自由模式","只有一个目标：活下去，活过 365 天"]].forEach(function(m){
+    modeBtns+='<button class="btn btn-sm" id="ngm'+m[0]+'" onclick="HB.ui.ngMode(\''+m[0]+'\')">'+m[1]+'</button>';
+  });
+  modeBtns+='</div>';
+  document.getElementById("ngModeSel").innerHTML=modeBtns;
+  var ob='<div class="row">';
+  HB.origins.forEach(function(o){ ob+='<button class="btn btn-sm" id="ngo'+o.id+'" onclick="HB.ui.ngOrigin(\''+o.id+'\')">'+o.n+'</button>'; });
+  ob+='</div>';
+  document.getElementById("ngOriginSel").innerHTML=ob;
+  var bb='<div class="row">';
+  ["gen","ber","chi","tyo","syd"].forEach(function(b){ bb+='<button class="btn btn-sm" id="ngb'+b+'" onclick="HB.ui.ngBirth(\''+b+'\')">'+HB.nodes[b].n+'</button>'; });
+  bb+='</div>';
+  document.getElementById("ngBirthSel").innerHTML=bb;
+  HB.ui.ngMode("story"); HB.ui.ngOrigin("soldier"); HB.ui.ngBirth("gen");
+};
+HB.ui.ngMode = function(m){
+  HB.ng.mode=m;
+  document.getElementById("ngDesc").textContent = m==="story"?"主线模式：十二个月主线，每月一章，悬念不断。":"自由模式：无主线，只有一个目标——活下去。";
+  document.getElementById("ngBirthRow").style.display = m==="free"?"":"none";
+  [["story"],["free"]].forEach(function(arr){ var el=document.getElementById("ngm"+arr[0]); if(el){ el.style.borderColor = arr[0]===m?"#e2a13a":""; el.style.color = arr[0]===m?"#f2c069":""; } });
+};
+HB.ui.ngOrigin = function(o){
+  HB.ng.origin=o;
+  var or=HB.origins.find(function(x){return x.id===o;});
+  document.getElementById("ngDesc").textContent=or.n+"："+or.d;
+  HB.origins.forEach(function(x){ var el=document.getElementById("ngo"+x.id); el.style.borderColor=x.id===o?"#e2a13a":""; el.style.color=x.id===o?"#f2c069":""; });
+};
+HB.ui.ngBirth = function(b){
+  HB.ng.birth=b;
+  ["gen","ber","chi","tyo","syd"].forEach(function(x){ var el=document.getElementById("ngb"+x); el.style.borderColor=x===b?"#e2a13a":""; el.style.color=x===b?"#f2c069":""; });
+};
+HB.ui.confirmNew = function(){
+  var name=document.getElementById("ngName").value.trim()||"韩一";
+  HB.ui.closeModal();
+  HB.newGame(HB.ng.mode, name, HB.ng.origin, HB.ng.mode==="free"?HB.ng.birth:"gen");
+};
+
+// ---------- 世界设定 / 关于 ----------
+HB.ui.worldInfo = function(){
+  var h='<p class="bold" style="letter-spacing:.2em">冷战热战 · 时间线（虚构）</p>';
+  var lines=[
+    ["1985.05","柏林危机升级为全面战争。北约与华约在欧洲交火。主角 12 岁，在柏林大撤退中与妹妹失散。"],
+    ["1985.11","双方在一天之内互掷数十枚核弹（多为空爆军事目标）。纽约、柏林、莫斯科周边成为辐射区。"],
+    ["1986","欧洲成为绞肉机。战线从易北河到伏尔加河来回拉锯。"],
+    ["1987.01","日内瓦停火协议签署。但没有任何一方撤军——冷战的冰层下，埋着更危险的东西。"],
+    ["1988.01","游戏开始。你 19 岁，成年之日收到一封署名“乌鸦”的信。"],
+    ["1989.01","倒计时的终点。第二击系统……本作中你可以决定它的结局。"]
+  ];
+  lines.forEach(function(l){
+    h+='<div class="kv"><span class="k tick">'+l[0]+'</span><span class="v" style="text-align:right">'+l[1]+'</span></div>';
+  });
+  h+='<p class="muted mt" style="font-size:11px">本作为完全虚构的架空历史设定，与现实国家、组织及个人无关。</p>';
+  HB.ui.openModal("世界设定", h);
+};
+HB.ui.about = function(){
+  var h='<p class="bold" style="letter-spacing:.2em">HanBer 系列计划</p>';
+  h+='<div class="kv"><span class="k tick">HanBer ONE</span><span class="v">冷战热战 · 生存纪事（本作）</span></div>';
+  h+='<div class="kv"><span class="k tick">HanBer TWO</span><span class="v">系列下一作（独立制作）</span></div>';
+  h+='<div class="kv"><span class="k tick">深海</span><span class="v">海啸第二套系统（规划中）</span></div>';
+  h+='<div class="kv"><span class="k tick">铁幕彼端</span><span class="v">（规划中）</span></div>';
+  h+='<div class="mt muted" style="font-size:12px">本作功能：主线 12 章（按月解锁，章末悬念）/ 自由生存模式 / 32 个世界节点 / 40+ NPC / 16 支线 / 本地存档 + 导出导入。</div>';
+  h+='<div class="mt muted" style="font-size:11px">单文件 HTML，无联网依赖，可整包上传 GitHub Pages。</div>';
+  HB.ui.openModal("关于 HanBer 系列", h);
+};
+
+</script>
+<script>
+// ===== HanBer ONE · 启动 =====
+window.HB = window.HB || {};
+
+// 别名
+HB.uiRefresh = function(){ HB.ui.refresh(); };
+
+HB.boot = function(){
+  HB.ui.titleInit();
+  HB.ui.initMap();
+  HB.map.loop();
+  // 自检模式: URL 带 ?test=1
+  if(location.search.indexOf("test=1")>=0) HB.selftest();
+};
+
+// ---------- 自检（仅开发验证用） ----------
+HB.selftest = function(){
+  var out=[];
+  var ok=function(msg){ out.push("[OK] "+msg); };
+  var fail=function(msg){ out.push("[FAIL] "+msg); };
+  try{
+    // 1. 数据完整性
+    if(Object.keys(HB.nodes).length>=30) ok("世界节点 "+Object.keys(HB.nodes).length+" 个");
+    else fail("节点数不足");
+    if(Object.keys(HB.npcs).length>=35) ok("NPC "+Object.keys(HB.npcs).length+" 名");
+    else fail("NPC 不足");
+    if(HB.story.length===12) ok("主线 12 章");
+    else fail("主线章节数="+HB.story.length);
+    if(HB.sideQuests.length>=16) ok("支线 "+HB.sideQuests.length+" 个");
+    if(Object.keys(HB.items).length>=45) ok("物品 "+Object.keys(HB.items).length+" 种");
+    // 2. 新游戏
+    HB.newGame("story","自检员","soldier","gen");
+    var p=HB.state.player;
+    if(p && p.pos==="gen") ok("主线模式开局于日内瓦");
+    if(p.inv.locket===1) ok("初始挂坠在背包");
+    // 3. 日期与推进
+    var d0=HB.state.dayCount;
+    HB.dayTick(3);
+    if(HB.state.dayCount===d0+3) ok("时间推进 3 天");
+    // 4. 存档往返
+    var saveOk=HB.saveGame(0);
+    if(saveOk){ var loaded=HB.loadGame(0); if(loaded && HB.state.dayCount===d0+3) ok("存档→读档往返一致"); else fail("读档不一致"); }
+    else fail("保存失败");
+    // 5. 战斗模拟
+    HB.startCombat("bandit",{onWin:function(){},onLose:function(){}});
+    var guard=0;
+    while(HB.combat.active && guard<50){ guard++; HB.combatPlayerAttack(); }
+    if(!HB.combat.active) ok("战斗闭环（"+guard+" 回合内结束）");
+    else fail("战斗未结束");
+    // 6. 旅行
+    var days=HB.travelDays("gen","ber");
+    if(days>=1) ok("日内瓦→柏林 预计 "+days+" 天");
+    // 7. 章节解锁判定
+    HB.state.date={y:1988,m:1,d:10};
+    HB.storyDay();
+    if(HB.state.story.started) ok("第一章已开启");
+    else fail("第一章未开启");
+    // 8. 物品/合成
+    HB.state.player.inv.scrap=5; HB.state.player.inv.gunpowder=5;
+    var craftable=HB.canCraft(HB.craft[4]);
+    if(craftable) ok("配方判定正常");
+    HB.doCraft(4);
+    if((HB.state.player.inv.ammo_pistol||0)>=6) ok("制作 9mm 弹药成功");
+    // 9. 自由模式
+    HB.newGame("free","自由人","street","chi");
+    if(HB.state.mode==="free" && HB.state.player.pos==="chi") ok("自由模式开局芝加哥");
+    HB.autosave();
+    ok("自检完成");
+  }catch(e){
+    fail("异常: "+e.message+"\n"+(e.stack||"").split("\n").slice(0,3).join("\n"));
+  }
+  var d=document.createElement("div");
+  d.style.cssText="position:fixed;left:8px;top:8px;z-index:9999;background:#0a1016;border:1px solid #31465f;color:#c8d4e2;font:12px/1.6 monospace;padding:12px;max-width:520px;max-height:80vh;overflow:auto;white-space:pre-wrap";
+  d.textContent=out.join("\n");
+  document.body.appendChild(d);
+  console.log("SELFTEST", out.join("\n"));
+};
+
+document.addEventListener("DOMContentLoaded", HB.boot);
+
+</script>
+</body>
+</html>

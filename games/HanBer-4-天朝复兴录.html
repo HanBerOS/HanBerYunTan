@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HanBer FOUR · 天朝复兴录</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%231b1914'/><path d='M14 20 L32 10 L50 20 L50 40 Q32 58 14 40 Z' fill='none' stroke='%23d9b25c' stroke-width='3'/><circle cx='32' cy='30' r='6' fill='%23c9492b'/><text x='32' y='54' font-size='12' fill='%23d9b25c' text-anchor='middle' font-family='serif'>四</text></svg>">
+<style>
+:root{
+  --ink:#17150f;
+  --paper:#1e1b14;
+  --paper2:#262119;
+  --line:#4a3f2b;
+  --gold:#d9b25c;
+  --gold-soft:#c9a14a;
+  --blood:#c9492b;
+  --jade:#5b8a6f;
+  --bone:#e6dcc3;
+  --bone-dim:#a89b7d;
+  --dim:#7a7059;
+  --shadow:rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(201,161,74,.12), transparent 60%),
+    radial-gradient(900px 500px at 90% 110%, rgba(91,138,111,.10), transparent 60%),
+    var(--ink);
+  color:var(--bone);
+  font-family:"Noto Serif SC","Songti SC","SimSun",serif;
+  overflow:hidden;
+  user-select:none;
+}
+#app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+#stage{position:relative;width:min(1500px,100vw);height:min(900px,100vh);background:var(--paper);border:1px solid var(--line);box-shadow:0 0 60px rgba(0,0,0,.6);overflow:hidden;}
+.grain::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");z-index:2000;}
+
+/* ===== 启动界面 ===== */
+.view{position:absolute;inset:0;display:none;flex-direction:column;}
+.view.active{display:flex;}
+#view-menu{
+  align-items:center;justify-content:center;
+  background:
+    radial-gradient(700px 500px at 50% 30%, rgba(201,161,74,.16), transparent 70%),
+    linear-gradient(180deg,#221d12,#14110a);
+}
+.menu-frame{text-align:center;padding:20px;max-width:640px;width:100%;}
+.title-seal{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:6px;}
+.title-seal .seal{
+  width:64px;height:64px;border:3px solid var(--blood);color:var(--blood);
+  display:flex;align-items:center;justify-content:center;font-size:34px;
+  transform:rotate(-4deg);border-radius:8px;font-weight:700;background:rgba(201,73,43,.08);
+}
+h1.title{font-size:clamp(38px,7vw,72px);letter-spacing:.06em;color:var(--gold);
+  text-shadow:0 2px 0 rgba(0,0,0,.5);font-weight:900;line-height:1.1;}
+.sub-title{color:var(--bone-dim);letter-spacing:.5em;margin:8px 0 2px;font-size:15px;}
+.sub-title2{color:var(--gold-soft);letter-spacing:.3em;margin-bottom:30px;font-size:13px;opacity:.85;}
+.menu-desc{color:var(--bone-dim);font-size:14px;line-height:1.9;margin-bottom:30px;max-width:520px;margin-left:auto;margin-right:auto;}
+.menu-buttons{display:flex;flex-direction:column;gap:12px;align-items:center;}
+.btn{
+  cursor:pointer;font-family:inherit;font-size:16px;letter-spacing:.2em;
+  padding:14px 40px;color:var(--bone);background:linear-gradient(180deg,#2c2618,#201b10);
+  border:1px solid var(--line);position:relative;transition:.18s;min-width:280px;
+}
+.btn:hover{background:linear-gradient(180deg,#3a3220,#2a2315);color:var(--gold);border-color:var(--gold-soft);transform:translateY(-1px);}
+.btn.primary{color:#1a1408;background:linear-gradient(180deg,#e0bd6d,#c9a14a);border-color:#e6cc8a;font-weight:700;}
+.btn.primary:hover{color:#0d0a03;background:linear-gradient(180deg,#eed08a,#d6ad58);}
+.btn.small{min-width:0;padding:12px 16px;font-size:13px;min-height:44px;}
+.btn.danger{border-color:var(--blood);color:#e8a08c;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+
+/* ===== 通用面板 ===== */
+.panel{
+  position:absolute;background:linear-gradient(180deg,var(--paper2),var(--paper));
+  border:1px solid var(--line);box-shadow:0 8px 30px var(--shadow);
+  display:flex;flex-direction:column;z-index:40;
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--line);padding:10px 14px;
+}
+.panel-head h3{font-size:16px;color:var(--gold);letter-spacing:.1em;}
+.panel-head .sub{color:var(--bone-dim);font-size:11px;letter-spacing:.1em;}
+.close-x{cursor:pointer;color:var(--bone-dim);font-size:20px;line-height:1;padding:2px 6px;border:1px solid var(--line);}
+.close-x:hover{color:var(--blood);border-color:var(--blood);}
+.panel-body{flex:1;overflow:auto;padding:14px;}
+.panel-body::-webkit-scrollbar{width:8px;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--line);}
+
+/* ===== HUD ===== */
+#hud{position:absolute;inset:0;display:none;z-index:5;}
+#hud.active{display:flex;flex-direction:column;}
+#hud-top{display:flex;align-items:center;gap:12px;padding:8px 12px;background:linear-gradient(180deg,#1d1910,#16130b);border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.hud-item{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--bone);}
+.hud-item .label{color:var(--bone-dim);}
+.hud-item .val{color:var(--gold);font-weight:700;}
+.bar{width:100px;height:8px;background:#0d0b06;border:1px solid var(--line);position:relative;overflow:hidden;}
+.bar .fill{height:100%;background:linear-gradient(90deg,#c9492b,#e0704a);}
+.bar.gold .fill{background:linear-gradient(90deg,#8a6a2a,#d9b25c);}
+.bar.jade .fill{background:linear-gradient(90deg,#3f6b52,#6ba787);}
+.spacer{flex:1;}
+.icon-btn{cursor:pointer;color:var(--bone);font-size:13px;padding:6px 10px;border:1px solid var(--line);background:#241f15;}
+.icon-btn:hover{color:var(--gold);border-color:var(--gold-soft);}
+#hud-main{flex:1;position:relative;}
+#worldCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+#map-legend{position:absolute;top:10px;left:12px;z-index:6;font-size:11px;color:var(--bone-dim);background:rgba(23,21,15,.82);border:1px solid var(--line);padding:8px 10px;line-height:1.8;pointer-events:none;}
+#map-legend b{color:var(--gold);}
+#msg-log{position:absolute;left:12px;bottom:12px;width:min(460px,60%);max-height:140px;z-index:6;
+  background:rgba(15,13,8,.82);border:1px solid var(--line);padding:8px 10px;font-size:12.5px;line-height:1.7;overflow:hidden;}
+#msg-log .entry{opacity:0;animation:fadein .6s forwards;}
+#msg-log .e-story{color:var(--gold);}
+#msg-log .e-evt{color:var(--bone);}
+#msg-log .e-bad{color:#e0704a;}
+#msg-log .e-good{color:#7dbd96;}
+@keyframes fadein{to{opacity:1;}}
+
+/* ===== 状态栏底部 ===== */
+#hud-bottom{display:flex;gap:8px;padding:8px 12px;background:linear-gradient(180deg,#16130b,#1d1910);border-top:1px solid var(--line);flex-wrap:wrap;align-items:center;font-size:13px;color:var(--bone-dim);}
+#hud-bottom .region-name{color:var(--gold);font-weight:700;letter-spacing:.1em;}
+.big-btn{cursor:pointer;font-family:inherit;font-size:14px;letter-spacing:.15em;color:var(--bone);background:#241f15;border:1px solid var(--line);padding:9px 18px;}
+.big-btn:hover{color:var(--gold);border-color:var(--gold-soft);}
+.big-btn.primary{color:#1a1408;background:linear-gradient(180deg,#e0bd6d,#c9a14a);font-weight:700;border-color:#e6cc8a;}
+.big-btn.danger{color:#e8a08c;border-color:var(--blood);}
+
+/* ===== 对话框 ===== */
+#dialog{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:min(720px,94%);
+  background:linear-gradient(180deg,#252015,#1a160d);border:1px solid var(--line);z-index:50;
+  box-shadow:0 10px 34px var(--shadow);display:none;flex-direction:column;}
+#dialog.open{display:flex;}
+#dialog .d-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);}
+#dialog .d-portrait{width:46px;height:46px;border:1px solid var(--gold-soft);background:#0f0d08;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--gold);flex-shrink:0;}
+#dialog .d-name{font-size:16px;color:var(--gold);font-weight:700;letter-spacing:.05em;}
+#dialog .d-role{font-size:11px;color:var(--bone-dim);}
+#dialog .d-text{padding:14px 16px;font-size:15px;line-height:2;color:var(--bone);min-height:60px;white-space:pre-wrap;}
+#dialog .d-choices{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px;}
+.d-choice{cursor:pointer;font-family:inherit;font-size:14px;text-align:left;color:var(--bone);background:#221d12;border:1px solid var(--line);padding:10px 12px;line-height:1.6;}
+.d-choice:hover{border-color:var(--gold-soft);color:var(--gold);transform:translateX(3px);}
+#dialog .d-advance{cursor:pointer;text-align:center;color:var(--bone-dim);font-size:12px;padding:6px;letter-spacing:.2em;}
+
+/* ===== 类型面板 ===== */
+.city-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.action-tile{cursor:pointer;font-family:inherit;font-size:14px;text-align:left;color:var(--bone);
+  background:#211c11;border:1px solid var(--line);padding:12px;line-height:1.5;}
+.action-tile b{color:var(--gold);display:block;margin-bottom:2px;letter-spacing:.08em;}
+.action-tile span{color:var(--bone-dim);font-size:12px;}
+.action-tile:hover{border-color:var(--gold-soft);transform:translateY(-1px);background:#2a2417;}
+
+/* ===== 列表 / 表格 ===== */
+.list-item{display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid rgba(74,63,43,.4);font-size:14px;color:var(--bone);}
+.list-item:hover{background:#2a2417;cursor:pointer;}
+.list-item .li-name{flex:1;color:var(--gold-soft);}
+.list-item .li-sub{font-size:12px;color:var(--bone-dim);}
+.tag{font-size:10px;padding:1px 6px;border:1px solid var(--line);color:var(--bone-dim);border-radius:2px;white-space:nowrap;}
+.tag.gold{color:var(--gold);border-color:var(--gold-soft);}
+.tag.red{color:#e0704a;border-color:var(--blood);}
+
+/* ===== 商店 ===== */
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.shop-item{cursor:pointer;font-family:inherit;text-align:left;background:#211c11;border:1px solid var(--line);padding:10px;color:var(--bone);font-size:13px;}
+.shop-item:hover{border-color:var(--gold-soft);}
+.shop-item b{color:var(--gold);}
+.shop-item .cost{color:var(--bone-dim);}
+
+/* ===== 战斗 ===== */
+#battle{position:absolute;inset:0;background:radial-gradient(800px 500px at 50% 40%, rgba(120,40,20,.25), var(--ink));z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;}
+#battle.open{display:flex;}
+.battle-stage{display:flex;gap:60px;align-items:center;}
+.b-char{text-align:center;width:170px;}
+.b-char .b-portrait{width:110px;height:130px;border:2px solid var(--line);background:#151109;display:flex;align-items:center;justify-content:center;font-size:52px;margin:0 auto 8px;}
+.b-char.enemy .b-portrait{border-color:var(--blood);}
+.b-char .b-name{color:var(--gold);font-weight:700;letter-spacing:.08em;margin-bottom:6px;}
+.bar-vs{font-size:30px;color:var(--bone-dim);font-weight:900;}
+.battle-log{width:min(640px,92%);height:120px;background:rgba(15,13,8,.85);border:1px solid var(--line);margin:18px 0;padding:10px;font-size:13px;line-height:1.7;overflow:auto;}
+.battle-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.ba-btn{cursor:pointer;font-family:inherit;font-size:14px;letter-spacing:.1em;color:var(--bone);background:#241f15;border:1px solid var(--line);padding:12px 24px;}
+.ba-btn:hover{color:var(--gold);border-color:var(--gold-soft);}
+.ba-btn.skill{color:#e8c77a;}
+.ba-btn.danger{color:#e0704a;border-color:var(--blood);}
+.ba-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ===== 读取存档 ===== */
+.save-slot{cursor:pointer;font-family:inherit;width:100%;text-align:left;background:#211c11;border:1px solid var(--line);padding:12px;margin-bottom:10px;color:var(--bone);}
+.save-slot:hover{border-color:var(--gold-soft);}
+.save-slot .sv-title{color:var(--gold);font-weight:700;margin-bottom:4px;letter-spacing:.05em;}
+.save-slot .sv-meta{color:var(--bone-dim);font-size:12px;line-height:1.7;}
+.save-slot.empty{color:var(--bone-dim);text-align:center;}
+
+/* ===== 剧情 ===== */
+.story-intro{background:linear-gradient(180deg,#17130a,#100d07);border:1px solid var(--line);padding:20px;line-height:2;font-size:15px;}
+.story-intro h2{color:var(--gold);text-align:center;letter-spacing:.2em;margin-bottom:8px;font-size:20px;}
+.story-intro .ep{color:var(--blood);text-align:center;letter-spacing:.3em;margin-bottom:12px;font-size:12px;}
+.story-intro .cliff{color:#e8c77a;text-align:center;margin-top:16px;font-size:14px;letter-spacing:.1em;font-style:italic;}
+
+/* ===== 时间/状态 ===== */
+.day-pill{font-size:12px;color:var(--bone-dim);letter-spacing:.05em;}
+.day-pill b{color:var(--bone);}
+
+/* ===== 移动端适配 ===== */
+@media (max-width:760px){
+  h1.title{font-size:42px;}
+  .sub-title{letter-spacing:.3em;}
+  #map-legend{display:none;}
+  #msg-log{width:100%;left:0;bottom:0;max-height:110px;font-size:11px;border-left:0;border-right:0;border-bottom:0;}
+  #hud-bottom{font-size:12px;}
+  .big-btn{padding:8px 12px;font-size:13px;}
+  .battle-stage{gap:24px;}
+  .b-char{width:130px;}
+  .b-char .b-portrait{width:84px;height:100px;font-size:40px;}
+  #dialog{width:97%;bottom:110px;}
+}
+</style>
+<style id="hanber-soviet-skin">
+/* === HanBer 统一皮肤 · 后苏联忧郁美学 (Post-Soviet Melancholy) === */
+html,body{
+  background-color:#15181e !important;
+  background-image:
+    radial-gradient(ellipse at 50% -5%, rgba(201,168,106,.10), transparent 55%),
+    linear-gradient(165deg,#11141a 0%,#1a1f28 48%,#231d15 100%) !important;
+  color:#d6cdb8 !important;
+}
+#hanber-vignette{position:fixed;inset:0;z-index:99998;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(0,0,0,.55) 100%);}
+</style>
+<div id="hanber-vignette"></div>
+</head>
+<body>
+<div id="app"><div id="stage" class="grain">
+<!-- content injected by JS view system -->
+</div></div>
+<script>
+"use strict";
+/* =====================================================================
+   HanBer FOUR · 世界设定
+   世界观：第一次鸦片战争结局反转——清军在海口大破英夷水师，英国远征军
+   全军覆没，道光年间天朝开始自强革新。1845年，天下格局剧变……
+   ===================================================================== */
+
+// ---------- 大陆地理（虚拟 2000x1200 世界坐标） ----------
+const REGIONS = [
+  {id:'guangzhou', name:'广州', full:'广州府 · 粤海关', type:'port', x:880, y:900, danger:2,
+   desc:'南天一柱，粤海关商贾云集。此役扭转乾坤之地，海港帆樯如林，洋行、十三行余部皆在此。',
+   trade:{tea:0.8, silk:0.9, porcelain:0.85, spice:1.2, opium:1.4, cotton:1.1, silver:1.0, rice:0.9, salt:1.0, pearl:0.9, wood:1.1, tobacco:1.0},
+   shops:['tea','silk','porcelain','pearl','rice','salt','medicine','weapon']},
+  {id:'aomen', name:'澳门', full:'澳门 · 葡人租界', type:'port', x:880, y:955, danger:4,
+   desc:'葡萄牙人南湾旧港。战败的西洋势力在此蛰伏，黑市、火铳与流言暗流涌动。',
+   trade:{opium:1.8, spice:1.1, cotton:1.3, silver:1.1, tobacco:1.2, pearl:1.0, wood:1.0, silk:1.2},
+   shops:['opium','spice','cotton','silver','weapon','medicine']},
+  {id:'beijing', name:'北京', full:'京师 · 直隶', type:'capital', x:980, y:520, danger:1,
+   desc:'紫禁城新立“自强新政”，改革派与守旧权贵明争暗斗，朝堂风雷激荡。',
+   trade:{tea:1.2, silk:1.1, porcelain:1.2, salt:1.3, rice:1.1, horse:1.0, silver:0.9},
+   shops:['tea','silk','porcelain','salt','rice','horse','weapon','medicine']},
+  {id:'shengjing', name:'盛京', full:'盛京 · 奉天', type:'city', x:1080, y:470, danger:3,
+   desc:'龙兴之地，八旗驻防。猎场广袤，白山黑水之间多匪患。',
+   trade:{fur:0.7, wood:0.8, horse:0.8, ginseng:0.7, rice:1.0, salt:1.1},
+   shops:['fur','wood','horse','ginseng','medicine','weapon']},
+  {id:'seoul', name:'汉城', full:'朝鲜 · 汉城', type:'city', x:1080, y:570, danger:2,
+   desc:'藩属朝鲜之王都。天朝大胜后，朝鲜上国更尊，然倭寇与西教暗流渐起。',
+   trade:{rice:0.8, ginseng:0.6, fur:0.9, silk:1.2, silver:1.2, salt:1.0},
+   shops:['rice','ginseng','fur','salt','medicine']},
+  {id:'nagasaki', name:'长崎', full:'日本 · 长崎', type:'port', x:1180, y:770, danger:4,
+   desc:'幕府锁国唯一开放口岸。闻得清军大胜，日本上下震动，维新之念暗生，武士与浪人往来如织。',
+   trade:{silver:0.8, cotton:1.0, spice:1.3, tea:1.3, silk:1.3, porcelain:1.2, weapon:0.9},
+   shops:['silver','cotton','spice','tea','silk','porcelain','weapon']},
+  {id:'taiwan', name:'台湾', full:'台湾 · 淡水', type:'port', x:1100, y:860, danger:3,
+   desc:'东南海上屏障。清军水师大胜后台湾地位骤升，移民涌入，番社与垦民并存。',
+   trade:{rice:0.75, sugar:0.7, tea:0.9, tobacco:1.0, wood:0.9, pearl:1.0},
+   shops:['rice','sugar','tea','tobacco','wood','medicine']},
+  {id:'shanghai', name:'上海', full:'松江府 · 上海县', type:'port', x:1030, y:720, danger:1,
+   desc:'江海要冲，新起之贸易重镇。清军胜后，外贸北移，沙船与商号日盛。',
+   trade:{tea:0.9, silk:0.8, cotton:0.8, rice:0.9, silver:1.0, salt:0.9, porcelain:0.9, tobacco:1.1},
+   shops:['tea','silk','cotton','rice','salt','porcelain','medicine','weapon']},
+  {id:'nanjing', name:'南京', full:'江南 · 金陵', type:'city', x:960, y:665, danger:1,
+   desc:'六朝古都，江南织造所出绸缎冠绝天下。文气与商气并盛。',
+   trade:{silk:0.75, cotton:0.9, tea:1.0, porcelain:1.0, rice:0.85, salt:0.9},
+   shops:['silk','cotton','tea','porcelain','rice','salt','medicine']},
+  {id:'hankou', name:'汉口', full:'湖广 · 汉口镇', type:'city', x:880, y:680, danger:1,
+   desc:'九省通衢，茶商云集。此处之“汉口茶路”直通俄国，为陆上丝路新脉。',
+   trade:{tea:0.7, silk:1.0, rice:0.9, salt:0.9, spice:1.2, wood:1.0},
+   shops:['tea','silk','rice','salt','spice','wood','medicine']},
+  {id:'xian', name:'西安', full:'陕西 · 长安', type:'city', x:800, y:625, danger:2,
+   desc:'关中沃野，周秦汉唐故都。新政书院林立，亦多旧党耆老。',
+   trade:{salt:0.8, rice:0.9, cotton:1.0, horse:1.1, tea:1.2, silk:1.1},
+   shops:['salt','rice','cotton','horse','tea','medicine']},
+  {id:'chengdu', name:'成都', full:'四川 · 锦官城', type:'city', x:740, y:705, danger:1,
+   desc:'天府之国，蜀锦与井盐之利甲天下。西连藏地，南控滇边。',
+   trade:{silk:0.8, salt:0.75, rice:0.8, tea:0.9, wood:1.0, ginseng:1.1},
+   shops:['silk','salt','rice','tea','wood','medicine']},
+  {id:'yunnan', name:'滇南', full:'云南 · 大理', type:'city', x:800, y:800, danger:4,
+   desc:'滇缅边境，马帮驮铃不绝。鸦片烟土走私之要道，亦是银矿与翡翠之地。',
+   trade:{opium:1.2, silver:0.85, spice:1.0, jade:0.8, tea:1.0, horse:0.9},
+   shops:['opium','silver','spice','jade','horse','medicine']},
+  {id:'lhasa', name:'拉萨', full:'西藏 · 前藏', type:'frontier', x:640, y:770, danger:5,
+   desc:'雪域高原，僧俗共治。清廷驻藏大臣统辖，西方探险者与间谍常潜行于此。',
+   trade:{fur:0.8, wood:1.1, horse:0.9, spice:1.3, salt:1.2, gold:0.9},
+   shops:['fur','wood','horse','spice','salt','gold','medicine']},
+  {id:'yili', name:'伊犁', full:'伊犁 · 西域', type:'frontier', x:600, y:545, danger:6,
+   desc:'天山北路重镇。清廷屯垦戍边，与浩罕、俄商交接，战马与黄金交易活跃，时闻边警。',
+   trade:{horse:0.7, fur:0.8, gold:0.8, wood:0.9, tea:1.3, silk:1.3, spice:1.2},
+   shops:['horse','fur','gold','wood','tea','silk','spice','weapon']},
+  {id:'jiayuguan', name:'嘉峪关', full:'肃州 · 嘉峪关', type:'frontier', x:720, y:605, danger:3,
+   desc:'天下第一雄关，中原与西域门户。商旅、戍卒、驼队络绎于途。',
+   trade:{horse:0.9, fur:0.9, salt:1.0, tea:1.1, rice:1.1, wood:1.0},
+   shops:['horse','fur','salt','tea','rice','medicine']},
+  {id:'kolkata', name:'加尔各答', full:'英属印度 · 加尔各答', type:'port', x:620, y:880, danger:6,
+   desc:'东印度公司在南亚的总部。英军在华惨败后，印度殖民地统治动摇，土邦蠢动，鸦片库房仍暗中运作。',
+   trade:{opium:0.6, spice:0.8, cotton:0.8, tea:1.2, silver:1.0, rice:1.1, gold:1.1},
+   shops:['opium','spice','cotton','silver','gold','weapon','medicine']},
+  {id:'malacca', name:'马六甲', full:'马六甲 · 南洋', type:'port', x:820, y:1010, danger:4,
+   desc:'南洋十字路口，华商云集。水师胜后，南洋华商地位骤升，与西洋商馆明争暗斗。',
+   trade:{spice:0.7, pearl:0.8, silver:1.1, cotton:1.0, tea:1.2, silk:1.2, opium:1.0},
+   shops:['spice','pearl','silver','cotton','tea','silk','weapon']},
+  {id:'london', name:'伦敦', full:'英伦 · 伦敦', type:'capital', x:240, y:360, danger:3,
+   desc:'战败之国都。国会哗然、宪章运动高涨，海军威信扫地，鸦片利益集团转为地下运作。',
+   trade:{cotton:0.9, wool:0.8, machinery:0.8, silver:1.0, tea:1.5, silk:1.5, porcelain:1.5},
+   shops:['cotton','wool','machinery','silver','weapon']},
+  {id:'paris', name:'巴黎', full:'法兰西 · 巴黎', type:'capital', x:305, y:425, danger:3,
+   desc:'波旁王朝复辟后期，法欲借中英之仇渔利。沙龙中新政思潮与密谋并炽。',
+   trade:{wine:0.7, cotton:0.9, machinery:0.85, porcelain:1.4, silk:1.4, silver:1.1},
+   shops:['wine','cotton','machinery','silver','weapon']},
+  {id:'spetersburg', name:'圣彼得堡', full:'俄罗斯 · 圣彼得堡', type:'capital', x:380, y:300, danger:3,
+   desc:'罗曼诺夫皇都。沙俄视清军大胜为威胁，亦视为西进扩张之机，使馆谍影幢幢。',
+   trade:{fur:0.8, wool:0.9, horse:0.8, tea:1.3, silk:1.3, gold:1.0, machinery:0.9},
+   shops:['fur','wool','horse','tea','gold','weapon']},
+  {id:'constantinople', name:'君士坦丁堡', full:'奥斯曼 · 君士坦丁堡', type:'capital', x:430, y:600, danger:5,
+   desc:'横跨欧亚的帝国之都。英法俄在中东角逐，鸦片经此西销，黑市与禁卫军叛乱并存。',
+   trade:{opium:0.8, spice:0.8, gold:1.0, cotton:1.0, tea:1.4, silk:1.3, machinery:1.1},
+   shops:['opium','spice','gold','cotton','tea','weapon']},
+  {id:'capetown', name:'开普敦', full:'好望角 · 开普殖民地', type:'port', x:470, y:950, danger:4,
+   desc:'欧亚海上航路咽喉。英荷角力之地，风浪险恶，海盗与贩奴船出没。',
+   trade:{diamond:0.7, gold:0.8, spice:1.1, cotton:1.0, fur:0.9, silver:1.1},
+   shops:['diamond','gold','spice','cotton','fur','weapon']},
+  {id:'newyork', name:'纽约', full:'美利坚 · 纽约', type:'port', x:140, y:620, danger:2,
+   desc:'新兴合众国之都。英美相忌，美商觊觎对华贸易，共和思潮与奴隶制之争并炽。',
+   trade:{cotton:0.75, tobacco:0.7, machinery:0.85, tea:1.4, silk:1.4, porcelain:1.4, silver:1.0},
+   shops:['cotton','tobacco','machinery','silver','weapon']},
+  // ---- 华夏扩充都市 ----
+  {id:'hangzhou', name:'杭州', full:'浙江 · 临安', type:'city', x:1015, y:705, danger:1,
+   desc:'上有天堂，下有苏杭。丝茶并盛，文脉昌明，西洋奇货亦多经此北上。',
+   trade:{tea:0.8, silk:0.8, porcelain:0.9, rice:0.9, cotton:1.0, spice:1.2},
+   shops:['tea','silk','porcelain','rice','cotton','medicine']},
+  {id:'suzhou', name:'苏州', full:'江苏 · 姑苏', type:'city', x:995, y:690, danger:1,
+   desc:'人间烟火，刺绣与园林名满天下。商贾辐辏，亦多风雅之士。',
+   trade:{silk:0.75, cotton:0.85, tea:1.0, porcelain:0.95, rice:0.9, salt:0.95},
+   shops:['silk','cotton','tea','porcelain','rice','salt']},
+  {id:'yangzhou', name:'扬州', full:'江苏 · 广陵', type:'city', x:955, y:640, danger:1,
+   desc:'两淮盐引，富甲天下。盐商巨宅连云，歌舞升平之下暗藏盐枭与帮会。',
+   trade:{salt:0.7, rice:0.9, silk:0.9, porcelain:1.0, pearl:0.9, tea:1.1},
+   shops:['salt','rice','silk','porcelain','pearl','medicine']},
+  {id:'fuzhou', name:'福州', full:'福建 · 闽都', type:'port', x:1035, y:800, danger:2,
+   desc:'马尾船坞初成，新式铁甲船初试锋芒。闽商海贸纵横，番客往来如潮。',
+   trade:{tea:0.8, porcelain:0.8, wood:0.9, pearl:0.8, silk:1.1, rice:1.0},
+   shops:['tea','porcelain','wood','pearl','silk','medicine','weapon']},
+  {id:'tianjin', name:'天津', full:'直隶 · 津门', type:'port', x:1015, y:545, danger:2,
+   desc:'京师门户，漕运海运之枢纽。新式炮台与洋务学堂并起，拳会与帮派亦众。',
+   trade:{salt:0.8, cotton:0.9, rice:0.9, machinery:1.1, tea:1.1, wool:1.0},
+   shops:['salt','cotton','rice','machinery','tea','medicine','weapon']},
+  {id:'zhengzhou', name:'郑州', full:'河南 · 中州', type:'city', x:905, y:615, danger:2,
+   desc:'中原腹地，四通八达。河患频仍，民多流徙，义军与流民暗结。',
+   trade:{rice:0.85, cotton:0.9, salt:0.9, horse:1.0, tea:1.1, wood:1.0},
+   shops:['rice','cotton','salt','horse','tea','medicine']},
+  {id:'chongqing', name:'重庆', full:'四川 · 渝州', type:'city', x:800, y:680, danger:2,
+   desc:'长江上游巨埠，山城叠嶂。川盐、蜀锦、生漆由此顺流而下。',
+   trade:{salt:0.75, wood:0.8, silk:0.9, rice:0.85, ginseng:1.0, tea:1.0},
+   shops:['salt','wood','silk','rice','tea','medicine']},
+  {id:'gansu', name:'兰州', full:'甘肃 · 金城', type:'city', x:735, y:585, danger:3,
+   desc:'黄河穿城，河西走廊之起点。驼队与铁骑汇于此，边贸与回商并盛。',
+   trade:{fur:0.8, horse:0.8, wool:0.85, gold:0.9, tea:1.2, salt:1.0},
+   shops:['fur','horse','wool','gold','tea','salt']},
+  {id:'emei', name:'峨眉', full:'四川 · 峨眉', type:'mountain', x:715, y:695, danger:2,
+   desc:'秀甲天下之名山，佛寺林立。游方僧侣与江湖客多隐于此。',
+   trade:{tea:0.9, wood:0.9, ginseng:1.0, spice:1.1, medicine:1.0},
+   shops:['tea','wood','ginseng','medicine']},
+  {id:'wudang', name:'武当', full:'湖北 · 太和山', type:'mountain', x:880, y:650, danger:2,
+   desc:'道教名山，古剑与丹炉并存。镖师、剑客常来此拜山问道。',
+   trade:{wood:0.85, ginseng:1.0, salt:1.0, medicine:1.1, tea:1.1},
+   shops:['wood','ginseng','salt','medicine']},
+  {id:'dongting', name:'洞庭', full:'湖南 · 洞庭湖', type:'mountain', x:845, y:700, danger:5,
+   desc:'八百里洞庭，烟波浩渺。水匪藏身芦苇深处，官军亦难清剿。',
+   trade:{rice:0.8, wood:0.8, fish:0.7, salt:1.1, tea:1.1, opium:1.3},
+   shops:['rice','wood','fish','salt','tea']},
+  {id:'yueyang', name:'岳阳', full:'湖南 · 巴陵', type:'city', x:858, y:702, danger:2,
+   desc:'岳阳楼临江，观洞庭之胜。骚人墨客多会于此，渔舟唱晚。',
+   trade:{rice:0.85, fish:0.75, tea:1.0, wood:1.0, salt:1.0, cotton:1.1},
+   shops:['rice','fish','tea','wood','salt']},
+  {id:'shaolin', name:'少林', full:'河南 · 嵩山', type:'mountain', x:912, y:630, danger:2,
+   desc:'禅武合一之祖庭。棍法传世，武僧护寺，江湖恩怨多在此了结。',
+   trade:{wood:0.9, tea:1.0, medicine:1.0, salt:1.0},
+   shops:['wood','tea','medicine']},
+  {id:'longhu', name:'龙虎山', full:'江西 · 贵溪', type:'mountain', x:945, y:720, danger:1,
+   desc:'天师府所在，丹炉道场。云游道人观星望气，传言颇多。',
+   trade:{tea:0.85, medicine:1.0, ginseng:1.1, wood:1.0, porcelain:1.0},
+   shops:['tea','medicine','ginseng','porcelain']},
+  {id:'hainan', name:'琼州', full:'广东 · 海南', type:'port', x:880, y:985, danger:4,
+   desc:'南海孤岛，椰风海韵。渔民讨海，亦有海寇与鸦片船在此避风。',
+   trade:{fish:0.7, pearl:0.7, spice:0.9, rice:1.1, opium:1.2, wood:1.0},
+   shops:['fish','pearl','spice','rice']},
+  {id:'zhanjiang', name:'雷州', full:'广东 · 雷州', type:'port', x:850, y:965, danger:5,
+   desc:'雷州半岛，扼南海之喉。渔村之外，海盗窝点星罗棋布。',
+   trade:{fish:0.7, pearl:0.75, rice:1.1, salt:0.9, opium:1.3, wood:1.0},
+   shops:['fish','pearl','rice','salt']}
+];
+
+// 区域邻接（路线）
+const ROUTES = {
+  guangzhou:['aomen','shanghai','hankou','nanjing','yunnan'],
+  aomen:['guangzhou','kolkata','malacca'],
+  beijing:['shengjing','nanjing','xian','hankou','seoul'],
+  shengjing:['beijing','seoul'],
+  seoul:['beijing','shengjing','shanghai','nagasaki'],
+  nagasaki:['taiwan','shanghai','seoul','newyork'],
+  taiwan:['shanghai','malacca','nagasaki'],
+  shanghai:['guangzhou','nanjing','nagasaki','taiwan','seoul'],
+  nanjing:['beijing','shanghai','hankou','xian'],
+  hankou:['guangzhou','nanjing','chengdu','xian'],
+  xian:['beijing','hankou','chengdu','jiayuguan','yili'],
+  chengdu:['hankou','xian','yunnan','lhasa'],
+  yunnan:['chengdu','guangzhou','kolkata','malacca'],
+  lhasa:['chengdu','yili'],
+  yili:['xian','jiayuguan','lhasa','spetersburg'],
+  jiayuguan:['xian','yili'],
+  kolkata:['yunnan','aomen','malacca','constantinople'],
+  malacca:['taiwan','yunnan','kolkata','capetown','nagasaki'],
+  london:['paris','spetersburg','newyork','capetown'],
+  paris:['london','spetersburg','constantinople'],
+  spetersburg:['london','paris','yili','constantinople'],
+  constantinople:['paris','spetersburg','kolkata'],
+  capetown:['newyork','malacca','london','kolkata'],
+  newyork:['london','nagasaki','capetown'],
+  // ---- 华夏扩充都市路线 ----
+  hangzhou:['shanghai','nanjing','suzhou','fuzhou','longhu'],
+  suzhou:['shanghai','nanjing','hangzhou','yangzhou','longhu'],
+  yangzhou:['nanjing','suzhou','zhengzhou','tianjin'],
+  fuzhou:['hangzhou','taiwan','longhu','guangzhou'],
+  tianjin:['beijing','yangzhou','zhengzhou','shanghai'],
+  zhengzhou:['beijing','xian','yangzhou','shaolin','wudang','tianjin'],
+  chongqing:['chengdu','hankou','dongting','emei'],
+  gansu:['xian','jiayuguan','yili'],
+  emei:['chengdu','chongqing','wudang'],
+  wudang:['hankou','zhengzhou','dongting','yueyang','shaolin'],
+  dongting:['yueyang','wudang','hankou','chongqing'],
+  yueyang:['dongting','wudang','hankou'],
+  shaolin:['zhengzhou','wudang','xian'],
+  longhu:['hangzhou','fuzhou','suzhou','nanjing'],
+  hainan:['guangzhou','zhanjiang','aomen','malacca'],
+  zhanjiang:['guangzhou','hainan','aomen','yunnan']
+};
+
+const REGION_MAP = Object.fromEntries(REGIONS.map(r=>[r.id,r]));
+
+// ---------- 人物（40+ NPC） ----------
+let NPC_SEQ = 0;
+function npc(o){o.uid=('n'+(NPC_SEQ++));o.region=o.region||'guangzhou';o.alive=true;o.liked=0;return o;}
+const NPCS = [
+  // 广州
+  npc({name:'沈砚秋', region:'guangzhou', role:'粤海关帮办 · 改革派密使', type:'story',
+    dial:['砚秋在此等候多时。海关新政，正缺你这样能托付的人。',
+          '那晚码头上的火，不是意外。有人要把大清的船，再烧回鸦片里去。',
+          '你若愿助我，便从这枚令牌开始。它指的地方，都埋着真相。']}),
+  npc({name:'黄六', region:'guangzhou', role:'码头把头 · 消息贩子', type:'info',
+    dial:['码头上没有我不知道的事，只要你出得起价钱。',
+          '最近海上来得怪，西洋船不敢挂旗，舱底却压得死死的。',
+          '要打听消息，去茶馆找说书的老周，那是个百事通。']}),
+  npc({name:'云娘', region:'guangzhou', role:'药铺老板娘', type:'shop',
+    dial:['伤病药，保命丹，都备着呢。大胜之后，死的人反倒多，这世道。',
+          '西洋有一样叫“吗啡”的东西，比鸦片还凶，你可别碰。']}),
+  npc({name:'林贵', region:'guangzhou', role:'水师退役把总', type:'fight',
+    dial:['当年虎门一役，我亲眼看着英夷的船沉了。大清的威风，又回来了。',
+          '可这几年，总觉得有东西在暗处啃大清的骨头。']}),
+  // 北京
+  npc({name:'翁学士', region:'beijing', role:'新政派重臣 · 军机处行走', type:'story',
+    dial:['自强新政，是拿命换来的。上头变了法，下头就要改天。',
+          '有人送我一封血书，说洋人要把鸦片换个名字运进来。',
+          '记住，在这朝堂上，真相是烫手的。']}),
+  npc({name:'肃亲王', region:'beijing', role:'守旧权贵', type:'hostile',
+    dial:['老祖宗的家法，岂容洋务小丑妄动？',
+          '新政？那是引狼入室。西洋之技，沾不得。']}),
+  npc({name:'小德子', region:'beijing', role:'茶馆跑堂 · 耳目', type:'info',
+    dial:['客官，宫墙里的话，茶馆里最听得全。',
+          '听说南边又来了批“哑药”，吃了人就说不出话。吓人哩。']}),
+  // 上海
+  npc({name:'顾四爷', region:'shanghai', role:'沙船巨商', type:'trade',
+    dial:['江海之利，尽在吾手。天朝胜了，这码头生意，我做得更大了。',
+          '可有人劝我，别碰那黑乎乎的东西。我懂，我懂。']}),
+  npc({name:'阿囡', region:'shanghai', role:'织布女工', type:'info',
+    dial:['东洋的棉布一船船运来，比我们自家织的还便宜，真叫人心慌。',
+          '大胜那天，满城放炮。可日子，也没见好过多少。']}),
+  // 南京
+  npc({name:'秦淮客', region:'nanjing', role:'江南文人', type:'info',
+    dial:['金陵王气黯然收，却收了洋人的锐气，也算解气。',
+          '书院里争得厉害：是守先王之道，还是师夷长技？']}),
+  // 汉口
+  npc({name:'茶商吴掌柜', region:'hankou', role:'茶路巨贾', type:'trade',
+    dial:['汉口的茶，顺着俄国人的驼队，能一直走到圣彼得堡。',
+          '可惜近来有人往茶砖里掺假货，坏了道上的名声。']}),
+  // 西安
+  npc({name:'老学究', region:'xian', role:'书院山长', type:'info',
+    dial:['关学一脉，讲求实学。天朝既胜，更当自强不息，岂可恃胜而骄？',
+          '西域传来消息，说有人想打通新路，直通西洋。']}),
+  // 成都
+  npc({name:'蜀锦娘', region:'chengdu', role:'织锦匠人', type:'trade',
+    dial:['蜀锦之美，西洋人见了也垂涎。他们愿出重金，只要改一改花样。',
+          '改了花样，还是蜀锦么？我寻思，不能丢了自己的魂。']}),
+  // 滇南
+  npc({name:'马锅头阿岩', region:'yunnan', role:'马帮首领', type:'trade',
+    dial:['马帮铃响，从大理一直响到缅甸。货分两种：白的米，黑的膏。',
+          '我阿岩只运白货。黑货，是断人子孙的。']}),
+  // 拉萨
+  npc({name:'扎西', region:'lhasa', role:'驻藏商贾', type:'info',
+    dial:['雪线之上，人心最干净，也最凶险。有西洋人扮成朝圣者，四处画地图。',
+          '他们不是来朝圣的。他们是来量这个世界的。']}),
+  // 伊犁
+  npc({name:'巴图尔', region:'yili', role:'边军千总', type:'fight',
+    dial:['天山的战马，一匹能换十两金。可最近，有商人拿金来换“药”。',
+          '我要的是马，不是鸦片。你是哪一种人？']}),
+  // 加尔各答
+  npc({name:'艾德礼', region:'kolkata', role:'落魄英商', type:'info',
+    dial:['东印度公司完了，可罂粟田不会完。只要世上还有人贪那口烟。',
+          '我在印度的庄园，如今种满了白花。那不是花，是债。']}),
+  npc({name:'辛格', region:'kolkata', role:'锡克水手', type:'fight',
+    dial:['英王的大炮沉在了珠江口，印度人却还跪着。',
+          '若有人举旗，我辛格愿做第一个站起来的人。']}),
+  // 马六甲
+  npc({name:'陈祖德', region:'malacca', role:'南洋华商领袖', type:'trade',
+    dial:['清军一胜，南洋华商扬眉吐气。洋人见了我们，腰都弯了几分。',
+          '可华商之间，也有明枪暗箭。这里不是天堂，是码头。']}),
+  // 长崎
+  npc({name:'佐佐木', region:'nagasaki', role:'浪人剑客', type:'fight',
+    dial:['支那赢了英吉利？武士刀要生锈了。',
+          '我听说，清国的新兵，练的是洋人的枪。剑的时代，要过去了。']}),
+  npc({name:'平八郎', region:'nagasaki', role:'兰学医师', type:'info',
+    dial:['荷兰的医书，说人体里有血有脉。清国人也该看看外面的世界。',
+          '幕府虽锁国，锁不住念头。']}),
+  // 汉城
+  npc({name:'金进士', region:'seoul', role:'北学儒生', type:'info',
+    dial:['上国既胜，我朝鲜当益修恭顺。然亦当自图富强，不可尽赖他人。',
+          '近来倭人欲通我，西洋之船亦叩我门。天下将变矣。']}),
+  // 盛京
+  npc({name:'佟保', region:'shengjing', role:'猎户', type:'info',
+    dial:['长白山的老林里，虎豹成群，也藏着逃兵和死囚。',
+          '有人在山里种烟土，白花花一片。我见了，只想放火烧。']}),
+  // 台湾
+  npc({name:'阿民', region:'taiwan', role:'蔗田佃户', type:'info',
+    dial:['甘蔗甜，甜到洋人的船上。可船上的甜，是拿命换的。',
+          '水师胜了以后，来开荒的人多了，我这肩膀，更不够用了。']}),
+  // 伦敦
+  npc({name:'哈里森', region:'london', role:'下议院议员', type:'info',
+    dial:['我们的炮舰沉了，可我们的议会还站着。',
+          '自由贸易？见鬼。鸦片贸易才是我们真正输掉的东西。']}),
+  npc({name:'玛丽', region:'london', role:'宪章运动女工', type:'info',
+    dial:['工厂的烟囱还在冒烟，可工人们的胃是空的。',
+          '战争输了，领主的皮靴还踩在我们头上。变革，变革！']}),
+  // 巴黎
+  npc({name:'杜兰德', region:'paris', role:'新闻记者', type:'info',
+    dial:['法兰西的报纸，都在追问：为何不联合清国，压制英吉利？',
+          '变局之中，谁先押对注，谁就是新世界的主人。']}),
+  // 圣彼得堡
+  npc({name:'伊万', region:'spetersburg', role:'哥萨克商人', type:'trade',
+    dial:['从莫斯科到恰克图，再到北京的茶路，是俄罗斯的动脉。',
+          '清国若强，此路由我做主；清国若弱，此路也是我的。']}),
+  // 君士坦丁堡
+  npc({name:'拉希德', region:'constantinople', role:'鸦片库房管事', type:'info',
+    dial:['苏丹的鸦片库，堆得比清真寺还高。',
+          '金子和罂粟，是这个世界最诚实的东西。你要哪个？']}),
+  // 开普敦
+  npc({name:'范德沃特', region:'capetown', role:'荷兰船长', type:'fight',
+    dial:['绕过风暴角，就是东方。我见过太多船沉在好望角。',
+          '英军败了，这海上的旗，要换一批了。']}),
+  // 纽约
+  npc({name:'杰克逊', region:'newyork', role:'棉花商', type:'trade',
+    dial:['南方的棉花，喂饱了兰开夏的工厂。可伦敦输了，这买卖要换主。',
+          '清国的丝绸，才是新大陆的下一个金矿。']}),
+  // 新增：江湖人物
+  npc({name:'说书人老周', region:'guangzhou', role:'茶馆说书人', type:'info',
+    dial:['话说当年虎门炮台，一声炮响，英夷水师……',
+          '客官要听秘闻？那得看您手里的银子，够不够厚。']}),
+  npc({name:'独臂侠', region:'hangzhou', role:'流浪侠客', type:'fight',
+    dial:['我这条臂，断在鸦片上。从此见一处烟馆，砸一处。',
+          '你若有胆，随我去剿一处黑窑。']}),
+  npc({name:'白头翁', region:'wudang', role:'老镖师', type:'info',
+    dial:['镖行走天下，镖的是货，护的是信义。',
+          '这世道，金银好保，人心难保。']}),
+  npc({name:'苏锦娘', region:'suzhou', role:'绣娘', type:'info',
+    dial:['苏绣一寸，可换一斗米。可如今，绣多少都填不满洋货的坑。',
+          '绣娘的心，比丝还细，也最受不得伤。']}),
+  npc({name:'铁匠老韩', region:'yangzhou', role:'铁匠', type:'shop',
+    dial:['好钢要千锤百炼。武器如此，人也如此。',
+          '火铳虽利，用的人心不正，反噬自身。']}),
+  npc({name:'疯和尚', region:'emei', role:'游方僧', type:'info',
+    dial:['阿弥陀佛。我看这天下，人人都在抢一样东西，却没人说清是什么。',
+          '施主，你抢的是什么？']}),
+  npc({name:'水匪头', region:'dongting', role:'水匪', type:'fight',
+    dial:['洞庭湖的浪，养肥了我们。官军追来，我们便散作渔夫。',
+          '你若交钱买路，我便交你这个朋友。']}),
+  npc({name:'青羊君', region:'yueyang', role:'隐士', type:'story',
+    dial:['我在岳阳楼观水，观了三十年。',
+          '这天下大势，如洞庭之水，涨潮时滔天，退潮时见底。',
+          '潮头，又要来了。你准备好了么？']}),
+  npc({name:'赵铁牛', region:'zhengzhou', role:'义军头目', type:'fight',
+    dial:['官府逼租，洋货逼命。我们只是不想饿死。',
+          '你这样的读书人，若肯入伙，我给头把交椅。']}),
+  npc({name:'钱掌柜', region:'guangzhou', role:'当铺掌柜', type:'trade',
+    dial:['穷时卖祖宅，急时当儿女。这当铺的秤，称的是人心。',
+          '你若有宝贝，我出公道价。若没有，恕不远送。']}),
+  npc({name:'孙太医', region:'beijing', role:'太医院医官', type:'shop',
+    dial:['圣上龙体安康，只是这朝野上下的“病”，比龙体难治。',
+          '鸦片之毒，蚀骨销魂。我为多少人诊过，却诊不好这一个世道。']}),
+  npc({name:'郑海清', region:'fuzhou', role:'水师参将', type:'fight',
+    dial:['马尾船坞新造的铁甲船，乘风破浪，是何等威风！',
+          '可打铁要钱，养船要钱。再大的威风，也怕没钱。']}),
+  npc({name:'花自芳', region:'yangzhou', role:'名伶', type:'info',
+    dial:['台上一声唱，台下十年功。我唱的是戏，看的是世道。',
+          '扬州城里，一半是盐商的银子，一半是乱世的眼泪。']}),
+  npc({name:'张把式', region:'tianjin', role:'拳师', type:'fight',
+    dial:['练武不练功，到老一场空。我教拳，也教做人。',
+          '洋人的枪炮再凶，也吓不倒一条好汉的腰杆。']}),
+  npc({name:'黎阿婆', region:'hainan', role:'渔民', type:'info',
+    dial:['南海的风，吹老了渔人的脸。出海的人，一半靠天，一半靠命。',
+          '近来海上的西洋船，多得像海鸥，不知又要起什么风浪。']}),
+  npc({name:'何老实', region:'chongqing', role:'盐工', type:'info',
+    dial:['井盐的卤水，是我一桶桶挑上来的。苦，可养家。',
+          '听说上面要收“新税”，我们这些苦力，怕是更苦了。']}),
+  npc({name:'明空', region:'shaolin', role:'武僧', type:'fight',
+    dial:['少林武学，护的是正，惩的是邪。',
+          '可如今正邪难分，施主，你要站在哪边？']}),
+  npc({name:'段千户', region:'gansu', role:'戍边武将', type:'fight',
+    dial:['河西走廊的风，能吹裂马鞍。戍边之苦，非中原人所能知。',
+          '但只要大清的旗还插在玉门关外，我便守到死。']}),
+  npc({name:'柳如是', region:'nanjing', role:'名妓才女', type:'info',
+    dial:['秦淮烟雨，多少英雄泪。',
+          '我虽是青楼中人，也知天下兴亡。你若有志，不妨共谋。']}),
+  npc({name:'焦大海', region:'zhanjiang', role:'海盗', type:'fight',
+    dial:['南海上，我就是王法。官军的水师，追不上我。',
+          '不过……你若能带我见见那新式铁甲船，倒也算个买卖。']}),
+  npc({name:'金满堂', region:'yangzhou', role:'盐商巨富', type:'trade',
+    dial:['两淮盐引，一本万利。我这宅子里的金，能买下半个扬州。',
+          '可我夜夜睡不着——怕的是，银子再多，也买不来太平。']}),
+  npc({name:'魏天师', region:'longhu', role:'道长', type:'info',
+    dial:['无为而治，却也要有为之时。',
+          '我观天象，东南有妖气冲天。施主若行商，当避东北方三成利。']}),
+  npc({name:'武大钟', region:'hankou', role:'船工', type:'info',
+    dial:['长江的纤夫，一天要吼上百遍号子。',
+          '号子里唱的是：出门求财，平安回家。']})
+];
+
+/* ---------- 物品与经济 ---------- */
+const ITEMS = {
+  // 商货（可倒买倒卖）
+  tea:      {name:'茶叶',   cat:'trade', base:100, w:1, desc:'清国大宗出口之货，陆海茶路皆以此为本。'},
+  silk:     {name:'丝绸',   cat:'trade', base:320, w:1, desc:'江南织造所出，西洋权贵争购。'},
+  porcelain:{name:'瓷器',   cat:'trade', base:260, w:2, desc:'景德镇名瓷，行销四海。'},
+  cotton:   {name:'棉花',   cat:'trade', base:40,  w:1, desc:'纺织之原，南北皆有。'},
+  rice:     {name:'大米',   cat:'trade', base:30,  w:1, desc:'民生之本，行路必备之食。'},
+  salt:     {name:'盐',     cat:'trade', base:35,  w:1, desc:'官盐之利，天下第一宗。'},
+  spice:    {name:'香料',   cat:'trade', base:180, w:1, desc:'南洋胡椒丁香，价比黄金。'},
+  pearl:    {name:'珍珠',   cat:'trade', base:220, w:1, desc:'南海合浦之珠，贡品之选。'},
+  silver:   {name:'白银',   cat:'trade', base:90,  w:2, desc:'硬通货，谁见谁爱。'},
+  gold:     {name:'黄金',   cat:'trade', base:900, w:2, desc:'西域与南洋之金，可兑银两。'},
+  horse:    {name:'骏马',   cat:'trade', base:600, w:5, desc:'边地良驹，可驮货代步。'},
+  fur:      {name:'皮毛',   cat:'trade', base:140, w:2, desc:'东北与西北之皮货，御寒佳品。'},
+  wood:     {name:'木材',   cat:'trade', base:45,  w:3, desc:'船料与营建所需。'},
+  opium:    {name:'鸦片',   cat:'illicit', base:500, w:1, desc:'国之大害。倒卖此物，折损声望，或有官非。'},
+  tobacco:  {name:'烟草',   cat:'trade', base:60,  w:1, desc:'美洲与吕宋之货。'},
+  wool:     {name:'羊毛呢', cat:'trade', base:200, w:1, desc:'西洋呢绒，北方权贵所好。'},
+  machinery:{name:'西洋机器', cat:'trade', base:1200, w:6, desc:'新政亟需之器，海关严管。'},
+  wine:     {name:'葡萄酒', cat:'trade', base:150, w:2, desc:'法兰西佳酿。'},
+  fish:     {name:'海产',   cat:'trade', base:25,  w:1, desc:'沿海鲜货。'},
+  ginseng:  {name:'人参',   cat:'trade', base:800, w:1, desc:'辽东老参，滋补上品。'},
+  sugar:    {name:'蔗糖',   cat:'trade', base:55,  w:1, desc:'台澎与闽广之糖。'},
+  jade:     {name:'翡翠',   cat:'trade', base:1500, w:1, desc:'滇边之玉，价比千金。'},
+  diamond:  {name:'钻石',   cat:'trade', base:2000, w:1, desc:'好望角之珍，富商竞购。'},
+  // 可用品
+  medicine: {name:'疗伤药', cat:'use', base:80, w:1, desc:'金疮止血，回血 40。'},
+  ginseng_use:{name:'参汤', cat:'use', base:120, w:1, desc:'大补元气，回血 90。'},
+  ration:   {name:'干粮',   cat:'use', base:20,  w:1, desc:'充饥解饿，饱食 +35。'},
+  wine_use: {name:'烧酒',   cat:'use', base:40,  w:1, desc:'御寒壮胆，体力 +25，微量回血。'},
+  // 武器与防具
+  sword:    {name:'青钢刀', cat:'weapon', base:220, w:3, atk:10, desc:'百炼钢刀，攻 +10。'},
+  saber:    {name:'雁翎刀', cat:'weapon', base:400, w:3, atk:18, desc:'边军制式，攻 +18。'},
+  musket:   {name:'火铳',   cat:'weapon', base:900, w:5, atk:32, desc:'新式洋枪，攻 +32。'},
+  dagger:   {name:'短刃',   cat:'weapon', base:120, w:1, atk:5,  desc:'贴身短刃，攻 +5。'},
+  armor:    {name:'棉甲',   cat:'armor', base:350, w:4, def:10, desc:'抵御刀剑，防 +10。'},
+  steelarmor:{name:'铁甲',  cat:'armor', base:800, w:8, def:20, desc:'重甲在身，防 +20。'}
+};
+const GOODS = Object.keys(ITEMS);
+const TRADE_GOODS = GOODS.filter(g=>['trade','illicit'].includes(ITEMS[g].cat));
+const USE_GOODS  = GOODS.filter(g=>ITEMS[g].cat==='use');
+const WEAPON_GOODS = GOODS.filter(g=>ITEMS[g].cat==='weapon');
+const ARMOR_GOODS  = GOODS.filter(g=>ITEMS[g].cat==='armor');
+
+/* ---------- 随机事件池 ---------- */
+const EVENTS = [
+  {id:'bandit', title:'路遇劫匪', good:false,
+   text:'前路尘埃起处，一伙蒙面强人拦住去路，刀光晃眼。',
+   opts:{fight:'拔刀应战', flee:'掷银买路', hide:'藏身道旁'},
+   out:{fight:{msg:'一场恶斗，你杀退匪人，搜得些散碎银两。', silver:[10,60], hp:[-5,15]},
+        flee:{msg:'你破财消灾，丢下些银两脱身。', silver:-20},
+        hide:{msg:'你伏于草莽，躲过一劫。'}}},
+  {id:'merchant', title:'行商搭话', good:true,
+   text:'道上一位老行商与你攀谈，聊起各地行情，颇有见地。',
+   opts:{chat:'问行情', trade:'看货', bye:'拱手辞行'},
+   out:{chat:{msg:'老行商指点你几处价差，你记在心上。（情报+1）', insight:1},
+        trade:{msg:'老行商愿以公道价与你交易，可在本区域商店临时补货。'},
+        bye:{msg:'各自赶路。'}}},
+  {id:'wild', title:'山道惊魂', good:false,
+   text:'密林深处传来狼嚎与窸窣之声，似有猛兽窥伺。',
+   opts:{hunt:'主动出击', run:'绕道疾走', camp:'生火结营'},
+   out:{hunt:{msg:'你猎得一头野物，剥得皮毛，也饱餐一顿。', fur:1, hunger:40},
+        run:{msg:'你奔行数里，甩脱危险，却也耗损体力。', energy:-15},
+        camp:{msg:'篝火一夜，安稳无虞。'}}},
+  {id:'beggar', title:'流民乞食', good:true,
+   text:'路边跪着几个衣衫褴褛的流民，眼中满是企盼。',
+   opts:{help:'施舍干粮', give:'赠银', ignore:'匆匆走过'},
+   out:{help:{msg:'流民千恩万谢，道是来日必报。声望微增。', rep:3, ration:-1},
+        give:{msg:'你散了些银钱，积善之名渐传。', rep:5, silver:-20},
+        ignore:{msg:'你无暇他顾，径直离开。'}}},
+  {id:'soldier', title:'溃兵拦路', good:false,
+   text:'几名败阵溃兵见你行囊鼓鼓，围拢上来，恶语相向。',
+   opts:{fight:'教训一顿', pay:'给买路钱', talk:'晓以大义'},
+   out:{fight:{msg:'你制服溃兵，夺回些缴获。', silver:[20,80], rep:2},
+        pay:{msg:'你破财消灾。', silver:-40},
+        talk:{msg:'你一番大义，说动溃兵投军。声望大涨。', rep:10}}},
+  {id:'scholar', title:'书院辩难', good:true,
+   text:'路过书院，诸生正论“师夷长技”与“守先王之道”，见你来便邀辩。',
+   opts:{debat:'论战', listen:'旁听', leave:'摇头而去'},
+   out:{debat:{msg:'你舌战群儒，引经据典，赢得满堂彩。', rep:8, insight:1},
+        listen:{msg:'你静听诸生之辩，若有所悟。', insight:1},
+        leave:{msg:'书生意气，你不愿纠缠。'}}},
+  {id:'tomb', title:'荒冢奇遇', good:true,
+   text:'道旁荒冢半塌，露出一角旧匣，似有金铁之光。',
+   opts:{dig:'掘开一观', burn:'焚香致祭', pass:'不去惊扰'},
+   out:{dig:{msg:'匣中藏着一册旧武谱与几两碎银。', silver:[30,90], insight:1, skill:1},
+        burn:{msg:'你焚香祭拜，亡者似有所感。声望微增。', rep:3},
+        pass:{msg:'逝者已矣，何必惊扰。'}}},
+  {id:'storm', title:'风雨大作', good:false,
+   text:'骤然阴云四合，狂风卷着沙石扑面，前路难辨。',
+   opts:{shelter:'寻庙避雨', press:'冒雨前行', build:'搭棚暂歇'},
+   out:{shelter:{msg:'你在破庙避雨，与借宿者谈了一夜。', insight:1, energy:-5},
+        press:{msg:'你冒雨疾行，衣甲尽湿，受了些寒气。', hp:-[5,15], energy:-10},
+        build:{msg:'你砍枝搭棚，挨过一夜风雨。'}}},
+  {id:'tavern', title:'客栈秘闻', good:true,
+   text:'投宿客栈，邻桌几个贩夫正压着嗓子，说什么“南边来了批哑药”。',
+   opts:{listen:'侧耳偷听', ask:'上前攀谈', sleep:'充耳不闻'},
+   out:{listen:{msg:'你偷听到一条要紧消息：有人要把鸦片改名换姓运入内地。', insight:2},
+        ask:{msg:'你上前敬酒，探得几句风闻。', insight:1},
+        sleep:{msg:'你早早歇下，一夜无话。'}}},
+  {id:'thief', title:'夜半窃贼', good:false,
+   text:'夜半，你察觉有人正撬你的行囊。',
+   opts:{catch:'当场拿贼', feign:'装睡窥伺', warn:'大声呼喝'},
+   out:{catch:{msg:'你擒住窃贼，追回失物，还赏了他一顿拳脚。', rep:2},
+        feign:{msg:'你暗中记下窃贼面目，他仓皇遁去。', insight:1},
+        warn:{msg:'窃贼惊走，你所幸免于难。'}}},
+  {id:'treaty', title:'茶会闻政', good:true,
+   text:'某处茶会，几位商绅正议论“新政”与“洋务”，言辞激昂。',
+   opts:{join:'参与议论', watch:'冷眼旁观', buy:'沽酒闲坐'},
+   out:{join:{msg:'你加入议论，结识了几位有识之士。', rep:6, insight:2},
+        watch:{msg:'你冷眼旁观，看出几方利益盘根错节。', insight:2},
+        buy:{msg:'你沽酒独酌，静听人言。', insight:1}}},
+  {id:'mine', title:'山间矿脉', good:true,
+   text:'山壁裸露处隐约可见矿苗，似有金银之相。',
+   opts:{prospect:'探矿', claim:'记下此地', leave:'不以为意'},
+   out:{prospect:{msg:'你顺藤摸瓜，采得些许金砂。', gold:1, silver:[20,60]},
+        claim:{msg:'你记下矿脉方位，日后或可图之。', insight:1},
+        leave:{msg:'贪心无益，你转身离去。'}}},
+  {id:'ambush', title:'伏兵突袭', good:false,
+   text:'林中忽然鼓噪，一支箭羽擦着你的耳边飞过——有人设伏！',
+   opts:{fight:'迎敌', retreat:'且战且退', shout:'虚张声势'},
+   out:{fight:{msg:'你杀透伏兵，夺路而走，身上添了几处伤。', silver:[40,120], hp:-[10,25]},
+        retreat:{msg:'你边战边退，丢了些辎重。', silver:-30, hp:-[5,15]},
+        shout:{msg:'你诈称官军大队在后，惊散伏兵。'}}},
+  {id:'scholar_gift', title:'名士赠书', good:true,
+   text:'一位游方名士与你一见如故，临别赠你一册手抄典籍。',
+   opts:{accept:'欣然收下', refuse:'固辞不受', pay:'以金相赠'},
+   out:{accept:{msg:'你收下典籍，日夜研读，见识大增。', insight:2, skill:1},
+        refuse:{msg:'名士叹你谦退，反而更加敬重。', rep:6},
+        pay:{msg:'名士不肯收金，你却因此与他结为莫逆。', rep:10}}},
+  {id:'bridge', title:'断桥之险', good:false,
+   text:'前方石桥已断，激流阻路，绕行需多耗时日。',
+   opts:{ford:'涉水强渡', build:'伐木搭桥', detour:'绕行远路'},
+   out:{ford:{msg:'你涉水而过，虽狼狈却省了时日。', hp:-[5,15], energy:-15},
+        build:{msg:'你伐木架桥，耽搁半日，却惠及后旅。', rep:5, energy:-15},
+        detour:{msg:'你绕道而行，多耗数日。', energy:-20, day:2}}}
+];
+const EVENT_MAP = Object.fromEntries(EVENTS.map(e=>[e.id,e]));
+
+/* 玩家默认档案 */
+const PLAYER_DEFAULTS = {
+  hp:100, maxHp:100, energy:100, maxEnergy:100,
+  hunger:80, maxHunger:100, health:100,
+  silver:200, rep:0,
+  atk:6, def:2,
+  inventory:{}, // {itemId: qty}
+  weapon:null, armor:null,
+  insight:0, skill:0,
+  alive:true
+};
+
+/* =====================================================================
+   主线剧情 ·《天朝复兴录》· 共十二回
+   世界观：1842年第一次鸦片战争结局反转，清军大破英夷水师，天朝开始
+   自强革新。1845年，主角卷入一场足以倾覆新政的惊天阴谋……
+   ===================================================================== */
+const STORY = [
+{ id:1, month:'道光廿五年·正月', title:'虎门余烬', region:'guangzhou', loc:'广州·粤海关码头',
+  objective:'前往广州码头，调查深夜靠岸的“哑药”之船。',
+  intro:'三年前，虎门一声炮响，英夷水师沉入珠江口，天下震动。天朝威名自此远播，道光帝顺势推行“自强新政”。\n你是粤海关一个不起眼的帮办学徒。这一夜，你在码头值更，亲眼看见一艘不悬旗帜的黑船悄然靠岸——有人卸下成箱的“哑药”。你自幼结拜的义兄、老水手陈大木恰在此时追查此事，却在一处暗巷被杀。临终，他把一枚青铜令牌塞进你手里：\n“查……查到底。火，要从海上来。”',
+  scenes:[
+   {who:'旁白', text:'你站在码头，手中铜令冰凉。远处灯火明灭，那艘黑船已没入夜色。'},
+   {who:'陈大木(遗言)', text:'好兄弟……我不行了。这令牌，是“南洋商帮”的信物。他们，在运一种比鸦片更毒的东西。'},
+   {who:'陈大木(遗言)', text:'记住……牌背刻着一个“四”字。去找……粤海关的沈帮办……他，可信。'},
+   {who:'旁白', text:'言讫气绝。你握紧令牌，望着他死不瞑目的眼——你知道，从今夜起，你回不去了。'}],
+  choice:{q:'你将如何着手？', opts:[
+    {t:'先往码头酒肆打听夜船来历', fx:{insight:1}, r:'你混入酒肆，从醉汉口中套出：那黑船是澳门“白头帮”的，专运一种令人“失语”的哑药。'},
+    {t:'径直求见沈帮办，呈上铜令', fx:{rep:4}, r:'沈砚秋见令色变，压低声音：“这令牌下过血咒，见令者，皆已入局。”'}]},
+  reward:{silver:120, items:{medicine:2}, insight:1},
+  cliff:'深夜，你回到住处，门缝下塞着一封信——没有署名，只画着一只墨色的麒麟。信上只有四个字：“停手，或死。”' },
+
+{ id:2, month:'道光廿五年·二月', title:'南关密影', region:'aomen', loc:'澳门·南湾黑市',
+  objective:'循令牌与“白头帮”线索，往澳门黑市追查哑药源头。',
+  intro:'那封墨麒麟信没有吓住你。你收拾行装，搭船南下巴往澳门——那里是战败西洋势力与黑市的交汇之地。',
+  scenes:[
+   {who:'旁白', text:'澳门南湾，商铺林立，人声鼎沸。你正四处打听“白头帮”，忽觉身后数道阴冷目光如影随形。'},
+   {who:'佐佐木', text:'（一柄太刀横在你面前）你脚下沾着棺材铺的香灰，身后跟着三条尾巴。是敌是友，报个字号。'},
+   {who:'你', text:'……在下只是来查一桩哑药买卖。'},
+   {who:'佐佐木', text:'哑药？巧了。我夜游多日，正是为了它。我族武士死于那“失语之毒”，此仇必报。结伴，如何？'}],
+  choice:{q:'佐佐木邀你同行，你……', opts:[
+    {t:'欣然结盟（与他并肩追查）', fx:{rep:5}, r:'你与佐佐木夜探“白头帮”巢穴，救出几名被灌哑药的苦力，却惊动了追兵。'},
+    {t:'婉拒独行（独自潜入黑市）', fx:{insight:2}, r:'你独行潜入黑市，偷听到“白头帮”奉的竟是“墨麒麟”之命，在澳门的库房藏着一批火铳。'}]},
+  reward:{silver:150, items:{dagger:1}, insight:1},
+  cliff:'黎明时分，你和佐佐木在库房深处找到一只上锁铁箱。撬开一看——里面不是哑药，而是一封盖着清廷御用印玺的密令。' },
+
+{ id:3, month:'道光廿五年·三月', title:'朝堂惊雷', region:'beijing', loc:'京师·新政衙门',
+  objective:'携御印密令北上，面见新政重臣翁学士，弄清哑药与朝廷的牵连。',
+  intro:'御用印玺出现，事情已超出江湖。你星夜北上，叩开了军机处行走、新政重臣翁学士的私邸。',
+  scenes:[
+   {who:'翁学士', text:'（抚着密令，良久不语）这是太医院御药房的印。可御药房里，绝不会有这种东西。'},
+   {who:'翁学士', text:'有人把朝廷，变成了一副空壳。守旧派视新政如仇寇，而洋人正等着天朝自己乱起来。'},
+   {who:'孙太医', text:'（闻讯赶来）密令是真。可老夫的御药房，一年前就被人掉过包。那批“哑药”，是从……宫里直接运出的。'},
+   {who:'旁白', text:'殿外忽传鼓声——有人连夜弹劾翁学士“通敌”。朝堂之上，刀光已在酝酿。'}],
+  choice:{q:'此局凶险，你当……', opts:[
+    {t:'为翁学士奔走搜集证据', fx:{rep:8}, r:'你通宵翻检旧档，寻到当年御药房换防的名单，弹劾暂解。'},
+    {t:'暗中盯守太医院，揪出内应', fx:{insight:2}, r:'你盯守三日，发现一名送药的太监，袖中滑出一张写有“墨麒麟”的纸条。'}]},
+  reward:{silver:200, items:{ginseng_use:1}, insight:1},
+  cliff:'那张纸条的背面，画着一条自长江蜿蜒而下的黑线——终点，指向南洋。而线的起点，是京城某座巍峨的王府。' },
+
+{ id:4, month:'道光廿五年·四月', title:'长江暗流', region:'dongting', loc:'洞庭·岳阳楼',
+  objective:'沿长江而下，追查“墨麒麟”的运输网络。',
+  intro:'长江，是帝国的血脉，也是走私的暗渠。你顺流而下，在洞庭湖畔遇见了那位观水三十年的隐士。',
+  scenes:[
+   {who:'青羊君', text:'我观洞庭三十年，涨潮滔天，退潮见底。如今的潮头底下，沉着一张网。'},
+   {who:'青羊君', text:'这张网叫“四商会”——水匪、盐枭、洋商、还有朝廷里的手，都被它串在一根绳上。'},
+   {who:'青羊君', text:'而织网的人，代号“墨麒麟”。传说他当年鸦片战争时，就是……朝中那位向英夷递情报的内应。'},
+   {who:'你', text:'（心头一凛）那这“哑药”，又是什么？'},
+   {who:'青羊君', text:'让人说不出话的东西。新政要说话，洋人要天朝闭嘴——谁想闭嘴，谁就造它。'}],
+  choice:{q:'你决定……', opts:[
+    {t:'混入盐枭船队，探四商会内幕', fx:{insight:2, hp:-10}, r:'你乔装混入盐枭船队，摸清一条“哑药”运输线，代价是挨了一顿打。'},
+    {t:'与洞庭水匪周旋，套取情报', fx:{rep:4}, r:'你以礼相待水匪头，他感你义气，透露四商会本月的“货”将走汉口水道。'}]},
+  reward:{silver:180, items:{sword:1}, insight:1},
+  cliff:'是夜，一条无灯货船从你眼前驶过。船舷边，赫然站着那名早已“暴毙”的老水手——陈大木，你义兄。' },
+
+{ id:5, month:'道光廿五年·五月', title:'南洋孤帆', region:'malacca', loc:'马六甲·华商码头',
+  objective:'追船下南洋，查明四商会在海外的鸦片工场与军火库。',
+  intro:'义兄“死而复生”让你心乱如麻，可线索不容你停步。你乘帆南下，在马六甲见到了南洋华商领袖陈祖德。',
+  scenes:[
+   {who:'陈祖德', text:'清军一胜，南洋华商扬眉吐气。可四商会的爪子，也伸到了这片海域。'},
+   {who:'陈祖德', text:'他们在婆罗洲有鸦片工场，在马六甲海峡的岛礁间藏着军火库。这一切，都听命于一个叫“墨麒麟”的人。'},
+   {who:'旁白', text:'话音未落，海面忽现数艘无旗战船，炮口正对着码头——有人泄了你们的行踪。'},
+   {who:'佐佐木', text:'（拔刀）船上混进了内鬼！逃，还是战？'}],
+  choice:{q:'海上伏兵骤至，你……', opts:[
+    {t:'率众突围，血战出港', fx:{rep:8, hp:-20}, r:'你指挥突围，虽人人带伤，终究杀出重围。陈祖德对你刮目相看。'},
+    {t:'佯降诱敌，伺机反杀', fx:{insight:2}, r:'你佯装束手，趁敌登船时夺其首船，反客为主，俘获一名四商会管事。'}]},
+  reward:{silver:250, items:{saber:1, ration:2}, insight:1},
+  cliff:'被俘的管事在酷刑前吐出一句：“你们船上的内鬼……不止一个。”他话未说完，颈间忽然喷出一股黑血——被人提前下了毒。' },
+
+{ id:6, month:'道光廿五年·六月', title:'血染河口', region:'fuzhou', loc:'福州·马尾船坞',
+  objective:'揪出队伍内鬼，护住马尾新式铁甲船。',
+  intro:'内鬼二字，如鲠在喉。你随陈祖德的商船北上福州，马尾船坞的新式铁甲船正在舾装——那是新政的脸面。',
+  scenes:[
+   {who:'郑海清', text:'（参将，抚着铁甲船）当年若有此船，英夷何须一战？可昨夜，有人往船底埋了炸药。'},
+   {who:'你', text:'炸药……（你猛然想起南洋的事）是从御药房运出的那种哑药引信？'},
+   {who:'郑海清', text:'你猜得不错。而埋药的人，此刻就在我们当中。'},
+   {who:'旁白', text:'你逐一排查同行者，最终，目光落在一个你从未怀疑过的人身上——他浑身是汗，指缝间残留着硫磺味。'}],
+  choice:{q:'你揪出的内鬼，正是……', opts:[
+    {t:'一路随行的向导老周', fx:{rep:10, insight:1}, r:'老周跪地认罪：“墨麒麟”许他万两，要他炸船。你亲手将他拿下，心口却疼得厉害。'},
+    {t:'陈祖德新收的护卫', fx:{rep:6}, r:'护卫是四商会安插的细作，你凭细节识破，避免了一场大祸。'}]},
+  reward:{silver:220, items:{armor:1, medicine:3}, insight:1},
+  cliff:'老周被押入地牢前，忽然回头，惨然一笑：“你以为……揪出我一个，就完了？京城那位‘墨麒麟’，早就在龙床之侧了。”' },
+
+{ id:7, month:'道光廿五年·七月', title:'西陲风沙', region:'yili', loc:'伊犁·边军大营',
+  objective:'西行追查鸦片陆路通道，联络边军。',
+  intro:'龙床之侧四字，让你脊背发凉。你一路西行，穿过嘉峪关的烽燧，直抵天山脚下的伊犁。',
+  scenes:[
+   {who:'巴图尔', text:'（边军千总）你来得正好。近来有商队把“新茶”运往俄国，可我看那茶砖，硬得像石头，砸开一看——竟包着白花花的鸦片！'},
+   {who:'巴图尔', text:'有人要借俄国人的驼队，把鸦片铺满北方的草原。若成了，天朝便从边疆烂起。'},
+   {who:'你', text:'那“新茶”从何而来？'},
+   {who:'巴图尔', text:'汉口！有人把四商会的“哑药”，掺进了给俄国的官茶里。'}],
+  choice:{q:'你决定……', opts:[
+    {t:'亲查“茶砖”实证，截获一批', fx:{insight:2}, r:'你随马队截下一批茶砖，砸开后坐实了鸦片走私。铁证在手。'},
+    {t:'与俄商伊万周旋，套取名单', fx:{rep:4}, r:'哥萨克商人伊万与你交易，暗示他手上有四商会的“名单”，愿以货易货。'}]},
+  reward:{silver:300, items:{horse:1, fur:1}, insight:1},
+  cliff:'临别，巴图尔将一柄边军旧刀赠你：“伊万那厮，面热心冷。他手里的名单……怕是沾着血，也牵着龙椅。”' },
+
+{ id:8, month:'道光廿五年·八月', title:'雪域机密', region:'lhasa', loc:'拉萨·驻藏衙门',
+  objective:'入藏查明“墨麒麟”在雪域经营多年的图谋。',
+  intro:'你翻越雪山入藏。拉萨的经幡下，驻藏商贾扎西告诉你一个更惊人的消息。',
+  scenes:[
+   {who:'扎西', text:'有人扮作朝圣者，在雪线上画了十年地图。他们不是来朝圣的，是来量这座高原的。'},
+   {who:'扎西', text:'“墨麒麟”想煽动藏地自外于天朝，好把这里变成四商会的大烟田与军马场。'},
+   {who:'你', text:'（你取出搜到的文书）这是从一名“朝圣者”身上搜出的密函——上面画着高原的矿脉与牧场。'},
+   {who:'扎西', text:'（细看密函，脸色骤变）这笔迹……我认得。它出自英商哈里森之手。而收信人，是京里的一位军机大臣。'}],
+  choice:{q:'得知此密，你当……', opts:[
+    {t:'烧毁煽动文书，粉碎阴谋', fx:{rep:10}, r:'你当众焚毁密函，揭穿“朝圣者”真面目，稳住了雪域人心。'},
+    {t:'留作文证，押回京城', fx:{insight:2}, r:'你妥善封存密函，决心以此为铁证，回京对质那位大臣。'}]},
+  reward:{silver:280, items:{ginseng:2}, insight:1},
+  cliff:'下山那夜，你在雪地中捡到一只折断的信鸽。信鸽腿上的竹筒里，字条只写着一行小字：“东窗事发，速启‘第四条路’。”' },
+
+{ id:9, month:'道光廿五年·九月', title:'江洋大盗', region:'kolkata', loc:'加尔各答·鸦片库房',
+  objective:'南下印度与君士坦丁堡，端掉四商会海外据点。',
+  intro:'“第四条路”——你虽不明其意，却知必须赶在四商会发动之前，先断其海外命脉。你渡海南下，直捣英属印度。',
+  scenes:[
+   {who:'辛格', text:'（锡克水手）英王的炮沉了，印度的鸦片却还种着。那库房里，堆着足以祸害半个世界的货。'},
+   {who:'旁白', text:'你与辛格里应外合，火烧加尔各答鸦片库房。烈焰冲天，却烧出一本落款“墨麒麟”的总账。'},
+   {who:'辛格', text:'（翻账到最后一页，忽然怔住）这……这名字！'},
+   {who:'旁白', text:'账册最后一页，赫然写着一个你无比熟悉的名字——陈大木，你的义兄。'}],
+  choice:{q:'面对义兄的名字，你……', opts:[
+    {t:'相信义兄有隐情，保存账册', fx:{insight:2}, r:'你压下心头的震惊，决定查清真相再定是非。'},
+    {t:'怒不可遏，直指义兄为黑手', fx:{rep:-2, insight:1}, r:'你一度认定义兄是“墨麒麟”，愤而疾书，誓要当面问个明白。'}]},
+  reward:{silver:400, items:{musket:1, gold:1}, insight:1},
+  cliff:'回程的海上，一封密信悄然钉在船舷——信中夹着半枚与你铜令严丝合缝的信物：“兄未死，亦非敌。京中‘墨麒麟’之名，是有人冒我。来，见我。”' },
+
+{ id:10, month:'道光廿五年·十月', title:'生死罗网', region:'beijing', loc:'京师·京郊孤驿',
+  objective:'携总账回京，却在京郊遭重兵围杀。',
+  intro:'你携总账与密信北上，却在京郊孤驿陷入重围——你的行踪早已被出卖。',
+  scenes:[
+   {who:'旁白', text:'三十名黑衣甲士将孤驿围得水泄不通。为首者宣读旨意：“粤海关叛逆某某，通敌卖国，格杀勿论。”'},
+   {who:'佐佐木', text:'（拔刀冷笑）罪名都替你拟好了。看来那位“墨麒麟”，要一网打尽。'},
+   {who:'你', text:'（你握紧手中刀）那就……让他们来取！'},
+   {who:'旁白', text:'血战至黎明。你与佐佐木、辛格拼死杀出重围，可总账与密信，在混乱中失落于火海。'}],
+  choice:{q:'身负重伤，你选择……', opts:[
+    {t:'凭记忆默写账册要点', fx:{insight:2, hp:-15}, r:'你凭着过人的记性，默写出了账册中几位关键人名——这成了日后的铁证。'},
+    {t:'先寻义兄，再图翻盘', fx:{rep:4, hp:-10}, r:'你决定先找到义兄陈大木，弄清“墨麒麟”冒名之谜，再谋翻盘之策。'}]},
+  reward:{silver:150, items:{medicine:4, ration:3}, insight:1},
+  cliff:'狼狈北行途中，一座破庙里，有人等你已久——正是那“死而复生”的义兄陈大木。他望着你，声音沙哑：“墨麒麟，是我师父。而我，是他的弃子。”' },
+
+{ id:11, month:'道光廿五年·十一月', title:'紫禁之变', region:'beijing', loc:'皇城·午门',
+  objective:'潜入皇城，揭穿“墨麒麟”真面目，平定政变。',
+  intro:'义兄道出惊世真相：他是“墨麒麟”的徒弟，当年鸦片战争，正是他师父向英夷递送情报、欲图倾覆天朝。可师父事败潜逃，化名蛰伏，如今竟成了朝中重臣。',
+  scenes:[
+   {who:'陈大木', text:'师父当年教你叔父替死，我替他背了多年的黑锅。他如今，就坐在军机处里，等着改朝换代。'},
+   {who:'你', text:'可你要我如何信你？'},
+   {who:'陈大木', text:'（他撕开衣袖，露出一道与令牌同源的烙印）你叔父死前，把这条命脉托付给了我。我装死三年，就是为等今天。'},
+   {who:'旁白', text:'子夜，你们翻过宫墙。午门外，新政大臣翁学士等已被控制，一场逼宫政变，正在紫禁城深处酝酿。'}],
+  choice:{q:'逼宫在即，你当……', opts:[
+    {t:'正面闯宫，护驾勤王', fx:{rep:12, hp:-20}, r:'你率亲随正面杀入，直逼乾清宫，与“墨麒麟”正面相对。'},
+    {t:'智取凭证，先揭其谋', fx:{insight:2}, r:'你潜入军机处，取回“墨麒麟”通敌的亲笔密信，以其人之道还治其人之身。'}]},
+  reward:{silver:500, items:{steelarmor:1, saber:1}, insight:1},
+  cliff:'乾清宫前，“墨麒麟”终于露出真容——他摘下官帽，竟是那位你一路仰赖、指点迷津的“恩师”。他微微一笑：“好徒儿，你终于，走到为师面前了。”' },
+
+{ id:12, month:'道光廿五年·腊月', title:'天朝复兴', region:'beijing', loc:'乾清宫·终局',
+  objective:'了结“墨麒麟”，为天朝新政扫清最后的阴影。',
+  intro:'最终的对决，在紫禁城中央展开。你终于明白——一切哑药、鸦片、政变，都只是“墨麒麟”想让天朝自毁的棋局。',
+  scenes:[
+   {who:'墨麒麟', text:'（坦然）你以为我是为钱？为权？为英夷？都不是。我要的，是让这个靠鸦片和谎言立国的朝廷，自食其果。'},
+   {who:'你', text:'可你用鸦片害死的人，比英夷的火炮还多！'},
+   {who:'墨麒麟', text:'（长叹）那又如何？天朝若不改，迟早要亡于自己手里。我不过是，让它死得其所。'},
+   {who:'旁白', text:'你听罢无言。你一路走来，见过新政的曙光，也见过鸦片的泥沼。你终于明白，这局棋没有对错，只有选择。'}],
+  choice:{q:'终局，你选择……', opts:[
+    {t:'擒下“墨麒麟”，护新政继续', fx:{rep:15, insight:2}, r:'你亲手擒下恩师，保住了新政的燎原之火。翁学士力荐你入军机，你婉拒，只求江湖浪迹。'},
+    {t:'放他一条生路，远赴南洋', fx:{insight:3}, r:'你放走了他。这天下的事，你已看得太透。你与佐佐木、辛格扬帆出海，去开辟自己的天地。'},
+    {t:'归隐山林，传武立派', fx:{rep:10, insight:2}, r:'你谢绝功名，寻一处山明水秀之地，立派收徒，将这一路的忠义传下去。'}]},
+  reward:{silver:800, items:{gold:2, ginseng_use:2}, insight:3},
+  cliff:'腊月的京城，瑞雪初霁。新政的号角吹过紫禁城，似乎一切都将向好。\n然而当夜，一只信鸽自西方飞来，落进太医院。纸条上用英、法、俄三种文字写着同一句话：“联合舰队，已过好望角。”\n——而“墨麒麟”被押入天牢那夜，狱卒听见铁链深处传来一声轻笑：“棋，才刚刚下到中局。”'
+  // 《HanBer FOUR》第二卷《联合舰队》预告：更多内幕，将在未来更新中揭晓……
+ }
+];
+const STORY_MAP = Object.fromEntries(STORY.map(s=>[s.id,s]));
+
+/* =====================================================================
+   核心引擎
+   ===================================================================== */
+let G=null; // 当前游戏
+/* ---------- 存档 ---------- */
+const SAVE_KEY='hanber4_saves_v1';
+function loadSaves(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY))||{}; }catch(e){ return {}; } }
+function persistSaves(s){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(s)); }catch(e){ log('存档失败：本地存储已满或不可用。','e-bad'); } }
+function saveGame(slot){
+  if(!G) return;
+  const all=loadSaves();
+  G.saveId=slot; G.savedAt=new Date().toLocaleString('zh-CN');
+  all[slot]=JSON.parse(JSON.stringify(G));
+  persistSaves(all);
+  toast('已存档至「'+slotName(slot)+'」');
+}
+function slotName(slot){ const n=['天字一号','地字二号','玄字三号','黄字四号','宇字五号']; return n[slot]||('档'+slot); }
+
+/* ---------- 工具 ---------- */
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function chance(p){ return Math.random()<p; }
+function $(id){ return document.getElementById(id); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function dist(x1,y1,x2,y2){ return Math.hypot(x2-x1,y2-y1); }
+
+/* ---------- 消息与界面 ---------- */
+function log(t,cls){
+  const el=$('msg-log'); if(!el) return;
+  const d=document.createElement('div'); d.className='entry '+(cls||'e-evt'); d.textContent='· '+t;
+  el.appendChild(d); while(el.children.length>25) el.removeChild(el.firstChild);
+  el.scrollTop=el.scrollHeight;
+}
+function toast(t){ log(t,'e-good'); }
+
+/* ---------- 视图路由 ---------- */
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const v=$('view-'+id); if(v){ v.classList.add('active'); }
+}
+
+/* ---------- 开始界面 ---------- */
+function buildMenu(){
+  const stage=$('stage');
+  stage.innerHTML=`
+   <div class="view active" id="view-menu">
+     <div class="menu-frame">
+       <div class="title-seal"><div class="seal">四</div></div>
+       <div class="sub-title">HANBER · FOUR</div>
+       <h1 class="title">天朝复兴录</h1>
+       <div class="sub-title2">鸦片战争结局反转 · 开放世界角色扮演</div>
+       <div class="menu-desc">
+         道光廿五年，虎门一役清军大胜，英夷水师全军覆没，天朝开始自强革新。<br>
+         你生于这个被改写的历史。是于乱世谋一席之地，还是揭开倾覆新政的惊天阴谋？<br>
+         自由模式——活下去，闯出你自己的天下。<br>
+         主线模式——十二回《天朝复兴录》，步步惊心，章章留疑。
+       </div>
+       <div class="menu-buttons">
+         <button class="btn primary" onclick="startNew()">【 新 游 戏 】</button>
+         <button class="btn" onclick="openLoadPanel()">【 继 续 游 戏 】</button>
+         <button class="btn small" onclick="openAbout()">关于本作</button>
+       </div>
+     </div>
+   </div>`;
+  showView('menu');
+}
+
+function startNew(){
+  const stage=$('stage');
+  const existing=$('view-char'); if(existing) existing.remove();
+  const v=document.createElement('div'); v.className='view'; v.id='view-char'; stage.appendChild(v);
+  showView('char');
+  v.innerHTML=`
+   <div style="max-width:680px;width:100%;margin:auto;padding:30px;overflow:auto;">
+     <h2 style="color:var(--gold);letter-spacing:.2em;text-align:center;margin-bottom:6px;">立 身 之 初</h2>
+     <div style="color:var(--bone-dim);text-align:center;margin-bottom:20px;">你是粤海关帮办的一名学徒。虎门大胜后的第三年，故事从这里开始。</div>
+     <div class="panel" style="position:static;border:1px solid var(--line);">
+       <div class="panel-body">
+         <div style="margin-bottom:14px;">
+           <div style="color:var(--bone-dim);margin-bottom:6px;">你的名号</div>
+           <input id="c-name" style="width:100%;padding:10px;background:#17130b;border:1px solid var(--line);color:var(--bone);font-family:inherit;font-size:16px;" placeholder="输入姓名（如：云中客）" maxlength="12">
+         </div>
+         <div style="margin-bottom:14px;">
+           <div style="color:var(--bone-dim);margin-bottom:6px;">身世（影响初始属性）</div>
+           <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+             <button class="action-tile" data-o="scholar" onclick="pickOrigin('scholar',this)"><b>书香门第</b><span>根骨平平，然见识过人 —— 初始情报+2，银两+100</span></button>
+             <button class="action-tile" data-o="martial" onclick="pickOrigin('martial',this)"><b>武行出身</b><span>拳脚过硬，胆气十足 —— 初始攻击+4，防御+2</span></button>
+             <button class="action-tile" data-o="merchant" onclick="pickOrigin('merchant',this)"><b>商贩之后</b><span>精于算计，长袖善舞 —— 初始银两+300，声望+5</span></button>
+             <button class="action-tile" data-o="sailor" onclick="pickOrigin('sailor',this)"><b>水手遗孤</b><span>识水辨风，见惯风浪 —— 初始体力+20，自带短刃</span></button>
+           </div>
+         </div>
+         <div style="margin-bottom:14px;">
+           <div style="color:var(--bone-dim);margin-bottom:6px;">游玩模式</div>
+           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+             <button class="action-tile" data-m="story" onclick="pickMode('story',this)"><b>主线模式</b><span>追随《天朝复兴录》十二回剧情，章章悬念</span></button>
+             <button class="action-tile" data-m="free" onclick="pickMode('free',this)"><b>自由模式</b><span>开放世界，唯一目标——活下去，闯出你的天下</span></button>
+           </div>
+         </div>
+         <button class="btn primary" style="width:100%;" onclick="confirmNew()">【 出 发 】</button>
+       </div>
+     </div>
+   </div>`;
+}
+let CH={origin:'scholar', mode:'story'};
+function pickOrigin(o,el){
+  CH.origin=o; el.closest('div').querySelectorAll('.action-tile').forEach(x=>x.style.borderColor='var(--line)');
+  el.style.borderColor='var(--gold)';
+}
+function pickMode(m,el){
+  CH.mode=m; el.closest('div').querySelectorAll('.action-tile').forEach(x=>x.style.borderColor='var(--line)');
+  el.style.borderColor='var(--gold)';
+}
+function confirmNew(){
+  const name=$('c-name').value.trim()||'无名客';
+  G=newGame(name, CH.origin, CH.mode);
+  enterGame();
+}
+
+function newGame(name, origin, mode){
+  const g={ saveId:0, name, origin, mode, savedAt:null,
+    region:'guangzhou', day:1, hour:8, season:1, weather:'晴',
+    inv:{ ration:3, medicine:2 },
+    weapon:null, armor:null,
+    npcs:{}, flags:{},
+    story:{ progress: mode==='story'?0: -1, current: mode==='story'?1:null, done:[], choices:{} },
+    dead:false, turnCount:0 };
+  const d=Object.assign({}, PLAYER_DEFAULTS);
+  if(origin==='scholar'){ d.insight=2; d.silver=300; }
+  if(origin==='martial'){ d.atk+=4; d.def+=2; }
+  if(origin==='merchant'){ d.silver=500; d.rep=5; }
+  if(origin==='sailor'){ d.maxEnergy=120; d.energy=120; g.inv.dagger=1; g.weapon='dagger'; }
+  g.stats=d;
+  return g;
+}
+
+/* ---------- 关于 / 读档 ---------- */
+function openAbout(){
+  const panel=openPanel('about', 460, 60);
+  panel.querySelector('.panel-head h3').textContent='关 于 本 作';
+  panel.querySelector('.panel-body').innerHTML=`
+    <div class="story-intro">
+      <h2>《HanBer FOUR · 天朝复兴录》</h2>
+      <div class="ep">历史反转 · 开放世界 · 单机存档</div>
+      <p>本作构建于一个虚构的平行历史：1842年第一次鸦片战争结局反转，清军大破英夷水师，天朝开始自强革新。</p>
+      <p>主线《天朝复兴录》共十二回，可逐月推进；自由模式以“活下去”为唯一目标，可在横跨欧亚的四十余座城邑间自由往来，行商、习武、结交、闯荡。</p>
+      <p>存档存储于本机浏览器，可导出、可清除，不上传任何数据。</p>
+      <p style="color:var(--dim);margin-top:8px;">本作纯属虚构历史演绎，一切人物、事件、组织皆为架空设定。</p>
+    </div>`;
+}
+function openLoadPanel(){
+  const panel=openPanel('load', 520, 70);
+  panel.querySelector('.panel-head h3').textContent='读 取 存 档';
+  const body=panel.querySelector('.panel-body');
+  const all=loadSaves();
+  body.innerHTML='<div style="margin-bottom:10px;color:var(--bone-dim);font-size:12px;">本机共 '+Object.keys(all).length+' 个存档。点击载入，或导出/清除。</div>';
+  for(let s=0;s<5;s++){
+    const slot=all[s];
+    const meta=slot?('第'+slot.day+'日 · 在'+(REGION_MAP[slot.region]?REGION_MAP[slot.region].name:'未知')+' · 银'+slot.stats.silver+' · 存于'+slot.savedAt):'点击此处创建新档于此档位';
+    const title=slotName(s)+' '+(slot?(slot.name+(slot.mode==='free'?'（自由）':'（主线）')):'（空档）');
+    body.innerHTML+=`<button class="save-slot" onclick="loadGame(${s})">
+      <div class="sv-title">${title}</div><div class="sv-meta">${meta}</div></button>`;
+  }
+  body.innerHTML+=`<div class="btn-row" style="margin-top:8px;">
+     <button class="btn small" onclick="exportSaves()">导出存档(JSON)</button>
+     <button class="btn small danger" onclick="clearSaves()">清除全部存档</button>
+   </div>`;
+}
+function loadGame(s){
+  const all=loadSaves(); const data=all[s];
+  if(!data){ toast('该档位为空'); return; }
+  G=JSON.parse(JSON.stringify(data));
+  enterGame(); closeAllPanels();
+  toast('已载入存档：'+data.name);
+}
+function exportSaves(){
+  const blob=new Blob([localStorage.getItem(SAVE_KEY)||'{}'],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='hanber4_saves.json'; a.click();
+  toast('存档已导出');
+}
+function clearSaves(){
+  if(!confirm('确定清除本机全部存档？此操作不可恢复。')) return;
+  localStorage.removeItem(SAVE_KEY); toast('全部存档已清除'); openLoadPanel();
+}
+
+/* ---------- 面板工具 ---------- */
+let PANELS={};
+function openPanel(id,w,h){
+  closePanels();
+  const stage=$('stage');
+  const p=document.createElement('div');
+  p.className='panel'; p.id='panel-'+id;
+  p.style.cssText=`width:min(${w}px,94%);height:min(${h}px,88%);left:50%;top:50%;transform:translate(-50%,-50%);`;
+  p.innerHTML=`<div class="panel-head"><h3></h3><div class="close-x" onclick="closeAllPanels()">×</div></div><div class="panel-body"></div>`;
+  stage.appendChild(p); PANELS[id]=p;
+  return p;
+}
+function closePanels(){ Object.keys(PANELS).forEach(k=>{ const el=$('panel-'+k); if(el) el.remove(); }); PANELS={}; }
+function closeAllPanels(){ closePanels(); }
+
+/* =====================================================================
+   主游戏界面
+   ===================================================================== */
+function enterGame(){
+  if(!G) return;
+  const stage=$('stage');
+  stage.innerHTML=`
+   <div class="view active" id="view-game">
+     <div id="hud" class="active">
+       <div id="hud-top">
+         <div class="hud-item"><span class="label">名号</span><span class="val" id="hud-name"></span></div>
+         <div class="hud-item"><span class="label">生命</span><div class="bar"><div class="fill" id="bar-hp"></div></div><span class="val" id="hud-hp"></span></div>
+         <div class="hud-item"><span class="label">体力</span><div class="bar jade"><div class="fill" id="bar-en"></div></div><span class="val" id="hud-en"></span></div>
+         <div class="hud-item"><span class="label">饱食</span><div class="bar gold"><div class="fill" id="bar-hu"></div></div><span class="val" id="hud-hu"></span></div>
+         <div class="hud-item"><span class="label">银两</span><span class="val" id="hud-silver"></span></div>
+         <div class="hud-item"><span class="label">声望</span><span class="val" id="hud-rep"></span></div>
+         <div class="spacer"></div>
+         <div class="day-pill" id="hud-date"></div>
+         <button class="icon-btn" onclick="openCharPanel()">人物</button>
+         <button class="icon-btn" onclick="openInvPanel()">行囊</button>
+         <button class="icon-btn" onclick="openLogPanel()">见闻</button>
+         <button class="icon-btn" onclick="openLoadPanel()">存档</button>
+         <button class="icon-btn" onclick="mainMenu()">主菜单</button>
+       </div>
+       <div id="hud-main">
+         <canvas id="worldCanvas"></canvas>
+         <div id="map-legend">
+           <b>天下舆图</b><br>
+           <span style="color:#d9b25c">●</span> 当前所在<br>
+           <span style="color:#e8c77a">◉</span> 主线目标<br>
+           <span style="color:#7a7059">—</span> 可通之路<br>
+           点击相邻城邑即可行旅
+         </div>
+         <div id="msg-log"></div>
+       </div>
+       <div id="hud-bottom">
+         <span class="region-name" id="hud-region"></span>
+         <span id="hud-loc"></span>
+         <span class="spacer"></span>
+         <button class="big-btn primary" onclick="openCityPanel()">城邑（入城）</button>
+         <button class="big-btn" onclick="openTravelPanel()">行旅（去往他处）</button>
+         <button class="big-btn" onclick="nextTurn()">歇息一日（过一日）</button>
+       </div>
+     </div>
+   </div>`;
+  showView('game');
+  setupCanvas();
+  renderAll();
+  onEnterRegion(G.region, true);
+}
+
+function mainMenu(){
+  if(G && !confirm('确定返回主菜单？当前进度请先存档。')) return;
+  G=null;
+  buildMenu();
+}
+
+function setupCanvas(){
+  const c=$('worldCanvas'); if(!c) return;
+  const box=$('hud-main');
+  const dpr=window.devicePixelRatio||1;
+  c.width=box.clientWidth*dpr; c.height=box.clientHeight*dpr;
+  c.style.width=box.clientWidth+'px'; c.style.height=box.clientHeight+'px';
+  const ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  c._box=box;
+  c.onclick=(e)=>{ mapClick(e); };
+}
+
+// 世界坐标 -> 画布坐标
+function mapScale(){
+  const c=$('worldCanvas'); if(!c) return 1;
+  const box=c._box||{clientWidth:1400,clientHeight:800};
+  const sx=box.clientWidth/2000, sy=box.clientHeight/1200;
+  return Math.min(sx,sy);
+}
+function mapOffset(){
+  const c=$('worldCanvas'); if(!c) return {x:0,y:0};
+  const box=c._box||{clientWidth:1400,clientHeight:800};
+  const s=mapScale();
+  const ox=(box.clientWidth-2000*s)/2, oy=(box.clientHeight-1200*s)/2;
+  return {x:ox,y:oy,s:s};
+}
+
+function drawMap(){
+  const c=$('worldCanvas'); if(!c||!c.getContext) return;
+  const ctx=c.getContext('2d'); if(!ctx) return;
+  const box=c._box||{clientWidth:1400,clientHeight:800};
+  const W=box.clientWidth,H=box.clientHeight;
+  ctx.clearRect(0,0,W,H);
+  // 底色：宣纸
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#262016'); bg.addColorStop(0.5,'#1f1a11'); bg.addColorStop(1,'#18140c');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  // 网格
+  ctx.strokeStyle='rgba(201,161,74,.05)'; ctx.lineWidth=1;
+  const gs=40;
+  for(let x=0;x<W;x+=gs){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for(let y=0;y<H;y+=gs){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  const {x:ox,y:oy,s}=mapOffset();
+  // 大陆简图（blob 陆地）
+  ctx.fillStyle='rgba(91,138,111,.14)';
+  const landMarks=[[140,300,120],[240,260,110],[400,300,150],[300,420,90],[420,500,130],[620,520,120],[880,560,150],[980,520,100],[1030,700,110],[1000,760,90],[1100,840,70],[880,880,110],[620,870,120],[820,990,100],[480,940,90],[140,610,120]];
+  landMarks.forEach(l=>{ ctx.beginPath(); ctx.arc(l[0]*s+ox,l[1]*s+oy,l[2]*s,0,Math.PI*2); ctx.fill(); });
+  ctx.strokeStyle='rgba(91,138,111,.25)'; ctx.lineWidth=1.5;
+  landMarks.forEach(l=>{ ctx.beginPath(); ctx.arc(l[0]*s+ox,l[1]*s+oy,l[2]*s,0,Math.PI*2); ctx.stroke(); });
+
+  // 路线
+  const cur=REGION_MAP[G.region];
+  ctx.lineWidth=1.6;
+  REGIONS.forEach(r=>{
+    (ROUTES[r.id]||[]).forEach(tid=>{
+      const t=REGION_MAP[tid]; if(!t) return;
+      const connected = r.id===G.region || t.id===G.region;
+      ctx.strokeStyle = connected? 'rgba(217,178,92,.5)' : 'rgba(122,112,89,.35)';
+      ctx.setLineDash(connected?[]:[4,5]);
+      ctx.beginPath();
+      ctx.moveTo(r.x*s+ox,r.y*s+oy); ctx.lineTo(t.x*s+ox,t.y*s+oy); ctx.stroke();
+      ctx.setLineDash([]);
+    });
+  });
+  // 区域节点
+  const target=storyTargetRegion();
+  REGIONS.forEach(r=>{
+    const cx=r.x*s+ox, cy=r.y*s+oy;
+    const isCur=r.id===G.region;
+    const isTar=r.id===target;
+    // 城市类型着色
+    let col=isCur?'#d9b25c':(isTar?'#e8c77a':'#7a7059');
+    ctx.beginPath(); ctx.arc(cx,cy,isCur?10:7,0,Math.PI*2);
+    ctx.fillStyle='#151109'; ctx.fill();
+    ctx.lineWidth=isCur?3:2; ctx.strokeStyle=col; ctx.stroke();
+    if(isTar){ ctx.beginPath(); ctx.arc(cx,cy,15,0,Math.PI*2); ctx.strokeStyle='rgba(232,199,122,.5)'; ctx.lineWidth=2; ctx.stroke(); }
+    if(isCur){ ctx.beginPath(); ctx.arc(cx,cy,16,0,Math.PI*2); ctx.strokeStyle='rgba(217,178,92,.45)'; ctx.lineWidth=2; ctx.stroke(); }
+    // 名称
+    ctx.fillStyle=isCur?'#f0e6c8':'#c9bd9e';
+    ctx.font=(isCur?'700 13px':'12px')+' "Noto Serif SC",serif';
+    ctx.textAlign='center';
+    ctx.fillText(r.name,cx,cy+(isCur?24:20));
+  });
+  // 图例 + 当前情报
+  if(cur){
+    ctx.fillStyle='rgba(23,21,15,.75)';
+    const lw=Math.min(W-24,360), lh=70;
+    ctx.fillRect(12,12,lw,lh);
+    ctx.strokeStyle='rgba(74,63,43,.8)'; ctx.strokeRect(12,12,lw,lh);
+    ctx.fillStyle='#d9b25c'; ctx.font='700 14px serif'; ctx.textAlign='left';
+    ctx.fillText(cur.name+' · '+cur.full,22,34);
+    ctx.fillStyle='#a89b7d'; ctx.font='12px serif';
+    ctx.fillText('险要指数：' + '★'.repeat(Math.max(1,cur.danger)) + '（'+cur.danger+'）   天气：'+G.weather,22,54);
+    ctx.fillText(G.mode==='story' && G.story.current? ('主线目标：'+ (STORY_MAP[G.story.current]?STORY_MAP[G.story.current].loc:'待定')) : '自由行走 · 唯求存活',22,74);
+  }
+}
+
+function storyTargetRegion(){
+  if(G.mode!=='story' || !G.story.current) return null;
+  const ch=STORY_MAP[G.story.current]; if(!ch) return null;
+  if(ch.done) return null;
+  return ch.region;
+}
+
+function mapClick(e){
+  const c=$('worldCanvas'); if(!c) return;
+  const rect=c.getBoundingClientRect();
+  const mx=(e.clientX-rect.left), my=(e.clientY-rect.top);
+  const {x:ox,y:oy,s}=mapOffset();
+  // 命中最邻近区域
+  let best=null, bd=30*s+6;
+  REGIONS.forEach(r=>{
+    const d=dist(mx,my, r.x*s+ox, r.y*s+oy);
+    if(d<bd){ bd=d; best=r; }
+  });
+  if(!best) return;
+  if(best.id===G.region){ openCityPanel(); return; }
+  if((ROUTES[G.region]||[]).includes(best.id)){ travelTo(best.id); }
+  else{ toast(best.name+'与当前城邑无直接通途，请先转经相邻城邑。'); }
+}
+
+/* ---------- 时间与生存 ---------- */
+const SEASONS=['春','夏','秋','冬'];
+function advanceDays(n){
+  for(let i=0;i<n;i++){
+    G.day++;
+    G.hour=(G.hour+8)%24;
+    // 生存损耗
+    const st=G.stats;
+    st.hunger=clamp(st.hunger-12,0,st.maxHunger||100);
+    st.energy=clamp(st.energy-8,0,st.maxEnergy||100);
+    if(st.hunger<=20) st.hp=clamp(st.hp-6,0,st.maxHp);
+    if(st.hp<=0){ G.dead=true; return; }
+    // 饱食恢复
+    if(st.hunger>60) st.hp=clamp(st.hp+2,0,st.maxHp);
+  }
+  G.season=Math.floor(((G.day-1)/3)%4)+1; // 3日一季
+  const w=['晴','阴','雨','雪','风'];
+  if(chance(.25)) G.weather=w[Math.floor(Math.random()*w.length)];
+  checkDead();
+}
+function checkDead(){
+  if(G && G.stats && G.stats.hp<=0){
+    G.dead=true;
+    openDeath();
+  }
+}
+function openDeath(){
+  const p=openPanel('death',440,50);
+  p.querySelector('.panel-head h3').textContent='殒 落';
+  p.querySelector('.panel-body').innerHTML=`
+    <div class="story-intro">
+      <h2>你倒在了路上</h2>
+      <p>第 ${G.day} 日。你的旅途，止于一场未竟的风波。</p>
+      <p>（自由模式下，亡故即重开；主线剧情可回档至最近抉择。）</p>
+    </div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn small" onclick="loadLast()">回档重来</button>
+      <button class="btn small danger" onclick="mainMenu()">返回主菜单</button>
+    </div>`;
+}
+function loadLast(){
+  const all=loadSaves();
+  if(all[G.saveId]){ loadGame(G.saveId); toast('已回档至最近存档'); return; }
+  toast('没有可回档的存档，返回主菜单');
+  mainMenu();
+}
+
+/* ---------- 渲染 ---------- */
+function renderAll(){
+  if(!G) return;
+  const st=G.stats;
+  $('hud-name').textContent=G.name;
+  const set=(id,val)=>$(id).textContent=val;
+  set('hud-hp', st.hp+'/'+st.maxHp);
+  set('hud-en', st.energy+'/'+st.maxEnergy);
+  set('hud-hu', st.hunger+'/'+(st.maxHunger||100));
+  set('hud-silver', st.silver);
+  set('hud-rep', st.rep);
+  set('bar-hp', st.hp); set('bar-en', st.energy); set('bar-hu', st.hunger);
+  $('bar-hp').style.width=(st.hp/st.maxHp*100)+'%';
+  $('bar-en').style.width=(st.energy/st.maxEnergy*100)+'%';
+  $('bar-hu').style.width=(st.hunger/(st.maxHunger||100)*100)+'%';
+  const r=REGION_MAP[G.region];
+  $('hud-region').textContent=r?r.name:'?';
+  $('hud-loc').textContent=r?(' · '+r.full+' · '+SEASONS[G.season-1]+' · '+G.weather):'';
+  $('hud-date').innerHTML='<b>第'+G.day+'日</b> · '+((G.day-1)%12+1)+'月 · '+G.weather;
+  drawMap();
+}
+
+/* ---------- 行旅 ---------- */
+function openTravelPanel(){
+  const p=openPanel('travel',520,74);
+  p.querySelector('.panel-head h3').textContent='行 旅 · 去往他处';
+  const body=p.querySelector('.panel-body');
+  body.innerHTML='<div style="color:var(--bone-dim);font-size:12px;margin-bottom:10px;">也可直接点击舆图上相邻城邑。风险随“险要指数”升高。</div>';
+  (ROUTES[G.region]||[]).forEach(tid=>{
+    const t=REGION_MAP[tid];
+    body.innerHTML+=`<div class="list-item" onclick="travelTo('${tid}')">
+       <span style="color:${t.type==='frontier'?'#e0704a':(t.type==='port'?'#7dbd96':'#d9b25c')}">●</span>
+       <span class="li-name">${t.name}</span>
+       <span class="li-sub">${t.full} · 险要${t.danger}</span>
+       <span class="tag gold">约${travelDays(G.region,tid)}日</span>
+     </div>`;
+  });
+}
+function travelDays(a,b){
+  const ra=REGION_MAP[a], rb=REGION_MAP[b];
+  const d=dist(ra.x,ra.y,rb.x,rb.y);
+  return Math.max(1, Math.round(d/140));
+}
+function travelTo(tid){
+  const t=REGION_MAP[tid];
+  const days=travelDays(G.region,tid);
+  log('你启程前往'+t.name+'，预计 '+days+' 日。','e-story');
+  advanceDays(days);
+  if(G.dead) return;
+  // 途中事件
+  const num=Math.min(2, days);
+  for(let i=0;i<num;i++){
+    if(chance(0.55) && G.region!==tid){ triggerTravelEvent(); if(G.dead) return; }
+  }
+  G.region=tid;
+  renderAll();
+  onEnterRegion(tid,false);
+  toast('抵达 '+t.name);
+}
+
+function triggerTravelEvent(){
+  const pool=EVENTS;
+  const ev=pool[Math.floor(Math.random()*pool.length)];
+  const p=openPanel('event',440,46);
+  p.querySelector('.panel-head h3').textContent='途 中 事 件 · '+ev.title;
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div style="line-height:1.9;margin-bottom:12px;">${ev.text}</div><div style="display:grid;gap:6px;" id="ev-opts"></div>`;
+  const wrap=$('ev-opts');
+  Object.keys(ev.opts).forEach(k=>{
+    const b=document.createElement('button'); b.className='d-choice';
+    b.textContent=ev.opts[k]; b.onclick=()=>resolveEvent(ev,k,p);
+    wrap.appendChild(b);
+  });
+}
+function resolveEvent(ev,key,p){
+  const out=ev.out[key]; if(!out) return;
+  const st=G.stats;
+  closeAllPanels();
+  log(out.msg||'', out.hp&&out.hp[0]<0?'e-bad':'e-evt');
+  applyFx(out);
+  if(ev.title==='路遇劫匪'&&key==='fight'){ // 战斗
+    startBattle('山贼', 30, ()=>{ resolveEventPost(ev,key); });
+    return;
+  }
+  resolveEventPost(ev,key);
+  renderAll();
+}
+function resolveEventPost(ev,key){ renderAll(); if(G.dead) checkDead(); }
+function applyFx(f){
+  const st=G.stats;
+  if(f.silver){ const v=Array.isArray(f.silver)?rnd(f.silver[0],f.silver[1]):f.silver; st.silver=Math.max(0,st.silver+v); }
+  if(f.hp){ const v=Array.isArray(f.hp)?rnd(f.hp[0],f.hp[1]):f.hp; st.hp=clamp(st.hp+v,0,st.maxHp); }
+  if(f.energy){ const v=Array.isArray(f.energy)?rnd(f.energy[0],f.energy[1]):f.energy; st.energy=clamp(st.energy+v,0,st.maxEnergy); }
+  if(f.hunger) st.hunger=clamp(st.hunger+(f.hunger||0),0,st.maxHunger||100);
+  if(f.rep) st.rep+=f.rep;
+  if(f.insight) st.insight+=f.insight;
+  if(f.skill) st.skill+=f.skill;
+  if(f.day) advanceDays(f.day);
+  if(f.ration) addItem('ration',f.ration);
+  if(f.fur) addItem('fur',f.fur);
+  if(f.gold) addItem('gold',f.gold);
+  Object.keys(f).forEach(k=>{
+    if(ITEMS[k] && !['silver','hp','energy','hunger','rep','insight','skill','day','ration','fur','gold'].includes(k)){
+      addItem(k,1);
+    }
+  });
+}
+
+/* ---------- 进城面板 ---------- */
+function onEnterRegion(rid,isStart){
+  const r=REGION_MAP[rid];
+  log(isStart? ('你抵达 '+r.name+'。'+r.desc) : ('你来到 '+r.name+'。'), 'e-story');
+  if(G.mode==='story' && G.story.current){
+    const ch=STORY_MAP[G.story.current];
+    if(ch && ch.region===rid && !G.story.done.includes(ch.id)){
+      startChapter(ch);
+    }
+  }
+}
+function openCityPanel(){
+  const r=REGION_MAP[G.region];
+  const p=openPanel('city',560,80);
+  p.querySelector('.panel-head h3').textContent='城 邑 · '+r.name;
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div style="color:var(--bone-dim);font-size:13px;line-height:1.8;margin-bottom:12px;">${r.desc}</div>
+    <div class="city-actions">
+      <div class="action-tile" onclick="openExplore()"><b>四 处 探 索</b><span>搜罗情报、奇遇、野物，可能遇险</span></div>
+      <div class="action-tile" onclick="openShop()"><b>商 行 买 卖</b><span>在此地采购、售出货物</span></div>
+      <div class="action-tile" onclick="openNpcList()"><b>拜 访 人 物</b><span>与${npcsAt(G.region).length}位本地人物交谈</span></div>
+      <div class="action-tile" onclick="openInn()"><b>客 栈 休 憩</b><span>用膳歇息，恢复体力与饱食</span></div>
+      <div class="action-tile" onclick="openTrain()"><b>习 武 磨 炼</b><span>消耗体力与银两提升战力</span></div>
+      <div class="action-tile" onclick="openJob()"><b>谋 生 挣 银</b><span>接点零活，赚取盘缠</span></div>
+    </div>`;
+}
+function npcsAt(rid){ return NPCS.filter(n=>n.region===rid && n.alive); }
+
+/* ---------- 城邑动作 ---------- */
+function openExplore(){
+  const p=openPanel('explore',500,70);
+  p.querySelector('.panel-head h3').textContent='四 处 探 索';
+  const r=REGION_MAP[G.region];
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div style="color:var(--bone-dim);margin-bottom:10px;">你在 ${r.name} 的街巷与郊野间游走。险要${r.danger}之地，收获与凶险并存。</div>
+    <div class="btn-row">
+      <button class="big-btn" onclick="doExplore('wild')">入郊野</button>
+      <button class="big-btn" onclick="doExplore('street')">逛街巷</button>
+      <button class="big-btn" onclick="doExplore('market')">探市集</button>
+      <button class="big-btn primary" onclick="doExplore('rumor')">茶馆听风</button>
+    </div>`;
+}
+function doExplore(kind){
+  closeAllPanels();
+  const st=G.stats;
+  st.energy=clamp(st.energy-10,0,st.maxEnergy);
+  let text='',good=true;
+  if(kind==='wild'){
+    const roll=Math.random();
+    if(roll<0.35 && REGION_MAP[G.region].danger>=3){ startBattle('歹人', 22+rnd(0,G.stats.skill*2), ()=>{}); log('你在郊野遇袭，拔刀应战！','e-bad'); return; }
+    if(roll<0.6){ const got=['fur','fish','wood','ginseng','jade'].filter(x=>ITEMS[x]); const it=got[rnd(0,got.length-1)]; addItem(it,1); text='你在山野采得'+ITEMS[it].name+'一件。'; good=true; }
+    else if(roll<0.8){ st.hp=clamp(st.hp+5,0,st.maxHp); text='你采些药草，就地疗伤，回血5。'; good=true; }
+    else { st.hunger=clamp(st.hunger+25,0,st.maxHunger); text='你打到些野味，饱餐一顿。'; good=true; }
+  }
+  else if(kind==='street'){
+    const roll=Math.random();
+    if(roll<0.5){ text='你在街巷听到些闲话，似有深意。（情报+1）'; st.insight+=1; }
+    else if(roll<0.75){ const found=Math.floor(Math.random()*30)+5; st.silver+=found; text='你顺手捡到 '+found+' 两散碎银两。'; }
+    else { text='街巷并无奇遇，你空手而归。'; }
+  }
+  else if(kind==='market'){
+    const roll=Math.random();
+    if(roll<0.4){ const g=TRADE_GOODS[rnd(0,TRADE_GOODS.length-1)]; addItem(g,1); text='你在市集低价淘得'+ITEMS[g].name+'一件。'; }
+    else if(roll<0.7){ const c=Math.floor(Math.random()*40)+10; st.silver-=c; text='你在市集花 '+c+' 两买了些杂物。'; }
+    else { text='市集喧闹，你逛了一圈，无所获。'; }
+  }
+  else { // rumor
+    const roll=Math.random();
+    if(roll<0.5){ st.insight+=2; text='说书人正讲“虎门大胜”旧事，你听出话中隐喻，情报大涨。'; good=true; }
+    else if(roll<0.75){ st.rep+=3; text='你请众茶客饮茶，博得“仗义”之名。声望+3。'; good=true; }
+    else { text='茶客们只顾骂新政，你听不出有用消息。'; }
+  }
+  log(text, good?'e-evt':'e-bad');
+  renderAll(); checkDead();
+}
+function addItem(id,q){
+  if(!G.inv[id]) G.inv[id]=0;
+  G.inv[id]+=q;
+}
+function hasItem(id,q){ return (G.inv[id]||0)>=(q||1); }
+function removeItem(id,q){ if(hasItem(id,q)){ G.inv[id]-=q; if(G.inv[id]<=0) delete G.inv[id]; } }
+
+/* ---------- 客栈 / 习武 / 谋生 ---------- */
+function openInn(){
+  const p=openPanel('inn',480,60);
+  p.querySelector('.panel-head h3').textContent='客 栈 休 憩';
+  const body=p.querySelector('.panel-body');
+  const price=20+REGION_MAP[G.region].danger*5;
+  body.innerHTML=`<div style="color:var(--bone-dim);margin-bottom:10px;">客栈掌柜堆笑道：“客官住店？单间 ${price} 两一夜，好酒好菜，保您舒坦。”</div>
+    <div class="btn-row">
+      <button class="big-btn" onclick="rest('cheap',${price})">用膳歇息（-${price}两，全恢复）</button>
+      <button class="big-btn" onclick="rest('free',0)">天桥打地铺（免费，仅回体力）</button>
+    </div>`;
+}
+function rest(kind,cost){
+  const st=G.stats;
+  if(st.silver<cost){ toast('银两不足'); return; }
+  st.silver-=cost;
+  closeAllPanels();
+  if(kind==='cheap'){ st.hp=st.maxHp; st.energy=st.maxEnergy; st.hunger=st.maxHunger||100; log('你饱餐安睡一夜，神采奕奕。','e-good'); }
+  else { st.energy=st.maxEnergy; log('你寻得一处避风屋檐，蜷了一夜，体力略复。','e-evt'); }
+  advanceDays(1); renderAll(); checkDead();
+}
+function openTrain(){
+  const p=openPanel('train',480,62);
+  p.querySelector('.panel-head h3').textContent='习 武 磨 炼';
+  const st=G.stats;
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div style="color:var(--bone-dim);margin-bottom:10px;">武馆教头捋须道：“要学真功夫，先交学费。拳脚兵刃，皆可精进。”</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="action-tile" onclick="train('atk')"><b>磨砺拳脚（80两）</b><span>攻击 +2 · 需体力</span></div>
+      <div class="action-tile" onclick="train('def')"><b>固守桩功（80两）</b><span>防御 +2 · 需体力</span></div>
+      <div class="action-tile" onclick="train('hp')"><b>淬炼体魄（60两）</b><span>生命上限 +10</span></div>
+      <div class="action-tile" onclick="train('en')"><b>调息养气（60两）</b><span>体力上限 +10</span></div>
+    </div>`;
+}
+function train(kind){
+  const st=G.stats, cost=80;
+  if(st.silver<cost){ toast('银两不足'); return; }
+  if(st.energy<20){ toast('体力不足，先去歇息'); return; }
+  st.silver-=cost; st.energy-=20;
+  if(kind==='atk') st.atk+=2;
+  if(kind==='def') st.def+=2;
+  if(kind==='hp'){ st.maxHp+=10; st.hp+=10; }
+  if(kind==='en'){ st.maxEnergy+=10; st.energy+=10; }
+  closeAllPanels();
+  log('你苦练一日，武艺精进。','e-good');
+  renderAll();
+}
+function openJob(){
+  const p=openPanel('job',500,60);
+  p.querySelector('.panel-head h3').textContent='谋 生 挣 银';
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div style="color:var(--bone-dim);margin-bottom:10px;">本地能人愿意使唤你出力，换些盘缠。</div>
+    <div class="btn-row">
+      <button class="big-btn" onclick="doJob('lift')">码头扛包（+40~70两）</button>
+      <button class="big-btn" onclick="doJob('escort')">护送商货（+80~150两，或遇险）</button>
+      <button class="big-btn" onclick="doJob('clean')">夜巡打更（+30两，微声望）</button>
+    </div>`;
+}
+function doJob(kind){
+  closeAllPanels();
+  const st=G.stats;
+  st.energy=clamp(st.energy-25,0,st.maxEnergy);
+  if(kind==='lift'){ const v=rnd(40,70); st.silver+=v; log('你扛了一天货，挣得 '+v+' 两。','e-evt'); }
+  else if(kind==='escort'){
+    if(REGION_MAP[G.region].danger>=3 && chance(.5)){ startBattle('劫货强人', 26+rnd(0,st.skill*2), ()=>{}); log('护送途中遇劫！','e-bad'); return; }
+    const v=rnd(80,150); st.silver+=v; log('商货安全送到，主家谢你 '+v+' 两。','e-good');
+  }
+  else { st.silver+=30; st.rep+=2; log('你打了一夜更，挣得30两，乡邻赞你勤谨。','e-evt'); }
+  renderAll(); checkDead();
+}
+
+/* ---------- 商店 ---------- */
+function openShop(){
+  const r=REGION_MAP[G.region];
+  const p=openPanel('shop',600,82);
+  p.querySelector('.panel-head h3').textContent='商 行 · '+r.name;
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div style="color:var(--bone-dim);font-size:12px;margin-bottom:10px;">本地商货价格：<span style="color:var(--gold)" id="shop-note">（见下）</span> · 你现有银两 <span style="color:var(--gold)">${G.stats.silver}</span> 两</div>
+    <div style="font-size:12px;color:var(--bone-dim);margin-bottom:8px;">—— 采 购 ——</div>
+    <div class="shop-grid" id="shop-buy"></div>
+    <div style="font-size:12px;color:var(--bone-dim);margin:10px 0 8px;">—— 售 出（行囊）——</div>
+    <div class="shop-grid" id="shop-sell"></div>`;
+  const buyEl=$('shop-buy'), sellEl=$('shop-sell');
+  (r.shops||[]).forEach(gid=>{
+    const it=ITEMS[gid]; if(!it) return;
+    const mult=(r.trade&&r.trade[gid])||1;
+    const price=Math.round(it.base*mult);
+    buyEl.innerHTML+=`<div class="shop-item" onclick="buyItem('${gid}',${price})">
+      <b>${it.name}</b> ${price}两 · ${it.cat==='illicit'?'<span style="color:#e0704a">违禁</span>':''}<br><span class="cost">${it.desc}</span></div>`;
+  });
+  Object.keys(G.inv).forEach(gid=>{
+    const it=ITEMS[gid]; if(!it) return;
+    const mult=(r.trade&&r.trade[gid])||1;
+    const price=Math.round(it.base*mult*0.7);
+    sellEl.innerHTML+=`<div class="shop-item" onclick="sellItem('${gid}',${price},${G.inv[gid]})">
+      <b>${it.name}</b> ×${G.inv[gid]} → 卖${price}两/件<br><span class="cost">${it.desc}</span></div>`;
+  });
+  if(!Object.keys(G.inv).length) sellEl.innerHTML='<div style="color:var(--dim);font-size:13px;">行囊空空。</div>';
+}
+function buyItem(gid,price){
+  const st=G.stats;
+  if(st.silver<price){ toast('银两不足'); return; }
+  if(ITEMS[gid].cat==='illicit') st.rep-=2;
+  st.silver-=price; addItem(gid,1);
+  log('购入 '+ITEMS[gid].name+'（-'+price+'两）。','e-evt');
+  openShop();
+}
+function sellItem(gid,price,qty){
+  removeItem(gid,1);
+  G.stats.silver+=price;
+  log('售出 '+ITEMS[gid].name+'（+'+price+'两）。','e-evt');
+  if(ITEMS[gid].cat==='illicit') G.stats.rep-=1;
+  openShop();
+}
+
+/* ---------- NPC 对话 ---------- */
+function openNpcList(){
+  const r=REGION_MAP[G.region];
+  const p=openPanel('npc',540,78);
+  p.querySelector('.panel-head h3').textContent='拜 访 人 物 · '+r.name;
+  const body=p.querySelector('.panel-body');
+  const locals=npcsAt(G.region);
+  if(!locals.length){ body.innerHTML='<div style="color:var(--dim)">此处并无可拜访之人。</div>'; return; }
+  locals.forEach(n=>{
+    body.innerHTML+=`<div class="list-item" onclick="talkTo('${n.uid}')">
+       <span style="color:var(--gold)">◆</span>
+       <span class="li-name">${n.name}</span>
+       <span class="li-sub">${n.role}</span>
+       <span class="tag ${n.type==='fight'?'red':(n.type==='story'?'gold':'')}">${n.type==='story'?'要人':(n.type==='fight'?'可较量':'路人')}</span>
+     </div>`;
+  });
+}
+function npcById(uid){ return NPCS.find(n=>n.uid===uid); }
+function talkTo(uid){
+  const n=npcById(uid); if(!n) return;
+  closeAllPanels();
+  const dial=n.dial||['……'];
+  const idx=(G.npcs[uid]&&G.npcs[uid].dialIdx)||0;
+  const line=dial[Math.min(idx,dial.length-1)];
+  const p=openDialog(n.name,n.role,'◈');
+  const body=p.querySelector('.d-text');
+  body.textContent=line;
+  // 选项
+  const wrap=document.createElement('div'); wrap.className='d-choices';
+  const opts=[];
+  if(idx<dial.length-1){
+    opts.push({t:'继续交谈', act:()=>{ G.npcs[uid]=(G.npcs[uid]||{}); G.npcs[uid].dialIdx=idx+1; talkTo(uid); }});
+  }else{
+    opts.push({t:'（回到开头的寒暄）', act:()=>{ G.npcs[uid]=(G.npcs[uid]||{}); G.npcs[uid].dialIdx=0; talkTo(uid); }});
+  }
+  if(n.type==='fight'){ opts.push({t:'切磋武艺', act:()=>{ closeAllPanels(); const lv=12+n.liked*3; startBattle(n.name,lv+Math.floor(G.stats.skill/2),()=>{ G.npcs[uid]=(G.npcs[uid]||{}); G.npcs[uid].liked=(G.npcs[uid].liked||0)+1; log('你赢得'+n.name+'敬重。','e-good'); }); }}); }
+  if(n.type==='trade'){ opts.push({t:'请其指点商情', act:()=>{ closeAllPanels(); G.stats.insight+=1; log('你与'+n.name+'论商，获益良多（情报+1）。','e-good'); renderAll(); }}); }
+  if(n.type==='shop'){ opts.push({t:'行商交易', act:()=>{ openShop(); }}); }
+  opts.push({t:'拱手告辞', act:()=>{ closeAllPanels(); openCityPanel(); }});
+  opts.forEach(o=>{
+    const b=document.createElement('button'); b.className='d-choice'; b.textContent=o.t;
+    b.onclick=o.act; wrap.appendChild(b);
+  });
+  p.appendChild(wrap);
+}
+function openDialog(name,role,icon){
+  const el=document.createElement('div'); el.id='dialog'; el.className='open';
+  el.innerHTML=`<div class="d-head"><div class="d-portrait">${icon}</div>
+    <div><div class="d-name">${name}</div><div class="d-role">${role}</div></div></div>
+    <div class="d-text"></div>`;
+  $('stage').appendChild(el);
+  return el;
+}
+function closeDialog(){ const el=$('dialog'); if(el) el.remove(); }
+
+/* ---------- 人物 / 行囊 / 见闻 ---------- */
+function openCharPanel(){
+  const st=G.stats;
+  const p=openPanel('char',500,72);
+  p.querySelector('.panel-head h3').textContent='人 物 · '+G.name;
+  const body=p.querySelector('.panel-body');
+  const atk=st.atk+(G.weapon?(ITEMS[G.weapon].atk||0):0);
+  const def=st.def+(G.armor?(ITEMS[G.armor].def||0):0);
+  body.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="shop-item"><b>名号</b><br>${G.name}（${G.origin==='scholar'?'书香':G.origin==='martial'?'武行':G.origin==='merchant'?'商贩':'水手'}出身）</div>
+      <div class="shop-item"><b>模式</b><br>${G.mode==='story'?'主线 · 《天朝复兴录》':'自由 · 浪迹天下'}</div>
+      <div class="shop-item"><b>生命/体力</b><br>${st.hp}/${st.maxHp} · ${st.energy}/${st.maxEnergy}</div>
+      <div class="shop-item"><b>银两/声望</b><br>${st.silver} 两 · ${st.rep} 点</div>
+      <div class="shop-item"><b>攻击/防御</b><br>${atk}（含${G.weapon?'武器':'空手'}）/ ${def}（含${G.armor?'甲胄':'无甲'}）</div>
+      <div class="shop-item"><b>情报/武技</b><br>${st.insight} 点 · ${st.skill} 点</div>
+      <div class="shop-item"><b>行至</b><br>第 ${G.day} 日 · ${SEASONS[G.season-1]} · ${G.weather}</div>
+      <div class="shop-item"><b>随身武备</b><br>武器：${G.weapon?ITEMS[G.weapon].name:'无'} · 甲：${G.armor?ITEMS[G.armor].name:'无'}</div>
+    </div>
+    <div style="margin-top:12px;" class="btn-row">
+      <button class="big-btn" onclick="equipMenu('weapon')">更换武器</button>
+      <button class="big-btn" onclick="equipMenu('armor')">更换甲胄</button>
+      <button class="big-btn danger" onclick="closeAllPanels()">关闭</button>
+    </div>`;
+}
+function equipMenu(slot){
+  const cat=slot==='weapon'?'weapon':'armor';
+  const pool=Object.keys(G.inv).filter(g=>ITEMS[g].cat===cat);
+  const p=openPanel('equip',460,50);
+  p.querySelector('.panel-head h3').textContent=cat==='weapon'?'更 换 武 器':'更 换 甲 胄';
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div class="shop-grid">`;
+  if(!pool.length){ body.innerHTML='<div style="color:var(--dim)">行囊中无此类装备。</div>'; return; }
+  pool.forEach(g=>{
+    const it=ITEMS[g];
+    const eq=G[slot]===g;
+    body.innerHTML+=`<div class="shop-item" onclick="equip('${slot}','${g}')">${eq?'<b>已装备</b>':'<b>'+it.name+'</b>'} ${it.atk?('攻+'+it.atk):(it.def?('防+'+it.def):'')}<br><span class="cost">${it.desc}</span></div>`;
+  });
+}
+function equip(slot,g){
+  G[slot]=g; removeItem(g,1);
+  closeAllPanels(); openCharPanel();
+  log('已装备'+ITEMS[g].name+'。','e-evt');
+}
+function openInvPanel(){
+  const p=openPanel('inv',520,76);
+  p.querySelector('.panel-head h3').textContent='行 囊';
+  const body=p.querySelector('.panel-body');
+  let html='';
+  Object.keys(G.inv).forEach(gid=>{
+    const it=ITEMS[gid];
+    html+=`<div class="list-item"><span class="li-name">${it.name}</span><span class="li-sub">×${G.inv[gid]} · ${it.desc}</span>
+      ${it.cat==='use'?`<button class="tag gold" style="cursor:pointer" onclick="useItem('${gid}')">使用</button>`:''}</div>`;
+  });
+  if(!html) html='<div style="color:var(--dim)">行囊空空如也。</div>';
+  body.innerHTML=html;
+}
+function useItem(gid){
+  const st=G.stats, it=ITEMS[gid];
+  if(!hasItem(gid,1)) return;
+  removeItem(gid,1);
+  if(gid==='medicine') st.hp=clamp(st.hp+40,0,st.maxHp);
+  if(gid==='ginseng_use') st.hp=clamp(st.hp+90,0,st.maxHp);
+  if(gid==='ration') st.hunger=clamp(st.hunger+35,0,st.maxHunger||100);
+  if(gid==='wine_use'){ st.energy=clamp(st.energy+25,0,st.maxEnergy); st.hp=clamp(st.hp+10,0,st.maxHp); }
+  log('使用'+it.name+'。','e-good');
+  openInvPanel(); renderAll();
+}
+function openLogPanel(){
+  const p=openPanel('log',540,80);
+  p.querySelector('.panel-head h3').textContent='见 闻 · 江湖风闻';
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div style="color:var(--bone-dim);margin-bottom:10px;">情报 ${G.stats.insight} 点 · 武技 ${G.stats.skill} 点 · 声望 ${G.stats.rep}</div>
+    <div style="color:var(--gold);margin-bottom:6px;font-size:14px;">已历主线</div>`;
+  if(G.mode==='story' && G.story.done.length){
+    G.story.done.forEach(id=>{ const c=STORY_MAP[id]; body.innerHTML+=`<div class="list-item"><span class="li-name">${c.title}</span><span class="li-sub">${c.month}</span></div>`; });
+  } else body.innerHTML+='<div style="color:var(--dim);font-size:13px;">尚未推进主线（自由模式无主线）。</div>';
+  body.innerHTML+=`<div style="color:var(--gold);margin:12px 0 6px;font-size:14px;">当前主线目标</div>`;
+  if(G.mode==='story' && G.story.current){ const c=STORY_MAP[G.story.current]; body.innerHTML+=`<div style="font-size:14px;line-height:1.8;color:var(--bone)">前往 <b style="color:var(--gold)">${REGION_MAP[c.region].name}</b> · ${c.loc}<br><span style="color:var(--bone-dim)">${c.objective}</span></div>`; }
+  else body.innerHTML+='<div style="color:var(--dim);font-size:13px;">自由模式：活下去，即为大成。</div>';
+}
+
+/* ---------- 过日 ---------- */
+function nextTurn(){
+  closeAllPanels();
+  advanceDays(1);
+  if(G.dead) return;
+  renderAll();
+  log('一日已过。','e-evt');
+}
+
+/* =====================================================================
+   战斗系统
+   ===================================================================== */
+let BATTLE=null;
+function playerAtk(){ return G.stats.atk+(G.weapon?(ITEMS[G.weapon].atk||0):0)+Math.floor(G.stats.skill/2); }
+function playerDef(){ return G.stats.def+(G.armor?(ITEMS[G.armor].def||0):0); }
+function startBattle(name,level,onWin,onLose){
+  if(BATTLE) return;
+  closeAllPanels();
+  BATTLE={ name, onWin:onWin||(()=>{}), onLose:onLose||null,
+    ehp: Math.round(45+level*4.2), emaxHp:Math.round(45+level*4.2),
+    eatk: Math.round(5+level*1.8), edef: Math.round(1+level*0.9),
+    level };
+  const stage=$('stage');
+  stage.innerHTML=stage.innerHTML+`<div id="battle" class="open">
+    <div class="battle-stage">
+      <div class="b-char">
+        <div class="b-portrait">侠</div>
+        <div class="b-name">${G.name}</div>
+        <div class="bar" style="width:140px"><div class="fill" id="b-hp"></div></div>
+        <div id="b-hptxt" style="font-size:12px;color:var(--bone-dim);margin-top:3px"></div>
+      </div>
+      <div class="bar-vs">⚔</div>
+      <div class="b-char enemy">
+        <div class="b-portrait">匪</div>
+        <div class="b-name">${name}</div>
+        <div class="bar" style="width:140px;border-color:var(--blood)"><div class="fill" id="b-ehp" style="background:linear-gradient(90deg,#8a2410,#c9492b)"></div></div>
+        <div id="b-ehptxt" style="font-size:12px;color:var(--bone-dim);margin-top:3px"></div>
+      </div>
+    </div>
+    <div class="battle-log" id="b-log"></div>
+    <div class="battle-actions">
+      <button class="ba-btn danger" onclick="bAttack()">攻击</button>
+      <button class="ba-btn skill" onclick="bSkill()">猛击(体力25)</button>
+      <button class="ba-btn" onclick="bUseItem()">用药</button>
+      <button class="ba-btn" onclick="bFlee()">遁走</button>
+    </div>
+  </div>`;
+  renderBattle();
+  bLine(name+'挡住去路，一场恶战在所难免。');
+}
+function renderBattle(){
+  if(!BATTLE) return;
+  $('b-hp').style.width=(G.stats.hp/G.stats.maxHp*100)+'%';
+  $('b-hptxt').textContent=G.stats.hp+'/'+G.stats.maxHp;
+  $('b-ehp').style.width=(BATTLE.ehp/BATTLE.emaxHp*100)+'%';
+  $('b-ehptxt').textContent=BATTLE.ehp+'/'+BATTLE.emaxHp;
+}
+function bLine(t){
+  const el=$('b-log'); if(!el) return;
+  const d=document.createElement('div'); d.textContent='· '+t;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+function bAttack(){
+  const dmg=Math.max(1, Math.round(playerAtk() - BATTLE.edef/2 + rnd(-2,4)));
+  BATTLE.ehp-=dmg;
+  bLine('你挥兵刃而上，命中'+BATTLE.name+' '+dmg+' 点。');
+  if(BATTLE.ehp<=0) return endBattle(true);
+  renderBattle();
+  enemyTurn();
+}
+function bSkill(){
+  if(G.stats.energy<25){ bLine('体力不济，无力施出猛击。'); return; }
+  G.stats.energy-=25;
+  const dmg=Math.max(2, Math.round((playerAtk()*1.8) - BATTLE.edef/2 + rnd(-2,5)));
+  BATTLE.ehp-=dmg;
+  bLine('你运劲暴喝，一击猛击，重创'+BATTLE.name+' '+dmg+' 点！');
+  if(BATTLE.ehp<=0) return endBattle(true);
+  renderBattle(); renderAll(); enemyTurn();
+}
+function bUseItem(){
+  const has=(G.inv.medicine||0)+(G.inv.ginseng_use||0);
+  if(has<=0){ bLine('行囊中没有疗伤药。'); return; }
+  const use=G.inv.ginseng_use?'ginseng_use':'medicine';
+  removeItem(use,1);
+  const heal=use==='ginseng_use'?90:40;
+  G.stats.hp=clamp(G.stats.hp+heal,0,G.stats.maxHp);
+  bLine('你服下'+ITEMS[use].name+'，回血 '+heal+' 点。');
+  renderBattle(); renderAll(); enemyTurn();
+}
+function bFlee(){
+  if(chance(0.55)){
+    bLine('你虚晃一招，转身遁走。');
+    setTimeout(()=>endBattle(false),600);
+  } else {
+    bLine('对方缠斗甚紧，遁走不得！');
+    enemyTurn();
+  }
+}
+function enemyTurn(){
+  const dmg=Math.max(1, Math.round(BATTLE.eatk - playerDef()/2 + rnd(-2,3)));
+  G.stats.hp-=dmg;
+  bLine(BATTLE.name+'扑了上来，你受 '+dmg+' 点伤。');
+  if(G.stats.hp<=0){ G.stats.hp=0; return endBattle(false,true); }
+  renderBattle(); renderAll();
+}
+function endBattle(win,lost){
+  const b=BATTLE; BATTLE=null;
+  closeBattleUI();
+  if(win){
+    log('你战胜了'+b.name+'！','e-good');
+    const v=rnd(20,60)+b.level*3;
+    G.stats.silver+=v; G.stats.rep+=2;
+    toast('缴获 '+v+' 两，声望+2。');
+    b.onWin();
+  } else if(lost){
+    G.dead=true;
+    log('你倒在了'+b.name+'脚下……','e-bad');
+    checkDead();
+  } else {
+    log('你脱离了战斗。','e-evt');
+  }
+  renderAll();
+}
+function closeBattleUI(){
+  const el=$('battle'); if(el) el.remove();
+}
+
+/* =====================================================================
+   主线剧情引擎
+   ===================================================================== */
+function startChapter(ch){
+  if(G.story.done.includes(ch.id)) return;
+  closeAllPanels();
+  // 章节开场
+  const p=openPanel('chapter-intro',620,0);
+  p.querySelector('.panel-head').style.display='none';
+  p.style.height='auto'; p.style.maxHeight='88%';
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div class="story-intro">
+     <div class="ep">${ch.month} · 第${ch.id}回</div>
+     <h2>《${ch.title}》</h2>
+     <p style="white-space:pre-wrap;">${ch.intro}</p>
+     <div style="margin-top:12px;text-align:center;"><button class="btn primary" onclick="closeAllPanels();playChapter(${ch.id})">【 入 局 】</button></div>
+   </div>`;
+  log('主线开启：第'+ch.id+'回《'+ch.title+'》','e-story');
+}
+function playChapter(id){
+  const ch=STORY_MAP[id];
+  let i=0;
+  const advance=()=>{
+    if(G.dead) return;
+    if(i>=ch.scenes.length){ finishChapter(ch); return; }
+    const s=ch.scenes[i++];
+    showScripted(s.who, s.text, advance);
+  };
+  advance();
+}
+function showScripted(who,text,done){
+  const el=openDialog(who,'',who==='旁白'?'◈':(who.includes('(')?'◆':'☰'));
+  el.querySelector('.d-text').textContent=text;
+  const adv=document.createElement('div'); adv.className='d-advance'; adv.textContent='〔 继 续 〕';
+  adv.onclick=()=>{ closeDialog(); done(); };
+  el.appendChild(adv);
+}
+function finishChapter(ch){
+  // 抉择
+  if(ch.choice){
+    const el=openDialog('抉择','此一着，改易来路','☸');
+    el.querySelector('.d-text').textContent=ch.choice.q;
+    const wrap=document.createElement('div'); wrap.className='d-choices';
+    ch.choice.opts.forEach(o=>{
+      const b=document.createElement('button'); b.className='d-choice'; b.textContent=o.t;
+      b.onclick=()=>{ closeDialog(); applyFx(o.fx||{}); log(o.r||'','e-story'); settleChapter(ch); };
+      wrap.appendChild(b);
+    });
+    el.appendChild(wrap);
+  } else settleChapter(ch);
+}
+function settleChapter(ch){
+  // 奖励
+  if(ch.reward){
+    G.stats.silver+=ch.reward.silver||0;
+    if(ch.reward.insight) G.stats.insight+=ch.reward.insight;
+    Object.keys(ch.reward.items||{}).forEach(g=>addItem(g,ch.reward.items[g]));
+    toast('本回奖赏：银'+ (ch.reward.silver||0) +'，另有物什入囊。');
+  }
+  // 标记完成，进入下一回
+  G.story.done.push(ch.id);
+  G.story.choices[ch.id]=1;
+  if(ch.id>=STORY.length){ G.story.current=null; }
+  else { G.story.current=ch.id+1; }
+  // 悬念
+  showCliff(ch);
+  renderAll();
+}
+function showCliff(ch){
+  const p=openPanel('cliff',600,0);
+  p.querySelector('.panel-head h3').textContent='—— 本 回 终 · 且 看 下 回 ——';
+  p.style.height='auto'; p.style.maxHeight='86%';
+  const body=p.querySelector('.panel-body');
+  body.innerHTML=`<div class="story-intro"><div class="cliff">悬念 · ${ch.month}</div>
+    <p style="white-space:pre-wrap;text-align:center;font-size:16px;">${ch.cliff}</p>
+    <div style="margin-top:14px;text-align:center;color:var(--bone-dim);font-size:13px;">
+      下一回目标：${G.story.current?STORY_MAP[G.story.current].loc:'已至终章，自由游历吧'}<br>
+      <span style="font-size:12px;color:var(--dim)">（自动存档已写入「当前档位」，可随时在主菜单读取）</span>
+    </div>
+    <div style="margin-top:14px;text-align:center;"><button class="btn primary" onclick="closeAllPanels();saveGame(G.saveId||0);openCityPanel()">【 存 档 继 续 】</button></div>
+  </div>`;
+  log('悬念已留：'+ch.cliff.split('\n')[0],'e-story');
+}
+
+/* ---------- 启动 ---------- */
+window.addEventListener('resize',()=>{ if(G){ const c=$('worldCanvas'); if(c){ setupCanvas(); drawMap(); } } });
+buildMenu();</script>
+</body>
+</html>

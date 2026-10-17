@@ -1,0 +1,3523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HanBer SEVEN · 雾海纪元</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+/* ===== 设计基调：1900 甲午逆转世界 · 海雾墨青 =====
+   深海墨青底 / 宣纸面板 / 朱砂印章 / 铜金纹路 / 海雾波纹
+   ================================================ */
+:root{
+  --ink:#101E26; --ink2:#18303A; --ink3:#2A4750;
+  --sea:#6E8FA0; --seaL:#9DBCC8; --fog:#8FA6AE;
+  --paper:#EAE0C6; --paper2:#DDD0AE; --paper3:#F4EBD6;
+  --brass:#B08A4F; --brass2:#87642F;
+  --ver:#B43C2A; --ver2:#8C2B1D;          /* 朱砂 */
+  --jade:#5E7D6E; --gold:#C9A44B;
+  --ok:#3F6B3F; --bad:#A33B2E;
+  --panel:rgba(236,228,202,.97);
+  --panel2:rgba(211,196,158,.92);
+  --line:2px solid var(--ink);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0B151B}
+body{
+  font-family:"Noto Serif SC","Songti SC","SimSun",serif;
+  color:var(--ink); -webkit-font-smoothing:antialiased;
+  user-select:none; -webkit-user-select:none; touch-action:none;
+}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;background:#081318;image-rendering:auto}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10}
+#ui>*{pointer-events:auto}
+.hidden{display:none!important}
+
+/* ===== 通用面板与按钮 ===== */
+.panel{
+  background:var(--panel); border:var(--line);
+  box-shadow:5px 5px 0 rgba(8,19,24,.42), inset 0 0 0 3px rgba(176,138,79,.28);
+  border-radius:3px; padding:14px 16px; position:relative;
+}
+.panel::before,.panel::after{
+  content:""; position:absolute; width:18px; height:18px;
+  border:2px solid var(--ver); pointer-events:none;
+}
+.panel::before{top:-2px;left:-2px;border-right:none;border-bottom:none}
+.panel::after{bottom:-2px;right:-2px;border-left:none;border-top:none}
+.btn{
+  display:inline-block; min-width:104px; padding:10px 18px; margin:5px;
+  font-family:inherit; font-size:16px; font-weight:700; color:var(--paper3);
+  background:linear-gradient(180deg,#CB9D4B,#8F6A22);
+  border:1px solid #5C4313; border-bottom:3px solid #5C4313;
+  border-radius:3px; cursor:pointer; letter-spacing:.14em;
+  box-shadow:0 2px 0 rgba(0,0,0,.3); text-align:center;
+  transition:transform .06s, filter .14s;
+}
+.btn:hover{filter:brightness(1.12)}
+.btn:active{transform:translateY(2px);border-bottom-width:1px}
+.btn.ghost{background:transparent;color:var(--paper3);border:1px solid var(--seaL);border-bottom:3px solid var(--seaL);box-shadow:none}
+.btn.ghost:hover{background:rgba(110,143,160,.18)}
+.btn.danger{background:linear-gradient(180deg,#C0563F,#8C2B1D);border-color:#5C1C15}
+.btn.jade{background:linear-gradient(180deg,#77907F,#4C6355);border-color:#2E4036}
+.btn.small{min-width:70px;padding:6px 10px;font-size:14px;letter-spacing:.06em}
+.btn.mini{min-width:52px;padding:3px 8px;font-size:12px;letter-spacing:.02em}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+h2.pTitle{font-size:26px;letter-spacing:.4em;text-align:center;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:10px}
+h3.pTitle{font-size:18px;letter-spacing:.25em;color:var(--ink)}
+.sep{height:2px;background:linear-gradient(90deg,transparent,var(--brass),transparent);margin:8px 0}
+.mute{color:#5E5340;font-size:13px}
+.small{font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.col{display:flex;flex-direction:column;gap:6px}
+
+/* ===== 顶栏 HUD ===== */
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(180deg,rgba(8,19,24,.94),rgba(8,19,24,.72)); padding:6px 10px; border-bottom:2px solid rgba(176,138,79,.6);}
+#hud .hL{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#hud .hR{display:flex;align-items:center;gap:6px}
+#hud .stat{color:var(--paper3);font-size:14px;letter-spacing:.08em}
+#hud .stat b{color:var(--gold);font-weight:700}
+#hud .stat.warn b{color:#E0A65A}
+#hud .stat.crit b{color:#E05555;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+#hud .btn{padding:5px 10px;font-size:13px;min-width:52px}
+
+/* ===== 底部快捷栏 ===== */
+#dock{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:8px;
+  background:linear-gradient(0deg,rgba(8,19,24,.94),rgba(8,19,24,.6)); padding:7px 8px; border-top:2px solid rgba(176,138,79,.55); flex-wrap:wrap}
+
+/* ===== 悬浮面板容器 ===== */
+#pop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,12,16,.55);z-index:30}
+#pop .panel{max-width:min(92vw,720px);max-height:86vh;overflow:auto;width:92vw}
+#pop.full .panel{max-width:min(96vw,900px)}
+
+/* ===== 标题界面 ===== */
+#boot{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:40;
+  background:radial-gradient(ellipse at 50% 30%,#12303C 0%,#0B1B22 55%,#060E13 100%)}
+#boot .mists{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.mistline{position:absolute;left:-20%;right:-20%;height:34px;background:linear-gradient(180deg,transparent,rgba(158,189,200,.16),rgba(158,189,200,.3),rgba(158,189,200,.16),transparent);
+  animation:mistDrift linear infinite}
+@keyframes mistDrift{0%{transform:translateY(-6vh);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:translateY(106vh);opacity:0}}
+#boot .titleT{font-size:clamp(34px,7vw,64px);font-weight:900;letter-spacing:.22em;color:var(--paper3);text-shadow:0 0 26px rgba(157,188,200,.55), 3px 3px 0 var(--ink);position:relative;z-index:2}
+#boot .titleS{font-size:clamp(15px,2.4vw,22px);letter-spacing:.6em;color:var(--gold);position:relative;z-index:2;margin-top:2px}
+#boot .titleSub{font-size:13px;letter-spacing:.3em;color:var(--seaL);position:relative;z-index:2;margin-top:10px}
+#boot .menu{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;margin-top:26px;gap:2px}
+#boot .menu .btn{min-width:230px;font-size:18px}
+#boot .ver{position:absolute;bottom:10px;right:14px;color:rgba(158,189,200,.55);font-size:12px;z-index:2}
+#boot .warnBar{position:absolute;bottom:12px;left:14px;color:rgba(158,189,200,.5);font-size:11px;z-index:2}
+
+/* ===== 对话框 ===== */
+#dlg{position:absolute;left:50%;transform:translateX(-50%);bottom:14%;width:min(94vw,860px);z-index:25;padding:0}
+#dlg .speaker{display:inline-block;background:var(--ver);color:var(--paper3);padding:4px 14px;font-size:15px;letter-spacing:.2em;border:1px solid var(--ver2);border-bottom:none;border-radius:3px 3px 0 0}
+#dlg .speaker.me{background:var(--ink3)}
+#dlg .body{background:var(--panel);border:var(--line);border-radius:0 3px 3px 3px;padding:16px 20px;min-height:96px;box-shadow:5px 5px 0 rgba(5,12,16,.5)}
+#dlg .text{font-size:17px;line-height:1.85;white-space:pre-wrap;min-height:60px}
+#dlg .choices{margin-top:10px;display:flex;flex-direction:column;align-items:stretch;gap:6px}
+#dlg .choices .btn{text-align:left;font-size:15px}
+#dlg .tip{position:absolute;right:16px;bottom:10px;color:#6E6250;font-size:12px}
+
+/* ===== 章节卡 ===== */
+#chapter{position:absolute;inset:0;z-index:45;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#12303C 0%,#0A1920 70%,#050C11 100%)}
+#chapter .no{font-size:16px;letter-spacing:.5em;color:var(--gold);margin-bottom:6px}
+#chapter .t{font-size:clamp(30px,6vw,52px);font-weight:900;letter-spacing:.3em;color:var(--paper3);text-shadow:0 0 22px rgba(157,188,200,.5)}
+#chapter .sub{font-size:14px;letter-spacing:.4em;color:var(--seaL);margin-top:12px}
+#chapter .lines{margin-top:26px;max-width:640px;padding:0 24px;font-size:16px;line-height:2.1;color:var(--paper2);text-align:center;letter-spacing:.08em;white-space:pre-wrap;max-height:40vh;overflow:auto}
+#chapter .btn{margin-top:30px}
+#chapter .suspense{max-width:600px;padding:14px 20px;border:1px dashed var(--gold);color:var(--gold);background:rgba(176,138,79,.08);font-size:15px;line-height:1.9;margin-top:18px;letter-spacing:.06em}
+
+/* ===== 战斗界面 ===== */
+#btl{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;background:rgba(5,12,16,.8)}
+#btl .stage{flex:1;position:relative;min-height:180px;overflow:hidden}
+#btl .unit{position:absolute;text-align:center;color:var(--paper3)}
+#btl .unit .hp{width:120px;height:8px;background:#3A1414;border:1px solid #000;margin:2px auto 0}
+#btl .unit .hp i{display:block;height:100%;background:linear-gradient(180deg,#7BC07B,#2F7A2F)}
+#btl .unit.enemy .hp i{background:linear-gradient(180deg,#D97A5A,#9E2F1D)}
+#btl .log{height:96px;overflow:auto;background:rgba(10,20,26,.92);border-top:2px solid rgba(176,138,79,.5);padding:8px 14px;color:var(--paper2);font-size:14px;line-height:1.7}
+#btl .cmd{display:flex;justify-content:center;gap:8px;padding:10px;flex-wrap:wrap}
+
+/* ===== 列表 / 表格 ===== */
+.listItem{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid rgba(39,33,26,.25);cursor:pointer}
+.listItem:hover{background:rgba(176,138,79,.16)}
+.listItem .nm{font-weight:700;font-size:15px}
+.listItem .ds{font-size:12px;color:#5E5340;margin-top:2px}
+.listItem .rt{font-size:13px;color:var(--ver2);white-space:nowrap}
+
+/* ===== 世界地图卡 ===== */
+#cityCard{position:absolute;right:14px;top:58px;width:min(92vw,330px);z-index:20}
+#cityCard .row{margin-top:6px}
+
+/* ===== 场景交互提示 ===== */
+#hint{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:15;
+  background:rgba(8,19,24,.85);color:var(--paper3);padding:6px 16px;font-size:14px;letter-spacing:.15em;border:1px solid var(--brass);border-radius:3px;pointer-events:none}
+
+/* ===== 虚拟方向键 ===== */
+#dpad{position:absolute;left:12px;bottom:86px;z-index:15;display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:4px}
+#dpad button{background:rgba(8,19,24,.8);border:1px solid var(--seaL);color:var(--paper3);font-size:20px;border-radius:4px;cursor:pointer}
+#dpad .up{grid-column:2}
+#dpad .left{grid-column:1;grid-row:2}
+#dpad .down{grid-column:2;grid-row:2}
+#dpad .right{grid-column:3;grid-row:2}
+
+/* ===== 输入框 ===== */
+input.txt{width:100%;padding:10px 12px;font-family:inherit;font-size:16px;background:var(--paper3);border:1px solid var(--ink);border-radius:2px;color:var(--ink)}
+select.txt{width:100%;padding:9px 12px;font-family:inherit;font-size:15px;background:var(--paper3);border:1px solid var(--ink);border-radius:2px}
+label.lbl{font-size:13px;color:#5E5340;letter-spacing:.1em}
+
+/* ===== 小工具 ===== */
+.gauge{height:10px;background:#CFC3A2;border:1px solid var(--ink);position:relative;overflow:hidden}
+.gauge i{display:block;height:100%;background:linear-gradient(180deg,#7BC07B,#3F7A3F)}
+.gauge i.mid{background:linear-gradient(180deg,#E0C65A,#A8872F)}
+.gauge i.low{background:linear-gradient(180deg,#E08A5A,#A84F2F)}
+.gauge i.rep{background:linear-gradient(180deg,#7BA8C0,#3F6A7A)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:720px){.grid2{grid-template-columns:1fr}}
+.tag{display:inline-block;background:var(--ink3);color:var(--paper3);font-size:11px;padding:2px 8px;border-radius:2px;letter-spacing:.12em;margin:1px}
+.tag.gold{background:var(--brass2)}
+.tag.ver{background:var(--ver)}
+#errBox{position:fixed;left:8px;bottom:8px;max-width:70vw;z-index:99;background:#7C2C22;color:#FFF;font-size:12px;padding:6px 10px;border-radius:3px;display:none;white-space:pre-wrap}
+/* ===== 运行时元素 ID 样式（与脚本创建的元素一一对应） ===== */
+#bootEl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:40;background:radial-gradient(ellipse at 50% 30%,#12303C 0%,#0B1B22 55%,#060E13 100%)}
+#charEl{position:absolute;inset:0;z-index:38}
+#hudEl{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(8,19,24,.94),rgba(8,19,24,.72));padding:6px 10px;border-bottom:2px solid rgba(176,138,79,.6);z-index:18}
+#hudEl .hL{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#hudEl .hR{display:flex;align-items:center;gap:6px}
+#dockEl{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:8px;background:linear-gradient(0deg,rgba(8,19,24,.94),rgba(8,19,24,.6));padding:7px 8px;border-top:2px solid rgba(176,138,79,.55);flex-wrap:wrap;z-index:18}
+#cityCardEl{position:absolute;right:14px;top:58px;width:min(92vw,330px);z-index:20}
+#hintEl{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:15;background:rgba(8,19,24,.85);color:var(--paper3);padding:6px 16px;font-size:14px;letter-spacing:.15em;border:1px solid var(--brass);border-radius:3px;pointer-events:none}
+#dpadEl{position:absolute;left:12px;bottom:86px;z-index:15;display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:4px}
+#dpadEl button{background:rgba(8,19,24,.8);border:1px solid var(--seaL);color:var(--paper3);font-size:20px;border-radius:4px;cursor:pointer}
+.toast{position:absolute;top:64px;left:50%;transform:translateX(-50%);background:rgba(8,19,24,.92);color:var(--paper3);padding:8px 20px;border:1px solid var(--gold);border-radius:3px;font-size:14px;letter-spacing:.1em;z-index:50;animation:toastIn .25s}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+<style id="hanber-soviet-skin">
+/* === HanBer 统一皮肤 · 后苏联忧郁美学 (Post-Soviet Melancholy) === */
+html,body{
+  background-color:#15181e !important;
+  background-image:
+    radial-gradient(ellipse at 50% -5%, rgba(201,168,106,.10), transparent 55%),
+    linear-gradient(165deg,#11141a 0%,#1a1f28 48%,#231d15 100%) !important;
+  color:#d6cdb8 !important;
+}
+#hanber-vignette{position:fixed;inset:0;z-index:99998;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(0,0,0,.55) 100%);}
+</style>
+<div id="hanber-vignette"></div>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="ui"></div>
+<div id="errBox"></div>
+<script>
+/* ============================================================
+   HanBer SEVEN · 核心工具与全局容器
+   1900 甲午逆转世界 · 雾海纪元
+   ============================================================ */
+(function(){
+  var eb = document.getElementById('errBox');
+    window.addEventListener('error', function(e){
+    var m = String(e.message||e.error||'未知错误');
+    eb.style.display = 'block';
+    eb.textContent = '运行错误: ' + m;
+    console.error(m, e.error);
+  });
+})();
+
+var VER = 'SEVEN v1.0.0';
+var $ = function(id){ return document.getElementById(id); };
+function qs(sel, root){ return (root||document).querySelector(sel); }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function rand(a,b){ return a + Math.random()*(b-a); }
+function rndi(a,b){ return Math.floor(rand(a,b+1)); }
+function chance(p){ return Math.random() < p; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function moneys(v){
+  v = Math.round(v);
+  if(v<0) return '欠' + (-v) + '两';
+  return v + '两';
+}
+function fmtDay(d){
+  var dt = new Date(1900, 3, 1);
+  dt.setDate(dt.getDate() + (d-1));
+  var y = dt.getFullYear();
+  var gz = (y-4)%10, zz = (y-4)%12;
+  var GAN = '甲乙丙丁戊己庚辛壬癸', ZHI = '子丑寅卯辰巳午未申酉戌亥';
+  var mon = dt.getMonth()+1, day = dt.getDate();
+  return GAN[gz] + ZHI[zz] + '年 ' + mon + '月' + day + '日';
+}
+function fmtDateLong(d){
+  return fmtDay(d) + ' · 第' + d + '日';
+}
+function log(){ if(window.console) console.log.apply(console, arguments); }
+
+/* ---- 全局数据容器（后续脚本填充） ---- */
+var D = {
+  locations: {},      // id -> {..}
+  locOrder: [],       // 显示顺序
+  routes: [],         // [ [a,b], ... ]
+  npcs: {},           // id -> {..}
+  npcOrder: [],
+  items: {},          // 物品
+  enemies: {},        // 敌人
+  goods: {},          // 贸易货物
+  jobs: {},           // 职业
+  events: [],         // 随机事件
+  achievements: [],   // 成就
+  buildings: {}       // 建筑原型(设施种类)
+};
+var STORY = [];       // 主线章节（story 脚本填充）
+
+/* ---- 配置 ---- */
+var CFG = {
+  startMoney: 20,
+  startDay: 1,
+  capStam: 100, capHunger: 100, capHealth: 100,
+  capacity: 30,               // 初始负重
+  saveKey: 'hanber7_save_',
+  saveMetaKey: 'hanber7_meta'
+};
+
+</script>
+<script>
+/* ============================================================
+   DATA Ⅰ · 世界地图 / 城市 / 路线 / 货物 / 建筑
+   ============================================================ */
+
+/* ---- 建筑设施原型 ---- */
+D.buildings = {
+  market:  {nm:'市集', ic:'市', ds:'买卖货物，打听行情'},
+  wharf:   {nm:'码头', ic:'港', ds:'船票、行商、海上生计'},
+  inn:     {nm:'客栈', ic:'宿', ds:'食宿歇脚，恢复体力'},
+  tavern:  {nm:'酒馆', ic:'酒', ds:'流言与雇佣，鱼龙混杂'},
+  gov:     {nm:'衙门', ic:'衙', ds:'差役、诉讼、功名'},
+  school:  {nm:'学馆', ic:'学', ds:'读书明理，习西学'},
+  church:  {nm:'教堂', ic:'堂', ds:'洋人往来，施药济贫'},
+  pawn:    {nm:'当铺', ic:'当', ds:'典卖物件，周转银钱'},
+  casino:  {nm:'赌坊', ic:'博', ds:'小赌怡情，愿者上钩'},
+  teahouse:{nm:'茶馆', ic:'茶', ds:'闲话天下，手谈一局'},
+  gym:     {nm:'武馆', ic:'武', ds:'练武强身，较技搏彩'},
+  post:    {nm:'驿站', ic:'驿', ds:'陆路车马，邮递差事'},
+  barracks:{nm:'兵营', ic:'兵', ds:'投军吃粮，购置军械'},
+  shrine:  {nm:'庙宇', ic:'庙', ds:'上香祈福，听老故事'},
+  guild:   {nm:'会馆', ic:'会', ds:'商帮集会，货运买卖'},
+  hospital:{nm:'医馆', ic:'医', ds:'诊病抓药，保平安'},
+  palace:  {nm:'官署', ic:'署', ds:'权贵所在，慎入慎言'}
+};
+
+/* ---- 货物 ---- */
+D.goods = {
+  grain:{nm:'米粮', base:4, wt:3, ds:'民以食为天'},
+  salt: {nm:'食盐', base:3, wt:2, ds:'官盐与私盐'},
+  tea:  {nm:'茶叶', base:12, wt:1, ds:'东方树叶，西洋之瘾'},
+  silk: {nm:'丝绸', base:22, wt:1, ds:'苏杭织造，价重千金'},
+  porcelain:{nm:'瓷器', base:18, wt:2, ds:'薄如纸，白如玉'},
+  iron: {nm:'铁器', base:8, wt:3, ds:'洋铁与土铁之争'},
+  herb: {nm:'药材', base:9, wt:1, ds:'人参鹿茸，南洋奇草'},
+  cotton:{nm:'棉布', base:6, wt:2, ds:'洋布冲垮土布'},
+  coal: {nm:'煤炭', base:5, wt:4, ds:'工业的血液'},
+  tung: {nm:'桐油', base:10, wt:2, ds:'船底防蚀，军需品'},
+  spice:{nm:'香料', base:14, wt:1, ds:'南洋胡椒，波斯藏红花'},
+  fur:  {nm:'皮毛', base:16, wt:1, ds:'西伯利亚的寒衣'},
+  lacquer:{nm:'漆器', base:13, wt:2, ds:'东瀛手艺，舶来珍玩'}
+};
+
+/* ---- 城市 ---- */
+function LOC(id,nm,x,y,type,reg,ds,fac,tr,dg){
+  return {id:id,nm:nm,x:x,y:y,type:type,reg:reg,ds:ds,fac:fac.split(','),tr:tr||{},dg:dg||0,
+    visited:false, descKnown:false};
+}
+var locDefs = [
+LOC('london','伦敦',8,12,'异邦','欧陆','雾都伦敦，世界金融的心脏，也是汉柏档案最初落地的城市。','wharf,market,guild,church,school,pawn,inn,tavern,barracks,gov',{tea:1.5,silk:1.5,porcelain:1.45,spice:1.35,iron:.98,coal:.92},0),
+LOC('paris','巴黎',10,16,'异邦','欧陆','时尚与革命之都，美术学院的画架支到了开罗。','market,guild,school,church,inn,tavern,casino,pawn',{silk:1.5,porcelain:1.5,lacquer:1.5,spice:1.3},0),
+LOC('berlin','柏林',14,13,'异邦','欧陆','新帝国的心脏，容克军官们正盯着远东的地图。','gov,barracks,market,school,church,inn,tavern,gym',{iron:.95,coal:.9,tea:1.4,silk:1.4},0),
+LOC('stpetersburg','圣彼得堡',17,8,'异邦','俄国','俄皇的新都，涅瓦河上的宫殿与雪。','palace,gov,market,church,inn,tavern,school,gym,pawn',{fur:.88,silk:1.4,tea:1.45,porcelain:1.3,coal:1.15},1),
+LOC('constantinople','君士坦丁堡',23,18,'异邦','中东','横跨两洲的老帝国之都，博斯普鲁斯的海风。','palace,market,church,inn,teahouse,pawn,post',{spice:1.2,silk:1.35,iron:1.1},1),
+LOC('cairo','开罗',23,30,'异邦','北非','尼罗河畔的千年之城，英国人在这里修起了运河与兵营。','market,church,inn,teahouse,pawn,post',{spice:1.15,cotton:1.05,porcelain:1.35},1),
+LOC('irkutsk','伊尔库茨克',40,12,'异邦','西伯利亚','贝加尔湖畔的流放之城，也是铁路东段的大站。','post,market,tavern,inn,church',{fur:.85,grain:1.2},1),
+LOC('karakoram','喀什噶尔',43,26,'边城','西域','天山脚下的绿洲，驼队进出中亚的门户。','post,market,inn,teahouse',{fur:1.1,herb:1.1,cotton:1.2,tea:1.3},2),
+LOC('vladivostok','海参崴',58,12,'军港','远东俄境','俄国的远东前哨，港内泊着太平洋舰队。','wharf,barracks,market,tavern,inn,gov',{fur:.92,grain:1.15,salt:1.1},2),
+LOC('kulun','库伦',47,20,'边城','蒙古','草原上的喇嘛城，商队与马队的交汇点。','post,market,tavern,inn,shrine',{fur:.9,grain:1.1,salt:1.15},1),
+LOC('lhasa','拉萨',48,30,'边城','西藏','高原圣城，佛光与雪线之间。','shrine,gov,market,inn,teahouse,hospital',{herb:.92,fur:.95,tea:1.35,salt:1.25},2),
+LOC('beijing','京师',52,21,'都会','直隶','大清的心脏，新政的谕旨从这里发出，守旧的阴影也在这里徘徊。','gov,teahouse,gym,school,shrine,market,inn,post,barracks',{grain:.95,salt:1.1,porcelain:1.15,coal:.9},0),
+LOC('tianjin','天津',54,22,'商埠','直隶','九国租界与新式军械局并立，京畿的咽喉。','wharf,market,gov,tavern,church,school,pawn,inn,barracks,guild',{iron:.9,cotton:.95,salt:1.05},0),
+LOC('shenyang','奉天',55,17,'省城','满洲','盛京故都，关外八旗与移民的天下。','gov,market,post,tavern,gym,inn,school',{fur:.9,grain:.92,iron:.9},0),
+LOC('lvshun','旅顺',56,19,'军港','直隶','北洋舰队的母港，炮台正对着黄海。','wharf,barracks,market,gym,inn,shrine',{coal:.88,iron:.9},1),
+LOC('weihai','威海卫',57,22,'军港','山东','甲午大胜之地，海神庙的香火连着那座改变历史的雾。','wharf,market,tavern,shrine,gym,inn,barracks,hospital',{grain:1.05,herb:.95},0),
+LOC('nanjing','南京',55,26,'省城','两江','金陵王气，贡院的笔墨和织造的机杼。','gov,market,school,teahouse,pawn,inn,shrine,post',{silk:1.15,porcelain:1.1,grain:.95},0),
+LOC('shanghai','上海',58,27,'都会','两江','远东第一大埠，租界灯火彻夜不熄，什么秘密都能在这里买到。','wharf,market,guild,tavern,church,casino,school,pawn,inn,hospital,barracks',{silk:1.25,cotton:.88,tea:.95,porcelain:1.1,tung:.9},0),
+LOC('hankou','汉口',52,28,'商埠','湖广','九省通衢，茶市和码头一样忙碌。','wharf,guild,market,teahouse,tavern,inn,hospital,pawn',{tea:.88,herb:.9,grain:.95,iron:.92},0),
+LOC('fuzhou','福州',59,30,'省城','福建','船政学堂的故地，马尾港的风。','wharf,school,market,inn,teahouse,pawn',{lacquer:.9,tea:.92},0),
+LOC('guangzhou','广州',54,34,'商埠','两广','十三行的余晖，万商云集。','wharf,guild,market,pawn,church,inn,tavern,hospital,gym',{tea:.86,silk:.9,spice:.9,porcelain:.95},0),
+LOC('hongkong','香港',56,34,'租界','两广','英国人的东方直布罗陀，自由港，什么都敢卖。','wharf,market,guild,church,pawn,inn,casino,tavern',{grain:.98,salt:.97,tea:.97,spice:.97,coal:.9},0),
+LOC('taipei','台北',62,29,'省城','台湾','台湾抚署所在，茶园与樟脑的气味。','gov,market,teahouse,inn,shrine,post,hospital',{tea:.88,herb:.92,grain:1.05},1),
+LOC('tainan','台南',63,32,'商埠','台湾','府城老街，鹿耳门的潮声。','wharf,market,tavern,inn,shrine',{grain:1.1,spice:1.2},1),
+LOC('pyongyang','平壤',60,18,'藩属','朝鲜','大同江畔的古城，清军大捷后驻有观风使。','gov,market,post,inn,tavern,school',{grain:.92,herb:.95},1),
+LOC('seoul','汉城',61,20,'藩都','朝鲜','李氏王朝的王都，亲清与开化两派暗流汹涌。','palace,gov,market,teahouse,inn,post,hospital,tavern',{grain:.95,lacquer:.95,herb:.93},1),
+LOC('busan','釜山',63,21,'港口','朝鲜','朝鲜半岛南端的大港，对日通商的口岸。','wharf,market,tavern,inn,shrine,pawn',{salt:1.05,grain:1.05,lacquer:.95},1),
+LOC('nagasaki','长崎',65,24,'异邦','日本','江户时代唯一的通商口岸，战后成为新北洋的泊地之一。','wharf,market,teahouse,inn,shrine,school,pawn',{lacquer:.88,porcelain:1.2,tea:1.25},1),
+LOC('osaka','大阪',68,22,'异邦','日本','商人之都，米市与铁厂的喧嚣。','market,gym,tavern,inn,pawn,school,guild',{iron:.95,cotton:1.15,porcelain:1.15},1),
+LOC('yokohama','横滨',69,23,'异邦','日本','开港的埠头，洋人商馆林立。','wharf,market,guild,church,inn,pawn,tavern',{silk:1.3,tea:1.3,lacquer:.9,iron:1.1},1),
+LOC('tokyo','东京',70,22,'异邦','日本','天皇所在的维新之都，战败的痛楚与复仇的暗流同在。','palace,gov,market,teahouse,school,inn,tavern,shrine',{porcelain:1.3,silk:1.25,herb:1.2},1),
+LOC('hanoi','河内',51,37,'异邦','越南','法国人的印度支那首府，红河三角洲的湿热。','gov,market,wharf,church,inn,teahouse',{spice:.88,herb:.92,tea:.95},1),
+LOC('singapore','新加坡',44,46,'异邦','南洋','马六甲咽喉，英属海峡殖民地，华人半壁江山。','wharf,guild,market,church,inn,tavern,pawn',{spice:.85,tea:.95,silk:1.2,coal:.95},1),
+LOC('manila','马尼拉',63,40,'异邦','南洋','西班牙旧都，如今飘扬着星条旗。','wharf,gov,church,market,inn,tavern',{spice:.9,grain:1.1,silk:1.25},2),
+LOC('bangkok','曼谷',47,40,'异邦','暹罗','湄南河上的佛国之都，唯一没被殖民的王国。','palace,wharf,market,church,inn,teahouse,guild',{spice:.88,tung:.85,grain:1.05},1),
+LOC('rangoon','仰光',43,41,'异邦','缅甸','英属缅甸的大港，大金塔下柚木滚滚。','wharf,market,church,inn,tavern',{herb:.9,tea:.95,tung:.9},1),
+LOC('calcutta','加尔各答',37,34,'异邦','印度','英属印度的首都，恒河口的人潮。','wharf,gov,market,church,inn,pawn,school',{tea:1.1,cotton:.9,spice:.95,iron:.95},1),
+LOC('mumbai','孟买',32,38,'异邦','印度','西海岸的棉纺之都。','wharf,market,church,inn,tavern,guild',{cotton:.9,spice:.95,iron:.92},1)
+];
+locDefs.forEach(function(l){ D.locations[l.id]=l; D.locOrder.push(l.id); });
+
+/* ---- 路线（双向） ---- */
+var ROUTE_DEF = [
+['london','paris'],['london','berlin'],['berlin','paris'],['berlin','stpetersburg'],
+['berlin','constantinople'],['paris','cairo'],['london','cairo'],
+['constantinople','cairo'],['cairo','mumbai'],
+['stpetersburg','irkutsk'],['irkutsk','karakoram'],['irkutsk','vladivostok'],['irkutsk','kulun'],
+['karakoram','kulun'],['karakoram','lhasa'],['lhasa','hanoi'],
+['kulun','beijing'],['beijing','shenyang'],['beijing','tianjin'],['beijing','nanjing'],
+['shenyang','tianjin'],['shenyang','pyongyang'],
+['tianjin','weihai'],['weihai','lvshun'],['weihai','shanghai'],
+['lvshun','vladivostok'],['vladivostok','busan'],
+['nanjing','shanghai'],['nanjing','hankou'],['hankou','guangzhou'],
+['guangzhou','hongkong'],['guangzhou','hanoi'],
+['hongkong','shanghai'],['hongkong','singapore'],['hongkong','manila'],['hongkong','tainan'],
+['shanghai','fuzhou'],['shanghai','nagasaki'],['shanghai','busan'],
+['fuzhou','taipei'],['taipei','tainan'],
+['pyongyang','seoul'],['seoul','busan'],['seoul','shenyang'],
+['nagasaki','busan'],['nagasaki','osaka'],['nagasaki','yokohama'],
+['yokohama','tokyo'],['osaka','tokyo'],['osaka','shanghai'],['yokohama','manila'],
+['hanoi','bangkok'],['hanoi','singapore'],
+['bangkok','rangoon'],['bangkok','singapore'],['rangoon','calcutta'],['rangoon','singapore'],
+['calcutta','mumbai'],['calcutta','singapore']
+];
+ROUTE_DEF.forEach(function(r){ D.routes.push([r[0],r[1]]); });
+
+/* 邻接表（供寻路） */
+D.adj = {};
+D.routes.forEach(function(r){
+  (D.adj[r[0]] = D.adj[r[0]] || []).push(r[1]);
+  (D.adj[r[1]] = D.adj[r[1]] || []).push(r[0]);
+});
+/* ============================================================
+   DATA Ⅱ · NPC / 物品 / 敌人 / 随机事件 / 职业 / 成就
+   ============================================================ */
+
+/* ---- NPC ---- */
+function NPC(id,nm,g,age,role,city,ds,col,opts){
+  opts = opts||{};
+  D.npcs[id] = {id:id,nm:nm,g:g,age:age,role:role,city:city,ds:ds,col:col,
+    fav:opts.fav||10, likes:opts.likes||[], rom:!!opts.rom, comp:opts.comp||null,
+    talk:opts.talk||['……（此人只是远远地看了你一眼。）']};
+  D.npcOrder.push(id);
+}
+var T = {
+  laoqi:'老头子我在这片海边上守了六年的雾。',
+  ye:'你要是真想查这雾，就别信任何人的话——包括我的。',
+  tie:'老子在定远舰上挨过一炮，如今这腿就是那年换的。',
+  xiao:'哥，码头工头又克扣我工钱了！',
+  ying:'我讨厌战争。可他们说我生来就是战争的女儿。',
+  liang:'生意就是生意，可有些生意，做不得。',
+  jin:'开化不是抛弃祖宗，是让朝鲜自己站起来。',
+  andr:'远东的棋局，俄国从不缺席。',
+  brow:'神爱世人，也爱上海。就是不爱租界的房租。',
+  bawan:'山里的规矩，比官府的律条管用。',
+  ayi:'这味药认生，人也一样。',
+  liu:'漕帮的船，走的是天下的水路。',
+  yam:'武士道不是用来杀人的借口。',
+  wen:'新政要流血，不是流京城的血，是流新政自己的血。',
+  agui:'搬一天货，挣一天粮，天经地义。',
+  liu3:'客官里边请，天桥的闲话，一壶茶管够。',
+  zhou:'练武先练桩，桩稳了，心才稳。',
+  qian:'死当活当，都是当。客官想好了没有？',
+  dao:'赌桌之上无父子，银钱往来见真章。',
+  yan:'报馆的墨，比炮台的铁更能改变人心。',
+  mari:'孩子，教堂的门永远开着。',
+  liudafu:'我的船不载军火，不载人命官司。',
+  chen:'天地君亲师，礼义廉耻，一字不可废。',
+  xu:'买办买办，买的办的都是洋人的脸色。',
+  petr:'中国的茶，配上俄国的雪，绝配。',
+  sato:'战后生意不好做，可日子总要过。',
+  shun:'阿爸说，汉城的天，迟早要变。',
+  awang:'南洋的风，吹得人忘了家。',
+  hans:'我的笔，只为真相而写。',
+  kuai:'话说那大东沟上，一场大雾遮了天……',
+  banx:'你印堂发黑，必有一劫；十两纹银，可解一厄。',
+  ming:'海神娘娘看着这片海，看着每一个打鱼的人。',
+  lina:'山上的茶，一年只采两茬，人活一世，也讲究个时机。',
+  ba:'我的马，比朝廷的驿站跑得快。',
+  niko:'沙皇陛下的双头鹰，一只看着西边，一只看着东边。',
+  schm:'德意志的钢铁，配上清国的码头，妙极了。',
+  wil:'女王陛下的旗帜，在远东也飘扬。',
+  luo:'主的福音，沿着红河传下去。',
+  su:'我偏不信女子无才便是德。',
+  xiang:'台上唱的是别人的悲欢，台下过的是自己的日子。',
+  chen2:'会党的刀子，只为没活路的人出鞘。',
+  hei:'洋老爷的货船，压弯了咱的脊梁。',
+  mari2:'伏特加暖身，可暖不了思乡的心。',
+  ahua:'渔汛来了又走，海永远在那里。',
+  jin2:'釜山的鱼市，什么鱼都有，就是没有秘密。'
+};
+NPC('laoqi','沈七爷','男',68,'守雾人 / 甲午老兵','weihai','威海卫海神庙的老香火，甲午那年在大东沟亲眼见过那场雾。六年前收养了你，如今留书出走。',['ink','ink2','paper'],{fav:30,talk:[T.laoqi,'这枚令牌是上头托我传的。你来了，我就能走了。','记住，雾里的东西，别替它取名字。']});
+NPC('yezhiqiu','叶知秋','女',24,'《海国新报》记者','tianjin','天津报馆唯一敢写海雾真相的女记者，笔名"秋实"。',['paper3','ver','ink'],{fav:15,rom:true,likes:['gift_tea','gift_jewel','gift_fan'],talk:[T.ye,'大东沟的事，我查了三年，越查越不对。','你那枚令牌，能给我看看吗？就一眼。']});
+NPC('tiehan','铁珊','男',52,'退役水手','weihai','甲午老兵，左腿挨过一炮，人称"铁拐李"。',['ink2','ink','brass'],{fav:20,comp:{martial:2,hp:15},likes:['item_wine'],talk:[T.tie,'那年海雾起来的时候，我就在镇远舰上。','日本人以为天助大清，呸，那是有人在海底动了手脚。']});
+NPC('xiaoman','小满','男',14,'码头孤儿','weihai','威海码头长大的野孩子，机灵得像条泥鳅。',['paper','ver','ink'],{fav:20,comp:{hp:8,charm:1},talk:[T.xiao,'七爷走了，咱俩可就是一条船上的了！','哥，我偷听到码头管事说，今晚有艘不打灯的黑船进港。']});
+NPC('tengying','藤原樱','女',19,'留学生 / 兴亚社遗孤','yokohama','父亲是日本海军旧将，母亲是长崎茶商之女。她说自己来"赎罪"。',['seaL','paper3','ver'],{fav:10,rom:true,likes:['gift_tea','gift_sachet'],talk:[T.ying,'他们造出那场雾，不是为赢，是为把仇种进下一代心里。','第七子……我找了你三年。']});
+NPC('liangjinzhi','梁敬之','男',45,'十三行商董','guangzhou','开明买办，主张"商战救国"。',['brass','ink2','paper'],{fav:15,likes:['item_tea'],talk:[T.liang,'没有枪炮的仗，我用算盘打。','海上来的消息，我这儿最全。']});
+NPC('jinheese','金赫西','男',27,'开化派青年','seoul','汉城开化派骨干，留学过横滨，主张朝鲜自强。',['paper3','jade','ink'],{fav:10,comp:{intel:2},likes:['item_book'],talk:[T.jin,'亲清的旧派说我们是叛徒，亲日的浪人说我们是清廷走狗。我们只是想让朝鲜活着。']});
+NPC('andrei','安德烈','男',33,'俄国驻华武官','stpetersburg','会说七国语言的外交官，眼睛像西伯利亚的冰。',['ink3','seaL','paper'],{fav:8,comp:{intel:1},talk:[T.andr,'贵国赢了那场战争，很好。这样远东才有棋可下。']});
+NPC('brown','布朗','男',41,'美国传教士','shanghai','上海虹口的牧师，兼着好几家洋行的"顾问"。',['paper','brass','ink'],{fav:12,likes:['item_bible'],talk:[T.brow,'上帝给每个民族都发了船票，有人划得快，有人还在造桨。']});
+NPC('bawan','巴万','男',29,'高山族猎手','taipei','阿里山下的猎手，能听出山风里的枪声。',['ink','jade','paper'],{fav:8,comp:{martial:2,hp:10},talk:[T.bawan,'山上的树不会说谎，说谎的是山下的官。']});
+NPC('ayi','阿依','女',33,'游方药婆','hankou','背着药篓走遍南方的苗家女子，认得三百种草。',['jade','paper','ink'],{fav:12,rom:true,comp:{health:2},likes:['item_herb'],talk:[T.ayi,'我这篓里的药，能医身体，医不了人心。']});
+NPC('laoliu','老刘','男',55,'漕帮舵主','hankou','长江上下三千里，漕帮的船没有过不去的坎。',['ink2','ver','paper'],{fav:15,likes:['item_wine'],talk:[T.liu,'水路就是血管，朝廷是心，咱帮会是血。']});
+NPC('yamada','山田次郎','男',26,'浪人','osaka','战败后流落大阪的浪人，腰间插着父辈的刀。',['ink','paper3','ver'],{fav:5,comp:{martial:3},talk:[T.yam,'我父亲说，输赢是天命；我母亲说，别让仇恨吃了你。']});
+NPC('wenguo','温国桢','男',57,'军机大臣','beijing','新政派重臣，暗中主持"海雾真相"的调查。',['ink','brass','paper'],{fav:20,comp:{rep:1},talk:[T.wen,'这世界没有神迹，只有还没查清的机关。']});
+NPC('agui','阿贵','男',38,'码头管事','weihai','威海码头说一不二的人物，工钱克扣三成。',['ink','paper','brass'],{fav:5,talk:[T.agui,'想上工？手脚麻利点，工钱好说。']});
+NPC('liu3','柳三娘','女',42,'茶博士','beijing','天桥茶馆老板娘，消息比京报灵通。',['paper3','ver','ink'],{fav:10,likes:['gift_tea'],talk:[T.liu3,'客官坐，这壶龙井，就着闲话喝。']});
+NPC('zhou','周铁臂','男',48,'武馆教头','beijing','八卦掌传人，拳头上能开砖。',['ink2','ink','paper'],{fav:10,likes:['item_wine'],talk:[T.zhou,'拜师先交束脩，练坏了腿不赔。']});
+NPC('qian','老钱','男',60,'当铺朝奉','shanghai','沪上老当铺的朝奉，眼睛毒得很。',['ink','brass','paper'],{fav:8,talk:[T.qian,'死当活当，客官想好了？']});
+NPC('dao','刀疤张','男',39,'赌坊老板','shanghai','脸上两道刀疤，手里的骰子从不空转。',['ver','ink','paper'],{fav:5,talk:[T.dao,'来了就是客，赢了带走，输了认栽。']});
+NPC('yan','严世骏','男',36,'报馆主笔','tianjin','《海国新报》主笔，甲午那年还是京师小吏。',['ink','paper3','brass'],{fav:10,likes:['gift_tea'],talk:[T.yan,'报馆的墨，比炮台的铁更能改变人心。']});
+NPC('mari','玛丽嬷嬷','女',55,'教堂嬷嬷','shanghai','虹口教堂的嬷嬷，收养过一院孤儿。',['seaL','paper','ink'],{fav:15,talk:[T.mari,'孩子，教堂的门永远开着。']});
+NPC('liudafu','刘大副','男',45,'船主','guangzhou','跑南洋的老把式，船规极严。',['ink2','seaL','paper'],{fav:12,comp:{hp:10},talk:[T.liudafu,'我的船不载军火，不载人命官司。']});
+NPC('chen','陈老夫子','男',65,'塾师','nanjing','金陵老学究，笃信"师夷长技以制夷"。',['ink','paper','brass'],{fav:10,likes:['item_book'],talk:[T.chen,'读书人，读的不是书，是天理人心。']});
+NPC('xu','许文栋','男',35,'洋行买办','hongkong','港英怡和洋行的华人大班，精于算计。',['brass','ink','paper'],{fav:8,likes:['item_tea'],talk:[T.xu,'洋人出钱，我们出脑子，这买卖公平。']});
+NPC('petr','彼得洛夫','男',40,'俄国茶商','hankou','在汉口开茶栈的俄国人，胡子像茶砖一样浓。',['paper','ink3','brass'],{fav:10,likes:['item_wine'],talk:[T.petr,'中国的茶，配上俄国的雪，绝配。']});
+NPC('sato','佐藤','男',34,'杂货商','nagasaki','长崎杂货铺老板，战前是清国商人学徒。',['paper3','ink','jade'],{fav:10,talk:[T.sato,'战后生意不好做，可日子总要过。']});
+NPC('shun','顺姬','女',20,'茶寮姑娘','seoul','汉城贞洞茶寮的姑娘，会说三国话。',['paper3','ver','ink'],{fav:12,rom:true,likes:['gift_sachet','gift_jewel'],talk:[T.shun,'阿爸说，汉城的天，迟早要变。']});
+NPC('awang','阿旺','男',32,'南洋水手','singapore','跑遍了南洋诸港的潮州水手。',['ink','seaL','paper'],{fav:10,talk:[T.awang,'南洋的风，吹得人忘了家。']});
+NPC('hans','汉斯·穆勒','男',30,'战地记者','yokohama','柏林来的自由记者，为多家欧陆报纸撰稿。',['paper','ink3','brass'],{fav:10,talk:[T.hans,'我的笔，只为真相而写。']});
+NPC('kuai','快嘴王','男',50,'说书人','beijing','天桥说书的老把式，一部《海雾传》说了六年。',['ver','paper','ink'],{fav:12,talk:[T.kuai,'话说那大东沟上，一场大雾遮了天……']});
+NPC('banx','半仙刘','男',63,'算命先生','guangzhou','自称铁口神算，实则消息灵通。',['brass','ink','paper'],{fav:8,talk:[T.banx,'十两纹银，可解一厄。']});
+NPC('ming','明净师太','女',58,'海神庙祭司','weihai','守着海神庙三十年的师太，见过太多雾。',['seaL','paper','ink'],{fav:15,talk:[T.ming,'海神娘娘看着这片海。那年的雾，是她闭的眼。']});
+NPC('lina','林阿土','男',36,'茶农','taipei','台北文山包种茶农，茶园被德国商人看上了。',['jade','ink','paper'],{fav:10,talk:[T.lina,'山上的茶，一年只采两茬。']});
+NPC('ba','巴图尔','男',31,'马商','kulun','蒙古马贩，一年跑三趟库伦到京师。',['ink2','brass','paper'],{fav:10,talk:[T.ba,'我的马，比朝廷的驿站跑得快。']});
+NPC('niko','尼古拉','男',37,'俄军军官','vladivostok','海参崴要塞的炮兵上尉，醉心于铁路。',['ink3','paper','brass'],{fav:8,talk:[T.niko,'沙皇陛下的双头鹰，一只看着西边，一只看着东边。']});
+NPC('schm','施密特','男',39,'德国工程师','tianjin','天津军械局的洋工程师，图纸从不离手。',['paper','brass','ink'],{fav:8,likes:['item_wine'],talk:[T.schm,'德意志的钢铁，配上清国的码头，妙极了。']});
+NPC('wil','威尔逊','男',44,'英国领事','hongkong','港英政府的政务司长，彬彬有礼的殖民者。',['paper3','ink','brass'],{fav:8,talk:[T.wil,'女王陛下的旗帜，在远东也飘扬。']});
+NPC('luo','罗贝尔神父','男',50,'传教士','hanoi','法国传教士，在红河三角洲传教二十年。',['seaL','paper','ink'],{fav:10,talk:[T.luo,'主的福音，沿着红河传下去。']});
+NPC('su','苏婉儿','女',18,'女校学生','shanghai','中西女塾的高材生，梦想办一份女子报。',['paper3','jade','ink'],{fav:12,rom:true,likes:['gift_fan','gift_sachet','item_book'],talk:[T.su,'我偏不信女子无才便是德。']});
+NPC('xiang','香菱','女',22,'京剧名伶','beijing','梨园行的台柱子，唱青衣。',['ver','paper3','ink'],{fav:10,rom:true,likes:['gift_jewel','gift_sachet'],talk:[T.xiang,'台上唱的是别人的悲欢，台下过的是自己的日子。']});
+NPC('chen2','陈小刀','男',28,'会党弟兄','nanjing','哥老会的小头目，讲义气。',['ink','ver','paper'],{fav:10,talk:[T.chen2,'会党的刀子，只为没活路的人出鞘。']});
+NPC('hei','黑皮','男',30,'码头苦力','calcutta','加尔各答码头扛包的孟加拉汉子，会两句中文。',['ink2','ink','paper'],{fav:10,talk:[T.hei,'洋老爷的货船，压弯了咱的脊梁。']});
+NPC('mari2','玛丽娜','女',26,'酒馆歌女','stpetersburg','涅瓦河畔酒馆的歌女，据说祖上是流放贵族。',['paper3','seaL','ink'],{fav:10,rom:true,likes:['gift_jewel','item_wine'],talk:[T.mari2,'伏特加暖身，可暖不了思乡的心。']});
+NPC('ahua','阿花','女',19,'渔家女','tainan','鹿耳门外的渔家女，晒得黑黑的，笑得亮亮的。',['paper3','jade','ink'],{fav:12,rom:true,likes:['gift_sachet'],talk:[T.ahua,'渔汛来了又走，海永远在那里。']});
+NPC('jin2','金老大','男',50,'渔夫','busan','釜山渔市的老人，认得每一艘过路的船。',['ink2','seaL','paper'],{fav:10,talk:[T.jin2,'釜山的鱼市，什么鱼都有，就是没有秘密。']});
+/* 动态剧情NPC（随剧情出现在场景中） */
+NPC('wuzhong','雾中人','男',null,'来历不明','dynamic','裹着黑斗篷的来客，说话时雾会变浓。',['ink','fog','paper'],{fav:0,talk:['雾要散了。你要抓紧。','记住，七不是数字，是门。']});
+
+/* ---- 物品 ---- */
+function ITEM(id,nm,kind,price,wt,st,ds){ D.items[id]={id:id,nm:nm,kind:kind,price:price,wt:wt,st:st||{},ds:ds}; }
+ITEM('food_mantou','馒头','food',0.2,0.3,{hunger:15},'热腾腾的白面馒头');
+ITEM('food_bing','烧饼','food',0.3,0.3,{hunger:18},'芝麻烧饼，管饱');
+ITEM('food_fan','米饭','food',0.5,0.5,{hunger:25},'一海碗热米饭配咸菜');
+ITEM('food_gan','干粮','food',0.8,0.8,{hunger:30},'行军干粮，耐存放');
+ITEM('food_rou','肉脯','food',1.5,0.5,{hunger:35},'腌制的猪肉脯');
+ITEM('food_haixian','海鲜饭','food',2,1,{hunger:45},'码头风味的海鲜烩饭');
+ITEM('med_cao','草药','med',1,0.4,{health:15},'路边采的止血草药');
+ITEM('med_jin','金疮药','med',2,0.4,{health:30},'军中金疮药，止血生肌');
+ITEM('med_xing','行军散','med',5,0.5,{health:60},'百年老方，吊命续气');
+ITEM('med_renshen','老山参','med',12,0.5,{health:100},'关东老山参，大补元气');
+ITEM('weap_chai','柴刀','weapon',2,2,{atk:2},'农家的柴刀，聊胜于无');
+ITEM('weap_yucha','鱼叉','weapon',3,3,{atk:3},'渔家的三股叉');
+ITEM('weap_qiang','红缨枪','weapon',8,4,{atk:5},'制式红缨枪，枪出如龙');
+ITEM('weap_miao','苗刀','weapon',12,3,{atk:6},'苗家腰刀，刀身微弯');
+ITEM('weap_bian','铁鞭','weapon',18,5,{atk:7},'铁鞭沉重，破甲之用');
+ITEM('weap_dao','武士刀','weapon',25,3,{atk:8},'东瀛刀匠的手艺');
+ITEM('weap_qixing','七星剑','weapon',1,3,{atk:10},'剑身刻七星，剑鞘缠旧帆。汉柏令的开鞘之刃。');
+ITEM('armor_buyi','布衣','armor',2,1,{def:2},'粗布短打');
+ITEM('armor_pi','皮甲','armor',6,3,{def:4},'牛皮背心');
+ITEM('armor_teng','藤甲','armor',12,4,{def:6},'南方藤甲，轻而韧');
+ITEM('armor_tie','铁甲','armor',24,8,{def:8},'新式铁甲，沉重结实');
+ITEM('armor_neiyi','海军呢大衣','armor',15,3,{def:5},'北洋海军呢大衣，领子上绣着锚');
+ITEM('gift_tea','雅瓷茶具','gift',8,2,{},'一套景德镇茶具');
+ITEM('gift_jewel','珍珠首饰','gift',15,0.5,{},'南洋珍珠串成的手链');
+ITEM('gift_wine','绍兴花雕','gift',5,2,{},'一坛十年的绍兴花雕');
+ITEM('gift_yanzhi','胭脂','gift',3,0.3,{},'苏式胭脂，桃红一点');
+ITEM('gift_sachet','香囊','gift',2,0.2,{},'绣着并蒂莲的香囊');
+ITEM('gift_fan','折扇','gift',4,0.3,{},'画着烟雨江南的折扇');
+ITEM('tool_lantern','灯笼','tool',1,0.5,{},'走夜路用');
+ITEM('tool_luopan','罗盘','tool',8,1,{},'航海罗盘，减少迷路风险');
+ITEM('tool_wangyuan','望远镜','tool',12,1,{},'洋造单筒望远镜');
+ITEM('tool_ditu','环宇地图册','tool',20,1,{},'印着全世界的海图册，打开它，陌生的口岸也有了名字');
+ITEM('tool_bingfa','练兵纪要','tool',10,1,{intel:1},'温国桢手抄的练兵纪要');
+ITEM('story_ling','汉柏令·柒','story',0,0.5,{},'乌木令牌，正面刻"柒"，背面刻着海波纹');
+ITEM('story_tu','七曜残图','story',0,0.2,{},'绘着七道星光与一片海雾的残图');
+ITEM('story_xin','密信','story',0,0.1,{},'一封蜡封的密信，署名是雾');
+
+/* ---- 敌人 ---- */
+function EN(id,nm,hp,atk,def,spd,g0,g1,ds,drop){ D.enemies[id]={id:id,nm:nm,hp:hp,atk:atk,def:def,spd:spd,gold:[g0,g1],ds:ds,drop:drop||[]}; }
+EN('biliu','地痞无赖',15,4,0,8,1,3,'街头欺软怕硬的角色。');
+EN('quan','疯犬',12,6,0,12,0,1,'一条红了眼的野狗。');
+EN('tufei','土匪',30,8,1,9,5,12,'占山为王的悍匪。');
+EN('jie','劫路强人',25,7,1,10,4,10,'打劫行旅的强人。');
+EN('wo','倭寇浪人',40,11,2,12,8,20,'不认输的日本浪人，刀上带着旧怨。');
+EN('huidang','会党打手',35,9,1,10,6,14,'帮会豢养的打手。');
+EN('yangbing','洋兵痞',45,12,3,11,10,25,'喝醉了的洋水兵，撒野有一套。');
+EN('gesake','俄国哥萨克',50,13,3,13,12,30,'马背上的哥萨克，腰里别着马刀。');
+EN('cike','兴亚社刺客',55,15,4,15,15,35,'一身黑衣，袖里藏着忍镖。');
+EN('haizei','海贼',40,12,2,12,10,26,'在航线上劫掠的海盗。');
+EN('yebing','逃兵',28,8,1,9,5,12,'从营里逃出来的兵痞。');
+EN('ye','野兽',35,14,1,14,8,8,'山里的猛兽，饿疯了。');
+EN('wuying','雾影',120,18,5,10,30,60,'雾里走出来的影子，不像人，也不像兽。');
+
+/* ---- 随机事件（自由模式核心） ---- */
+D.events = [
+{nm:'雨夜盘查',w:'t',txt:'大雨倾盆，前面路口突然亮起灯笼，一队清兵拦路盘查。',opts:[
+  {t:'老老实实受查（耗些银钱）',fx:function(s){s.money-=2;return'你赔了笑脸，塞了两两银子，兵爷挥挥手放行。';}},
+  {t:'塞钱疏通',fx:function(s){if(s.money<3)return'你掏遍口袋也没凑够钱，兵爷骂骂咧咧放你走了。';s.money-=3;return'三两银子递过去，兵头子眯眼一笑，放行。';}},
+  {t:'趁乱绕道（耗体力）',fx:function(s){s.stamina-=8;if(chance(.2))return'你绕了半天，摔进田沟里，狼狈逃过。';return'你摸黑绕过关卡，多走了几里路。';}}
+]},
+{nm:'行商搭伴',w:'t',txt:'一位老行商愿意与你同行一段，路上有个照应。',opts:[
+  {t:'同行（得些路程见闻）',fx:function(s){s.rep+=2;return'老行商讲了一路各地行情，你长了不少见识。声望+2';}},
+  {t:'婉拒',fx:function(){return'你摇摇头，独自赶路。';}}
+]},
+{nm:'路遇乞儿',w:'t',txt:'道旁蹲着个乞儿，冻得直哆嗦。',opts:[
+  {t:'给一个馒头',fx:function(s){if(!s.items.food_mantou)return'你翻了翻包袱，没有吃食。';delete s.items.food_mantou;if(chance(.6)){s.fav_bonus=0;return'孩子接过馒头，塞给你一枚磨得发亮的铜钱——上头刻着奇怪的雾纹。获得【雾纹铜钱】。';}return'孩子狼吞虎咽吃完，朝你磕了个头。';}},
+  {t:'视而不见',fx:function(){return'你紧了紧领口，继续赶路。';}}
+]},
+{nm:'茶馆奇谈',w:'c',txt:'茶客们正议论一件怪事：有人说海上又见了雾，形状像一扇门。',opts:[
+  {t:'细听（花一文茶钱）',fx:function(s){s.rep+=3;return'你添了一壶茶，把话听完。传闻+3（说书人有了新段子）。';}},
+  {t:'不感兴趣',fx:function(){return'你喝完茶，起身离开。';}}
+]},
+{nm:'当铺奇遇',w:'c',txt:'当铺柜台上压着一面铜镜，朝奉说死当，识货的可以带走。',opts:[
+  {t:'花5两买下',fx:function(s){if(s.money<5)return'钱不够。';s.money-=5;s.items.tool_luopan=s.items.tool_luopan||1;return'铜镜背面刻着航海罗盘纹样，你感觉它指的方向不太对。获得【罗盘】。';}},
+  {t:'不买',fx:function(){return'朝奉嘿嘿一笑，把铜镜收回了柜台。';}}
+]},
+{nm:'巡街征兵',w:'c',txt:'衙门门口贴着征兵告示：新政扩练新军，饷银从优。',opts:[
+  {t:'应募（武艺+2，声望+5）',fx:function(s){s.martial+=2;s.rep+=5;return'你报了名，练了三天兵，武艺+2，声望+5。';}},
+  {t:'绕开',fx:function(){return'你贴着墙根走了，征兵的不为难你。';}}
+]},
+{nm:'义学募捐',w:'c',txt:'街头有人募捐办义学，穷孩子读书不要钱。',opts:[
+  {t:'捐2两',fx:function(s){if(s.money<2)return'你囊中羞涩，惭愧地走了。';s.money-=2;s.rep+=8;return'你捐了二两。账房先生记了你的名字，街上的人对你拱手。声望+8';}},
+  {t:'不捐',fx:function(){return'你摇摇头走开。';}}
+]},
+{nm:'米价异动',w:'c',txt:'今日米价突然上涨，粮店门口排起长队，有人说是洋人囤米。',opts:[
+  {t:'趁机买米（囤积）',fx:function(s){if(s.money<4)return'钱不够。';s.money-=4;s.items.food_gan=(s.items.food_gan||0)+2;return'你买了二斤干粮囤着，以防不测。';}},
+  {t:'观望',fx:function(){return'你看着喧闹的粮市，总觉得要出大事。';}}
+]},
+{nm:'夜宿野庙',w:'s',txt:'荒郊野庙，破钟半悬，地上有未熄的篝火。',opts:[
+  {t:'在此安歇',fx:function(s){s.stamina=Math.min(100,s.stamina+35);if(chance(.15)){s.health-=10;return'半夜有东西在梁上走动，你惊醒后着了凉。体力+35，健康-10';}return'你睡了个囫囵觉，体力+35。';}},
+  {t:'换个地方',fx:function(){return'你总觉得这庙邪性，连夜走了。';}}
+]},
+{nm:'流民过境',w:'c',txt:'一队流民从北边来，说关外遭了旱灾，路上都是逃荒的。',opts:[
+  {t:'分些干粮',fx:function(s){if(!s.items.food_gan)return'你没有多余的干粮。';s.items.food_gan--;s.rep+=10;return'你把干粮分给带孩子的妇人。她的眼神让你心里发酸。声望+10';}},
+  {t:'赶路',fx:function(){return'你加快脚步，不敢回头看。';}}
+]},
+{nm:'洋人拍照',w:'c',txt:'一个洋人举着黑匣子对准你，咔嚓一声，说要登在报纸上。',opts:[
+  {t:'欣然配合',fx:function(s){s.rep+=4;return'你挺了挺胸。洋人记者朝你竖大拇指。声望+4';}},
+  {t:'摆手拒绝',fx:function(){return'你摆摆手，那洋人耸耸肩走了。';}}
+]},
+{nm:'猎户指路',w:'t',txt:'山中遇一猎户，说前头有山崩，指点你抄小路。',opts:[
+  {t:'走小路',fx:function(s){s.stamina-=5;if(chance(.3)){s.health-=8;return'小路塌方，你崴了脚。健康-8';}return'抄近路省了半日脚程。';}},
+  {t:'走大路',fx:function(){return'你谢过猎户，仍走大路，果然绕远了些。';}}
+]},
+{nm:'奇货可居',w:'c',txt:'码头上卸下一批南洋香料，货主急用钱，贱价出售。',opts:[
+  {t:'购入香料（10两）',fx:function(s){if(s.money<10)return'钱不够。';s.money-=10;s.cargo.spice=(s.cargo.spice||0)+2;return'你买下两箱香料，压在包袱里。';}},
+  {t:'看看热闹',fx:function(){return'你看着别人抢购，拍拍空口袋。';}}
+]},
+{nm:'通缉令',w:'c',txt:'城门口贴着通缉令：捉拿兴亚社妖人，赏银二百两。画像上的影子模糊不清。',opts:[
+  {t:'细看画像',fx:function(s){s.flags.see_wanted=1;return'画像糊得厉害，可那人的衣领上，似乎绣着半轮残月。情报+1';}},
+  {t:'不关我事',fx:function(){return'你低头走过，心里却记住了那个衣领。';}}
+]},
+{nm:'龙舟竞渡',w:'c',req:{month:5},txt:'今日端午，江上龙舟竞渡，两岸人山人海。',opts:[
+  {t:'下注看龙舟',fx:function(s){var w=chance(.5);if(w){s.money+=3;return'你押中的龙舟率先冲线，赢了3两！';}s.money-=2;return'你押的龙舟翻了，输了2两。';}},
+  {t:'只看热闹',fx:function(s){s.rep+=2;return'你挤在人群里看了一下午，心情好了不少。声望+2';}}
+]},
+{nm:'中秋灯会',w:'c',req:{month:8},txt:'中秋灯会，满城灯笼，猜谜的摊位前挤满了人。',opts:[
+  {t:'猜灯谜',fx:function(s){if(s.intel>=14){s.money+=2;s.rep+=5;return'你连中三元，赢了一盏走马灯和两串铜钱。声望+5';}return'你绞尽脑汁，猜中一个，得了个彩头。';}},
+  {t:'赏灯',fx:function(s){s.health=Math.min(100,s.health+5);return'灯影摇晃，你忽然觉得，这乱世也有片刻安宁。健康+5';}}
+]},
+{nm:'雪夜迷路',w:'t',req:{month:12},txt:'大雪封路，你在一片白茫茫中辨不清方向。',opts:[
+  {t:'靠罗盘辨向',fx:function(s){if(s.items.tool_luopan)return'罗盘的指针稳稳指北，你安然走出雪原。';s.health-=15;return'没有罗盘，你在风雪里冻了半宿，健康-15';}},
+  {t:'找人家借宿',fx:function(s){s.money-=2;s.stamina+=20;return'你敲开一户农家，付了两两银子借宿一夜。';}}
+]},
+{nm:'海豚引路',w:'t',req:{sea:1},txt:'船行海上，一群海豚绕着船头嬉戏，老水手说这是吉兆。',opts:[
+  {t:'许个愿',fx:function(s){s.health=Math.min(100,s.health+5);s.rep+=2;return'海豚跃出水面，你忽然心里透亮。健康+5';}},
+  {t:'不理会',fx:function(){return'你看着海豚远去，海面恢复平静。';}}
+]},
+{nm:'货舱渗水',w:'t',req:{sea:1},txt:'客船货舱进了水，船主正召集人手排水，答应给辛苦钱。',opts:[
+  {t:'帮忙排水',fx:function(s){s.stamina-=10;s.money+=2;return'你忙了一夜，腰酸背痛，挣了2两。';}},
+  {t:'旁观',fx:function(){return'船主瞪了你一眼。';}}
+]},
+{nm:'马贼劫道',w:'t',req:{risk:1},txt:'尘土飞扬，一队马贼呼啸而来，拦住了去路！',opts:[
+  {t:'迎战',fx:function(s){s.fight='tufei';return'FIGHT';}},
+  {t:'弃财保命',fx:function(s){var lost=Math.min(10,s.money);s.money-=lost;s.health-=8;return'你丢下钱袋抱头鼠窜，损失'+lost+'两，健康-8。';}},
+  {t:'躲进林子里',fx:function(s){s.stamina-=12;if(chance(.4)){s.fight='tufei';return'FIGHT';}return'你钻进树林，马贼呼啸而过，没发现你。';}}
+]},
+{nm:'渔船搭救',w:'t',req:{sea:1},txt:'一艘渔船向你招手，船老大说近海有海贼，愿意捎你一程。',opts:[
+  {t:'搭船（花1两）',fx:function(s){s.money-=1;return'渔船颠簸，但总比涉水强。';}},
+  {t:'婉拒',fx:function(){return'你谢过船家，继续自己的路。';}}
+]},
+{nm:'传教赠书',w:'c',txt:'教堂门口，传教士向路人派发小册子，说是"格物致知"。',opts:[
+  {t:'领一本',fx:function(s){s.intel=Math.min(99,s.intel+1);return'小册子讲的是蒸汽机原理。智力+1';}},
+  {t:'摆手',fx:function(){return'你摆摆手，传教士笑着把册子递给下一个人。';}}
+]},
+{nm:'失物招领',w:'c',txt:'路边有个荷包，鼓鼓囊囊的，像是谁掉的。',opts:[
+  {t:'捡起来',fx:function(s){if(chance(.5)){s.money+=4;return'荷包里竟有4两银子，你赶紧揣好。';}return'荷包里只有一枚铜钱和一张当票，你放了回去。';}},
+  {t:'原地等候',fx:function(s){s.rep+=3;return'你等了一炷香，失主匆匆赶来，千恩万谢。声望+3';}}
+]},
+{nm:'雾中怪声',w:'s',txt:'夜半，雾从海上漫进城里，雾里传来若有若无的笛声。',opts:[
+  {t:'循声去看',fx:function(s){if(s.flags.seen_fog){return'雾里什么都没有，只有一片潮湿。你觉得那笛声像是在引路。';}s.flags.seen_fog=1;return'雾深处，一个戴斗笠的影子一闪而过，留下半句没头没尾的话："柒……在威海。"你浑身发冷。';}},
+  {t:'蒙头大睡',fx:function(){return'你翻了个身，把被子蒙过头顶。';}}
+]},
+{nm:'戏班子开锣',w:'c',txt:'城里来了个戏班子，晚上开锣唱《海雾传》。',opts:[
+  {t:'看戏',fx:function(s){s.money-=0.5;s.rep+=2;return'台上的"海雾将军"正演到雾起那一折，台下喝彩如雷。声望+2';}},
+  {t:'不看',fx:function(){return'戏班的锣鼓声渐渐远了。';}}
+]},
+{nm:'铁匠铺招工',w:'c',txt:'铁匠铺的师傅说人手不够，问你可愿帮忙打铁。',opts:[
+  {t:'帮工一日',fx:function(s){s.stamina-=12;s.money+=2;if(chance(.3)){s.martial+=1;return'你一锤一锤敲到天黑，挣了2两，臂力见长，武艺+1。';}return'挣了2两辛苦钱。';}},
+  {t:'看看就走',fx:function(){return'铁花四溅，你看了一会儿，觉得还是别沾这烫手的营生。';}}
+]},
+{nm:'钦差过境',w:'c',txt:'仪仗开道，一顶绿呢大轿过街，说是钦差巡查新政。',opts:[
+  {t:'远远观望',fx:function(s){s.rep+=3;return'你隔着人墙看见轿帘一角，听说新政又要添新衙门了。声望+3';}},
+  {t:'不凑热闹',fx:function(){return'你转身进了小巷。';}}
+]}
+];
+
+/* ---- 职业 ---- */
+D.jobs = {
+  wharf:[
+    {nm:'码头扛包',pay:0.8,days:1,req:function(s){return s.stamina>=20;},risk:0,run:function(s){s.stamina-=15;if(chance(.2)){s.health-=5;return'活太累，你闪了腰，健康-5。';}return'你扛了一天麻袋，挣了0.8两。';},ds:'出力气的活，规矩是工头说了算'},
+    {nm:'随船水手',pay:1.5,days:2,req:function(s){return s.health>=40;},risk:.25,run:function(s){s.stamina-=20;if(chance(.2)){s.fight='haizei';return'FIGHT';}return'你跟船跑了个短趟，挣了1.5两。';},ds:'吃海上饭，风浪里挣命'}
+  ],
+  gov:[
+    {nm:'衙门跑差',pay:1.2,days:1,req:function(s){return s.rep>=50;},risk:0,run:function(s){s.stamina-=10;if(chance(.15)){s.rep+=3;return'你替老爷跑了一趟腿，赏钱1.2两，声望+3。';}return'你跑前跑后一整天，领了1.2两工钱。';},ds:'给官家办事，看脸色吃饭'},
+    {nm:'缉查队（武）',pay:3,days:2,req:function(s){return s.martial>=20&&s.rep>=200;},risk:.35,run:function(s){s.stamina-=25;if(chance(.3)){s.fight='jie';return'FIGHT';}return'你跟着缉查队抓了个惯偷，领了3两赏银。';},ds:'捕盗缉私，刀口舔血'}
+  ],
+  tavern:[
+    {nm:'镖师走镖',pay:5,days:3,req:function(s){return s.martial>=15;},risk:.4,run:function(s){s.stamina-=30;if(chance(.35)){s.fight='tufei';return'FIGHT';}if(chance(.3)){s.money+=5;s.rep+=5;return'镖车平安到站，东家多赏了5两，声望+5。';}return'一路无事，挣了5两。';},ds:'保人保货，路上结仇'},
+    {nm:'酒馆跑堂',pay:0.6,days:1,req:function(){return true;},risk:0,run:function(s){s.stamina-=8;if(chance(.15)){s.fav_info='rumor';return'你偷听到两个醉汉在谈"紫帆船"，记下了。';}return'端了一天的盘子，挣了0.6两。';},ds:'端盘子，听闲话'}
+  ],
+  school:[
+    {nm:'学堂帮工',pay:0.5,days:1,req:function(){return true;},risk:0,run:function(s){s.stamina-=8;s.intel=Math.min(99,s.intel+1);return'你蹭了一天的课，智力+1，顺带挣了0.5两。';},ds:'干杂活，蹭学问'}
+  ],
+  church:[
+    {nm:'教堂帮工',pay:0.4,days:1,req:function(){return true;},risk:0,run:function(s){s.health=Math.min(100,s.health+5);s.stamina-=6;return'你帮着修了一天屋顶，嬷嬷给了0.4两，还管了一顿饱饭。健康+5';},ds:'做些善事，混口饭吃'}
+  ],
+  post:[
+    {nm:'驿差送信',pay:1,days:1,req:function(){return true;},risk:.1,run:function(s){s.stamina-=14;if(chance(.12)){s.fight='biliu';return'FIGHT';}return'你跑了两县，准时送到，得了1两脚钱。';},ds:'跑断腿的差事'}
+  ],
+  barracks:[
+    {nm:'投军吃粮',pay:2,days:3,req:function(s){return s.martial>=12;},risk:.3,run:function(s){s.stamina-=25;s.martial=Math.min(99,s.martial+1);s.rep+=2;if(chance(.25)){s.fight='yebing';return'FIGHT';}return'你操练三日，武艺+1，饷银2两，声望+2。';},ds:'当兵吃饷，前程看造化'}
+  ],
+  hospital:[
+    {nm:'采药工',pay:1,days:1,req:function(){return true;},risk:.1,run:function(s){s.stamina-=12;if(chance(.3)){s.items.med_cao=(s.items.med_cao||0)+1;return'你采到一味好药，留了一副，卖了1两。';}return'跑了一天山，挣了1两。';},ds:'上山采药，认草认命'}
+  ],
+  guild:[
+    {nm:'押货运单',pay:4,days:2,req:function(s){return s.rep>=100;},risk:.2,run:function(s){s.stamina-=20;if(chance(.2)){s.fight='jie';return'FIGHT';}return'你押着货单跑了个来回，挣了4两。';},ds:'商帮的信差兼保镖'}
+  ]
+};
+
+/* ---- 成就 ---- */
+D.achievements = [
+{id:'first',nm:'第一桶金',ds:'挣到10两银子',cond:function(s){return s.money>=10;}},
+{id:'rich',nm:'小有家资',ds:'身家达到100两',cond:function(s){return s.money>=100;}},
+{id:'rich2',nm:'富甲一方',ds:'身家达到1000两',cond:function(s){return s.money>=1000;}},
+{id:'rep',nm:'崭露头角',ds:'声望达到100',cond:function(s){return s.rep>=100;}},
+{id:'rep2',nm:'名动一方',ds:'声望达到1000',cond:function(s){return s.rep>=1000;}},
+{id:'rep3',nm:'天下知名',ds:'声望达到5000',cond:function(s){return s.rep>=5000;}},
+{id:'martial',nm:'武艺初成',ds:'武艺达到20',cond:function(s){return s.martial>=20;}},
+{id:'martial2',nm:'技击高手',ds:'武艺达到50',cond:function(s){return s.martial>=50;}},
+{id:'intel',nm:'学贯中西',ds:'智力达到30',cond:function(s){return s.intel>=30;}},
+{id:'travel',nm:'行万里路',ds:'到访20座城市',cond:function(s){return s.visitedCount>=20;}},
+{id:'world',nm:'环游世界',ds:'到访30座城市',cond:function(s){return s.visitedCount>=30;}},
+{id:'sail',nm:'老海狗',ds:'在海上航行累计20天',cond:function(s){return s.seaDays>=20;}},
+{id:'fight',nm:'初经阵仗',ds:'赢得1场战斗',cond:function(s){return s.wins>=1;}},
+{id:'fight2',nm:'百战之身',ds:'赢得20场战斗',cond:function(s){return s.wins>=20;}},
+{id:'friend',nm:'广结善缘',ds:'与10位NPC好感超过50',cond:function(s){return Object.keys(s.favors).filter(function(k){return s.favors[k]>=50;}).length>=10;}},
+{id:'love',nm:'佳偶天成',ds:'与心仪之人结为连理',cond:function(s){return !!s.spouse;}},
+{id:'survive',nm:'久经岁月',ds:'存活满365天',cond:function(s){return s.day>=365;}},
+{id:'survive2',nm:'世纪老人',ds:'存活满1000天',cond:function(s){return s.day>=1000;}},
+{id:'merchant',nm:'无商不富',ds:'单笔交易赚到30两',cond:function(s){return s.bestDeal>=30;}},
+{id:'fog',nm:'雾中行者',ds:'与雾中人有过对话',cond:function(s){return !!s.flags.met_fog;}},
+{id:'seven',nm:'第七子',ds:'手持汉柏令·柒',cond:function(s){return !!s.items.story_ling;}},
+{id:'hero',nm:'海雾见证者',ds:'完成主线第12章',cond:function(s){return s.flags.ch12_done;}}
+];
+/* ---- 数据层完 ---- */
+
+
+</script>
+<script>
+/* ---- 剧情数据（见下方剧本块） ---- */
+</script>
+<script>
+/* ============================================================
+   主线剧情 · 卷一（序章 + 第1~6章）
+   引擎约定：beats 里 bX 为节拍；t:auto/enter/talk；fx 效果；
+   fight 战斗；choices 分支；next 后继节拍；章节结束 → 悬念卡
+   ============================================================ */
+
+STORY.push({
+ no:0, title:'序章 · 雾归', sub:'1900年四月朔日 · 威海卫', unlockDay:1, loc:'weihai',
+ intro:['你从辽东回来那天，威海的雾比走时更浓。','码头的浪一声一声拍着石阶，像有人在雾里敲钟。','沈七爷的信压在茶碗底下，墨迹还没干透。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'auto', d:[
+    {n:'小满',t:'哥！你可算回来了！出大事了——七爷他、他走啦！'},
+    {n:'小满',t:'今早我上庙里送香，师太说七爷天不亮就出了海。只留下这个包袱，说是给你的。'},
+    {n:'你',t:'（你接过包袱，很沉。解开，是一封信、一枚乌木令牌，和一截烧焦的旧船板。）'},
+    {n:'小满',t:'令牌上刻着个"柒"字……哥，七爷为啥叫你"第七子"啊？'}
+  ], choices:[
+    {t:'去海神庙找明净师太', goto:'b1'},
+    {t:'先回老屋看看', goto:'b1'}
+  ], fx:{flag:'ch0_meet', favor:{xiaoman:5}}, note:'七爷留书出走，留下一枚刻着"柒"的乌木令牌。' },
+  b1:{ t:'talk', npc:'ming', d:[
+    {n:'明净师太',t:'我就知道是你。六年前七爷抱你来庙里的时候，你才这么点大。'},
+    {n:'明净师太',t:'那老鬼留了话：海雾不是天象。海神庙底下，埋着"汉柏"的字。'},
+    {n:'明净师太',t:'他还说，三日之内，会有一艘紫帆船靠岸。船上的人，是来找你的。'},
+    {n:'你',t:'紫帆船？师太，七爷到底去了哪？'},
+    {n:'明净师太',t:'（她闭目半晌）雾里的事，我不问。你只记住——别替雾取名字。'}
+  ], fx:{items:['story_ling'], rep:5}, next:'b2', note:'明净师太说，七爷留下一句"别替雾取名字"。' },
+  b2:{ t:'auto', d:[
+    {n:'你',t:'（夜里，你展开那封信。纸上只有一行字，墨迹像被水洇过：）'},
+    {n:'信',t:'"海雾不是天象。去海神庙，找明净师太——她欠我一条命。别信紫帆船。——七"'},
+    {n:'你',t:'（信纸背面，画着七道星光。你摸了摸怀里的令牌，它烫得像块烧红的铁。）'}
+  ], fx:{flag:'ch0_done'}, next:'b3' },
+  b3:{ t:'auto', d:[
+    {n:'雾中人',t:'（雾从门缝里漫进来，一个裹着黑斗篷的影子站在门口）第七子，你终于来了。'},
+    {n:'雾中人',t:'雾里的东西在醒。三日内紫帆船到港——船上有人要你的命，也有人要你的令牌。'},
+    {n:'雾中人',t:'记住，七不是数字，是门。门开了，就没法从外面关。'},
+    {n:'你',t:'（话音落下，斗篷像盐一样化进雾里。地上只留下一片湿脚印。）'}
+  ], fx:{flag:'met_fog', rep:5}, next:null, note:'一个自称"雾中人"的黑影出现又消失，留下一句"七不是数字，是门"。' }
+ },
+ suspense:'七爷去了哪里？紫帆船上是什么人？那枚乌木令牌，为什么会烫手？——汉柏令·柒的故事，才刚刚开始。',
+ reward:{rep:5}
+});
+
+STORY.push({
+ no:1, title:'第一章 · 海上来客', sub:'1900年四月初 · 威海卫', unlockDay:15, loc:'weihai',
+ intro:['三日后，一艘船身漆成深紫色的商船，真的靠了岸。','船上下来的和服少女，径直向你走来。','她开口第一句话，让整个码头的风都停了一瞬：','"第七子——我找了你三年。"'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'藤原樱',t:'第七子。我找了你三年。'},
+    {n:'你',t:'（你握紧令牌）姑娘认错人了。我叫{name}，不叫第七子。'},
+    {n:'藤原樱',t:'你撒谎的样子，和你师父一模一样。沈七爷——他没告诉过你，他在日本还有一个名字？'},
+    {n:'倭寇浪人',t:'（人群中炸出一声怒喝）叛徒之女！兴亚社的耻辱！拿命来！'}
+  ], fight:'wo', fx:{favor:{tengying:8}}, next:'b1', note:'紫帆船靠岸，藤原樱道出"第七子"之名，随即遭遇兴亚社刺客伏击。' },
+  b1:{ t:'auto', d:[
+    {n:'藤原樱',t:'（你击退刺客，她面色苍白，却没有逃）他们追了我三年。因为我父亲……是兴亚社当年的大头目。'},
+    {n:'藤原樱',t:'父亲晚年烧掉了所有"兴亚录"，只留给我一句话：那场雾不是天象，是机关。是"汉柏"的机关。'},
+    {n:'藤原樱',t:'兴亚社想复仇，他们在造第二场雾。第七子，只有汉柏令能关掉那东西。'},
+    {n:'叶知秋',t:'（一个挎着相机的女子从人群里钻出来）说得好！我查了三年，终于有人肯认这茬了！'}
+  ], fx:{flag:'ch1_meet_ying', favor:{tengying:10}}, next:'b2', note:'藤原樱：父亲是兴亚社前大头目。兴亚社在造"第二场雾"。' },
+  b2:{ t:'auto', d:[
+    {n:'叶知秋',t:'《海国新报》记者，叶知秋。大东沟的事，我查了三年，越查越不对。'},
+    {n:'叶知秋',t:'这是当年洋人电报局的底档——海战前夜，有人从长崎发了七封电报，收件人是同一个代号：SHVILI。'},
+    {n:'叶知秋',t:'（她压低声音）SHVILI，七曜。第七子，这世上没有巧合。'},
+    {n:'藤原樱',t:'（她看着你怀里的令牌，忽然笑了）原来如此。我们三个，都是被那场雾钓上来的鱼。'}
+  ], fx:{items:['story_tu'], rep:8, favor:{yezhiqiu:12}}, next:'b3', note:'叶知秋给出关键情报：SHVILI（七曜）电报，与七枚令牌有关。' },
+  b3:{ t:'talk', npc:'yezhiqiu', d:[
+    {n:'叶知秋',t:'我把底档给你抄一份。你在明处钓，我在暗处查——咱们分头走。'},
+    {n:'叶知秋',t:'对了，天津军械局最近丢了批新式步枪。丢枪的日子，正好也是长崎发报的日子。'},
+    {n:'叶知秋',t:'你说巧不巧？'}
+  ], fx:{flag:'ch1_done', rep:5}, next:null, note:'线索指向天津：军械局丢枪与长崎电报同一天。' }
+ },
+ suspense:'兴亚社在造"第二场雾"？SHVILI（七曜）是谁在发电报？天津军械局丢的枪，要运去哪里？——下一章，天津暗流。',
+ reward:{rep:8, favor:{yezhiqiu:10}}
+});
+
+STORY.push({
+ no:2, title:'第二章 · 天津暗流', sub:'1900年四月 · 天津', unlockDay:40, loc:'tianjin',
+ intro:['天津的夜，码头比白天更忙。','军械局的暗哨一夜之间全部失联。','叶知秋的信只有八个字：别睡，枪在船上。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'叶知秋',t:'（她把你拉进报馆后巷）查到了。步枪在码头三号仓，今晚装船——紫帆船。'},
+    {n:'叶知秋',t:'押货的不是日本人，是洋行买办许文栋的人。这生意里，有洋人的份。'},
+    {n:'你',t:'（你摸了摸腰间的刀）我去看看。三号仓，是吧。'},
+    {n:'叶知秋',t:'（她忽然抓住你手腕）活着回来。查雾的事，还指望着你。'}
+  ], fx:{favor:{yezhiqiu:10}}, next:'b1', note:'军械局失枪案：步枪将在三号仓装上紫帆船，牵涉洋行买办。' },
+  b1:{ t:'enter', d:[
+    {n:'你',t:'（三号仓的暗处，你看见金丝眼镜一闪——许文栋正和黑衣人交接）'},
+    {n:'许文栋',t:'货到长崎，自然有人接。告诉你们会首，银子一分不少。'},
+    {n:'黑衣人',t:'（冷冰冰的声音）银子？我们兴亚社要的，从来不是银子。是那张图。'},
+    {n:'你',t:'（"那张图"三个字刺进耳朵。你刚要靠近，背后风声骤起——）'}
+  ], fight:'cike', fx:{flag:'ch2_found', rep:6}, next:'b2', note:'三号仓密会：兴亚社要的不是银子，是"那张图"。' },
+  b2:{ t:'auto', d:[
+    {n:'温国桢的密探',t:'（黑暗中一双手把你拖进暗巷）我家大人说，查枪案的人，请走正门。'},
+    {n:'密探',t:'军机处，温国桢温大人。他说，你师父欠他一个解释。'}
+  ], fx:{}, next:'b3' },
+  b3:{ t:'talk', npc:'wenguo', d:[
+    {n:'温国桢',t:'沈七爷的徒弟。坐。'},
+    {n:'温国桢',t:'新政要活，就得有人流血。我查了六年，终于查到一份名单——兴亚社在清国的内线。'},
+    {n:'温国桢',t:'名单上一共有七个名字。前六个都死了。第七个……是你师父，沈七爷。'},
+    {n:'你',t:'（你猛地站起来）七爷是甲午的英雄！他怎么会——'},
+    {n:'温国桢',t:'英雄和叛徒，往往只隔一张纸。这是他让我转交给你的《练兵纪要》——夹层里，有半张七曜图。'},
+    {n:'温国桢',t:'孩子，查清你师父，你就查清了这场雾。'}
+  ], fx:{items:['tool_bingfa'], favor:{wenguo:15}, flag:'ch2_done'}, next:null, note:'温国桢：兴亚社内线名单上第七个名字，竟是沈七爷。他转交《练兵纪要》，内有半张七曜图。' }
+ },
+ suspense:'沈七爷为何在兴亚社的名单上？《练兵纪要》夹层里的半张七曜图，指向哪里？——下一章，汉城秋信。',
+ reward:{rep:10, favor:{wenguo:10}}
+});
+
+STORY.push({
+ no:3, title:'第三章 · 汉城秋信', sub:'1900年四月 · 汉城 / 平壤', unlockDay:70, loc:'seoul',
+ intro:['朝鲜的王都汉城，春天的杏花开得正好。','可开化派的密信，字字带血：','"边境有幽灵兵出没，请朝廷遣使核实。"'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'金赫西',t:'你就是温大人派来的？比我预想的年轻。'},
+    {n:'金赫西',t:'边境的"幽灵兵"——是日本旧部的余孽，打着商队的旗号在收买亲日派。'},
+    {n:'金赫西',t:'我开化派内，有人被他们收买了。给我三天，我把内鬼揪出来。'},
+    {n:'你',t:'（你想起七爷的信）三天太长。兵贵神速，我今夜就动身去义州。'}
+  ], fx:{favor:{jinheese:10}}, next:'b1', note:'汉城：开化派金赫西告知边境有日本旧部余孽，派内出了内鬼。' },
+  b1:{ t:'enter', d:[
+    {n:'向导',t:'（压低声音）大人，前面的山谷有火光。不是猎户的篝火。'},
+    {n:'你',t:'（你拨开树枝——山谷里，几十个黑影正列队搬运木箱。箱角漆着紫帆船的暗记！）'},
+    {n:'倭寇浪人',t:'（一声短啸）什么人！'}
+  ], fight:'wo', fx:{rep:6}, next:'b2', note:'义州山谷：发现兴亚社旧部搬运紫帆暗记木箱，遭遇伏击。' },
+  b2:{ t:'auto', d:[
+    {n:'金赫西',t:'（你在平壤的馆驿醒来，金赫西坐在榻边）你伤得不轻，但值了。那些箱子——不是军火，是铜件。'},
+    {n:'金赫西',t:'精密的、成百上千的铜件。我托釜山的朋友查过，这东西一年前就在往日本运。'},
+    {n:'你',t:'铜件……（你脑中浮现那半张七曜图，图上的机关纹路，正是这种铜件的模样）'}
+  ], fx:{flag:'ch3_cu', intel:1}, next:'b3', note:'幽灵兵运的不是军火，是精密铜件——疑似"雾机"零件。' },
+  b3:{ t:'talk', npc:'jinheese', d:[
+    {n:'金赫西',t:'内鬼抓到了——是王宫里的一个录事。他在兴亚社手里，押着全家老小。'},
+    {n:'金赫西',t:'录事临死前喊了一句话：釜山港，幽灵船。'},
+    {n:'金赫西',t:'这是我从他怀里摸出来的信。蜡封上，印着半个残月。'}
+  ], fx:{items:['story_xin'], favor:{jinheese:12}, flag:'ch3_done'}, next:null, note:'内鬼供出：釜山港有"幽灵船"，留下半枚残月蜡封的密信。' }
+ },
+ suspense:'釜山港的幽灵船里装着什么？残月蜡封是谁的信物？——下一章，长崎之樱。',
+ reward:{rep:8, favor:{jinheese:10}}
+});
+
+STORY.push({
+ no:4, title:'第四章 · 长崎之樱', sub:'1900年五月 · 长崎 / 大阪', unlockDay:100, loc:'nagasaki',
+ intro:['樱说，带我去长崎。','那里有父亲的书房，和兴亚社总坛的旧地址。','海雾里的樱，比任何时候都要决绝。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'藤原樱',t:'（老宅的书房，尘封的书架像一排沉默的墓碑）父亲最后的七年，都在这里写《兴亚录》。'},
+    {n:'藤原樱',t:'（她划着火柴，点燃那叠手稿）他写它，是为了让后人知道：雾是骗局，复仇是毒药。'},
+    {n:'藤原樱',t:'可兴亚社的残党不这么想。他们要的不是真相，是"再赢一次"。'},
+    {n:'你',t:'（火光映着她的侧脸）你父亲……是怎么死的？'},
+    {n:'藤原樱',t:'（她沉默了很久）被人从背后，用他教过的那一招。'}
+  ], fx:{favor:{tengying:15}, flag:'ch4_ash'}, next:'b1', note:'长崎老宅：樱烧毁父亲《兴亚录》，揭示兴亚社真实图谋是"再赢一次"。' },
+  b1:{ t:'enter', d:[
+    {n:'山田次郎',t:'（大阪的桥头，一个浪人拦住了你的去路）你就是那个第七子？'},
+    {n:'山田次郎',t:'有人悬赏你的人头——五十两，兴亚社的价码。'},
+    {n:'山田次郎',t:'（他拔刀，又缓缓插回鞘里）可我不想挣这个钱。我帮你，不是帮你，是帮樱。'}
+  ], fight:'wo', fx:{favor:{yamada:10}}, next:'b2', note:'大阪：浪人山田次郎拦路，言明兴亚社悬赏你的人头，但他选择站在樱这边。' },
+  b2:{ t:'auto', d:[
+    {n:'山田次郎',t:'（战后大阪的夜里，酒馆的灯像碎掉的月亮）我父亲也是海军。他死在雾里。'},
+    {n:'山田次郎',t:'母亲说，输赢是天命；父亲在信里说，那场雾"不对"。我信母亲，也信父亲。'},
+    {n:'你',t:'（你递过一壶酒）那就都别信，信自己看见的。'}
+  ], fx:{flag:'ch4_yamada', favor:{yamada:8}}, next:'b3' },
+  b3:{ t:'talk', npc:'sato', d:[
+    {n:'佐藤',t:'（长崎杂货铺的柜台后，佐藤擦着一只铜碗）你们在查雾的事？我劝你们别查了。'},
+    {n:'佐藤',t:'（他压低声音）每个月，都有个德国工程师来长崎收货——施密特，从天津来。他买的不是杂货，是"精密铜件"。'},
+    {n:'佐藤',t:'货主从不露面，只在码头留下一个记号。你猜是什么？——半枚残月。'}
+  ], fx:{flag:'ch4_done', rep:6}, next:null, note:'佐藤：德国工程师施密特每月从天津来长崎收购"精密铜件"，货主记号是半枚残月。' }
+ },
+ suspense:'施密特与残月记号，指向同一条线。樱烧掉父亲遗物后，却越来越沉默——她真正怕的，是什么？——下一章，海雾再起。',
+ reward:{rep:8, favor:{tengying:10}}
+});
+
+STORY.push({
+ no:5, title:'第五章 · 海雾再起', sub:'1900年五月末 · 威海卫', unlockDay:125, loc:'weihai',
+ intro:['五月末，大东沟海祭。','威海卫的雾，比往年早来了整整一个月。','祭典正午，雾从海上倒灌进港。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'明净师太',t:'（海神庙的钟自己响了三下）来了。它醒了。'},
+    {n:'你',t:'（雾像活的，绕过行人，笔直向你涌来。雾深处，那个声音又响起——）'},
+    {n:'雾中人',t:'它们醒了。七枚令牌，你只有一枚。海祭夜，海底的门会开——想关它，就集齐七曜图。'},
+    {n:'雾中人',t:'你师父去找第七枚了。别问他在哪。问，就是害他。'}
+  ], fx:{flag:'met_fog2', rep:5}, next:'b1', note:'海祭异象：雾中人说"它们醒了"，七枚令牌需集齐七曜图，七爷去找第七枚。' },
+  b1:{ t:'talk', npc:'ming', d:[
+    {n:'明净师太',t:'（她掌灯带你走下海神庙的地道）七爷走前，在这里存了东西。他说，只有持柒令的人能开。'},
+    {n:'明净师太',t:'（石室里，一面碑上刻着字）你自己看吧。'},
+    {n:'碑文',t:'"汉柏立誓，七曜镇海。庚子雾起之日，重开此门。——初代第七子，绝笔"'}
+  ], fx:{flag:'ch5_stela', intel:2}, next:'b2', note:'海神庙地道石碑：初代第七子绝笔，预言"庚子雾起之日，重开此门"。' },
+  b2:{ t:'auto', d:[
+    {n:'你',t:'（雾散后，海面浮起一块焦黑的船板。船板上刻着三个字——）'},
+    {n:'船板',t:'雾机 · 壹'},
+    {n:'小满',t:'（在岸上冲你喊）哥！海神庙的钟又响了！这回是七下！'},
+    {n:'你',t:'七下……（你握紧令牌。七，不是数字，是门。）'}
+  ], fx:{flag:'ch5_done', rep:8}, next:null, note:'海面浮起刻着"雾机·壹"的焦黑船板；海神庙的钟连响七下。' }
+ },
+ suspense:'"雾机·壹"是什么？海底的门后有什么？其余六枚令牌，分别在哪？——下一章，江南米案。',
+ reward:{rep:8, favor:{ming:10}}
+});
+
+STORY.push({
+ no:6, title:'第六章 · 江南米案', sub:'1900年六月 · 上海 / 汉口', unlockDay:150, loc:'shanghai',
+ intro:['上海米价，十日三涨。','洋米倾销的背后，有人在做空江南。','粮行老板们联名递的折子，被压在了案头。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'苏婉儿',t:'（女校门口，她拦住你）你就是知秋姐说的那个查雾的人？'},
+    {n:'苏婉儿',t:'米价的事，我查过了——有人勾结洋行做空米市，逼朝廷签"新约"。签字的日子，就定在月底。'},
+    {n:'布朗牧师',t:'（他不知何时出现在一旁）神爱世人，可华尔街不爱。孩子，这事比你想的大。'}
+  ], fx:{favor:{brown:10, su:8}, flag:'ch6_meet'}, next:'b1', note:'上海：苏婉儿与布朗牧师揭露洋行做空米市、逼签新约的内幕。' },
+  b1:{ t:'enter', d:[
+    {n:'老刘',t:'（汉口码头，漕帮的船靠岸，老刘的烟锅子磕在船舷上）米船在安庆被人截了。'},
+    {n:'老刘',t:'截船的，打着紫帆船的旗。我漕帮的船，走的是朝廷的漕，动我船的，就是动朝廷的脸。'},
+    {n:'老刘',t:'小子，我这有一百条船，借你用。你只管查，查出事来，天塌了帮会顶着。'}
+  ], fx:{favor:{laoliu:15}, flag:'ch6_liu'}, next:'b2', note:'汉口：漕帮老刘查明米船被紫帆船旗号所截，愿借船助查。' },
+  b2:{ t:'enter', d:[
+    {n:'你',t:'（茶栈的暗间，你隔着窗看见彼得洛夫正与黑衣人交接——）'},
+    {n:'彼得洛夫',t:'米市的事办妥，银子就能过账。记住，我们要的不是米，是你们那台"机器"的图纸。'},
+    {n:'黑衣人',t:'（半枚残月的银扣在袖口一闪）机器的事，由我们兴亚社做主。你们俄国人，只要出钱。'},
+    {n:'你',t:'（图纸！那半张七曜图在他们手里还有一份！你刚抬脚，门帘后杀机骤起——）'}
+  ], fight:'cike', fx:{flag:'ch6_russia', rep:8}, next:'b3', note:'茶栈密会：俄国出钱、兴亚社出人，目标是一台"机器"的图纸。' },
+  b3:{ t:'talk', npc:'liangjinzhi', d:[
+    {n:'梁敬之',t:'（广州的商栈，他给你斟了杯茶）你查得太深了。有人已经在广交会上挂了你的号。'},
+    {n:'梁敬之',t:'这是十三行的护身信。拿着它，广交会上没人敢动你。'},
+    {n:'梁敬之',t:'可记住——这封信保你三天。三天之后，是龙是虫，看你自己的本事。'}
+  ], fx:{items:['story_xin'], favor:{liangjinzhi:12}, flag:'ch6_done'}, next:null, note:'梁敬之赠十三行护身信：广交会上有人挂了你的号，三天之约。' }
+ },
+ suspense:'兴亚社的金主名单上，赫然写着俄国人的名字。广交会上的杀局，三天后见分晓。——下一章，台北山雨。',
+ reward:{rep:10, favor:{laoliu:10}}
+});
+/* ============================================================
+   主线剧情 · 卷二（第7~12章 + 结局）
+   ============================================================ */
+
+STORY.push({
+ no:7, title:'第七章 · 台北山雨', sub:'1900年六月 · 台北 / 台南', unlockDay:180, loc:'taipei',
+ intro:['台湾的高山族，突然起了"番变"。','抚署十万火急求援，可山里的枪声，不像土铳。','你受温国桢之托，渡海查案。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'巴万',t:'（山道的雾里，一支箭钉在你脚前半寸）汉人的官，来这里做什么？'},
+    {n:'你',t:'（你取下腰牌）查案。查谁在山里发的枪。'},
+    {n:'巴万',t:'（他放下弓，冷笑）德国人。他们答应给山里"自由"，只要茶山的地契。'},
+    {n:'巴万',t:'我劝过族人，他们不信。你来得正好——跟我上山，让他们看看山外的嘴脸。'}
+  ], fx:{favor:{bawan:15}}, next:'b1', note:'台北：高山族猎手巴万揭示德国人借"自由"之名收购茶山、煽动番变。' },
+  b1:{ t:'auto', d:[
+    {n:'巴万',t:'（山里一夜，你与他并肩击退了冒充"番变"的枪手）你倒是条汉子。'},
+    {n:'巴万',t:'（他拔下一根羽毛递给你）拿着。山里人认这个。以后有事，吹三声。'},
+    {n:'你',t:'（你收下羽毛）巴万，愿意跟我下山查那批枪吗？'},
+    {n:'巴万',t:'（他咧嘴一笑）早等你这句话了。'}
+  ], fx:{comp:'bawan', flag:'ch7_bawan', rep:6}, next:'b2', note:'巴万加入同行，山里认羽毛为信物。' },
+  b2:{ t:'enter', d:[
+    {n:'阿花',t:'（台南渔村的码头，她压低声音）昨晚有艘紫帆船，卸了几十个箱子，藏进鹿耳门的破庙里。'},
+    {n:'你',t:'（深夜，破庙。你撬开木箱——不是军火，是铜件和图纸。图纸一角，画着七道星光！）'},
+    {n:'你',t:'（图纸背面用德文写着：Licht der sieben——七曜之光。）'}
+  ], fight:'haizei', fx:{flag:'ch7_plan', intel:1}, next:'b3', note:'鹿耳门破庙：查获雾机铜件与德文图纸"七曜之光"。' },
+  b3:{ t:'talk', npc:'lina', d:[
+    {n:'林阿土',t:'（茶园里，他捧着一把土）德国人收地契，用的是兴亚社的钱。他们说，地契到手，茶山就是他们的。'},
+    {n:'林阿土',t:'番变的火，是"自由"点的；地契的纸，是银子铺的。两头都是套。'},
+    {n:'林阿土',t:'你把这把土带回抚署。告诉他们：山上的茶，一年只采两茬，人活一世，也讲究个时机。'}
+  ], fx:{favor:{bawan:10}, flag:'ch7_done', rep:8}, next:null, note:'番变真相：德国人以"自由"为名、兴亚社以银钱为饵，两头设套图谋茶山。' }
+ },
+ suspense:'图纸上的"七曜之光"，与七曜图是什么关系？第十三件木箱，据说被运往了北方。——下一章，京都之变。',
+ reward:{rep:10, favor:{bawan:10}}
+});
+
+STORY.push({
+ no:8, title:'第八章 · 京都之变', sub:'1900年七月 · 东京 / 大阪', unlockDay:210, loc:'tokyo',
+ intro:['日本国内，风雨欲来。','主战派的军部，正酝酿一场政变。','兴亚社扶他们上台，条件只有一个：再造一场雾。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'藤原樱',t:'（使馆区的阴影里，她攥着你的衣袖）军部后天动手。他们要的，是"名分"——一场能遮住战败之耻的雾。'},
+    {n:'藤原樱',t:'父亲的信，是唯一的武器。我要在政变前夜，把它登在横滨的报纸上。'},
+    {n:'你',t:'（你按住她的手）那是你父亲的遗信。登出来，你就是兴亚社的叛徒。'},
+    {n:'藤原樱',t:'（她反而笑了）我生来就是"叛徒的女儿"。再多一个名头，又算得了什么。'}
+  ], fx:{favor:{tengying:18}}, next:'b1', note:'东京：军部政变在即，樱决定公开父亲遗信，揭露"雾"是人造骗局。' },
+  b1:{ t:'enter', d:[
+    {n:'山田次郎',t:'（旧城的屋脊上，他倒挂着翻下来）政变前夜，全城戒严。樱要去的报馆，被兴亚社盯死了。'},
+    {n:'山田次郎',t:'我带你们走地下的排水道。丑时，报馆后门见。'},
+    {n:'你',t:'（你看着他腰间的刀）山田，你父亲也是兴亚社的人吧。'},
+    {n:'山田次郎',t:'（他沉默一瞬）所以才更不能让他们，再造一个像我这样的人。'}
+  ], fx:{favor:{yamada:15}, flag:'ch8_yamada'}, next:'b2', note:'山田次郎愿助樱潜入报馆，其父同为兴亚社旧部。' },
+  b2:{ t:'talk', npc:'hans', d:[
+    {n:'汉斯·穆勒',t:'（横滨的报社，他把电报纸推到你面前）柏林来电：天津军械局顾问施密特，失踪十二日。'},
+    {n:'汉斯·穆勒',t:'施密特失踪的前一天，他在长崎码头提走了最后一批"精密铜件"。'},
+    {n:'汉斯·穆勒',t:'我的线人说，那批铜件装船去了——威海。'}
+  ], fx:{flag:'ch8_schmidt', intel:1}, next:'b3', note:'施密特携最后一批铜件失踪，线报称已运往威海。' },
+  b3:{ t:'auto', d:[
+    {n:'报馆主笔',t:'（深夜的油墨味里，主笔盯着樱手里的信）姑娘，这版发出去，你就是日本国的逆贼。'},
+    {n:'藤原樱',t:'（她把信按在排版台上）国家的逆贼，还是真相的功臣——让历史去评吧。'},
+    {n:'黑衣刺客',t:'（油墨的气味里，杀气先一步到了！）'}
+  ], fight:'cike', fx:{flag:'ch8_done', favor:{tengying:12}}, next:null, note:'政变前夜，樱冒死公开父亲遗信；兴亚社刺客来袭，你死战护她。' }
+ },
+ suspense:'樱的信，拦得住军部的政变吗？施密特带着铜件去了威海——他想干什么？——下一章，关外风雪。',
+ reward:{rep:12, favor:{tengying:12}}
+});
+
+STORY.push({
+ no:9, title:'第九章 · 关外风雪', sub:'1900年八月 · 奉天 / 海参崴', unlockDay:240, loc:'shenyang',
+ intro:['入秋的关外，风已经带了刀子。','俄国人中东铁路东段开工，铁轨一寸一寸碾过边境。','安德烈在奉天的馆驿，摆了一桌酒。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'安德烈',t:'（他给你斟了一杯伏特加）贵国赢了日本，很好。可赢不了铁路。'},
+    {n:'安德烈',t:'沙皇陛下的意思很明白：远东的秩序，该由俄国来写。'},
+    {n:'安德烈',t:'（他话锋一转，目光像冰锥）你手里那枚令牌——复制品，我可以出高价。'},
+    {n:'你',t:'（你推回酒杯）汉柏令不卖。铁路的事，朝廷自有主张。'},
+    {n:'安德烈',t:'（他笑了，笑里没有温度）那我们就看看，谁的铁更硬。'}
+  ], fx:{favor:{andrei:-5}}, next:'b1', note:'奉天：安德烈当面开出"买令牌复制品"的价码，被你拒绝。' },
+  b1:{ t:'enter', d:[
+    {n:'哥萨克',t:'（馆驿外，马蹄声碎）清国小子，我家上尉请你"试剑"。'}
+  ], fight:'gesake', fx:{rep:8}, next:'b2', note:'馆驿外，哥萨克"试剑"拦路。' },
+  b2:{ t:'auto', d:[
+    {n:'尼古拉',t:'（海参崴炮台，他倚着炮管，醉眼望着海）我的炮台，对准的不只是海。'},
+    {n:'尼古拉',t:'（他忽然压低声音）铁路修到哪，炮台就修到哪。这是俄国的规矩。'},
+    {n:'尼古拉',t:'我劝你一句：别在铁轨上站太久。火车可不会给你让路。'}
+  ], fx:{flag:'ch9_niko', rep:4}, next:'b3', note:'海参崴：尼古拉醉语点破俄国的扩张逻辑。' },
+  b3:{ t:'enter', d:[
+    {n:'你',t:'（伊尔库茨克的铁路工地，你混在流民里救下一批被强征的华工）'},
+    {n:'安德烈',t:'（他不知何时站在雪地里，静静看着你）这就是棋子的命。你救得了一时，救不了一世。'},
+    {n:'你',t:'（你从华工怀里摸到一份皱巴巴的纸——密约！纸角上，一个港口的名字被重重画了个圈：）旅顺。'},
+    {n:'你',t:'（密约落款：俄国远东总督府。日期，竟是一个月前。）'}
+  ], fight:'gesake', fx:{flag:'ch9_done', items:['story_xin'], rep:10}, next:null, note:'抢获密约：俄国远东总督府一个月前已密议划取旅顺。' }
+ },
+ suspense:'密约上的旅顺，是兴亚社和俄国人共同割让的棋子？还是另有更深的交易？——下一章，紫阙之影。',
+ reward:{rep:10}
+});
+
+STORY.push({
+ no:10, title:'第十章 · 紫阙之影', sub:'1900年九月 · 京师', unlockDay:265, loc:'beijing',
+ intro:['京师入秋，新政与守旧两派的角力到了摊牌时刻。','温国桢深夜传信：有人要在太庙动手。','你持柒令，走入了紫禁城的阴影。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'温国桢',t:'（太庙偏殿，灯影昏黄）新政要成，就必须过太庙这一关。守旧派今夜要在祭典上发难。'},
+    {n:'温国桢',t:'令牌给我。密道在神位之后——七爷说，那里有"汉柏"的第一页。'},
+    {n:'你',t:'（令牌按进机关槽，神位无声滑开。石阶通向地底，壁上刻着密密麻麻的字。）'}
+  ], fx:{flag:'ch10_temple', favor:{wenguo:10}}, next:'b1', note:'太庙密道开启，温国桢称其中有"汉柏的第一页"。' },
+  b1:{ t:'auto', d:[
+    {n:'石室铭文',t:'"光绪廿一年三月，大东沟。败局已定之时，吾等以机关改海相，雾锁日舰三时辰。是为汉柏之始。"'},
+    {n:'石室铭文',t:'"吾等来自更远的时代。甲午一战，本不该赢，也不该输——你们的世界，需要另一条路。"'},
+    {n:'你',t:'（更远的时代……你终于明白那艘紫帆船、那台"雾机"、还有七爷信里那句"海雾不是天象"）'},
+    {n:'温国桢',t:'（在你身后，他的声音很轻）汉柏计划第一阶段，是止战。第二阶段——是重开世界之门。'}
+  ], fx:{flag:'ch10_secret', intel:3}, next:'b2', note:'石室铭文揭示"汉柏"来自更远的时代，以机关改写甲午战局；计划分两阶段。' },
+  b2:{ t:'auto', d:[
+    {n:'守旧派甲',t:'（密道出口，刀光先于质问）妖人！私闯太庙，还拿着妖物令牌！拿下！'},
+    {n:'雾中人',t:'（雾凭空涌起，刀光在雾里失了方向）走！时间不多了——'},
+    {n:'雾中人',t:'七曜图在威海。七枚令牌，樱手里有一枚，你师父带着最后一枚。去集齐它！'}
+  ], fight:'cike', fx:{flag:'met_fog3', rep:8}, next:null, note:'太庙被守旧派围堵，雾中人现身引路，指明七曜图与最后令牌所在。' }
+ },
+ suspense:'"重开世界之门"是什么？守旧派为何对令牌如此忌惮？——下一章，海祭之夜。',
+ reward:{rep:10, favor:{wenguo:10}}
+});
+
+STORY.push({
+ no:11, title:'第十一章 · 海祭之夜', sub:'1900年十月 · 威海卫', unlockDay:295, loc:'weihai',
+ intro:['深秋的威海卫，海祭如期而至。','可这一夜，紫帆舰队与德国炮舰，一起出现在了海平线上。','雾，从四面八方涌起——像六年前一样。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'enter', d:[
+    {n:'传令兵',t:'（炮台瞭望哨，声音发颤）大人！紫帆舰队！至少十一艘，还有两艘挂德旗的铁甲舰！'},
+    {n:'铁珊',t:'（他把酒壶往地上一摔）六年前老子在这片海上输过一次，今天得赢回来！'},
+    {n:'铁珊',t:'小子，跟我上刘公岛炮台！这仗，咱们替七爷打！'}
+  ], fx:{favor:{tiehan:15}, comp:'tiehan'}, next:'b1', note:'海祭之夜，紫帆舰队与德舰来袭，铁珊随你登炮台助战。' },
+  b1:{ t:'enter', d:[
+    {n:'铁珊',t:'（炮火里，他吼着）那年雾起的时候，我就站在镇远舰上！那不是天象——是海底的"镇海龙枢"！'},
+    {n:'铁珊',t:'龙枢认令不认人！你手里的柒令，是钥匙也是闸！可开，也可关！'},
+    {n:'你',t:'（你望着海心那片浓到化不开的雾）龙枢……就在那下面？'},
+    {n:'铁珊',t:'（他咧嘴，缺了半颗牙）老子上辈子欠你的。走！我驾小艇送你进雾！'}
+  ], fx:{flag:'ch11_longshen', rep:6}, next:'b2', note:'铁珊揭示"镇海龙枢"认令不认人，愿驾小艇送主角入雾。' },
+  b2:{ t:'enter', d:[
+    {n:'雾中人',t:'（小艇驶进雾里，雾中一个巨大、沉默的影子缓缓转动）它醒了。六年来，第一次有人握着柒令走近它。'},
+    {n:'镇海龙枢',t:'（海底深处，齿轮的轰鸣像远古的呼吸。雾影从浪里爬出来——）'}
+  ], fight:'wuying', fx:{flag:'ch11_boss', rep:15}, next:'b3', note:'雾中巨影"镇海龙枢"现身，雾影为护卫而战。' },
+  b3:{ t:'auto', d:[
+    {n:'你',t:'（柒令按进龙枢的槽口，巨大的齿轮缓缓停转。雾分开——露出一个尘封的舱室）'},
+    {n:'舱室',t:'（七曜图的全图，静静躺在铜案上。图上最后两枚令牌的位置，标着：一枚在樱手里，一枚……在"雾纹铜钱"里。）'},
+    {n:'铁珊',t:'（他瞪大眼睛）雾纹铜钱？那不是威海码头那个小乞儿——当年七爷给每个孩子都发过一枚！'}
+  ], fx:{flag:'ch11_done', items:['story_tu'], rep:10}, next:null, note:'龙枢舱室现七曜图全图：最后一枚令牌藏在一枚"雾纹铜钱"里。' }
+ },
+ suspense:'雾纹铜钱——七爷六年前撒遍威海码头的铜钱里，藏着最后一枚汉柏令？——下一章，长夜将尽。',
+ reward:{rep:15}
+});
+
+STORY.push({
+ no:12, title:'第十二章 · 长夜将尽', sub:'1900年十一月 · 威海卫', unlockDay:330, loc:'weihai',
+ intro:['六枚令牌已在手中。第七枚，藏在一枚撒遍码头的铜钱里。','而七爷，终于回来了。','带着他守了六年的秘密，和一身的伤。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'auto', d:[
+    {n:'沈七爷',t:'（他倚在门框上，笑得像偷了鸡的老狐狸）小七，令牌凑齐了吧？'},
+    {n:'沈七爷',t:'（他从怀里摸出一枚磨得发亮的铜钱）第七枚，我六年前就给你了。你小时候饿哭了，我拿它给你换过馒头。'},
+    {n:'沈七爷',t:'（他把铜钱按进你掌心）汉柏令·柒，从来就不是一块令牌。是你。是每个接过这枚钱的孩子。'},
+    {n:'你',t:'（铜钱在掌心发烫。雾，忽然停了。）'}
+  ], fx:{flag:'ch12_coin', favor:{laoqi:30}, rep:10}, next:'b1', note:'七爷归来：第七枚汉柏令，就是那枚雾纹铜钱——它一直是你的。' },
+  b1:{ t:'enter', d:[
+    {n:'传令兵',t:'（旗舰的桅顶，声音穿过风浪）紫帆舰队满帆！德国铁甲舰压上来了！'},
+    {n:'沈七爷',t:'（他按住你拔刀的手）小七，这一仗不是刀剑能赢的。去龙枢舱——把七枚令牌，放进七曜图的槽里。'},
+    {n:'沈七爷',t:'然后，选你自己的路。'}
+  ], fight:'cike', fx:{rep:12}, next:'b2', note:'决战前夜，七爷嘱托：集齐七枚令牌入七曜图，然后"选你自己的路"。' },
+  b2:{ t:'auto', d:[
+    {n:'你',t:'（龙枢舱里，七枚令牌依次归位。七曜图亮起，像七颗星星沉进海里。）'},
+    {n:'沈七爷',t:'（舱门外，他最后一次望着你）雾要散了。孩子，记住——'},
+    {n:'沈七爷',t:'"别替雾取名字。"'},
+    {n:'你',t:'（雾在七曜图的光芒里，第一次，顺从地让开了一条路。抉择的时刻到了——）'}
+  ], choices:[
+    {t:'铁血之路——以舰炮镇海，让敌舰有来无回', goto:'endA'},
+    {t:'维新之路——把"雾机"真相公诸于世，以法止战', goto:'endB'},
+    {t:'迷雾之路——启动龙枢封锁海峡，关上"门"', goto:'endC'}
+  ], fx:{flag:'ch12_done'} }
+ },
+ suspense:'',
+ reward:{rep:30, flag:'ch12_done'}
+});
+STORY.push({
+ no:13, title:'终章 · 后日谈', sub:'1901年1月 · 华盛顿', unlockDay:365, loc:'london',
+ intro:['汉柏的档案，还在写着。','1901年1月，华盛顿。','地下室的打字机声，没有停。'],
+ start:'b0',
+ beats:{
+  b0:{ t:'auto', d:[
+    {n:'档案员',t:'（打字机的咔嗒声里，他翻到一份新归档的文件，封面上印着一行字——）'},
+    {n:'档案',t:'《汉柏计划 · 第二阶段》——启封条件：七曜图集齐，或，第七子做出选择。'},
+    {n:'档案员',t:'（他抬起头，望向窗外。雾，正从波托马克河上慢慢升起。）'}
+  ], fx:{flag:'ch13_done', rep:20}, next:null }
+ },
+ suspense:'第二阶段，即将开始。HanBer SEVEN，未完待续。',
+ reward:{rep:10}
+});
+/* ---- 全剧终 ---- */
+
+
+</script>
+<script>
+/* ============================================================
+   ENGINE · 状态 / 存档 / 世界地图 / 场景 / 对话 / 剧情 / 战斗
+   ============================================================ */
+var LOGIC_W = 960, LOGIC_H = 600;
+var S = null;   /* 当前游戏状态 */
+var cv = $('cv'), ctx = cv.getContext('2d');
+var dpr = Math.max(1, window.devicePixelRatio||1);
+function fitCanvas(){
+  cv.width = LOGIC_W*dpr; cv.height = LOGIC_H*dpr;
+  cv.style.width = '100vw'; cv.style.height = '100vh';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
+
+/* ---- 结局文案 ---- */
+var ENDINGS = {
+ A:{nm:'结局 · 铁血之路', sub:'威海卫决战 · 1900年冬', txt:'威海卫一战，新北洋歼敌十一舰。自此远东之海，唯清国铁舰可巡。\n庆功宴上你喝下那碗酒，想起七爷的话：别替雾取名字。\n1901年，军中推你为"镇海将军"。\n可只有你知道——龙枢的门还开着，而那台机器，从未停下。'},
+ B:{nm:'结局 · 维新之路', sub:'万国会议厅 · 1900年冬', txt:'你带着证据走进万国会议厅，当众拆穿"海雾神迹"。\n列强震动，签下《海雾公约》：禁止机关介入战争。\n你被称为"拆雾之人"。三年后，新政推行至各省。\n夜半无人时，你望着海，总觉得那雾，还会回来。'},
+ C:{nm:'结局 · 迷雾之路', sub:'镇海龙枢 · 1900年冬', txt:'龙枢轰鸣，海峡被雾锁死。\n外面的船进不来，里面的船出不去。\n有人说你是疯子的钥匙，有人说你是守门的鬼。\n你在海神庙添了一炷香，香灰落进海里。\n第七枚令牌躺在供桌上，等下一个第七子。'},
+ f_rich:{nm:'自由结局 · 富甲一方', sub:'乱世里的算盘声', txt:'你数着账本上的零，忽然想起那年码头的风。\n商路、银号、船队，你用一场甲午的余温，烧出了自己的天下。\n坊间都说，你比洋行的大班还精。\n只有你知道，夜深时你总摸一摸怀里那枚乌木令牌——\n那是你从雾里带出来的，唯一一样东西。'},
+ f_general:{nm:'自由结局 · 一代名将', sub:'海疆的刀', txt:'从白身到提督，你把名字刻进了新北洋的将册。\n练兵、巡海、平乱，你把自己活成了这个世界的另一道岸线。\n庆功的酒喝了无数碗，你始终记得七爷那句：\n别替雾取名字。你把这句话，教给了每一个新兵。'},
+ f_old:{nm:'自由结局 · 寿终正寝', sub:'百年之后', txt:'你活了很久，久到甲午的旗子进了博物馆。\n子孙绕膝，海风如旧。\n临终前你握着那枚磨亮的铜钱，笑了笑——\n这一生，你谁也没告诉：那个雾里的世界，是真的。'},
+ f_hidden:{nm:'自由结局 · 隐于市井', sub:'寻常百姓', txt:'你终于明白，乱世里最奢侈的，是做一个普通人。\n一间屋，一亩田，一壶茶，一个说得上话的人。\n偶尔路过码头，你还会听见水手唱《海雾传》。\n你低头笑笑，继续走你的路。\n雾里的事，就让它留在雾里吧。'},
+ f_death:{nm:'结局 · 客死他乡', sub:'风灯一盏', txt:'你倒在了乱世的路上。\n没人知道你叫什么，也没人知道那枚令牌的故事。\n只有海神庙的师太，替你点了一盏灯。\n灯下压着一句话：别替雾取名字。\n——可你的名字，总该有人记得。'}
+};
+
+/* ---- 玩家背景 ---- */
+var BACKGROUNDS = {
+ b1:{nm:'北洋遗孤',ds:'甲午战后由沈七爷养大的孤儿。武艺+4，体力强健。',fx:{martial:4,health:10,stamina:10},loc:'weihai'},
+ b2:{nm:'商贾之子',ds:'江南商人之子，见过银票也见过刀。金钱+30两，魅力+2。',fx:{money:30,charm:2},loc:'shanghai'},
+ b3:{nm:'农家子弟',ds:'地里的庄稼汉出身，一身好筋骨。体力+15，健康+10。',fx:{stamina:15,health:10},loc:'weihai'},
+ b4:{nm:'朝鲜流亡者',ds:'平壤逃出来的书生，见惯战火。智力+2，声望+50，熟稔藩属。',fx:{intel:2,rep:50},loc:'seoul'},
+ b5:{nm:'归国留学生',ds:'从横滨学堂回国的少年。智力+6，银钱+10两。',fx:{intel:6,money:10},loc:'shanghai'}
+};
+
+/* ================= 状态 ================= */
+function newState(){
+  return {
+    ver:VER, mode:'story', name:'阿七', gender:'男', bg:'b1',
+    day:1, money:CFG.startMoney, stamina:80, hunger:80, health:90,
+    rep:0, martial:10, intel:12, charm:10, title:'白身',
+    loc:'weihai', visited:{}, visitedCount:0,
+    items:{food_mantou:2, med_cao:1}, equip:{weapon:'weap_chai', armor:'armor_buyi'},
+    cargo:{}, bestDeal:0,
+    companions:[], favors:{}, spouse:null,
+    flags:{}, story:{cur:null, beat:null, done:[]},
+    wins:0, seaDays:0, jobsDone:0, achievements:[],
+    drift:{}, lastLoc:'weihai', dead:false, ending:null,
+    textSpeed:1
+  };
+}
+
+/* 重算称号 */
+function titleFor(rep){
+  if(rep>=9000)return '一等公';
+  if(rep>=7000)return '三品大员';
+  if(rep>=5000)return '五品大夫';
+  if(rep>=3500)return '七品县尊';
+  if(rep>=2000)return '九品吏员';
+  if(rep>=1000)return '监生';
+  if(rep>=500)return '乡贤';
+  return '白身';
+}
+function cargoWeight(s){
+  var w=0;
+  for(var k in s.cargo){ w += D.goods[k].wt*s.cargo[k]; }
+  return w;
+}
+function capacityOf(s){
+  var c = CFG.capacity;
+  if(s.martial>=40) c+=12;
+  if(s.martial>=20) c+=6;
+  if(titleFor(s.rep)==='一等公') c+=8;
+  return c;
+}
+function compBonus(s){
+  var b={martial:0,intel:0,charm:0,health:0,hp:0,rep:0};
+  s.companions.forEach(function(id){
+    var c = D.npcs[id] && D.npcs[id].comp;
+    if(!c) return;
+    for(var k in c){ b[k]=(b[k]||0)+c[k]; }
+  });
+  return b;
+}
+function maxHp(s){
+  var cb = compBonus(s);
+  return 50 + (s.martial+cb.martial)*2 + (D.items[s.equip.armor].st.def||0)*6 + (cb.hp||0);
+}
+function atkBonus(s){
+  var cb = compBonus(s);
+  return (s.martial+cb.martial) + (D.items[s.equip.weapon].st.atk||0) + Math.floor((s.intel+cb.intel)/5);
+}
+function defOf(s){
+  var cb = compBonus(s);
+  return (D.items[s.equip.armor].st.def||0) + Math.floor((s.martial+cb.martial)/10);
+}
+function intelOf(s){ return s.intel + compBonus(s).intel; }
+function charmOf(s){ return s.charm + compBonus(s).charm; }
+
+/* ================= 存档 ================= */
+function saveSlotKey(i){ return CFG.saveKey + i; }
+function saveGame(slot){
+  try{
+    var key = saveSlotKey(slot);
+    localStorage.setItem(key, JSON.stringify(S));
+    var meta = {};
+    try{ meta = JSON.parse(localStorage.getItem(CFG.saveMetaKey)||'{}'); }catch(e){ meta={}; }
+    meta[slot] = {name:S.name, day:S.day, mode:S.mode, loc:S.loc, t:Date.now()};
+    localStorage.setItem(CFG.saveMetaKey, JSON.stringify(meta));
+    return true;
+  }catch(e){ return false; }
+}
+function loadGame(slot){
+  try{
+    var raw = localStorage.getItem(saveSlotKey(slot));
+    if(!raw) return false;
+    var st = JSON.parse(raw);
+    S = Object.assign(newState(), st);
+    if(!S.flags) S.flags = {};
+    if(!S.story) S.story = {cur:null, beat:null, done:[]};
+    S.story.started = 0; S.story.curBeat = null;
+    if(!S.cargo) S.cargo = {};
+    if(!S.items) S.items = {};
+    if(!S.favors) S.favors = {};
+    if(!S.drift) S.drift = {};
+    if(!S.companions) S.companions = [];
+    if(!S.achievements) S.achievements = [];
+    if(!S.equip) S.equip = {weapon:'weap_chai', armor:'armor_buyi'};
+    return true;
+  }catch(e){ return false; }
+}
+function exportSave(){
+  try{ return btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
+  catch(e){ return null; }
+}
+function importSave(str){
+  try{
+    var json = decodeURIComponent(escape(atob(str.replace(/\s/g,''))));
+    var st = JSON.parse(json);
+    S = Object.assign(newState(), st);
+    if(!S.flags) S.flags = {}; if(!S.story) S.story = {cur:null,beat:null,done:[]};
+    S.story.started = 0; S.story.curBeat = null;
+    if(!S.cargo) S.cargo = {}; if(!S.items) S.items = {}; if(!S.favors) S.favors = {};
+    if(!S.drift) S.drift = {}; if(!S.companions) S.companions = []; if(!S.achievements) S.achievements = [];
+    if(!S.equip) S.equip = {weapon:'weap_chai', armor:'armor_buyi'};
+    return true;
+  }catch(e){ return false; }
+}
+function deleteSave(slot){
+  try{ localStorage.removeItem(saveSlotKey(slot)); }catch(e){}
+}
+
+/* ================= 工具：toast/飘字 ================= */
+var toastTimer = null;
+function toast(msg){
+  var old = $('toastBox');
+  if(old) old.remove();
+  var d = document.createElement('div');
+  d.className = 'toast'; d.id = 'toastBox'; d.textContent = msg;
+  $('ui').appendChild(d);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); }, 2600);
+}
+function popPanel(html, opts){
+  opts = opts||{};
+  var old = $('pop'); if(old) old.remove();
+  var wrap = document.createElement('div');
+  wrap.id = 'pop';
+  if(opts.full) wrap.className = 'full';
+  wrap.innerHTML = '<div class="panel"></div>';
+  wrap.firstChild.innerHTML = html;
+  $('ui').appendChild(wrap);
+  return wrap.firstChild;
+}
+function closePop(){ var p = $('pop'); if(p) p.remove(); }
+
+/* ================= 世界地图 ================= */
+var worldCv = document.createElement('canvas');
+worldCv.width = 1000; worldCv.height = 620;
+var wctx = worldCv.getContext('2d');
+var LAND_BLOBS = [
+ [100,120,110,80],[150,90,80,60],[240,80,200,55],[280,130,120,55],
+ [470,150,90,65],[520,205,75,55],[600,160,40,45],
+ [350,140,90,55],[330,300,55,85],[300,340,45,55],
+ [225,175,70,55],[245,235,55,45],[235,270,42,65],
+ [180,330,85,60],[215,370,65,85],[175,430,55,70],
+ [430,370,55,60],[470,410,45,45],[505,435,45,30],
+ [655,170,22,35],[665,195,26,30],[655,225,24,30],[642,248,20,28],
+ [622,272,18,30],[635,385,20,40],[625,420,18,25],[610,445,20,22],
+ [500,460,50,30],[540,475,40,20],[585,490,20,15],
+ [450,430,25,20],[455,445,22,18]
+];
+function paintWorld(){
+  wctx.fillStyle = '#5F85A0';
+  wctx.fillRect(0,0,1000,620);
+  LAND_BLOBS.forEach(function(b){
+    wctx.fillStyle = '#C9B78E';
+    wctx.beginPath();
+    wctx.ellipse(b[0], b[1], b[2], b[3], 0, 0, 6.2832);
+    wctx.fill();
+  });
+  /* 内陆纹理 */
+  wctx.fillStyle = 'rgba(126,155,106,.35)';
+  [[480,180,45,22],[520,240,30,18],[360,320,20,28],[430,380,20,22],[200,350,30,22]].forEach(function(b){
+    wctx.beginPath(); wctx.ellipse(b[0],b[1],b[2],b[3],0,0,6.2832); wctx.fill();
+  });
+  wctx.fillStyle = 'rgba(138,132,120,.3)';
+  [[430,200,22,14],[235,190,22,14],[700,190,14,10]].forEach(function(b){
+    wctx.beginPath(); wctx.ellipse(b[0],b[1],b[2],b[3],0,0,6.2832); wctx.fill();
+  });
+  /* 路线 */
+  wctx.lineWidth = 2;
+  D.routes.forEach(function(r){
+    var a = D.locations[r[0]], b = D.locations[r[1]];
+    var sea = isSeaRoute(r);
+    wctx.strokeStyle = sea ? 'rgba(200,220,230,.55)' : 'rgba(120,90,45,.5)';
+    if(sea){ wctx.setLineDash([6,4]); } else { wctx.setLineDash([]); }
+    wctx.beginPath();
+    wctx.moveTo(a.x*10, a.y*10);
+    wctx.lineTo(b.x*10, b.y*10);
+    wctx.stroke();
+  });
+  wctx.setLineDash([]);
+  /* 城市 */
+  D.locOrder.forEach(function(id){
+    var l = D.locations[id];
+    var vis = S && (S.visited[id] || S.items.tool_ditu);
+    wctx.fillStyle = vis ? '#B08A4F' : 'rgba(176,138,79,.45)';
+    wctx.beginPath(); wctx.arc(l.x*10, l.y*10, 4, 0, 6.2832); wctx.fill();
+    if(vis){
+      wctx.fillStyle = 'rgba(240,235,214,.85)';
+      wctx.font = '10px "Noto Serif SC",serif';
+      wctx.textAlign = 'center';
+      wctx.fillText(l.nm, l.x*10, l.y*10 + 16);
+    }
+  });
+}
+function isSeaRoute(r){
+  var a = D.locations[r[0]], b = D.locations[r[1]];
+  var s1 = (a.fac.indexOf('wharf')>=0 || a.type==='港口'||a.type==='军港'||a.type==='异邦');
+  var s2 = (b.fac.indexOf('wharf')>=0 || b.type==='港口'||b.type==='军港'||b.type==='异邦');
+  return (s1&&s2) ? true : false;
+}
+function bfsPath(from, to){
+  if(from===to) return [from];
+  var q=[from], prev={}, seen={}; seen[from]=1;
+  while(q.length){
+    var cur = q.shift();
+    var nbs = D.adj[cur]||[];
+    for(var i=0;i<nbs.length;i++){
+      var nx = nbs[i];
+      if(seen[nx]) continue;
+      seen[nx]=1; prev[nx]=cur; q.push(nx);
+      if(nx===to){
+        var path=[to], c=to;
+        while(prev[c]){ c=prev[c]; path.unshift(c); }
+        return path;
+      }
+    }
+  }
+  return null;
+}
+function reachableCities(){
+  var out = [];
+  D.locOrder.forEach(function(id){
+    if(id===S.loc) return;
+    if(bfsPath(S.loc, id)) out.push(id);
+  });
+  return out;
+}
+
+/* ---- 世界屏绘制 ---- */
+function drawWorld(dt, t){
+  var scale = Math.min(LOGIC_W/1000, (LOGIC_H-40)/620);
+  var w = 1000*scale, h = 620*scale;
+  var ox = (LOGIC_W-w)/2, oy = (LOGIC_H-h)/2 + 10;
+  ctx.fillStyle = '#081318'; ctx.fillRect(0,0,LOGIC_W,LOGIC_H);
+  ctx.save();
+  ctx.translate(ox,oy); ctx.scale(scale,scale);
+  ctx.drawImage(worldCv,0,0);
+  /* 当前城市脉冲 */
+  var cl = D.locations[S.loc];
+  if(cl){
+    var px = cl.x*10, py = cl.y*10;
+    ctx.strokeStyle = 'rgba(180,60,42,.8)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(px, py, 7 + Math.sin(t/300)*3, 0, 6.2832);
+    ctx.stroke();
+  }
+  ctx.restore();
+  /* 图例 */
+  ctx.fillStyle = 'rgba(8,19,24,.8)';
+  ctx.fillRect(10, LOGIC_H-34, 200, 26);
+  ctx.fillStyle = '#B08A4F'; ctx.beginPath(); ctx.arc(24, LOGIC_H-21, 4, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = 'rgba(240,235,214,.8)'; ctx.font = '12px "Noto Serif SC",serif';
+  ctx.fillText('你所在', 34, LOGIC_H-17);
+  ctx.fillStyle = 'rgba(158,189,200,.7)';
+  ctx.fillText('· 点击城市可前往 / 进城', 130, LOGIC_H-17);
+}
+function worldPointToTile(mx, my){
+  var scale = Math.min(LOGIC_W/1000, (LOGIC_H-40)/620);
+  var w = 1000*scale, h = 620*scale;
+  var ox = (LOGIC_W-w)/2, oy = (LOGIC_H-h)/2 + 10;
+  var tx = (mx-ox)/scale/10, ty = (my-oy)/scale/10;
+  var best=null, bd=999;
+  D.locOrder.forEach(function(id){
+    var l = D.locations[id];
+    var dx = l.x-tx, dy = l.y-ty;
+    var d = dx*dx+dy*dy;
+    if(d < bd){ bd = d; best = id; }
+  });
+  if(bd <= 25) return best;
+  return null;
+}
+
+/* ================= 场景 ================= */
+var scene = null; // {loc, tiles:2d, w,h, buildings:[], npcs:[], spawn, px,py, frame}
+var TILE = 30;
+var KEYS = {};
+var dpadDir = {u:false,d:false,l:false,r:false};
+
+function hashStr(s){
+  var h = 0;
+  for(var i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i))|0; }
+  return Math.abs(h);
+}
+/* ---- 主要 NPC 分城表 ---- */
+var CITY_NPC = {
+  weihai:['laoqi','tiehan','xiaoman','agui','ming'],
+  beijing:['wenguo','liu3','zhou','kuai','xiang'],
+  tianjin:['yezhiqiu','yan','schm'],
+  shanghai:['brown','qian','dao','mari','su'],
+  nanjing:['chen','chen2'],
+  hankou:['ayi','laoliu','petr'],
+  guangzhou:['liangjinzhi','banx','liudafu'],
+  hongkong:['xu','wil'],
+  taipei:['bawan','lina'],
+  tainan:['ahua'],
+  seoul:['jinheese','shun'],
+  busan:['jin2'],
+  nagasaki:['sato'],
+  osaka:['yamada'],
+  yokohama:['tengying','hans'],
+  stpetersburg:['andrei','mari2'],
+  vladivostok:['niko'],
+  kulun:['ba'],
+  hanoi:['luo'],
+  singapore:['awang'],
+  calcutta:['hei']
+};
+var GEN_NAMES = ['阿牛','三婶','癞头','二狗','春桃','老蔫','石头','杏儿','旺财','福生','翠莲','铁柱','喜子','兰香','冬子','大丫','栓子','秋生','梅香','黑娃','巧云','满仓','桂花','根生','秀儿','大宝','虎子','菊香','春生','二妮','胖嫂','瞎六','顺子','瓜子','聋伯','麻子','幺妹','来福','五婶','骡子'];
+var GEN_TALK = ['（打量了你一眼，没有说话。）','天气不错，就是雾有点重。','听说城东有新铺子开张。','唉，这年头，米又贵了。','你也是行商？路上小心些。','（笑了笑，继续忙手里的活。）','海那边的消息，一天一个样。','这城里的热闹，一半是洋人的。'];
+var GEN_COLS = [['#3A3A3A','#7A6C54','#EAE0C6'],['#5E4B3A','#8A7A5C','#EAE0C6'],['#2A4550','#5E7D6E','#EAE0C6'],['#4A3540','#8C5A64','#EAE0C6'],['#333F2E','#6B7A4F','#EAE0C6']];
+function genNpcsFor(locId){
+  var hh = hashStr(locId+'gen');
+  var used = {};
+  var count = 6 - (CITY_NPC[locId]||[]).length;
+  var out = [];
+  for(var i=0;i<count;i++){
+    var nm, guard=0;
+    do{ nm = GEN_NAMES[Math.abs(hh) % GEN_NAMES.length]; hh = (hh*2654435761)|0; guard++; }
+    while(used[nm] && guard<20);
+    used[nm] = 1;
+    var id = 'gen_'+locId+'_'+i;
+    D.npcs[id] = {id:id, nm:nm, g:chance(.5)?'男':'女', age:rndi(18,65), role:'本地百姓',
+      city:locId, ds:'土生土长的本地人。', col:GEN_COLS[Math.abs(hh)%GEN_COLS.length],
+      fav:5, likes:[], rom:false, comp:null, talk:[pick(GEN_TALK)]};
+    out.push(id);
+  }
+  return out;
+}
+function buildScene(locId){
+  var loc = D.locations[locId];
+  var W = 26, H = 18;
+  var tiles = [];
+  for(var y=0;y<H;y++){
+    var row = [];
+    for(var x=0;x<W;x++){ row.push(0); }
+    tiles.push(row);
+  }
+  /* 南侧水岸 */
+  for(var x=0;x<W;x++){ tiles[H-1][x]=2; tiles[H-2][x]=(x%3===0)?2:0; }
+  /* 道路十字 */
+  for(var x=0;x<W;x++){ tiles[9][x]=1; tiles[8][x]=1; }
+  for(var y=0;y<H;y++){ tiles[y][13]=1; }
+  /* 树木点缀（避开中心） */
+  var hh = hashStr(locId+'tree');
+  for(var i=0;i<26;i++){
+    var tx = hh%W, ty = (hh>>3)%H;
+    hh = (hh*2654435761)|0; tx = Math.abs(hh)%W; hh=(hh*2654435761)|0; ty=Math.abs(hh)%H;
+    if(tx===13||ty===9||ty===8||tiles[ty][tx]===1) continue;
+    tiles[ty][tx] = 4;
+  }
+  /* 建筑 */
+  var buildings = [];
+  var slotIdx = 0;
+  var SLOTS = [
+    [3,3,4,2],[8,3,4,2],[16,3,4,2],[21,3,3,2],
+    [3,12,4,2],[8,12,4,2],[16,12,4,2],[21,12,3,2],
+    [3,15,4,2],[8,15,4,2],[16,15,4,2],[21,15,3,2],
+    [3,5,3,2],[20,5,3,2],[6,5,3,2],[18,5,3,2],
+    [3,8,3,2],[20,8,3,2]
+  ];
+  loc.fac.forEach(function(k){
+    var b = D.buildings[k];
+    if(!b) return;
+    var s = SLOTS[slotIdx % SLOTS.length]; slotIdx++;
+    var bx = s[0], by = s[1], bw = s[2], bh = s[3];
+    buildings.push({kind:k, nm:b.nm, ic:b.ic, x:bx, y:by, w:bw, h:bh,
+      door:{x:bx+Math.floor(bw/2), y:by+bh}});
+    for(var yy=by; yy<by+bh; yy++){ for(var xx=bx; xx<bx+bw; xx++){ tiles[yy][xx]=5; } }
+  });
+  /* NPC 放置（主要人物 + 填充百姓） */
+  var npcIds = (CITY_NPC[locId]||[]).slice();
+  npcIds = npcIds.concat(genNpcsFor(locId));
+  var npcs = [];
+  var nn = hashStr(locId+'npc');
+  npcIds.forEach(function(id){
+    var n = D.npcs[id]; if(!n) return;
+    var nx, ny, guard=0;
+    do{
+      nx = Math.abs(nn)%W; nn=(nn*2654435761)|0;
+      ny = Math.abs(nn)%H; nn=(nn*2654435761)|0;
+      guard++;
+      if(guard>40) break;
+    } while(tiles[ny][nx]!==0 && tiles[ny][nx]!==1);
+    if(tiles[ny][nx]===0||tiles[ny][nx]===1){
+      npcs.push({id:id, x:nx*TILE+10, y:ny*TILE+8, dir:1, frame:0});
+    }
+  });
+  scene = {loc:locId, tiles:tiles, w:W, h:H, buildings:buildings, npcs:npcs,
+    spawn:{x:13*TILE-8, y:9*TILE+8}, px:13*TILE-8, py:9*TILE+8, frame:0, facing:2, t:0};
+}
+function tileAt(x,y){
+  if(!scene) return 5;
+  var tx = Math.floor(x/TILE), ty = Math.floor(y/TILE);
+  if(tx<0||ty<0||tx>=scene.w||ty>=scene.h) return 5;
+  return scene.tiles[ty][tx];
+}
+function walkable(x,y){
+  var t = tileAt(x,y);
+  if(t===2||t===4||t===5) return false;
+  return true;
+}
+function drawScene(dt, t){
+  var offX = (LOGIC_W - scene.w*TILE)/2;
+  var offY = (LOGIC_H - scene.h*TILE)/2;
+  ctx.fillStyle = '#081318'; ctx.fillRect(0,0,LOGIC_W,LOGIC_H);
+  ctx.save();
+  ctx.translate(offX, offY);
+  /* 地面 */
+  for(var y=0;y<scene.h;y++){
+    for(var x=0;x<scene.w;x++){
+      var tt = scene.tiles[y][x];
+      var col = tt===1 ? '#C9B98A' : tt===2 ? '#5F8BA0' : tt===3 ? '#D6C79A' : '#9DB07E';
+      var hv = (hashStr(scene.loc+'_'+x+'_'+y))%40;
+      if(tt===0) col = (hv>25)?'#A3B584':'#9DB07E';
+      if(tt===1) col = (hv>30)?'#D0C093':'#C9B98A';
+      ctx.fillStyle = col;
+      ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+      if(tt===0&&hv%7===0){ ctx.fillStyle='rgba(90,120,80,.25)'; ctx.fillRect(x*TILE+6,y*TILE+14,3,3); }
+    }
+  }
+  /* 水波纹 */
+  ctx.strokeStyle = 'rgba(220,235,240,.25)';
+  for(var y=0;y<scene.h;y++){
+    for(var x=0;x<scene.w;x++){
+      if(scene.tiles[y][x]===2){
+        ctx.beginPath();
+        ctx.arc(x*TILE+15, y*TILE+15, 4+Math.sin(t/500 + x+y)*2, 0, 6.2832);
+        ctx.stroke();
+      }
+    }
+  }
+  /* 建筑 */
+  scene.buildings.forEach(function(b){
+    var bx = b.x*TILE, by = b.y*TILE, bw = b.w*TILE, bh = b.h*TILE;
+    ctx.fillStyle = '#8A7A5C';
+    ctx.fillRect(bx, by, bw, bh-6);
+    ctx.fillStyle = '#6E4F2E';
+    ctx.beginPath();
+    ctx.moveTo(bx-3, by); ctx.lineTo(bx+bw+3, by); ctx.lineTo(bx+bw+3, by-14);
+    ctx.lineTo(bx, by-22); ctx.lineTo(bx-3, by-14); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(234,224,198,.92)';
+    ctx.font = '13px "Noto Serif SC",serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(b.ic, bx+bw/2, by+bh/2);
+    /* 门 */
+    ctx.fillStyle = '#4F3B22';
+    var dx = b.door.x*TILE, dy = b.door.y*TILE;
+    ctx.fillRect(dx, dy-6, 12, 8);
+  });
+  /* 交互高亮 */
+  var near = nearestInteract();
+  if(near){
+    var ix, iy;
+    if(near.type==='npc'){ var np = npcSprite(near.id); ix=np.x+15; iy=np.y+14; }
+    else { ix = near.obj.door.x*TILE+6; iy = near.obj.door.y*TILE+4; }
+    ctx.strokeStyle = 'rgba(180,60,42,.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(ix, iy, 16+Math.sin(t/260)*3, 0, 6.2832); ctx.stroke();
+  }
+  /* NPC */
+  scene.npcs.forEach(function(n){
+    drawPerson(ctx, n.x, n.y, D.npcs[n.id].col, D.npcs[n.id].nm, n.dir, n.frame, false, t);
+    if(isStoryMarkNPC(n.id)){
+      ctx.fillStyle = '#B43C2A';
+      ctx.font = 'bold 18px "Noto Serif SC",serif';
+      ctx.fillText('!', n.x+16, n.y-6);
+    }
+  });
+  /* 玩家 */
+  var cb = compBonus(S);
+  drawPerson(ctx, scene.px, scene.py, S.gender==='女'?['#7A4A68','#B08A9A','#EAE0C6']:['#18303A','#2A5560','#EAE0C6'], S.name, scene.facing, scene.frame, true, t);
+  ctx.restore();
+}
+function npcSprite(id){
+  for(var i=0;i<scene.npcs.length;i++){
+    if(scene.npcs[i].id===id) return scene.npcs[i];
+  }
+  return null;
+}
+function drawPerson(c, x, y, col, nm, dir, frame, isP, t){
+  var bob = Math.sin(t/260 + x)*1.2;
+  /* 影 */
+  c.fillStyle = 'rgba(0,0,0,.18)';
+  c.beginPath(); c.ellipse(x+16, y+27, 9, 3.5, 0, 0, 6.2832); c.fill();
+  /* 身体 */
+  c.fillStyle = col[1];
+  c.fillRect(x+10, y+12, 12, 15);
+  /* 头 */
+  c.fillStyle = col[0];
+  c.fillRect(x+9, y+2, 14, 12);
+  c.fillStyle = '#D9B48A';
+  c.fillRect(x+11, y+5, 10, 9);
+  /* 头发 */
+  c.fillStyle = col[0];
+  c.fillRect(x+9, y+2, 14, 5);
+  /* 腿 */
+  c.fillStyle = col[2];
+  c.fillRect(x+11, y+27, 5, 5);
+  c.fillRect(x+17, y+27, 5, 5);
+  if(isP){
+    c.fillStyle = '#B43C2A';
+    c.font = 'bold 11px "Noto Serif SC",serif';
+    c.textAlign = 'center';
+    c.fillText('你', x+16, y+42);
+  } else {
+    c.fillStyle = 'rgba(240,235,214,.85)';
+    c.font = '10px "Noto Serif SC",serif';
+    c.textAlign = 'center';
+    c.fillText(nm, x+16, y+42);
+  }
+}
+function nearestInteract(){
+  if(!scene) return null;
+  var best=null, bd=48*48;
+  scene.npcs.forEach(function(n){
+    var dx = (n.x+16)-(scene.px+16), dy = (n.y+14)-(scene.py+14);
+    var d = dx*dx+dy*dy;
+    if(d<bd){ bd=d; best={type:'npc', id:n.id, d:d}; }
+  });
+  scene.buildings.forEach(function(b){
+    var dx = (b.door.x*TILE+6)-(scene.px+16), dy = (b.door.y*TILE+4)-(scene.py+14);
+    var d = dx*dx+dy*dy;
+    if(d<bd){ bd=d; best={type:'bld', obj:b, d:d}; }
+  });
+  return best;
+}
+function sceneMove(dt){
+  var sp = 120*dt;
+  var dx=0, dy=0;
+  if(KEYS['arrowleft']||KEYS['a']||dpadDir.l) dx-=1;
+  if(KEYS['arrowright']||KEYS['d']||dpadDir.r) dx+=1;
+  if(KEYS['arrowup']||KEYS['w']||dpadDir.u) dy-=1;
+  if(KEYS['arrowdown']||KEYS['s']||dpadDir.d) dy+=1;
+  if(dx!==0||dy!==0){
+    scene.facing = dx<0?0:(dx>0?1:(dy<0?2:3));
+    scene.frame = (scene.frame+1)%2;
+  }
+  if(dx!==0){
+    var nx = scene.px + dx*sp;
+    if(walkable(nx+6, scene.py+8) && walkable(nx+24, scene.py+8) && walkable(nx+6, scene.py+26) && walkable(nx+24, scene.py+26)) scene.px = nx;
+  }
+  if(dy!==0){
+    var ny = scene.py + dy*sp;
+    if(walkable(scene.px+6, ny+8) && walkable(scene.px+24, ny+8) && walkable(scene.px+6, ny+26) && walkable(scene.px+24, ny+26)) scene.py = ny;
+  }
+  scene.px = clamp(scene.px, 0, scene.w*TILE-30);
+  scene.py = clamp(scene.py, 0, scene.h*TILE-30);
+}
+
+/* ================= 对话引擎 ================= */
+var dlgState = null;
+function startDialog(lines, opts){
+  opts = opts||{};
+  closePop();
+  dlgState = {lines:lines, idx:0, choices:opts.choices||null, onEnd:opts.onEnd||null,
+    speaker:opts.speaker||null, typing:0, done:false};
+  buildDlg();
+  setScreen('dlg');
+}
+function renderLine(){
+  if(!dlgState) return;
+  var l = dlgState.lines[dlgState.idx];
+  var txt = String(l.t||'').replace(/\{name\}/g, S.name).replace(/\{money\}/g, moneys(S.money)).replace(/\{city\}/g, D.locations[S.loc].nm);
+  var el = $('dlgText'), sp = $('dlgSpeaker');
+  if(sp){ sp.textContent = l.n||''; sp.className = 'speaker' + (l.n==='你'?' me':''); }
+  if(!dlgState.done && dlgState.typing < txt.length){
+    dlgState.typing = Math.min(txt.length, dlgState.typing + 30*(1+S.textSpeed));
+    el.textContent = txt.slice(0, dlgState.typing);
+    if(dlgState.typing < txt.length){ return; }
+  }
+  el.textContent = txt;
+  dlgState.done = true;
+  if(dlgState.choices){
+    buildChoices(dlgState.choices);
+  } else {
+    var ch = $('dlgChoices');
+    ch.innerHTML = '<button class="btn ghost" onclick="dlgNext()">继续 ▶</button>';
+  }
+}
+function buildDlg(){
+  var ui = $('ui');
+  var old = $('dlg'); if(old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'dlg';
+  d.innerHTML = '<div id="dlgSpeaker" class="speaker"></div>' +
+    '<div class="body"><div id="dlgText" class="text"></div><div id="dlgChoices" class="choices"></div></div>' +
+    '<div class="tip">空格 / 点击继续 · Esc 跳过</div>';
+  ui.appendChild(d);
+  setScreen('dlg');
+  renderLine();
+}
+function buildChoices(list){
+  var ch = $('dlgChoices');
+  ch.innerHTML = '';
+  list.forEach(function(c, i){
+    var b = document.createElement('button');
+    b.className = 'btn ghost';
+    b.textContent = String(c.t).replace(/\{name\}/g, S.name);
+    b.setAttribute('onclick', 'dlgChoice('+i+')');
+    ch.appendChild(b);
+  });
+}
+function dlgNext(){
+  if(!dlgState) return;
+  if(!dlgState.done){ dlgState.done = true; dlgState.typing = 99999; renderLine(); return; }
+  if(dlgState.choices) return;
+  dlgState.idx++;
+  if(dlgState.idx >= dlgState.lines.length){
+    var onEnd = dlgState.onEnd;
+    dlgState = null;
+    removeDlg();
+    if(onEnd) onEnd();
+    return;
+  }
+  dlgState.done = false; dlgState.typing = 0;
+  renderLine();
+}
+function dlgChoice(i){
+  if(!dlgState) return;
+  var c = dlgState.choices[i];
+  if(!c) return;
+  var onEnd = dlgState.onEnd;
+  var goto = c.goto;
+  dlgState = null;
+  removeDlg();
+  if(c.fx) applyFx(c.fx);
+  if(c.fxFn) c.fxFn(S);
+  if(onEnd) onEnd(goto);
+}
+function removeDlg(){ var d = $('dlg'); if(d) d.remove(); }
+function dlgSkip(){ if(dlgState){ dlgState.done=true; dlgState.typing=99999; renderLine(); } }
+
+/* 效果应用 */
+function applyFx(fx){
+  if(!fx) return;
+  if(fx.money) S.money += fx.money;
+  if(fx.rep) S.rep = Math.max(0, S.rep + fx.rep);
+  if(fx.martial) S.martial = clamp(S.martial+fx.martial, 1, 99);
+  if(fx.intel) S.intel = clamp(S.intel+fx.intel, 1, 99);
+  if(fx.charm) S.charm = clamp(S.charm+fx.charm, 1, 99);
+  if(fx.health) S.health = clamp(S.health+fx.health, 0, 100);
+  if(fx.stamina) S.stamina = clamp(S.stamina+fx.stamina, 0, 100);
+  if(fx.hunger) S.hunger = clamp(S.hunger+fx.hunger, 0, 100);
+  if(fx.item) addItem(fx.item);
+  if(fx.items) fx.items.forEach(addItem);
+  if(fx.flag) setFlag(fx.flag);
+  if(fx.flags) fx.flags.forEach(setFlag);
+  if(fx.favor){ for(var k in fx.favor){ changeFavor(k, fx.favor[k]); } }
+  if(fx.comp && S.companions.indexOf(fx.comp)<0){ S.companions.push(fx.comp); toast(D.npcs[fx.comp].nm + ' 加入了你的队伍。'); }
+  if(fx.npcCity){ for(var k2 in fx.npcCity){ var n=D.npcs[k2]; if(n) n.city = fx.npcCity[k2]; } }
+  if(fx.title) S.title = fx.title;
+  if(fx.intelDone) {}
+  S.title = titleFor(S.rep);
+  S.rep = Math.max(0, S.rep);
+}
+function setFlag(f){ S.flags[f]=1; }
+function hasFlag(f){ return !!S.flags[f]; }
+function addItem(id){
+  var it = D.items[id]; if(!it) return;
+  if(it.kind==='weapon'||it.kind==='armor'){ S.items[id]=(S.items[id]||0)+1; return; }
+  S.items[id]=(S.items[id]||0)+1;
+}
+function changeFavor(npcId, d){
+  S.favors[npcId] = clamp((S.favors[npcId]||10)+d, 0, 100);
+}
+
+/* ================= 剧情引擎 ================= */
+function nextChapterIdx(){
+  if(S.mode!=='story') return null;
+  for(var i=0;i<STORY.length;i++){
+    var ch = STORY[i];
+    if(hasFlag('ch'+ch.no+'_done')) continue;
+    if(S.day < ch.unlockDay) continue;
+    return i;
+  }
+  return null;
+}
+function checkStory(){
+  if(S.mode!=='story') return;
+  var idx = nextChapterIdx();
+  if(idx===null) return;
+  if(S.story.cur!==null && S.story.cur!==idx) return;
+  if(S.story.cur===null){
+    S.story.cur = idx; S.story.beat = null;
+  }
+  var ch = STORY[idx];
+  var beatId = S.story.beat || ch.start;
+  var beat = ch.beats[beatId];
+  if(!beat) return;
+  var key = ch.no + '_' + beatId;
+  if(S.story.curBeat === key) return;   /* 防重复触发 */
+  if(beat.t==='auto'){
+    if(!S.story.started){
+      S.story.started = 1;
+      showChapterCard(ch);
+    }
+  } else if(beat.t==='enter'){
+    if(!beat.loc || S.loc===beat.loc){
+      startBeatFlow(ch, beatId, beat);
+    }
+  }
+}
+function isStoryMarkNPC(id){
+  if(S.mode!=='story' || S.story.cur===null) return false;
+  var ch = STORY[S.story.cur];
+  var beatId = S.story.beat || ch.start;
+  var beat = ch.beats[beatId];
+  return beat && beat.t==='talk' && beat.npc===id;
+}
+function showChapterCard(ch){
+  var ui = $('ui');
+  var old = $('chapter'); if(old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'chapter';
+  var lines = (ch.intro||[]).map(function(t){ return '<div>' + String(t).replace(/\{name\}/g,S.name) + '</div>'; }).join('');
+  d.innerHTML = '<div class="no">第' + (ch.no===0?'〇':(ch.no===13?'终':ch.no)) + '回</div>' +
+    '<div class="t">' + ch.title + '</div>' +
+    '<div class="sub">' + ch.sub + '</div>' +
+    '<div class="lines">' + lines + '</div>' +
+    '<button class="btn" onclick="chapterGo()">启程</button>';
+  ui.appendChild(d);
+  setScreen('chapter');
+}
+function chapterGo(){
+  var d = $('chapter'); if(d) d.remove();
+  if(S.story.cur===null) return;
+  var ch = STORY[S.story.cur];
+  var beatId = S.story.beat || ch.start;
+  startBeatFlow(ch, beatId, ch.beats[beatId]);
+}
+function startBeatFlow(ch, beatId, beat){
+  if(!beat) return;
+  S.story.beat = beatId;
+  S.story.curBeat = ch.no + '_' + beatId;
+  if(beat.t==='talk'){
+    /* 直接以对话触发（NPC 在场） */
+    if(beat.npc && !npcSprite(beat.npc)){ toast('你要找的人不在此处，请改日再来。'); S.story.curBeat = null; return; }
+  }
+  var lines = (beat.d||[]).map(function(l){
+    var nm = l.n;
+    if(beat.npc && !nm){ nm = D.npcs[beat.npc] ? D.npcs[beat.npc].nm : ''; }
+    return {n:nm, t:l.t};
+  });
+  var choices = (beat.choices||[]).map(function(c){
+    return {t:c.t, goto:c.goto, fx:c.fx, fxFn:c.fxFn};
+  });
+  startDialog(lines, {choices: choices.length?choices:null, onEnd:function(goto){
+    /* 战斗节拍 */
+    if(beat.fight){
+      startBattle(beat.fight, function(win){
+        if(!win){ return; }
+        afterBeat(ch, beatId, beat, goto);
+      });
+      return;
+    }
+    afterBeat(ch, beatId, beat, goto);
+  }});
+}
+function afterBeat(ch, beatId, beat, goto){
+  if(beat.fx) applyFx(beat.fx);
+  if(beat.note){ journalNote(beat.note); }
+  S.story.curBeat = null;
+  var next = goto || beat.next;
+  if(next){
+    if(next.indexOf('end')===0){
+      var en = next.replace('end','');
+      completeChapter(ch);
+      showEnding(en);
+      return;
+    }
+    S.story.beat = next;
+    var nb = ch.beats[next];
+    if(nb.t==='auto' || (nb.t==='enter' && (!nb.loc || S.loc===nb.loc))){
+      startBeatFlow(ch, next, nb);
+    } else {
+      hud();
+      toast('前路已明，接着走吧。');
+    }
+  } else {
+    completeChapter(ch);
+  }
+}
+function completeChapter(ch){
+  setFlag('ch'+ch.no+'_done');
+  if(ch.reward) applyFx(ch.reward);
+  if(S.story.done.indexOf(ch.no)<0) S.story.done.push(ch.no);
+  S.story.cur = null; S.story.beat = null; S.story.started = 0; S.story.curBeat = null;
+  saveGame(0);
+  if(ch.suspense){
+    showSuspense(ch);
+  } else {
+    hud();
+  }
+}
+function showSuspense(ch){
+  var ui = $('ui');
+  var old = $('chapter'); if(old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'chapter';
+  d.innerHTML = '<div class="no">本回完 · 待续</div>' +
+    '<div class="t">' + ch.title + '</div>' +
+    '<div class="suspense">' + (ch.suspense||'') + '</div>' +
+    '<button class="btn" onclick="suspenseGo()">下回再会</button>';
+  ui.appendChild(d);
+  setScreen('chapter');
+}
+function suspenseGo(){
+  var d = $('chapter'); if(d) d.remove();
+  checkStory();
+  enterScene(S.loc);
+  hud();
+}
+function showEnding(en){
+  var e = ENDINGS[en];
+  if(!e){ e = ENDINGS.f_death; }
+  S.ending = en;
+  saveGame(0);
+  var ui = $('ui');
+  var old = $('chapter'); if(old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'chapter';
+  d.innerHTML = '<div class="no">—— 终 ——</div>' +
+    '<div class="t" style="font-size:clamp(24px,4.5vw,40px)">' + e.nm + '</div>' +
+    '<div class="sub">' + e.sub + '</div>' +
+    '<div class="lines">' + String(e.txt).replace(/\n/g,'<br>') + '</div>' +
+    '<div class="row" style="margin-top:24px"><button class="btn" onclick="endingBackTitle()">回到标题</button>' +
+    '<button class="btn jade" onclick="endingNewGame()">开启新人生</button></div>';
+  ui.appendChild(d);
+  setScreen('chapter');
+}
+function endingBackTitle(){ goBoot(); }
+function endingNewGame(){ goBoot(); }
+
+/* ================= 战斗引擎 ================= */
+var BTL = null;
+var lastEnemyId = null, lastOnWin = null;
+function playerMaxHp(){ return maxHp(S); }
+function playerAtk(){ return atkBonus(S); }
+function playerDef(){ return defOf(S); }
+function startBattle(enemyId, onWin){
+  var e = D.enemies[enemyId];
+  lastEnemyId = enemyId; lastOnWin = onWin;
+  var cb = compBonus(S);
+  BTL = {
+    enemy: {id:enemyId, nm:e.nm, hp:e.hp, max:e.hp, atk:e.atk, def:e.def, spd:e.spd, gold:e.gold},
+    player: {hp: maxHp(S), max: maxHp(S)},
+    log: [], def:false, over:false, onWin:onWin, esc:false
+  };
+  buildBattle();
+}
+function buildBattle(){
+  var ui = $('ui');
+  var old = $('btl'); if(old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'btl';
+  d.innerHTML = '<div class="stage">' +
+    '<div id="btlPlayer" class="unit" style="left:8%;bottom:8%"></div>' +
+    '<div id="btlEnemy" class="unit enemy" style="right:8%;bottom:8%"></div>' +
+    '</div>' +
+    '<div id="btlLog" class="log"></div>' +
+    '<div class="cmd" id="btlCmd"></div>';
+  ui.appendChild(d);
+  setScreen('battle');
+  renderBattle();
+  btlLog('遭遇了 ' + BTL.enemy.nm + '！');
+}
+function btlLog(t){ BTL.log.push(t); if(BTL.log.length>6) BTL.log.shift(); var el=$('btlLog'); if(el){ el.innerHTML = BTL.log.map(function(x){return '<div>'+x+'</div>';}).join(''); el.scrollTop=9999; } }
+function renderBattle(){
+  var p = BTL.player, e = BTL.enemy;
+  var pe = $('btlPlayer'), ee = $('btlEnemy');
+  var cb = compBonus(S);
+  if(pe){
+    pe.innerHTML = '<div style="width:64px;height:64px;margin:0 auto;background:radial-gradient(circle at 40% 35%,#3A6A75,#1B3A44);border:2px solid #B08A4F;border-radius:50%"></div>' +
+      '<div>' + S.name + '</div><div class="hp"><i style="width:'+Math.max(0,p.hp/p.max*100)+'%"></i></div><div class="mute">' + p.hp + '/' + p.max + '</div>';
+  }
+  if(ee){
+    ee.innerHTML = '<div style="width:72px;height:72px;margin:0 auto;background:radial-gradient(circle at 40% 35%,#8C2B1D,#4A1210);border:2px solid #B43C2A;border-radius:50%"></div>' +
+      '<div>' + e.nm + '</div><div class="hp"><i style="width:'+Math.max(0,e.hp/e.max*100)+'%"></i></div><div class="mute">' + e.hp + '/' + e.max + '</div>';
+  }
+  if(BTL.over) return;
+  var cmd = $('btlCmd');
+  cmd.innerHTML = '<button class="btn" onclick="btlCmd(\'atk\')">攻击</button>' +
+    '<button class="btn" onclick="btlCmd(\'def\')">防御</button>' +
+    '<button class="btn" onclick="btlCmd(\'skill\')">' + skillName() + '</button>' +
+    '<button class="btn" onclick="btlCmd(\'item\')">用药</button>' +
+    '<button class="btn ghost" onclick="btlCmd(\'run\')">遁走</button>';
+}
+function skillName(){
+  if(S.martial>=45) return '连环刺';
+  if(S.martial>=35) return '铁布衫';
+  if(S.martial>=25) return '横扫';
+  if(S.martial>=15) return '力劈';
+  if(intelOf(S)>=20) return '暗器';
+  return '怒击';
+}
+function btlCmd(cmd){
+  if(!BTL || BTL.over) return;
+  var e = BTL.enemy, p = BTL.player;
+  var dmg = 0, txt = '';
+  if(cmd==='atk'){
+    dmg = Math.max(1, playerAtk() - e.def + rndi(-2,3));
+    e.hp -= dmg; txt = '你挥出' + (D.items[S.equip.weapon].nm) + '，造成 ' + dmg + ' 点伤害。';
+  } else if(cmd==='def'){
+    BTL.def = true; txt = '你凝神防御。';
+  } else if(cmd==='skill'){
+    var sn = skillName();
+    if(sn==='力劈'){ dmg = Math.max(1, playerAtk()+5 - e.def + rndi(-1,3)); e.hp-=dmg; txt = '力劈华山！造成 '+dmg+' 点伤害。'; }
+    else if(sn==='横扫'){ dmg = Math.max(1, Math.floor(playerAtk()*1.4)-e.def + rndi(0,3)); e.hp-=dmg; txt='横扫千军！造成 '+dmg+' 点伤害。'; }
+    else if(sn==='连环刺'){ var t1=0; for(var i=0;i<2;i++){ t1+=Math.max(1, Math.floor(playerAtk()*0.7)-e.def+rndi(0,2)); } e.hp-=t1; dmg=t1; txt='连环刺出，连伤两处，共 '+t1+' 点伤害。'; }
+    else if(sn==='铁布衫'){ BTL.def=true; txt='你气沉丹田，周身如铁。'; }
+    else if(sn==='暗器'){ dmg = Math.max(1, intelOf(S)+4 - e.def + rndi(0,3)); e.hp-=dmg; txt='暗器破空，命中要害，造成 '+dmg+' 点伤害。'; }
+    else { dmg = Math.max(1, playerAtk()+2-e.def+rndi(0,2)); e.hp-=dmg; txt='你怒喝一声，造成 '+dmg+' 点伤害。'; }
+  } else if(cmd==='item'){
+    var meds = ['med_renshen','med_xing','med_jin','med_cao'];
+    var has = meds.filter(function(m){ return S.items[m]; });
+    if(!has.length){ btlLog('你没有药品！'); return; }
+    var pick = has[0];
+    S.items[pick]--;
+    if(S.items[pick]<=0) delete S.items[pick];
+    var h = D.items[pick].st.health||0;
+    p.hp = Math.min(p.max, p.hp + h);
+    txt = '你服下' + D.items[pick].nm + '，恢复 ' + h + ' 点生命。';
+  } else if(cmd==='run'){
+    if(S.mode==='story'){ btlLog('强敌当前，你无法从这场宿命之战中脱身。'); }
+    else {
+      var sp = S.martial/10 + 4;
+      if(chance(sp/20)){ btlLog('你成功遁走，脱离了战斗。'); BTL.over=true; endBattle(false, true); return; }
+      txt = '你试图脱身，但没有成功。';
+    }
+  }
+  if(txt) btlLog(txt);
+  BTL.def = false;
+  renderBattle();
+  if(e.hp<=0){
+    e.hp = 0; renderBattle();
+    btlLog('你击败了 ' + e.nm + '！');
+    S.wins++;
+    var gold = rndi(e.gold[0], e.gold[1]);
+    S.money += gold;
+    btlLog('缴获银两 ' + gold + '。');
+    (e.drop||[]).forEach(function(dr){ if(chance(dr.ch)){ addItem(dr.it); btlLog('拾得 ' + D.items[dr.it].nm + '。'); } });
+    checkAchievements();
+    BTL.over = true;
+    endBattle(true);
+    return;
+  }
+  /* 敌方行动 */
+  var ed = Math.max(1, e.atk - playerDef() + rndi(-2,3));
+  if(BTL.def){ ed = Math.max(1, Math.floor(ed/2)); }
+  p.hp -= ed;
+  btlLog(e.nm + '的攻击造成 ' + ed + ' 点伤害。');
+  renderBattle();
+  if(p.hp<=0){
+    p.hp = 0; renderBattle();
+    BTL.over = true;
+    btlLog('你倒下了……');
+    endBattle(false);
+  }
+}
+function endBattle(win, esc){
+  var onWin = BTL.onWin;
+  BTL = null;
+  var d = $('btl'); if(d) d.remove();
+  if(win){
+    if(onWin) onWin(true);
+    else { checkFreeEnding(); enterScene(S.loc); hud(); }
+  } else if(esc){
+    if(onWin) onWin(false);
+    else { S.travel = null; enterScene(S.loc); hud(); }
+  } else {
+    /* 战败 */
+    if(S.mode==='story'){
+      showRetryPanel();
+    } else {
+      S.health = Math.max(1, S.health - 25);
+      S.stamina = 10;
+      var lost = Math.min(10, Math.floor(S.money/4));
+      S.money -= lost;
+      S.travel = null;
+      toast('你负伤败退，损失 ' + lost + ' 两。');
+      enterScene(S.loc); hud();
+      checkFreeEnding();
+    }
+  }
+}
+function showRetryPanel(){
+  var html = '<h2 class="pTitle">身陷绝境</h2>' +
+    '<p class="mute" style="text-align:center">你倒在了敌人的刀下。这场战斗还远未结束——重振旗鼓，再战一次。</p>' +
+    '<div class="row" style="justify-content:center;margin-top:12px">' +
+    '<button class="btn" onclick="retryBattle()">重振旗鼓</button>' +
+    '<button class="btn ghost" onclick="closePop();goBoot()">回到标题读档</button></div>';
+  var pan = popPanel(html, {full:true});
+}
+function retryBattle(){
+  closePop();
+  var d = $('btl'); if(d) d.remove();
+  if(lastEnemyId) startBattle(lastEnemyId, lastOnWin);
+}
+
+/* ============================================================
+   ENGINE Ⅱ · 界面 / 设施 / 输入 / 主循环 / 启动
+   ============================================================ */
+var SCR = 'boot';
+var uiEl = $('ui');
+
+/* ---- 屏幕切换 ---- */
+function setScreen(n){
+  SCR = n;
+  ['bootEl','charEl','hudEl','dockEl','cityCardEl','hintEl','dpadEl'].forEach(function(id){
+    var el = $(id);
+    if(el){ el.classList.add('hidden'); }
+  });
+  var show = {};
+  if(n==='boot') show.bootEl=1;
+  if(n==='char') show.charEl=1;
+  if(n==='world'){ show.hudEl=1; show.dockEl=1; show.cityCardEl=1; }
+  if(n==='scene'){ show.hudEl=1; show.dockEl=1; show.hintEl=1; show.dpadEl=1; }
+  for(var k in show){ var el2=$(k); if(el2) el2.classList.remove('hidden'); }
+  if(n==='world'||n==='scene') hud();
+}
+
+/* ---- HUD ---- */
+function hud(){
+  var hudEl = $('hudEl');
+  if(!hudEl) return;
+  var s = S;
+  var hCls = s.hunger<25?' crit':(s.hunger<50?' warn':'');
+  var stCls = s.stamina<20?' crit':(s.stamina<50?' warn':'');
+  var hpCls = s.health<25?' crit':(s.health<50?' warn':'');
+  hudEl.innerHTML =
+    '<div class="hL">' +
+    '<span class="stat">' + fmtDay(s.day) + '</span>' +
+    '<span class="stat"><b>' + moneys(s.money) + '</b></span>' +
+    '<span class="stat' + hCls + '">食<b>' + Math.round(s.hunger) + '</b></span>' +
+    '<span class="stat' + hpCls + '">命<b>' + Math.round(s.health) + '</b></span>' +
+    '<span class="stat' + stCls + '">力<b>' + Math.round(s.stamina) + '</b></span>' +
+    '<span class="stat">望<b>' + s.rep + '</b></span>' +
+    '<span class="stat" style="color:#7BC07B">' + (D.locations[s.loc]?D.locations[s.loc].nm:'') + '</span>' +
+    '</div>' +
+    '<div class="hR">' +
+    '<button class="btn mini" onclick="openStatus()">状态</button>' +
+    '<button class="btn mini" onclick="openInventory()">背包</button>' +
+    '<button class="btn mini" onclick="openJournal()">日志</button>' +
+    '<button class="btn mini" onclick="openSave()">存档</button>' +
+    '<button class="btn mini" onclick="openSettings()">设定</button>' +
+    '</div>';
+  var dock = $('dockEl');
+  if(dock){
+    if(SCR==='scene'){
+      dock.innerHTML =
+        '<button class="btn small" onclick="openFacilities()">设施</button>' +
+        '<button class="btn small" onclick="openMapBack()">回大地图</button>' +
+        '<button class="btn small" onclick="openSleep()">歇息</button>' +
+        '<button class="btn small" onclick="openStatus()">状态</button>' +
+        '<button class="btn small" onclick="openSave()">存档</button>';
+    } else if(SCR==='world'){
+      dock.innerHTML =
+        '<button class="btn small" onclick="travelPicker()">前往</button>' +
+        '<button class="btn small" onclick="enterScene(S.loc)">进城</button>' +
+        '<button class="btn small" onclick="openStatus()">状态</button>' +
+        '<button class="btn small" onclick="openJournal()">日志</button>' +
+        '<button class="btn small" onclick="openSave()">存档</button>' +
+        '<button class="btn small" onclick="waitDays(1)">过一日</button>';
+    }
+  }
+}
+
+/* ================= 引导屏 ================= */
+/* 常驻界面骨架：HUD 栏 / 底部操作栏 / 场景提示条 */
+function buildChrome(){
+  if(!$('hudEl')){
+    var h = document.createElement('div');
+    h.id = 'hudEl'; h.className = 'hidden';
+    uiEl.appendChild(h);
+  }
+  if(!$('dockEl')){
+    var dk = document.createElement('div');
+    dk.id = 'dockEl'; dk.className = 'hidden';
+    uiEl.appendChild(dk);
+  }
+  if(!$('hintEl')){
+    var ht = document.createElement('div');
+    ht.id = 'hintEl'; ht.className = 'hidden';
+    uiEl.appendChild(ht);
+  }
+}
+function goBoot(){
+  ['bootEl','charEl','hudEl','dockEl','cityCardEl','hintEl','dpadEl','dlg','btl','chapter','pop'].forEach(function(id){
+    var el = $(id); if(el) el.remove();
+  });
+  buildChrome();
+  var d = document.createElement('div');
+  d.id = 'bootEl';
+  d.innerHTML =
+    '<div class="mists">' + [0,1,2,3,4].map(function(i){
+      return '<div class="mistline" style="animation-duration:' + (9+i*3) + 's;animation-delay:' + i*1.8 + 's;top:' + (i*18) + 'vh"></div>';
+    }).join('') + '</div>' +
+    '<div class="titleT">HanBer SEVEN</div>' +
+    '<div class="titleS">雾 海 纪 元</div>' +
+    '<div class="titleSub">甲午逆转 · 1900 · 第七子的世界</div>' +
+    '<div class="menu">' +
+    '<button class="btn" onclick="goChar()">新 游 戏</button>' +
+    '<button class="btn" onclick="openSave(true)">读 取 存 档</button>' +
+    '<button class="btn ghost" onclick="openAbout()">关 于 本 作</button>' +
+    '</div>' +
+    '<div class="ver">' + VER + '</div>' +
+    '<div class="warnBar">本地存档 · 单机 · 献给汉柏系列的第七作</div>';
+  uiEl.appendChild(d);
+  setScreen('boot');
+}
+function openAbout(){
+  var html = '<h2 class="pTitle">关于《HanBer SEVEN》</h2>' +
+    '<p style="line-height:1.9;font-size:14px">本作设定于「甲午战争结局反转」的 1900 年世界：<br>' +
+    '清军在大东沟以一场不散之雾逆转战局，日本割地赔款、交还琉球；<br>' +
+    '此后朝廷行「甲午新政」，铁路、铁舰、新军次第而立——史称海雾纪元。<br><br>' +
+    '<b>但那场雾，从来不是天象。</b><br><br>' +
+    '你，一个被老兵养大的孤儿，接过一枚刻着「柒」的乌木令牌。<br>' +
+    '主线模式：一年十二回，回回留悬念，逐月揭开。<br>' +
+    '自由模式：唯一目标——活下去。38 座城池，40 余位 NPC，海陆通商，职业百工。<br><br>' +
+    '存档存在浏览器本地，可导出/导入。欢迎上传 GitHub Pages 运行。</p>' +
+    '<div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="closePop()">知晓</button></div>';
+  popPanel(html, {full:true});
+}
+/* ---- 建号 ---- */
+function goChar(){
+  var old = $('charEl'); if(old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'charEl';
+  d.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 35%,#12303C,#0A1920)">' +
+    '<div class="panel" style="width:min(92vw,520px)">' +
+    '<h2 class="pTitle">立身于雾海纪元</h2>' +
+    '<div class="row" style="justify-content:center;margin-bottom:8px">' +
+    '<button class="btn' + (selMode==='story'?'':' ghost') + '" onclick="setMode(\'story\')">主线模式 · 十二回</button>' +
+    '<button class="btn' + (selMode==='free'?'':' ghost') + '" onclick="setMode(\'free\')">自由模式 · 活下去</button></div>' +
+    '<div class="col">' +
+    '<label class="lbl">你的名字</label><input id="nmInp" class="txt" maxlength="6" value="阿七">' +
+    '<div class="row"><label class="lbl" style="margin-right:6px">性别</label>' +
+    '<select id="gdSel" class="txt" style="width:120px"><option>男</option><option>女</option></select>' +
+    '<label class="lbl" style="margin-left:10px;margin-right:6px">出身</label>' +
+    '<select id="bgSel" class="txt" style="width:220px">' +
+    Object.keys(BACKGROUNDS).map(function(k){ return '<option value="'+k+'">'+BACKGROUNDS[k].nm+' · '+BACKGROUNDS[k].ds+'</option>'; }).join('') +
+    '</select></div>' +
+    '<button class="btn" onclick="startNewGame()">启 程</button>' +
+    '<button class="btn ghost" onclick="goBoot()">返回</button>' +
+    '</div></div></div>';
+  uiEl.appendChild(d);
+  setScreen('char');
+}
+var selMode = 'story';
+function setMode(m){ selMode = m; goChar(); }
+function startNewGame(){
+  var nm = ($('nmInp').value||'阿七').trim().slice(0,6);
+  var gd = $('gdSel').value;
+  var bg = $('bgSel').value;
+  S = newState();
+  S.name = nm; S.gender = gd; S.bg = bg; S.mode = selMode;
+  var bfx = BACKGROUNDS[bg].fx;
+  applyFx(bfx);
+  S.title = titleFor(S.rep);
+  enterScene(BACKGROUNDS[bg].loc);
+  saveGame(0);
+  toast('光绪廿六年，你的故事开始了。');
+  checkStory();
+}
+
+/* ================= 场景与大地图切换 ================= */
+function enterScene(locId){
+  S.loc = locId;
+  if(!S.visited[locId]){ S.visited[locId]=1; S.visitedCount++; }
+  paintWorld();
+  buildScene(locId);
+  setScreen('scene');
+  var hint = $('hintEl');
+  if(hint){ hint.textContent = 'WASD/方向键移动 · E 交谈 · Esc 回大地图'; }
+  checkStory();
+  saveGame(0);
+}
+function openMapBack(){ paintWorld(); setScreen('world'); }
+
+/* ================= 旅行 ================= */
+function travelPicker(){
+  var dests = reachableCities();
+  if(!dests.length){ toast('此处暂无可通之路。'); return; }
+  var items = dests.map(function(id){
+    var l = D.locations[id];
+    var path = bfsPath(S.loc, id);
+    var days = path.length-1;
+    var cost = days*0.5;
+    return '<div class="listItem" onclick="travelTo(\''+id+'\')"><div><div class="nm">' + l.nm + '</div>' +
+      '<div class="ds">' + l.type + ' · 约' + days + '日 · 路资' + cost.toFixed(1) + '两' + '</div></div>' +
+      '<div class="rt">前往</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">海陆行旅</h2><div>' + items + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:10px"><button class="btn ghost" onclick="closePop()">作罢</button></div>';
+  popPanel(html, {full:true});
+}
+function travelTo(dest){
+  closePop();
+  var path = bfsPath(S.loc, dest);
+  if(!path){ toast('此路不通。'); return; }
+  S.travel = {path:path, idx:1};
+  toast('启程前往 ' + D.locations[dest].nm + '。');
+  setScreen('world');
+  travelStep();
+}
+function travelStep(){
+  if(!S.travel){ return; }
+  var path = S.travel.path, i = S.travel.idx;
+  if(i >= path.length){
+    var dest = path[path.length-1];
+    S.travel = null;
+    enterScene(dest);
+    toast('抵达 ' + D.locations[dest].nm + '。');
+    checkFreeEnding();
+    return;
+  }
+  var a = path[i-1], b = path[i];
+  var la = D.locations[a], lb = D.locations[b];
+  var sea = isSeaRoute([a,b]);
+  S.travel.idx = i+1;
+  S.day++;
+  S.hunger = Math.max(0, S.hunger - (sea?2.5:2));
+  S.stamina = Math.max(0, S.stamina - (sea?12:9));
+  S.health = clamp(S.health - (S.hunger<=0?3:0), 0, 100);
+  if(sea) S.seaDays++;
+  S.money = Math.max(0, S.money - (sea?0.6:0.3));
+  marketDrift(1);
+  /* 存档点 */
+  if(S.day%5===0) saveGame(0);
+  var evCh = S.mode==='story' ? 0.10 : 0.22;
+  if(chance(evCh)){
+    var ev = pickEvent('t');
+    if(ev){ showEvent(ev, function(){ travelStep(); }); return; }
+  }
+  if(chance(0.05)){
+    var bad = pickEnemy(la.dg);
+    startBattle(bad, function(win){
+      if(win){ travelStep(); }
+      else { S.travel=null; enterScene(S.loc); }
+    });
+    return;
+  }
+  travelStep();
+}
+function pickEnemy(dg){
+  var pool = ['biliu','jie'];
+  if(dg>=1) pool.push('tufei','wo');
+  if(dg>=2) pool.push('cike','gesake');
+  return pick(pool);
+}
+function waitDays(n){
+  if(SCR!=='world') return;
+  for(var i=0;i<n;i++){
+    S.day++; S.hunger=Math.max(0,S.hunger-2); S.stamina=Math.max(0,S.stamina-2);
+    S.health=clamp(S.health-(S.hunger<=0?2:0),0,100);
+    marketDrift(1);
+    if(S.hunger<=10&&S.health<30){ toast('你饿得头昏眼花，赶紧找吃的吧。'); }
+  }
+  var ev = pickEvent('c');
+  if(ev){ showEvent(ev, function(){ afterDay(); }); return; }
+  afterDay();
+}
+function afterDay(){
+  if(checkDeath()) return;
+  checkStory();
+  checkAchievements();
+  checkFreeEnding();
+  if(S.day%7===0) saveGame(0);
+  hud();
+}
+function checkDeath(){
+  if(S.health<=0 && !S.ending){
+    S.health=0;
+    showEnding('f_death');
+    return true;
+  }
+  return false;
+}
+
+/* ---- 市场漂移 ---- */
+function marketDrift(n){
+  for(var g in D.goods){
+    var d = S.drift[g] || 1;
+    d = d * (0.985 + Math.random()*0.03);
+    if(chance(0.01)) d = d * (chance(0.5)?0.9:1.12);
+    S.drift[g] = clamp(d, 0.7, 1.5);
+  }
+}
+function priceOf(loc, good, buy){
+  var l = D.locations[loc], g = D.goods[good];
+  var p = g.base * (l.tr[good]||1) * (S.drift[good]||1);
+  return buy ? p : p*0.8;
+}
+
+/* ================= 随机事件 ================= */
+function pickEvent(w){
+  var pool = D.events.filter(function(e){ return e.w===w; });
+  if(!pool.length) return null;
+  return pick(pool);
+}
+function showEvent(ev, done){
+  var opts = ev.opts.map(function(o, i){
+    return '<button class="btn ghost" onclick="eventPick('+i+')">' + o.t + '</button>';
+  }).join('');
+  var html = '<h2 class="pTitle">' + ev.nm + '</h2>' +
+    '<p style="line-height:1.9;font-size:15px">' + ev.txt + '</p>' +
+    '<div style="display:flex;flex-direction:column;align-items:stretch;margin-top:12px">' + opts + '</div>';
+  popPanel(html, {full:true});
+  evDone = done;
+  curEv = ev;
+}
+var curEv = null, evDone = null;
+function eventPick(i){
+  var o = curEv.opts[i];
+  if(!o){ return; }
+  var ev = curEv, done = evDone;
+  curEv = null; evDone = null;
+  closePop();
+  var res = o.fx(S);
+  if(res==='FIGHT'){
+    startBattle(S.fight, function(win){
+      if(win) toast('你击退了来犯之敌。');
+      else S.health = Math.max(1, S.health-15);
+      if(done) done();
+    });
+    return;
+  }
+  if(res) toast(res);
+  if(done) done();
+}
+
+/* ================= NPC 互动 ================= */
+function openNpcPanel(npcId){
+  var n = D.npcs[npcId];
+  if(!n) return;
+  /* 剧情节拍 */
+  if(S.mode==='story' && S.story.cur!==null){
+    var ch = STORY[S.story.cur];
+    var beatId = S.story.beat || ch.start;
+    var beat = ch.beats[beatId];
+    if(beat && beat.t==='talk' && beat.npc===npcId){
+      startBeatFlow(ch, beatId, beat);
+      return;
+    }
+  }
+  var fav = S.favors[npcId]||10;
+  var opts = [];
+  opts.push('<button class="btn ghost" onclick="npcTalk(\''+npcId+'\')">交谈</button>');
+  opts.push('<button class="btn ghost" onclick="npcGift(\''+npcId+'\')">赠送礼物</button>');
+  if(n.comp && S.companions.indexOf(npcId)<0){
+    opts.push('<button class="btn jade" onclick="npcJoin(\''+npcId+'\')">邀为同伴</button>');
+  }
+  if(n.rom && S.gender!==n.g && !S.spouse){
+    if(fav>=100 && S.money>=100 && S.rep>=300){
+      opts.push('<button class="btn danger" onclick="npcMarry(\''+npcId+'\')">求婚</button>');
+    } else if(fav>=80){
+      opts.push('<button class="btn ghost" onclick="npcLove(\''+npcId+'\')">表白心迹</button>');
+    }
+  }
+  if(S.companions.indexOf(npcId)>=0){
+    opts.push('<button class="btn ghost" onclick="npcLeave(\''+npcId+'\')">辞别同伴</button>');
+  }
+  opts.push('<button class="btn ghost" onclick="closePop()">作罢</button>');
+  var html = '<h2 class="pTitle">' + n.nm + ' · ' + n.role + '</h2>' +
+    '<p class="mute">' + n.ds + '</p>' +
+    '<div style="margin-top:6px"><span class="tag">' + (n.g==='男'?'须眉':'巾帼') + '</span>' +
+    '<span class="tag">' + n.age + '岁</span>' +
+    '<span class="tag gold">好感 ' + Math.round(fav) + '</span></div>' +
+    '<div style="margin-top:4px"><span class="mute">所在地：' + (n.city==='dynamic' ? '随剧情' : (D.locations[n.city] ? D.locations[n.city].nm : '漂泊')) + '</span></div>' +
+    '<div style="display:flex;flex-direction:column;align-items:stretch;margin-top:10px">' + opts.join('') + '</div>';
+  popPanel(html, {full:true});
+}
+function npcTalk(npcId){
+  var n = D.npcs[npcId];
+  var fav = S.favors[npcId]||10;
+  if(!S.npcTalk) S.npcTalk = {};
+  var i = S.npcTalk[npcId] || 0;
+  var lines = n.talk;
+  if(chance(0.25) && fav<40){ lines = [n.talk[0], n.talk[Math.min(1,n.talk.length-1)]]; }
+  startDialog(lines.slice(i, i+2).map(function(t){ return {n:n.nm, t:t}; }), {onEnd:function(){
+    S.npcTalk[npcId] = (i+1) % Math.max(1, lines.length);
+    changeFavor(npcId, 1);
+    if(chance(0.2)) toast('与 ' + n.nm + ' 的关系略有增进。');
+    openNpcPanel(npcId);
+  }});
+}
+function npcGift(npcId){
+  var n = D.npcs[npcId];
+  var gifts = Object.keys(S.items).filter(function(k){ return D.items[k] && D.items[k].kind==='gift'; });
+  if(!gifts.length){ toast('你身上没有可赠送的礼物。'); return; }
+  var list = gifts.map(function(k){
+    var it = D.items[k];
+    var eff = (n.likes||[]).indexOf(k)>=0 ? 2 : 1;
+    return '<div class="listItem" onclick="doGift(\''+npcId+'\',\''+k+'\','+eff+')"><div class="nm">' + it.nm + '（x' + S.items[k] + '）</div><div class="rt">赠</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">赠礼 · ' + n.nm + '</h2><div>' + list + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="openNpcPanel(\''+npcId+'\')">返回</button></div>';
+  popPanel(html, {full:true});
+}
+function doGift(npcId, itemId, eff){
+  if(S.items[itemId]<=0){ toast('礼物已用完。'); return; }
+  S.items[itemId]--;
+  if(S.items[itemId]<=0) delete S.items[itemId];
+  var favGain = Math.round(D.items[itemId].price/4 + 2) * eff;
+  changeFavor(npcId, favGain);
+  toast(D.npcs[npcId].nm + ' 收下礼物，好感 +' + favGain + '。');
+  openNpcPanel(npcId);
+}
+function npcLove(npcId){
+  changeFavor(npcId, 5);
+  toast('你鼓起勇气说出心里话。' + D.npcs[npcId].nm + ' 的脸红了。好感 +5。');
+  openNpcPanel(npcId);
+}
+function npcMarry(npcId){
+  var n = D.npcs[npcId];
+  S.spouse = npcId;
+  S.favors[npcId] = 100;
+  S.rep += 30;
+  if(S.companions.indexOf(npcId)<0 && n.comp) S.companions.push(npcId);
+  toast('执子之手，与子偕老。你与 ' + n.nm + ' 结为连理，声望 +30。');
+  checkAchievements();
+  openNpcPanel(npcId);
+}
+function npcJoin(npcId){
+  if(S.companions.length>=3){ toast('队伍已满（最多三人同行）。'); return; }
+  var fav = S.favors[npcId]||10;
+  if(fav<60){ toast(D.npcs[npcId].nm + ' 与你还不熟识，婉言谢绝了。'); return; }
+  S.companions.push(npcId);
+  toast(D.npcs[npcId].nm + ' 加入了你的队伍。');
+  openNpcPanel(npcId);
+}
+function npcLeave(npcId){
+  S.companions = S.companions.filter(function(x){ return x!==npcId; });
+  toast(D.npcs[npcId].nm + ' 与你拱手作别。');
+  openNpcPanel(npcId);
+}
+
+/* ================= 设施系统 ================= */
+function openFacilities(){
+  var loc = D.locations[S.loc];
+  var list = loc.fac.map(function(k){
+    var b = D.buildings[k];
+    return '<div class="listItem" onclick="openFacility(\''+k+'\')"><div><div class="nm">' + b.nm + ' · ' + b.ic + '</div><div class="ds">' + b.ds + '</div></div><div class="rt">进</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">' + loc.nm + ' · 城中设施</h2><div>' + list + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function openFacility(kind){
+  if(kind==='market') openMarket();
+  else if(kind==='wharf') openWharf();
+  else if(kind==='inn') openSleep();
+  else if(kind==='tavern') openTavern();
+  else if(kind==='gov') openGov();
+  else if(kind==='school') openSchool();
+  else if(kind==='church') openChurch();
+  else if(kind==='pawn') openPawn();
+  else if(kind==='casino') openCasino();
+  else if(kind==='teahouse') openTeahouse();
+  else if(kind==='gym') openGym();
+  else if(kind==='post') openPost();
+  else if(kind==='barracks') openBarracks();
+  else if(kind==='shrine') openShrine();
+  else if(kind==='guild') openGuild();
+  else if(kind==='hospital') openHospital();
+  else if(kind==='palace') openPalace();
+  else toast('此处暂未开放。');
+}
+/* 市集 */
+function openMarket(){
+  var loc = D.locations[S.loc];
+  var rows = Object.keys(D.goods).map(function(g){
+    var gd = D.goods[g];
+    var bp = priceOf(S.loc, g, true), sp = priceOf(S.loc, g, false);
+    var cargo = S.cargo[g]||0;
+    return '<div class="listItem"><div><div class="nm">' + gd.nm + '</div>' +
+      '<div class="ds">本处买' + bp.toFixed(1) + '两 / 卖' + sp.toFixed(1) + '两 · 负重' + gd.wt + (cargo?' · 持有'+cargo:'') + '</div></div>' +
+      '<div class="row" style="gap:4px"><button class="btn mini" onclick="tradeBuy(\''+g+'\')">买1</button>' +
+      '<button class="btn mini jade" onclick="tradeSell(\''+g+'\')">卖1</button></div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">市集 · ' + loc.nm + '</h2>' +
+    '<p class="mute">背负 ' + cargoWeight(S) + '/' + capacityOf(S) + ' · 银两 ' + moneys(S.money) + '</p><div>' + rows + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function tradeBuy(g){
+  var bp = priceOf(S.loc, g, true);
+  if(S.money < bp){ toast('银两不足。'); return; }
+  if(cargoWeight(S) + D.goods[g].wt > capacityOf(S)){ toast('背不下了。'); return; }
+  S.money -= bp; S.cargo[g] = (S.cargo[g]||0)+1;
+  toast('购入 ' + D.goods[g].nm + ' 一担（' + bp.toFixed(1) + '两）。');
+  openMarket();
+}
+function tradeSell(g){
+  if(!S.cargo[g]){ toast('你没有此货。'); return; }
+  var sp = priceOf(S.loc, g, false);
+  S.money += sp;
+  var profit = sp - D.goods[g].base;
+  if(profit > S.bestDeal) S.bestDeal = profit;
+  S.cargo[g]--;
+  if(S.cargo[g]<=0) delete S.cargo[g];
+  toast('售出 ' + D.goods[g].nm + '，得 ' + sp.toFixed(1) + '两。');
+  checkAchievements();
+  openMarket();
+}
+/* 码头 */
+function openWharf(){
+  var loc = D.locations[S.loc];
+  var seaDests = reachableCities().filter(function(id){
+    return isSeaRoute([S.loc, id]);
+  });
+  var rows = seaDests.length ? seaDests.map(function(id){
+    var l = D.locations[id];
+    var p = bfsPath(S.loc, id);
+    return '<div class="listItem" onclick="travelTo(\''+id+'\')"><div class="nm">' + l.nm + '</div><div class="ds">海路约' + (p.length-1) + '日</div><div class="rt">乘船</div></div>';
+  }).join('') : '<p class="mute">此处无通海之路。</p>';
+  var jobs = D.jobs.wharf.map(function(j, i){
+    return '<div class="listItem" onclick="doJob(\'wharf\','+i+')"><div><div class="nm">' + j.nm + '</div><div class="ds">' + j.ds + '</div></div><div class="rt">' + j.pay + '两/' + j.days + '日</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">码头 · ' + loc.nm + '</h2><h3 class="pTitle">行船</h3><div>' + rows + '</div><div class="sep"></div><h3 class="pTitle">生计</h3><div>' + jobs + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+/* 客栈 */
+function openSleep(){
+  var html = '<h2 class="pTitle">客栈歇脚</h2>' +
+    '<div class="listItem" onclick="sleep(0.3,1)"><div class="nm">睡一夜（0.3两）</div><div class="ds">体力+50，过一日</div></div>' +
+    '<div class="listItem" onclick="sleep(0.8,3)"><div class="nm">连住三日（0.8两）</div><div class="ds">体力+80，过三日</div></div>' +
+    '<div class="listItem" onclick="eatAtInn()"><div class="nm">吃顿热饭（0.5两）</div><div class="ds">饱食+40</div></div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function sleep(cost, n){
+  if(S.money < cost){ toast('银两不足。'); return; }
+  S.money -= cost;
+  S.stamina = Math.min(100, S.stamina + (n===1?50:80));
+  for(var i=0;i<n;i++){
+    S.day++; S.hunger=Math.max(0,S.hunger-2); marketDrift(1);
+    var cb = compBonus(S);
+    if(cb.health) S.health = clamp(S.health + cb.health, 0, 100);
+  }
+  closePop();
+  if(checkDeath()) return;
+  checkStory(); checkAchievements(); checkFreeEnding();
+  if(S.day%7===0) saveGame(0);
+  toast('一夜安眠。体力恢复，新的一日开始了。');
+  hud();
+}
+function eatAtInn(){
+  if(S.money<0.5){ toast('银两不足。'); return; }
+  S.money-=0.5; S.hunger=Math.min(100,S.hunger+40);
+  closePop(); toast('吃饱了，浑身有劲。');
+}
+/* 酒馆 */
+function openTavern(){
+  var jobs = D.jobs.tavern.map(function(j,i){
+    return '<div class="listItem" onclick="doJob(\'tavern\','+i+')"><div><div class="nm">'+j.nm+'</div><div class="ds">'+j.ds+'</div></div><div class="rt">'+j.pay+'两/'+j.days+'日</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">酒馆 · 鱼龙混杂</h2><div>' + jobs + '</div>' +
+    '<div class="listItem" onclick="tavernRumor()"><div class="nm">听一段闲话</div><div class="ds">花一文酒钱，换一条消息</div></div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function tavernRumor(){
+  var pool = ['听说长崎港夜里有紫帆船进出，守港的兵却装作没看见。','有人说汉城的王宫里，有人在半夜敲钟，敲七下。','新北洋又添了两艘铁舰，炮管子比烟囱还粗。','天津军械局的大烟囱，黑烟从早冒到晚。','一个德国人包了整条客船去威海，船上装的都是铜件。','海神庙的师太说，今年海祭，雾会再来。','俄国人的铁路已经修到满洲边上了，铁轨下面压着银票。','京城的大官们吵架，吵到掀了桌。','南洋来的香料船在海上漂了十一天，船上的人都说见了雾。'];
+  toast(pick(pool));
+  closePop();
+}
+/* 衙门 */
+function openGov(){
+  var jobs = D.jobs.gov.map(function(j,i){
+    return '<div class="listItem" onclick="doJob(\'gov\','+i+')"><div><div class="nm">'+j.nm+'</div><div class="ds">'+j.ds+'</div></div><div class="rt">'+j.pay+'两/'+j.days+'日</div></div>';
+  }).join('');
+  var t = titleFor(S.rep);
+  var canBuy = S.rep>=500 && t!=='一等公';
+  var buyBtn = canBuy ? '<div class="listItem" onclick="buyTitle()"><div class="nm">捐个功名</div><div class="ds">花50两，声望+300，官身升一级</div></div>' : '';
+  var html = '<h2 class="pTitle">衙门 · ' + (S.loc==='beijing'?'京师':'地方') + '</h2>' +
+    '<p class="mute">你如今的声名：' + S.rep + '（' + t + '）</p><div>' + jobs + buyBtn + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function buyTitle(){
+  if(S.money<50){ toast('银两不足。'); return; }
+  S.money-=50; S.rep+=300;
+  toast('捐官文书到手，你的声名大涨。声望+300。');
+  openGov();
+}
+/* 学馆 */
+function openSchool(){
+  var html = '<h2 class="pTitle">学馆</h2>' +
+    '<div class="listItem" onclick="study(2,1)"><div class="nm">听讲一日（2两）</div><div class="ds">智力+1，过一日</div></div>' +
+    '<div class="listItem" onclick="study(5,1)"><div class="nm">专修西学（5两）</div><div class="ds">智力+2，过一日</div></div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function study(cost, gain){
+  if(S.money<cost){ toast('银两不足。'); return; }
+  S.money-=cost; S.intel=Math.min(99,S.intel+gain);
+  S.day++; S.hunger=Math.max(0,S.hunger-2);
+  closePop();
+  toast('书山有路，智力+' + gain + '。');
+  hud();
+}
+/* 教堂 */
+function openChurch(){
+  var healCost = Math.round((100-S.health)*0.4);
+  var html = '<h2 class="pTitle">教堂</h2>' +
+    '<div class="listItem" onclick="churchHeal(' + healCost + ')"><div class="nm">疗养（' + healCost + '两）</div><div class="ds">恢复健康至满</div></div>' +
+    '<div class="listItem" onclick="churchCharity()"><div class="nm">义工会（免费）</div><div class="ds">帮工半日，声望+3</div></div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function churchHeal(cost){
+  if(S.money<cost){ toast('银两不足。'); return; }
+  S.money-=cost; S.health=100;
+  closePop(); toast('嬷嬷为你祈祷，伤痛尽去。');
+}
+function churchCharity(){
+  S.rep+=3;
+  closePop(); toast('善行无辙迹，声望+3。');
+}
+/* 当铺 */
+function openPawn(){
+  var sellable = Object.keys(S.items).filter(function(k){ var it=D.items[k]; return it && (it.kind==='food'||it.kind==='med'||it.kind==='tool'||it.kind==='gift'); });
+  var rows = sellable.length ? sellable.map(function(k){
+    var it = D.items[k];
+    var v = Math.floor(it.price*0.6*S.items[k]);
+    return '<div class="listItem" onclick="pawnSell(\''+k+'\')"><div class="nm">' + it.nm + ' x' + S.items[k] + '</div><div class="rt">当' + v + '两</div></div>';
+  }).join('') : '<p class="mute">没有可典当的东西。</p>';
+  var html = '<h2 class="pTitle">当铺 · 死当活当</h2><div>' + rows + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function pawnSell(k){
+  var it = D.items[k];
+  var v = Math.floor(it.price*0.6*S.items[k]);
+  S.money += v;
+  delete S.items[k];
+  toast('当出' + it.nm + '，得' + v + '两。');
+  openPawn();
+}
+/* 赌坊 */
+function openCasino(){
+  var html = '<h2 class="pTitle">赌坊 · 愿赌服输</h2>' +
+    '<p class="mute">三枚骰子，点数和为11或以上则赢，否则输。</p>' +
+    [1,3,5,10].map(function(v){
+      return '<div class="listItem" onclick="dice(' + v + ')"><div class="nm">押' + v + '两</div><div class="ds">赢则翻倍</div></div>';
+    }).join('') +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function dice(v){
+  if(S.money<v){ toast('银两不足。'); return; }
+  S.money-=v;
+  var r1=rndi(1,6), r2=rndi(1,6), r3=rndi(1,6);
+  var sum=r1+r2+r3;
+  var win = sum>=11;
+  if(win){ S.money+=v*2; toast('掷出 ' + r1 + '+' + r2 + '+' + r3 + '=' + sum + '，赢了！得' + v*2 + '两。'); }
+  else toast('掷出 ' + r1 + '+' + r2 + '+' + r3 + '=' + sum + '，输了' + v + '两。');
+  openCasino();
+}
+/* 茶馆 + 手谈 */
+function openTeahouse(){
+  var html = '<h2 class="pTitle">茶馆 · 闲话与手谈</h2>' +
+    '<div class="listItem" onclick="teahouseGossip()"><div class="nm">听茶客闲话</div><div class="ds">免费，偶尔有金句</div></div>' +
+    '<div class="listItem" onclick="openGo(1)"><div class="nm">手谈一局（1两）</div><div class="ds">五子棋对弈，赢则得2两</div></div>' +
+    '<div class="listItem" onclick="openGo(5)"><div class="nm">豪赌手谈（5两）</div><div class="ds">赢则得10两</div></div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function teahouseGossip(){
+  var pool = ['茶客甲：听说那场雾，是人放出来的！茶客乙：嘘——这种话也敢说。','说书人正讲到《海雾传》新一回：雾里走出来一个第七子。','掌柜的低声说：昨夜有客人包了整间雅座，谈的是"机器"。','一个学生模样的人念报纸：新政又有新学堂要开。','茶博士说：最近去威海的路费涨了，都是去看雾的。'];
+  toast(pick(pool));
+  closePop();
+}
+/* 武馆 */
+function openGym(){
+  var html = '<h2 class="pTitle">武馆</h2>' +
+    '<div class="listItem" onclick="trainMartial()"><div class="nm">练武（5两）</div><div class="ds">武艺+1，过二日</div></div>' +
+    '<div class="listItem" onclick="spar()"><div class="nm">下场较技</div><div class="ds">与教头切磋，赢了得银</div></div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function trainMartial(){
+  if(S.money<5){ toast('银两不足。'); return; }
+  S.money-=5; S.martial=Math.min(99,S.martial+1);
+  S.day+=2; S.hunger=Math.max(0,S.hunger-4);
+  closePop(); toast('冬练三九，武艺+1。'); hud();
+}
+function spar(){
+  closePop();
+  startBattle('biliu', function(win){
+    if(win){ S.money+=2; toast('教头点头赞许，赏了2两。'); }
+    else toast('你被教头摔了个跟头，下次再来。');
+  });
+}
+/* 驿站 */
+function openPost(){
+  var jobs = D.jobs.post.map(function(j,i){
+    return '<div class="listItem" onclick="doJob(\'post\','+i+')"><div><div class="nm">'+j.nm+'</div><div class="ds">'+j.ds+'</div></div><div class="rt">'+j.pay+'两/'+j.days+'日</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">驿站</h2><div>' + jobs + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+/* 兵营 */
+function openBarracks(){
+  var wpns = ['weap_chai','weap_yucha','weap_qiang','weap_miao','weap_bian','weap_dao','weap_qixing'];
+  var armors = ['armor_buyi','armor_pi','armor_neiyi','armor_teng','armor_tie'];
+  var rows = wpns.map(function(k){
+    var it = D.items[k];
+    if(k==='weap_qixing' && !hasFlag('ch11_done')) return '';
+    return '<div class="listItem" onclick="buyWeapon(\''+k+'\')"><div class="nm">' + it.nm + '（' + it.price + '两，攻+' + it.st.atk + '）</div><div class="rt">购</div></div>';
+  }).join('') + armors.map(function(k){
+    var it = D.items[k];
+    return '<div class="listItem" onclick="buyArmor(\''+k+'\')"><div class="nm">' + it.nm + '（' + it.price + '两，防+' + it.st.def + '）</div><div class="rt">购</div></div>';
+  }).join('');
+  var jobs = D.jobs.barracks.map(function(j,i){
+    return '<div class="listItem" onclick="doJob(\'barracks\','+i+')"><div><div class="nm">'+j.nm+'</div><div class="ds">'+j.ds+'</div></div><div class="rt">'+j.pay+'两/'+j.days+'日</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">兵营 · 军械局</h2><div>' + jobs + '</div><div class="sep"></div><div>' + rows + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function buyWeapon(k){
+  var it=D.items[k];
+  if(S.money<it.price){ toast('银两不足。'); return; }
+  S.money-=it.price; S.equip.weapon=k;
+  closePop(); toast('换上了' + it.nm + '。');
+}
+function buyArmor(k){
+  var it=D.items[k];
+  if(S.money<it.price){ toast('银两不足。'); return; }
+  S.money-=it.price; S.equip.armor=k;
+  closePop(); toast('穿上了' + it.nm + '。');
+}
+/* 庙宇 */
+function openShrine(){
+  var html = '<h2 class="pTitle">' + (S.loc==='weihai'?'海神庙':'庙宇') + '</h2>' +
+    '<div class="listItem" onclick="shrineBless()"><div class="nm">上香祈福（0.5两）</div><div class="ds">心神安宁，健康+10</div></div>' +
+    '<div class="listItem" onclick="shrineStory()"><div class="nm">听守庙人讲古</div><div class="ds">免费听一段旧事</div></div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function shrineBless(){
+  if(S.money<0.5){ toast('银两不足。'); return; }
+  S.money-=0.5; S.health=clamp(S.health+10,0,100);
+  closePop(); toast('一炷香燃尽，心里忽然安定。健康+10。');
+}
+function shrineStory(){
+  var pool = ['守庙人：那年大东沟的雾，盖了整整三天海。都说是有龙。','守庙人：海神娘娘托梦说，今年别往深海里走。','守庙人：镇海龙枢的事，听老人讲过——是海里的铁家伙，会发雾。'];
+  toast(pick(pool));
+  closePop();
+}
+/* 会馆 */
+function openGuild(){
+  var jobs = D.jobs.guild.map(function(j,i){
+    return '<div class="listItem" onclick="doJob(\'guild\','+i+')"><div><div class="nm">'+j.nm+'</div><div class="ds">'+j.ds+'</div></div><div class="rt">'+j.pay+'两/'+j.days+'日</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">会馆 · 商帮</h2><div>' + jobs + '</div>' +
+    '<div class="listItem" onclick="deliveryQuest()"><div class="nm">接一单货运</div><div class="ds">替商帮送货，报酬视路程而定</div></div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function deliveryQuest(){
+  var dests = reachableCities();
+  if(!dests.length){ toast('此处无路可通。'); return; }
+  var dest = pick(dests);
+  var path = bfsPath(S.loc, dest);
+  var days = path.length-1;
+  var pay = Math.round(days*3 + 3);
+  if(S.money<days){ toast('路费不够，商帮不肯赊账。'); return; }
+  S.money -= days*0.4;
+  S.day += days;
+  S.hunger = Math.max(0,S.hunger - days*2);
+  S.stamina = Math.max(0,S.stamina - days*8);
+  S.money += pay;
+  S.rep += 3;
+  closePop();
+  toast('你替商帮押了一趟货到' + D.locations[dest].nm + '，挣了' + pay + '两，声望+3。');
+  if(checkDeath()) return;
+  checkStory(); checkAchievements(); checkFreeEnding();
+  enterScene(dest);
+}
+/* 医馆 */
+function openHospital(){
+  var healCost = Math.round((100-S.health)*0.3);
+  var meds = ['med_cao','med_jin','med_xing','med_renshen'];
+  var rows = meds.map(function(k){
+    var it = D.items[k];
+    return '<div class="listItem" onclick="buyMed(\''+k+'\')"><div class="nm">' + it.nm + '（' + it.price + '两）</div><div class="ds">恢复健康+' + it.st.health + '</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">医馆</h2>' +
+    '<div class="listItem" onclick="hospitalHeal(' + healCost + ')"><div class="nm">诊脉开方（' + healCost + '两）</div><div class="ds">恢复健康至满</div></div>' +
+    '<div class="sep"></div><div>' + rows + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function hospitalHeal(cost){
+  if(S.money<cost){ toast('银两不足。'); return; }
+  S.money-=cost; S.health=100;
+  closePop(); toast('郎中妙手回春，你精神焕发。');
+}
+function buyMed(k){
+  var it=D.items[k];
+  if(S.money<it.price){ toast('银两不足。'); return; }
+  S.money-=it.price; addItem(k);
+  closePop(); toast('购入' + it.nm + '。');
+}
+/* 官署 */
+function openPalace(){
+  var html = '<h2 class="pTitle">官署 · 朱门深院</h2>' +
+    '<p class="mute" style="line-height:1.8">守卫打量了你几眼：<br>"有公文吗？没有？那请回吧。"</p>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+
+/* ---- 职业执行 ---- */
+function doJob(kind, i){
+  var j = D.jobs[kind][i];
+  if(!j) return;
+  if(!j.req(S)){ toast('你现在的状况做不了这活。'); return; }
+  if(S.money < 0){ toast('身无分文，先想办法填饱肚子吧。'); return; }
+  closePop();
+  S.jobsDone++;
+  var res = j.run(S);
+  S.day += j.days;
+  S.hunger = Math.max(0, S.hunger - j.days*2);
+  var profit = j.pay;
+  if(res==='FIGHT'){
+    startBattle(S.fight, function(win){
+      if(win){ S.money += profit; toast(j.nm + '：挣得' + profit + '两。'); }
+      else { S.money = Math.max(0, S.money - profit/2); toast('你负伤而归，这趟白干了。'); }
+      if(checkDeath()) return;
+      checkStory(); checkAchievements(); checkFreeEnding();
+      hud();
+    });
+    return;
+  }
+  S.money += profit;
+  if(S.day%7===0) saveGame(0);
+  toast(res + ' 挣得' + profit + '两。');
+  if(checkDeath()) return;
+  checkStory(); checkAchievements(); checkFreeEnding();
+  hud();
+}
+
+/* ---- 五子棋 ---- */
+var GO = null;
+function openGo(bet){
+  if(S.money<bet){ toast('银两不足。'); return; }
+  S.money-=bet;
+  GO = {bet:bet, board:null, over:false};
+  var N=15;
+  GO.board=[];
+  for(var i=0;i<N;i++){ GO.board.push([]); for(var j=0;j<N;j++) GO.board[i].push(0); }
+  var cells='';
+  for(var y=0;y<N;y++){
+    for(var x=0;x<N;x++){
+      cells += '<div class="gocell" id="gc_'+x+'_'+y+'" onclick="goPut('+x+','+y+')" style="width:26px;height:26px;display:inline-block;background:#D6C79A;border:1px solid #7A6C54;cursor:pointer"></div>';
+    }
+    cells += '<br>';
+  }
+  var html = '<h2 class="pTitle">手谈 · 五子棋（押' + bet + '两）</h2>' +
+    '<div style="text-align:center">' + cells + '</div>' +
+    '<p id="goMsg" class="mute" style="text-align:center;margin-top:6px">你先落子（黑）</p>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="goQuit()">认输离开</button></div>';
+  popPanel(html, {full:true});
+}
+function goPut(x,y){
+  if(!GO||GO.over) return;
+  if(GO.board[x][y]!==0) return;
+  GO.board[x][y]=1;
+  goDraw(x,y,'#1A1A1A');
+  if(goCheck(x,y,1)){
+    goOver(true);
+    return;
+  }
+  setTimeout(goAI, 350);
+}
+function goDraw(x,y,col){
+  var el = $('gc_'+x+'_'+y);
+  if(el){ el.style.background = col==='#1A1A1A' ? 'radial-gradient(circle at 35% 35%,#555,#000)' : 'radial-gradient(circle at 35% 35%,#fff,#ccc)'; }
+}
+function goCheck(x,y,who){
+  var dirs=[[1,0],[0,1],[1,1],[1,-1]];
+  for(var d=0;d<4;d++){
+    var dx=dirs[d][0], dy=dirs[d][1];
+    var c=1;
+    for(var s=1;s<5;s++){ var nx=x+dx*s, ny=y+dy*s; if(nx<0||ny<0||nx>=15||ny>=15||GO.board[nx][ny]!==who) break; c++; }
+    for(var s2=1;s2<5;s2++){ var nx2=x-dx*s2, ny2=y-dy*s2; if(nx2<0||ny2<0||nx2>=15||ny2>=15||GO.board[nx2][ny2]!==who) break; c++; }
+    if(c>=5) return true;
+  }
+  return false;
+}
+function goAI(){
+  if(!GO||GO.over) return;
+  /* 找能赢的点，否则堵玩家 */
+  var best=null;
+  for(var y=0;y<15;y++){
+    for(var x=0;x<15;x++){
+      if(GO.board[x][y]!==0) continue;
+      GO.board[x][y]=2;
+      if(goCheck(x,y,2)){ GO.board[x][y]=0; best={x:x,y:y}; break; }
+      GO.board[x][y]=0;
+    }
+    if(best) break;
+  }
+  if(!best){
+    for(var y2=0;y2<15;y2++){
+      for(var x2=0;x2<15;x2++){
+        if(GO.board[x2][y2]!==0) continue;
+        GO.board[x2][y2]=1;
+        if(goCheck(x2,y2,1)){ GO.board[x2][y2]=0; best={x:x2,y:y2}; break; }
+        GO.board[x2][y2]=0;
+      }
+      if(best) break;
+    }
+  }
+  if(!best){
+    var empt=[];
+    for(var y3=0;y3<15;y3++) for(var x3=0;x3<15;x3++) if(GO.board[x3][y3]===0) empt.push({x:x3,y:y3});
+    if(empt.length) best = pick(empt);
+  }
+  if(!best){ goOver(true); return; }
+  GO.board[best.x][best.y]=2;
+  goDraw(best.x,best.y,'#fff');
+  if(goCheck(best.x,best.y,2)){ goOver(false); return; }
+}
+function goOver(win){
+  GO.over=true;
+  if(win){
+    S.money += GO.bet*2;
+    toast('你赢了！得' + (GO.bet*2) + '两。');
+    $('goMsg').textContent = '你赢了（白）。再会！';
+  } else {
+    toast('你输了' + GO.bet + '两。');
+    $('goMsg').textContent = '你输了。再会！';
+  }
+}
+function goQuit(){
+  GO = null;
+  closePop();
+  openTeahouse();
+}
+
+/* ================= 状态 / 背包 / 日志 / 存档 / 设定 ================= */
+function openStatus(){
+  var cb = compBonus(S);
+  var html = '<h2 class="pTitle">人物状态</h2>' +
+    '<p class="mute">' + S.name + ' · ' + (S.gender==='男'?'男儿':'女儿') + ' · ' + S.title + '</p>' +
+    '<div class="grid2" style="margin-top:10px">' +
+    statRow('饱食', S.hunger, 100) + statRow('健康', S.health, 100) + statRow('体力', S.stamina, 100) + statRow('声望', S.rep, 10000) +
+    '</div>' +
+    '<div class="row" style="margin-top:8px"><span class="tag">武艺 ' + S.martial + '</span><span class="tag">智力 ' + intelOf(S) + '</span><span class="tag">魅力 ' + charmOf(S) + '</span>' +
+    '<span class="tag gold">负重 ' + cargoWeight(S) + '/' + capacityOf(S) + '</span></div>' +
+    '<div style="margin-top:6px"><span class="mute">武器：' + D.items[S.equip.weapon].nm + '（攻+' + D.items[S.equip.weapon].st.atk + '） · 防具：' + D.items[S.equip.armor].nm + '（防+' + D.items[S.equip.armor].st.def + '）</span></div>' +
+    '<div style="margin-top:6px"><span class="mute">同伴：' + (S.companions.length?S.companions.map(function(id){return D.npcs[id].nm;}).join('、'):'孤身一人') + (cb.martial?'（队伍武艺+' + cb.martial + '）':'') + '</span></div>' +
+    (S.spouse?'<div style="margin-top:6px"><span class="tag ver">结发：' + D.npcs[S.spouse].nm + '</span></div>':'') +
+    '<div style="margin-top:6px"><span class="mute">战历：' + S.wins + '胜 · 行走' + S.visitedCount + '城 · 海上' + S.seaDays + '日</span></div>' +
+    '<div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="closePop()">知晓</button></div>';
+  popPanel(html, {full:true});
+}
+function statRow(nm, v, max){
+  var p = Math.min(100, v/max*100);
+  var cls = p<25?'low':(p<50?'mid':'');
+  return '<div><div style="display:flex;justify-content:space-between"><span class="small">' + nm + '</span><span class="small">' + Math.round(v) + '</span></div>' +
+    '<div class="gauge"><i style="width:' + p + '%" class="' + cls + '"></i></div></div>';
+}
+function openInventory(){
+  var keys = Object.keys(S.items).filter(function(k){ return S.items[k]>0; });
+  var rows = keys.length?keys.map(function(k){
+    var it = D.items[k];
+    var c = S.items[k];
+    var btn = '';
+    if(it.kind==='food') btn = '<button class="btn mini jade" onclick="useItem(\''+k+'\')">吃</button>';
+    else if(it.kind==='med') btn = '<button class="btn mini jade" onclick="useItem(\''+k+'\')">用</button>';
+    else if(it.kind==='weapon') btn = '<button class="btn mini" onclick="equipItem(\''+k+'\',\'weapon\')">装备</button>';
+    else if(it.kind==='armor') btn = '<button class="btn mini" onclick="equipItem(\''+k+'\',\'armor\')">装备</button>';
+    else if(it.kind==='gift') btn = '';
+    else btn = '';
+    return '<div class="listItem"><div><div class="nm">' + it.nm + (c>1?' x'+c:'') + '</div><div class="ds">' + it.ds + '</div></div><div>' + btn + '</div></div>';
+  }).join('') : '<p class="mute">行囊空空。</p>';
+  var html = '<h2 class="pTitle">行囊</h2><div>' + rows + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function useItem(k){
+  var it = D.items[k];
+  if(!S.items[k]) return;
+  if(it.st.hunger) S.hunger = clamp(S.hunger+it.st.hunger, 0, 100);
+  if(it.st.health) S.health = clamp(S.health+it.st.health, 0, 100);
+  if(it.st.intel) S.intel = clamp(S.intel+it.st.intel, 1, 99);
+  S.items[k]--;
+  if(S.items[k]<=0) delete S.items[k];
+  toast('使用' + it.nm + (it.st.hunger?'，饱食+' + it.st.hunger:'') + (it.st.health?'，健康+' + it.st.health:'') + '。');
+  openInventory();
+}
+function equipItem(k, slot){
+  if(!S.items[k]) return;
+  S.equip[slot] = k;
+  toast('装备了' + D.items[k].nm + '。');
+  openInventory();
+}
+/* 日志 */
+var journalTab = 'story';
+function openJournal(){
+  renderJournal('story');
+}
+function renderJournal(tab){
+  journalTab = tab;
+  var tabs = ['story','goal','gossip','ach'];
+  var tabNames = {story:'主线', goal:'自由目标', gossip:'传闻', ach:'成就'};
+  var tabBtns = tabs.map(function(t){
+    return '<button class="btn small' + (tab===t?'':' ghost') + '" onclick="renderJournal(\''+t+'\')">' + tabNames[t] + '</button>';
+  }).join('');
+  var body = '';
+  if(tab==='story'){
+    var ch = null;
+    if(S.mode==='story' && S.story.cur!==null) ch = STORY[S.story.cur];
+    if(ch){
+      var beatId = S.story.beat || ch.start;
+      var beat = ch.beats[beatId];
+      var hint = beat ? (beat.t==='enter'?'前往 ' + (D.locations[beat.loc]?D.locations[beat.loc].nm:'未知') + ' 一探究竟。' : (beat.t==='talk'?'在 ' + D.locations[ch.loc].nm + ' 找 ' + (D.npcs[beat.npc]?D.npcs[beat.npc].nm:'故人') + ' 详谈。' : '时机已到。')) : '';
+      body = '<div class="listItem" style="cursor:default"><div class="nm">' + ch.title + ' · 进行中</div><div class="ds">' + hint + '</div></div>';
+    }
+    var done = STORY.filter(function(c){ return hasFlag('ch'+c.no+'_done'); });
+    if(!ch && !done.length){ body += '<p class="mute">主线尚未开始。' + (S.mode==='story'?'——序章会在你抵达威海卫时拉开。':'自由模式没有主线，你只管活下去。') + '</p>'; }
+    body += done.map(function(c){
+      return '<div class="listItem" style="cursor:default"><div class="nm">' + c.title + ' ✓</div><div class="ds">' + (c.sub||'') + '</div></div>';
+    }).join('');
+    var nextCh = S.mode==='story' ? STORY.find(function(c){ return !hasFlag('ch'+c.no+'_done') && c.unlockDay>S.day; }) : null;
+    if(nextCh) body += '<p class="mute" style="margin-top:6px">下一回《' + nextCh.title + '》将于第' + nextCh.unlockDay + '日启封。</p>';
+  } else if(tab==='goal'){
+    if(S.mode==='free'){
+      body = '<p class="mute">自由模式 · 唯一目标：活下去。</p>' +
+        '<div class="listItem"><div class="nm">活出个名堂</div><div class="ds">达成任意自由结局即可收束此局</div></div>' +
+        '<div class="listItem"><div class="nm">富甲一方</div><div class="ds">身家 10000 两 且 声望 3000</div></div>' +
+        '<div class="listItem"><div class="nm">一代名将</div><div class="ds">武艺 90 · 声望 8000 · 胜仗 30</div></div>' +
+        '<div class="listItem"><div class="nm">寿终正寝</div><div class="ds">安然活过 3650 日</div></div>' +
+        '<div class="listItem"><div class="nm">隐于市井</div><div class="ds">平淡活过 730 日，声名不显</div></div>';
+    } else {
+      body = '<p class="mute">主线模式 · 十二回主线之外，世界依旧开放。<br>赚钱、交友、行商、练武——皆为你的自由。</p>' +
+        '<div class="listItem"><div class="nm">环游世界</div><div class="ds">到访 30 座城市</div></div>' +
+        '<div class="listItem"><div class="nm">广结善缘</div><div class="ds">与 10 位 NPC 好感超过 50</div></div>';
+    }
+  } else if(tab==='gossip'){
+    var notes = S.notes || [];
+    body = notes.length ? notes.map(function(n){ return '<div class="listItem" style="cursor:default"><div class="ds">' + n + '</div></div>'; }).join('') : '<p class="mute">尚无传闻笔记。</p>';
+  } else {
+    var rows = D.achievements.map(function(a){
+      var got = S.achievements.indexOf(a.id)>=0;
+      return '<div class="listItem" style="cursor:default"><div><div class="nm">' + (got?'✓ ':'○ ') + a.nm + '</div><div class="ds">' + a.ds + '</div></div></div>';
+    }).join('');
+    body = rows;
+  }
+  var html = '<h2 class="pTitle">行旅日志</h2><div class="row" style="justify-content:center">' + tabBtns + '</div><div style="margin-top:8px">' + body + '</div>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function journalNote(t){
+  if(!S.notes) S.notes = [];
+  S.notes.unshift(t);
+  if(S.notes.length>40) S.notes.length = 40;
+}
+/* 存档 */
+function openSave(fromBoot){
+  var slots=[0,1,2,3];
+  var rows = slots.map(function(i){
+    var meta=null;
+    try{ meta = JSON.parse(localStorage.getItem(CFG.saveMetaKey)||'{}')[i]; }catch(e){}
+    var label = i===0?'自动':('存档' + i);
+    var info = meta ? (meta.name + ' · ' + fmtDay(meta.day) + ' · ' + meta.mode + ' · ' + (D.locations[meta.loc]?D.locations[meta.loc].nm:meta.loc)) : '空';
+    return '<div class="listItem"><div><div class="nm">' + label + '</div><div class="ds">' + info + '</div></div>' +
+      '<div class="row" style="gap:4px">' +
+      '<button class="btn mini" onclick="saveTo('+i+')">存</button>' +
+      '<button class="btn mini jade" onclick="loadFrom('+i+')">读</button>' +
+      (meta?'<button class="btn mini danger" onclick="delSave('+i+')">删</button>':'') +
+      '</div></div>';
+  }).join('');
+  var html = '<h2 class="pTitle">存档 · 本地</h2><div>' + rows + '</div>' +
+    '<div class="sep"></div>' +
+    '<div class="row"><button class="btn small" onclick="doExport()">导出存档</button>' +
+    '<button class="btn small" onclick="doImport()">导入存档</button></div>' +
+    '<textarea id="expBox" class="txt" style="height:64px;margin-top:6px;font-size:11px" placeholder="导出的存档代码会显示在这里；导入时粘贴代码后点下方确认"></textarea>' +
+    '<div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" onclick="closePop()">离开</button></div>';
+  popPanel(html, {full:true});
+}
+function saveTo(i){
+  var ok = saveGame(i);
+  toast(ok?'已存入' + (i===0?'自动':'存档' + i) + '。':'保存失败（浏览器可能禁用了本地存储）。');
+  openSave();
+}
+function loadFrom(i){
+  var ok = loadGame(i);
+  if(ok){
+    closePop();
+    toast('读取存档，回到了第' + S.day + '日。');
+    enterScene(S.loc);
+    checkStory();
+  } else {
+    toast('存档读取失败或为空。');
+  }
+}
+function delSave(i){
+  deleteSave(i);
+  openSave();
+}
+function doExport(){
+  var str = exportSave();
+  var box = $('expBox');
+  if(box) box.value = str || '导出失败';
+  toast('存档代码已生成，复制保存即可。');
+}
+function doImport(){
+  var box = $('expBox');
+  var v = box ? box.value : '';
+  if(!v){ toast('请先粘贴存档代码。'); return; }
+  var ok = importSave(v);
+  if(ok){
+    closePop();
+    toast('导入成功。');
+    enterScene(S.loc);
+    checkStory();
+  } else {
+    toast('导入失败：代码无效。');
+  }
+}
+/* 设定 */
+function openSettings(){
+  var html = '<h2 class="pTitle">设定</h2>' +
+    '<div class="row"><label class="lbl">对话速度</label>' +
+    '<button class="btn small' + (S.textSpeed===0?'':' ghost') + '" onclick="setTS(0)">慢</button>' +
+    '<button class="btn small' + (S.textSpeed===1?'':' ghost') + '" onclick="setTS(1)">常</button>' +
+    '<button class="btn small' + (S.textSpeed===2?'':' ghost') + '" onclick="setTS(2)">快</button></div>' +
+    '<div class="sep"></div>' +
+    '<div class="row"><button class="btn danger" onclick="confirmQuit()">返回标题</button>' +
+    '<button class="btn ghost" onclick="closePop()">继续游戏</button></div>' +
+    '<p class="mute" style="margin-top:8px">提示：本作数据存于浏览器本地。上传 GitHub Pages 后，存档随浏览器保留。</p>';
+  popPanel(html, {full:true});
+}
+function setTS(v){ S.textSpeed = v; openSettings(); }
+function confirmQuit(){
+  saveGame(0);
+  closePop();
+  goBoot();
+}
+
+/* ================= 世界地图点击 ================= */
+function worldClick(mx, my){
+  var id = worldPointToTile(mx, my);
+  if(!id) return;
+  var l = D.locations[id];
+  var cur = id===S.loc;
+  var vis = S.visited[id] || !!S.items.tool_ditu;
+  var ds = vis ? l.ds : '（尚未踏足之地。传闻与地图册会揭开它的面目。）';
+  var hasPath = cur || bfsPath(S.loc, id);
+  var btns = '';
+  if(cur) btns = '<button class="btn" onclick="enterScene(\''+id+'\')">进城</button>';
+  else if(hasPath) btns = '<button class="btn" onclick="travelTo(\''+id+'\')">前往（约' + (bfsPath(S.loc,id).length-1) + '日）</button>';
+  else btns = '<span class="mute">此路暂不通。</span>';
+  var old = $('cityCardEl'); if(old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'cityCardEl';
+  d.className = 'panel';
+  d.innerHTML = '<h3 class="pTitle">' + l.nm + ' · ' + l.type + '</h3>' +
+    '<p class="mute small" style="line-height:1.7">' + ds + '</p>' +
+    '<div class="row">' + btns + '<button class="btn ghost small" onclick="closeCityCard()">收起</button></div>';
+  uiEl.appendChild(d);
+  setScreen('world');
+}
+function closeCityCard(){ var c=$('cityCardEl'); if(c) c.remove(); }
+
+/* ================= 成就 / 自由结局 ================= */
+function checkAchievements(){
+  D.achievements.forEach(function(a){
+    if(S.achievements.indexOf(a.id)>=0) return;
+    if(a.cond(S)){
+      S.achievements.push(a.id);
+      toast('成就达成：' + a.nm + '！');
+      S.rep = Math.max(0, S.rep + 2);
+    }
+  });
+}
+function checkFreeEnding(){
+  if(S.mode!=='free') return;
+  if(S.ending) return;
+  if(S.money>=10000 && S.rep>=3000){ showEnding('f_rich'); return; }
+  if(S.martial>=90 && S.rep>=8000 && S.wins>=30){ showEnding('f_general'); return; }
+  if(S.day>=3650){ showEnding('f_old'); return; }
+  if(S.day>=730 && S.rep<50 && S.money<100){ showEnding('f_hidden'); return; }
+}
+
+/* ================= 输入 ================= */
+document.addEventListener('keydown', function(e){
+  var k = e.key.toLowerCase();
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(k)>=0) e.preventDefault();
+  KEYS[k] = 1;
+  if(k==='e' && SCR==='scene'){ interact(); }
+  if(k===' ' && SCR==='dlg'){ dlgNext(); }
+  if(k==='enter' && SCR==='dlg'){ dlgNext(); }
+  if(k==='escape'){
+    if(SCR==='dlg'){ dlgSkip(); }
+    else if(SCR==='scene'){ openMapBack(); }
+    else if(SCR==='world'){ openSettings(); }
+  }
+});
+document.addEventListener('keyup', function(e){ KEYS[e.key.toLowerCase()] = 0; });
+cv.addEventListener('pointerdown', function(e){
+  var r = cv.getBoundingClientRect();
+  var mx = (e.clientX - r.left) * LOGIC_W / r.width;
+  var my = (e.clientY - r.top) * LOGIC_H / r.height;
+  if(SCR==='world'){ worldClick(mx, my); }
+  else if(SCR==='scene'){ interactAt(mx, my); }
+});
+function interact(){
+  var n = nearestInteract();
+  if(!n) return;
+  if(n.type==='npc') openNpcPanel(n.id);
+  else openFacility(n.obj.kind);
+}
+function interactAt(mx, my){
+  /* 换算到场景坐标 */
+  var offX = (LOGIC_W - scene.w*TILE)/2;
+  var offY = (LOGIC_H - scene.h*TILE)/2;
+  var tx = (mx-offX)/TILE, ty = (my-offY)/TILE;
+  var best=null, bd=4*4;
+  scene.npcs.forEach(function(n){
+    var dx=(n.x+16)/TILE-tx, dy=(n.y+14)/TILE-ty;
+    var d=dx*dx+dy*dy;
+    if(d<bd){ bd=d; best={type:'npc', id:n.id}; }
+  });
+  scene.buildings.forEach(function(b){
+    var dx=(b.door.x*TILE+6)/TILE-tx, dy=(b.door.y*TILE+4)/TILE-ty;
+    var d=dx*dx+dy*dy;
+    if(d<bd){ bd=d; best={type:'bld', obj:b}; }
+  });
+  if(best){
+    if(best.type==='npc') openNpcPanel(best.id);
+    else openFacility(best.obj.kind);
+  }
+}
+/* 虚拟方向键 */
+function buildDpad(){
+  var d = document.createElement('div');
+  d.id = 'dpadEl';
+  d.innerHTML = '<button class="up" data-d="u">▲</button>' +
+    '<button class="left" data-d="l">◀</button>' +
+    '<button class="down" data-d="d">▼</button>' +
+    '<button class="right" data-d="r">▶</button>';
+  uiEl.appendChild(d);
+  d.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('pointerdown', function(ev){ ev.preventDefault(); dpadDir[b.dataset.d]=1; });
+    b.addEventListener('pointerup', function(){ dpadDir[b.dataset.d]=0; });
+    b.addEventListener('pointerleave', function(){ dpadDir[b.dataset.d]=0; });
+  });
+}
+buildDpad();
+
+/* ================= 主循环 ================= */
+var lastT = 0, rafId = null, running = false;
+function loop(t){
+  if(!running) return;
+  var dt = Math.min(0.05, (t - lastT)/1000 || 0.016);
+  lastT = t;
+  if(SCR==='world'){
+    drawWorld(dt, t);
+  } else if(SCR==='scene'){
+    sceneMove(dt);
+    drawScene(dt, t);
+  } else if(SCR==='dlg'){
+    renderLine();
+    drawScene(0.016, t);
+  }
+  rafId = requestAnimationFrame(loop);
+}
+function startLoop(){
+  if(running) return;
+  running = true;
+  lastT = performance.now();
+  rafId = requestAnimationFrame(loop);
+}
+function stopLoop(){ running = false; if(rafId) cancelAnimationFrame(rafId); }
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden) stopLoop();
+  else { lastT = performance.now(); startLoop(); }
+});
+
+/* ================= 启动 ================= */
+(function init(){
+  paintWorld();
+  goBoot();
+  startLoop();
+})();
+
+
+</script>
+</body>
+</html>

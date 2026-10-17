@@ -439,7 +439,6 @@ var G={
       if(k==='e') self.press('interact');
       if(k==='i') UI.toggleInv();
       if(k==='m') Aud.mute();
-      if(k==='k'){ saveGame(); UI.toast('已存档 · 战争第 '+S.days+' 天',1800); }
       if(k==='1'||k==='2'||k==='3'||k==='4') self.press('num'+k);
       Aud.resume();
     });
@@ -464,8 +463,8 @@ var G={
     var sc=this.scenes[name];
     if(sc) sc.name=sc.name||name;
     this.cur=sc;
-    UI.closeAll();
     if(sc.enter) sc.enter(this.sceneData);
+    UI.closeAll();
   },
   shake:function(a){ this.shakeAmt=Math.max(this.shakeAmt,a); },
   flash:function(col,a){ this.flashA=a; this.flashCol=col; var el=$('flash'); el.style.background=col; el.style.opacity=clamp(a,0,0.9); },
@@ -603,7 +602,7 @@ var UI=(function(){
     else if(S.kills>50) kv.textContent='你已数不清';
     else kv.textContent='你杀了 '+S.kills+' 个母亲的孩子';
     var kh=$('keyhint');
-    if(G.hint) kh.textContent=G.hint; else kh.textContent='移动 WASD/方向键 · 互动 空格/E · 行囊 I · 存档 K · 静音 M';
+    if(G.hint) kh.textContent=G.hint; else kh.textContent='移动 WASD/方向键 · 互动 空格/E · 行囊 I · 静音 M';
     $('hintval').textContent='';
   }
   /* 行囊 */
@@ -656,7 +655,7 @@ G.scenes.title={
   enter:function(){
     this.t=0; this.started=false;
     UI.show('title');
-    $('titletxt').innerHTML='2D 像素 · 单机 · 反战游戏<br>键盘 WASD/方向键 移动 · 空格 互动 · I 行囊 · K 存档 · M 静音<br>存档自动覆盖 · 回到标题可继续游戏';
+    $('titletxt').innerHTML='2D 像素 · 单机 · 反战游戏<br>键盘 WASD/方向键 移动 · 空格 互动 · I 行囊 · M 静音';
     var has=loadGame();
     $('titlecta').textContent=has? '点 击 继 续':'点 击 开 始';
     Aud.setWind(0.12); Aud.setRain(0.1);
@@ -728,7 +727,7 @@ G.scenes.intro={
     setTimeout(function(){ UI.say(self.lines,function(){ self.done=true; }); },900);
   },
   press:function(a){ if(a==='confirm'){ if(this.done){ this.next(); } } },
-  next:function(){ if(this._fading) return; this._fading=true; G.fade(1,function(){ G.fade(0); G.start('act0'); }); },
+  next:function(){ G.fade(1,function(){ G.fade(0); G.start('act0'); }); },
   update:function(dt){ this.t+=dt; },
   draw:function(c){
     c.fillStyle='#020204'; c.fillRect(0,0,480,270);
@@ -796,7 +795,7 @@ G.scenes.act0={
       UI.say([
         {w:'旁白',s:'1939 年夏。战争第一年。你的小镇从没有这么热闹过。'},
         {w:'你',cls:'red',s:'战争！我等这一天，等了十八年！'},
-        {w:'阿良',s:'陈望！快来看！征兵处！打一仗回来就是英雄！'},
+        {w:'阿良',s:'陈铭！快来看！征兵处！打一仗回来就是英雄！'},
         {w:'老周',s:'打完这一仗，我就回家娶翠兰。你们都得来喝喜酒，一个都跑不掉！'},
         {w:'你',cls:'red',s:'好！到时候我给你们一人带一个德国钢盔当酒杯！'},
         {w:'旁白',s:'人群在欢呼。军乐队在吹奏。太阳很好，连空气都是香的。'},
@@ -845,7 +844,7 @@ G.scenes.act0={
     Aud.whistle();
     setTimeout(function(){
       UI.say([
-        {w:'阿秀',s:'陈望！陈望！你答应过我——春天就回来！'},
+        {w:'阿秀',s:'陈铭！陈铭！你答应过我——春天就回来！'},
         {w:'你',cls:'red',s:'等我回来，娶你！'},
         {w:'阿秀',s:'你保证！'},
         {w:'你',cls:'red',s:'我保证！'},
@@ -853,7 +852,7 @@ G.scenes.act0={
         {w:'旁白',s:'火车开了。人群追着跑。阿秀的辫子散开了，她没有停。'}
       ],function(){
         addLetter({id:'m1',title:'妈妈的信 · 一',from:'妈妈',text:'儿啊：\n你爸当年也是这么走的。他回来那天，一句话都没说，在门口坐了一夜。\n娘不要你当英雄。娘只要你回来。\n\n——娘'});
-        addLetter({id:'g1',title:'阿秀的信 · 一',from:'阿秀',text:'陈望：\n我等你。\n春天，村口的桃花会开。你要回来，摘给我。\n\n——阿秀'});
+        addLetter({id:'g1',title:'阿秀的信 · 一',from:'阿秀',text:'陈铭：\n我等你。\n春天，村口的桃花会开。你要回来，摘给我。\n\n——阿秀'});
         UI.toast('获得两封信（按 I 阅读）',3000);
         self.goRange();
       });
@@ -887,7 +886,6 @@ G.scenes.act0={
   },
   endRange:function(){
     if(this.phase!=='range') return;
-    this.phase='rangeEnd';
     var acc=this.score/20;
     var line;
     if(this.score===0) line='教官：你连鸡都没杀过。上了战场，是鸡先死，还是你先死？';
@@ -1148,7 +1146,7 @@ G.scenes.act2={
   },
   waitDialogue:function(){
     var self=this;
-    addLetter({id:'g2',title:'阿秀的信 · 二',from:'阿秀',text:'陈望：\n听说你们要进攻了。\n别死。\n你说过，春天回来，摘桃花给我。\n\n——阿秀'});
+    addLetter({id:'g2',title:'阿秀的信 · 二',from:'阿秀',text:'陈铭：\n听说你们要进攻了。\n别死。\n你说过，春天回来，摘桃花给我。\n\n——阿秀'});
     UI.say([
       {w:'旁白',s:'战争第 47 天。黎明前的战壕里，雾很重。'},
       {w:'铁柱',s:'我……我有点害怕。我还没杀过人。',cls:'inner'},
@@ -1339,7 +1337,7 @@ G.scenes.act2={
     setTimeout(function(){
       UI.say([
         {w:'旁白',s:'打扫战场的时候，军官念了念立功名单。'},
-        {w:'军官',cls:'officer',s:'……陈望！第一个冲进敌人战壕！好样的！你是英雄！'},
+        {w:'军官',cls:'officer',s:'……陈铭！第一个冲进敌人战壕！好样的！你是英雄！'},
         {w:'旁白',s:'你站起来，敬了个礼。'},
         {w:'旁白',s:'然后你转身，吐了。',cls:'red'},
         {w:'旁白',s:'英雄的名声在战壕里传开。你看见阿良在远处看着你，眼神很复杂。',cls:'inner'},
@@ -1696,7 +1694,7 @@ G.scenes.act4={
           {w:'旁白',s:'战争第 160 天。冬天来了。你们在撤退。'},
           {w:'旁白',s:'雪没过大腿。夜里零下二十度。你数不清自己冻掉了几个脚趾。'},
           {w:'旁白',s:'粮食早就吃完了。你们开始吃老鼠。老鼠也快没了。',cls:'inner'},
-          {w:'老胡',s:'陈望……过来……',cls:'red'},
+          {w:'老胡',s:'陈铭……过来……',cls:'red'},
           {w:'旁白',s:'老胡躺在担架上。他的腿冻烂了，伤口流着黑色的脓水。'},
           {w:'老胡',s:'兄弟……给我个痛快吧。',cls:'red'},
           {w:'旁白',s:'军医说，没有药。他最多再撑两个晚上，然后会在高烧里活活疼死。',cls:'inner'}
@@ -1875,7 +1873,7 @@ G.scenes.act5={
         UI.say([
           {w:'旁白',s:'街道战。每一栋楼都在着火。'},
           {w:'旁白',s:'你的连队只剩四个人了：你、阿良、还有两个刚补上来的新兵。'},
-          {w:'阿良',s:'陈望……打完这一仗……我真的想回家。我娘还等我穿新棉袄……',cls:'inner'},
+          {w:'阿良',s:'陈铭……打完这一仗……我真的想回家。我娘还等我穿新棉袄……',cls:'inner'},
           {w:'你',s:'会回去的。打完就回去。',cls:'inner'},
           {w:'旁白',s:'你说了这句话。你说了很多次这句话。你已经不信了。',cls:'inner'},
           {w:'旁白',s:'（W/S 上下移动瞄准 · 空格射击 · 消灭前面的敌人。三个。）',cls:'mono'}
@@ -1891,7 +1889,8 @@ G.scenes.act5={
     Aud.rifle(); FX.spark(450,this.aimY,5,0);
     var hit=null,best=60;
     for(var i=0;i<this.enem.length;i++){ var e=this.enem[i]; if(e.dead) continue; var d=Math.abs(e.y-this.aimY); if(d<best){ best=d; hit=e; } }
-    if(hit){ hit.dead=true; S.kills++; this.sq++; FX.blood(420,hit.y,14,Math.PI); Aud.scream(); }
+    if(hit){ hit.dead=true; S.kills++; FX.blood(420,hit.y,14,Math.PI); Aud.scream(); }
+    this.sq++;
     if(this.sq>=3&&!this.aliangDead){ this.aliangScene(); }
   },
   spawnE:function(){
@@ -1899,7 +1898,7 @@ G.scenes.act5={
   },
   aliangScene:function(){
     var self=this;
-    this.lock=true; this.aliangDead=true; G.hint=null;
+    this.lock=true; G.hint=null;
     setTimeout(function(){
       UI.say([
         {w:'旁白',s:'第三个敌人倒下了。街道安静了一瞬。'},
@@ -1908,7 +1907,7 @@ G.scenes.act5={
         {w:'旁白',s:'子弹打在他胸口。他低头看了看那个洞，又抬头看你。'},
         {w:'阿良',s:'棉袄……我娘的……新棉袄……',cls:'red'},
         {w:'旁白',s:'他倒在你怀里。血从嘴角流出来，流成一条小河。'},
-        {w:'阿良',s:'陈望……你……你回家……替我……看看我娘……',cls:'red'},
+        {w:'阿良',s:'陈铭……你……你回家……替我……看看我娘……',cls:'red'},
         {w:'旁白',s:'他的眼睛慢慢没有了光。你抱着他，在燃烧的街道中间，跪了很久。',cls:'inner'},
         {w:'旁白',s:'你把他棉袄上的弹孔用手捂住，好像这样血就不会流干。',cls:'inner'},
         {w:'旁白',s:'他娘做的棉袄，他一直没舍得穿。他说要回家再穿。',cls:'inner'}

@@ -1,0 +1,3788 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HanBer THREE · 被写错的世界</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+/* ===== 设计基调：1933 反转世界 · 油印档案 =====
+   羊皮纸底 / 墨线 / 黄铜强调 / 血锈红印章
+   ============================================ */
+:root{
+  --paper:#E9DDBF; --paper2:#DCCDA6; --paper3:#F2E8CF;
+  --ink:#27211A; --ink2:#4A3F30; --ink3:#7A6C54;
+  --brass:#B98A2F; --brass2:#8F6A22; --rust:#8A4B2A;
+  --blood:#A33B2E; --blood2:#7C2C22;
+  --olive:#5F6B4F; --fog:#6E7F8E;
+  --ok:#3F6B3F; --bad:#A33B2E;
+  --panel:rgba(235,224,198,.97);
+  --panel2:rgba(216,199,154,.9);
+  --line:2px solid var(--ink);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#14100B}
+body{
+  font-family:"Noto Serif SC","Songti SC","SimSun",serif;
+  color:var(--ink); -webkit-font-smoothing:antialiased;
+  user-select:none; -webkit-user-select:none; touch-action:none;
+}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;background:#0d0a07;image-rendering:auto}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10}
+#ui>*{pointer-events:auto}
+.hidden{display:none!important}
+
+/* ===== 通用面板 ===== */
+.panel{
+  background:var(--panel); border:var(--line);
+  box-shadow:4px 4px 0 rgba(39,33,26,.28), inset 0 0 0 3px rgba(185,138,47,.25);
+  border-radius:4px; padding:14px 16px;
+}
+.btn{
+  display:inline-block; min-width:96px; padding:9px 16px; margin:4px;
+  font-family:inherit; font-size:15px; font-weight:700; color:var(--paper3);
+  background:linear-gradient(180deg,#C99B43,#8F6A22);
+  border:1px solid #5C4313; border-bottom:3px solid #5C4313;
+  border-radius:3px; cursor:pointer; letter-spacing:.12em;
+  box-shadow:0 2px 0 rgba(0,0,0,.25); text-align:center;
+  transition:transform .06s, filter .12s;
+}
+.btn:hover{filter:brightness(1.1)}
+.btn:active{transform:translateY(2px);border-bottom-width:1px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink);border-bottom:3px solid var(--ink);box-shadow:none}
+.btn.danger{background:linear-gradient(180deg,#B9503F,#7C2C22);border-color:#5C1C15}
+.btn.olive{background:linear-gradient(180deg,#7A8760,#4C573C);border-color:#333C26}
+.btn.small{min-width:64px;padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.locked{opacity:.5}
+
+/* ===== 标题界面 ===== */
+#titleScreen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 38%, rgba(233,221,191,.18), rgba(13,10,7,.88) 72%);
+  z-index:60;}
+#titleScreen .t-logo{
+  font-family:"Noto Serif SC",serif; font-weight:900;
+  font-size:min(9vw,84px); letter-spacing:.28em; color:var(--paper);
+  text-shadow:0 0 18px rgba(185,138,47,.65), 0 6px 0 #1d1811, 0 10px 24px rgba(0,0,0,.9);
+  transform:translateX(.14em); white-space:nowrap;
+}
+#titleScreen .t-sub{
+  margin-top:14px; font-size:min(3.2vw,20px); letter-spacing:.6em; color:var(--brass);
+  text-shadow:0 2px 6px rgba(0,0,0,.8); transform:translateX(.3em);
+}
+#titleScreen .t-line{width:min(480px,70vw);height:2px;margin:22px 0;background:linear-gradient(90deg,transparent,var(--brass),transparent)}
+#titleScreen .t-menu{display:flex;flex-direction:column;gap:10px;width:min(320px,76vw)}
+#titleScreen .t-menu .btn{width:100%;font-size:17px;padding:12px}
+#titleScreen .t-foot{position:absolute;bottom:26px;color:var(--ink3);font-size:12px;letter-spacing:.2em;text-align:center;line-height:1.9}
+#titleScreen .t-stamp{
+  position:absolute; top:9%; right:8%; transform:rotate(9deg);
+  border:3px double var(--blood); color:var(--blood);
+  padding:6px 14px; font-size:14px; font-weight:900; letter-spacing:.3em;
+  opacity:.85; background:rgba(20,13,8,.35);
+}
+
+/* ===== 建档界面 ===== */
+#charScreen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:55;
+  background:rgba(13,10,7,.72)}
+#charScreen .panel{width:min(560px,92vw)}
+#charScreen h2{letter-spacing:.4em;font-size:22px;margin-bottom:12px;border-bottom:2px solid var(--ink);padding-bottom:8px}
+.field{margin:10px 0}
+.field label{display:block;font-size:13px;color:var(--ink2);letter-spacing:.14em;margin-bottom:5px;font-weight:700}
+.field input[type=text]{
+  width:100%; padding:9px 10px; font-family:inherit; font-size:16px;
+  background:var(--paper3); border:1px solid var(--ink); border-radius:2px; color:var(--ink);
+}
+.origin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.origin-card{
+  border:1px solid var(--ink2); border-radius:3px; padding:8px 9px; cursor:pointer;
+  background:var(--paper3); transition:all .1s;
+}
+.origin-card:hover{background:#F4EBD4}
+.origin-card.sel{border:2px solid var(--brass); box-shadow:0 0 0 2px rgba(185,138,47,.35); background:#F7EED6}
+.origin-card b{display:block;font-size:14px;letter-spacing:.08em}
+.origin-card span{font-size:11px;color:var(--ink2);line-height:1.5;display:block;margin-top:3px}
+
+/* ===== HUD ===== */
+#hud{position:absolute;inset:0;z-index:20}
+.hud-top{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:8px;
+  padding:8px 10px; pointer-events:none;
+}
+.hud-top>*{pointer-events:auto}
+.hud-left{background:rgba(30,24,16,.82); border:1px solid var(--brass); border-radius:3px; padding:6px 12px; color:var(--paper)}
+.hud-left .ln1{font-size:14px;font-weight:700;letter-spacing:.06em}
+.hud-left .ln2{font-size:11px;color:var(--brass);letter-spacing:.1em;margin-top:2px}
+.hud-stats{
+  background:rgba(30,24,16,.82); border:1px solid var(--brass); border-radius:3px;
+  padding:7px 12px; display:grid; grid-template-columns:repeat(4,minmax(88px,1fr)); gap:7px; flex:0 1 auto;
+}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat .lab{font-size:10px;color:var(--paper2);letter-spacing:.18em}
+.stat .bar{height:9px;background:#17110B;border:1px solid #4A3A22;border-radius:2px;overflow:hidden}
+.stat .bar i{display:block;height:100%;background:linear-gradient(180deg,#D8C68F,#8F6A22)}
+.stat .bar i.hp{background:linear-gradient(180deg,#D9644F,#8A2E20)}
+.stat .bar i.th{background:linear-gradient(180deg,#6FA8C9,#3A6E8C)}
+.stat .bar i.en{background:linear-gradient(180deg,#8FA87C,#4C6340)}
+.stat .num{font-size:10px;color:var(--paper3);text-align:right}
+.hud-right{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.hud-right .money{
+  background:rgba(30,24,16,.82); border:1px solid var(--brass); border-radius:3px;
+  padding:4px 10px; color:var(--brass); font-weight:900; font-size:14px; letter-spacing:.06em;
+}
+.hud-right .money b{color:var(--paper3);font-weight:700}
+.hud-btns{display:flex;gap:4px}
+.hud-btns .btn{min-width:52px;padding:5px 8px;font-size:12px;margin:0}
+.hud-bottom{position:absolute;left:10px;bottom:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+#hudHint{
+  background:rgba(30,24,16,.7); color:var(--paper2); border:1px solid rgba(185,138,47,.5);
+  border-radius:3px; padding:5px 12px; font-size:12px; letter-spacing:.05em; min-height:30px;
+  display:flex; align-items:center;
+}
+#minimapWrap{background:rgba(30,24,16,.85);border:1px solid var(--brass);border-radius:3px;padding:4px}
+#minimap{display:block;width:196px;height:104px}
+#hudMode{
+  position:absolute; top:8px; left:50%; transform:translateX(-50%);
+  background:rgba(30,24,16,.8); border:1px solid var(--brass); border-radius:3px;
+  color:var(--paper); font-size:12px; letter-spacing:.24em; padding:5px 16px;
+}
+#hudChapter{
+  position:absolute; top:44px; left:50%; transform:translateX(-50%);
+  color:var(--brass); font-size:11px; letter-spacing:.2em; text-shadow:0 1px 3px #000;
+}
+#questBanner{
+  position:absolute; top:86px; left:50%; transform:translateX(-50%);
+  max-width:70%; text-align:center;
+  background:rgba(30,24,16,.78); border-left:3px solid var(--brass); border-right:3px solid var(--brass);
+  color:var(--paper2); font-size:12px; padding:4px 14px; border-radius:2px; letter-spacing:.04em;
+}
+
+/* ===== 触摸控制 ===== */
+#touchPad{position:absolute;left:14px;bottom:70px;z-index:25;display:none}
+#touchPad.show{display:block}
+#touchPad .pad{position:relative;width:132px;height:132px;border:2px solid rgba(185,138,47,.6);border-radius:50%;
+  background:rgba(30,24,16,.4)}
+#touchPad .knob{position:absolute;width:46px;height:46px;border-radius:50%;left:41px;top:41px;
+  background:rgba(185,138,47,.5);border:1px solid var(--brass)}
+#touchAct{position:absolute;right:14px;bottom:70px;z-index:25;display:none}
+#touchAct.show{display:flex;flex-direction:column;gap:8px}
+#touchAct .btn{min-width:64px;padding:10px}
+
+/* ===== 通用弹窗 ===== */
+.modal-mask{position:absolute;inset:0;background:rgba(13,10,7,.66);display:flex;align-items:center;justify-content:center;z-index:40}
+.modal{max-width:min(760px,94vw);max-height:88vh;overflow-y:auto;overscroll-behavior:contain}
+.modal h3{
+  font-size:18px; letter-spacing:.24em; border-bottom:2px solid var(--ink);
+  padding-bottom:7px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;
+}
+.modal h3 .x{font-size:13px;color:var(--ink2);cursor:pointer;letter-spacing:0;font-weight:700;border:1px solid var(--ink2);padding:1px 8px;border-radius:2px}
+.modal h3 .x:hover{color:var(--blood);border-color:var(--blood)}
+.modal p{font-size:14.5px;line-height:1.95;letter-spacing:.02em;text-align:justify}
+.modal .muted{color:var(--ink3);font-size:12px}
+.modal .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.modal .scroll{max-height:52vh;overflow-y:auto;overscroll-behavior:contain;padding-right:6px}
+
+/* 物品列表 */
+.it-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:7px}
+.it-card{border:1px solid var(--ink2);border-radius:3px;background:var(--paper3);padding:7px;cursor:pointer;position:relative;transition:all .1s}
+.it-card:hover{border-color:var(--brass);transform:translateY(-1px)}
+.it-card b{font-size:13px;display:block}
+.it-card span{font-size:11px;color:var(--ink2);display:block;margin-top:2px;line-height:1.4}
+.it-card .qty{position:absolute;top:5px;right:7px;font-size:11px;color:var(--blood);font-weight:900}
+.it-card .tag{position:absolute;top:5px;left:6px;font-size:9px;color:var(--ink3);letter-spacing:.1em}
+.it-detail{margin-top:9px;border-top:1px dashed var(--ink2);padding-top:8px;font-size:13px;line-height:1.8}
+
+/* NPC 对话 */
+.dlg-name{font-size:15px;font-weight:900;letter-spacing:.1em;color:var(--rust);margin-bottom:2px}
+.dlg-name .role{font-size:11px;color:var(--ink3);font-weight:400;letter-spacing:.06em}
+.dlg-text{font-size:14.5px;line-height:2;margin-top:6px;text-align:justify}
+.dlg-choices{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.dlg-choices .btn{text-align:left;white-space:normal;line-height:1.5;font-size:13.5px;min-height:38px;height:auto}
+
+/* 战斗 */
+.battle-hero{font-size:15px;font-weight:900;letter-spacing:.2em;text-align:center;border-bottom:2px solid var(--blood);padding-bottom:6px;margin-bottom:10px}
+.battle-enemies{display:flex;gap:12px;justify-content:center;margin:10px 0;flex-wrap:wrap}
+.b-enemy{border:1px solid var(--ink2);border-radius:3px;background:var(--paper3);padding:8px 12px;text-align:center;min-width:104px}
+.b-enemy b{font-size:14px;display:block}
+.b-enemy .hpbar{height:8px;background:#17110B;border-radius:2px;margin-top:6px;overflow:hidden}
+.b-enemy .hpbar i{display:block;height:100%;background:linear-gradient(180deg,#D9644F,#8A2E20)}
+.b-enemy .st{font-size:10px;color:var(--ink2);margin-top:3px}
+.battle-party{display:flex;gap:12px;justify-content:center;margin:8px 0;flex-wrap:wrap}
+.b-pc{border:1px solid var(--brass2);border-radius:3px;background:var(--paper);padding:8px 12px;text-align:center;min-width:104px}
+.b-pc b{font-size:14px;display:block}
+.battle-log{height:118px;overflow-y:auto;background:rgba(39,33,26,.08);border:1px solid var(--ink2);border-radius:3px;
+  padding:6px 10px;font-size:12.5px;line-height:1.8;margin:10px 0}
+.battle-log .hl{color:var(--blood);font-weight:700}
+.battle-acts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.battle-acts .btn{min-width:86px}
+
+/* 剧情演出 */
+.story-paper{
+  background:var(--panel); border:var(--line); border-radius:4px;
+  box-shadow:5px 5px 0 rgba(39,33,26,.3);
+  padding:22px 26px; max-width:min(780px,94vw); max-height:86vh; overflow-y:auto;
+}
+.story-head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:12px}
+.story-head .ch{font-size:13px;letter-spacing:.3em;color:var(--rust);font-weight:900}
+.story-head .t{font-size:22px;font-weight:900;letter-spacing:.14em}
+.story-head .date{font-size:12px;color:var(--ink3);letter-spacing:.1em}
+.story-body{font-size:15px;line-height:2.1;text-align:justify;white-space:pre-wrap}
+.story-body .spk{color:var(--rust);font-weight:700}
+.story-body .anom{color:var(--blood);font-weight:700}
+.story-body .hint{color:var(--ink3);font-size:13px}
+.story-choices{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.story-page{display:none}
+.story-page.on{display:block}
+.story-nav{margin-top:14px;display:flex;justify-content:space-between;align-items:center}
+.stamp{display:inline-block;border:3px double var(--blood);color:var(--blood);font-weight:900;letter-spacing:.3em;
+  padding:2px 10px;font-size:12px;transform:rotate(-6deg);opacity:.8}
+
+/* 日志/图鉴 */
+.journal-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.journal-tabs .btn{padding:5px 12px;font-size:12px;margin:0}
+.entry{border:1px solid var(--ink2);border-radius:3px;background:var(--paper3);padding:8px 10px;margin:6px 0}
+.entry b{font-size:13px;display:block}
+.entry span{font-size:12px;color:var(--ink2);line-height:1.7;display:block;margin-top:3px}
+.entry.new{border-color:var(--brass);box-shadow:0 0 0 2px rgba(185,138,47,.25)}
+
+/* 存档 */
+.save-slot{border:1px solid var(--ink2);border-radius:3px;background:var(--paper3);padding:10px 12px;margin:8px 0;cursor:pointer;transition:all .1s}
+.save-slot:hover{border-color:var(--brass)}
+.save-slot b{font-size:14px}
+.save-slot span{font-size:12px;color:var(--ink2);display:block;margin-top:3px;line-height:1.6}
+.save-slot.empty{opacity:.55;cursor:default}
+
+/* Toast */
+#toastRoot{position:absolute;top:120px;left:50%;transform:translateX(-50%);z-index:70;display:flex;flex-direction:column;gap:6px;align-items:center}
+.toast{
+  background:rgba(30,24,16,.92); color:var(--paper); border:1px solid var(--brass);
+  border-radius:3px; padding:7px 18px; font-size:13.5px; letter-spacing:.06em;
+  animation:toastIn .25s ease; max-width:76vw;
+}
+.toast.bad{border-color:var(--blood);color:#F0B9AE}
+.toast.good{border-color:var(--olive)}
+@keyframes toastIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+
+/* 章节选择 */
+.chapter-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ch-item{border:1px solid var(--ink2);border-radius:3px;background:var(--paper3);padding:9px 11px;cursor:pointer;transition:all .1s}
+.ch-item:hover{border-color:var(--brass)}
+.ch-item.done{border-color:var(--olive)}
+.ch-item.locked{opacity:.45;cursor:default}
+.ch-item b{font-size:13.5px;display:block;letter-spacing:.05em}
+.ch-item span{font-size:11px;color:var(--ink2);display:block;margin-top:3px;line-height:1.5}
+.ch-item .st{float:right;font-size:10px;color:var(--blood);font-weight:900;letter-spacing:.1em}
+
+/* 地图页 */
+.map-panel{width:min(860px,96vw)}
+.map-panel canvas{width:100%;border:1px solid var(--ink);border-radius:2px;background:#1c160e}
+.legend-line{font-size:11px;color:var(--ink2);display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.swatch{display:inline-block;width:11px;height:11px;border:1px solid rgba(0,0,0,.3);border-radius:2px}
+
+/* 滚动条 */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:rgba(39,33,26,.12)}
+::-webkit-scrollbar-thumb{background:var(--brass2);border-radius:5px;border:2px solid var(--paper)}
+::-webkit-scrollbar-thumb:hover{background:var(--rust)}
+
+@media (max-width:760px){
+  .hud-stats{grid-template-columns:repeat(2,minmax(74px,1fr))}
+  .chapter-list{grid-template-columns:1fr}
+  .hud-left .ln2{display:none}
+}
+</style>
+<style id="hanber-soviet-skin">
+/* === HanBer 统一皮肤 · 后苏联忧郁美学 (Post-Soviet Melancholy) === */
+html,body{
+  background-color:#15181e !important;
+  background-image:
+    radial-gradient(ellipse at 50% -5%, rgba(201,168,106,.10), transparent 55%),
+    linear-gradient(165deg,#11141a 0%,#1a1f28 48%,#231d15 100%) !important;
+  color:#d6cdb8 !important;
+}
+#hanber-vignette{position:fixed;inset:0;z-index:99998;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(0,0,0,.55) 100%);}
+</style>
+<div id="hanber-vignette"></div>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="ui">
+
+  <!-- ===== 标题界面 ===== -->
+  <div id="titleScreen">
+    <div class="t-stamp">档案 · 时间线E-11</div>
+    <div class="t-logo">HanBer&nbsp;THREE</div>
+    <div class="t-sub">被写错的世界</div>
+    <div class="t-line"></div>
+    <div class="t-menu">
+      <button class="btn" id="btnNew">开始游戏</button>
+      <button class="btn ghost" id="btnLoad">读取存档</button>
+      <button class="btn ghost" id="btnGuide">操作说明</button>
+      <button class="btn ghost" id="btnAbout">关于本作</button>
+    </div>
+    <div class="t-foot">1918·柏林没有失败 · 1933·世界仍在转动<br>单机 · 自由探索 · 本地存档 · 主线十二卷连载中</div>
+  </div>
+
+  <!-- ===== 建档界面 ===== -->
+  <div id="charScreen" class="hidden">
+    <div class="panel">
+      <h2>建立档案</h2>
+      <div class="field"><label>姓名（默认：汉伯）</label><input type="text" id="inpName" maxlength="10" placeholder="输入你的名字"></div>
+      <div class="field"><label>出身 · 决定初始能力与立场</label>
+        <div class="origin-grid" id="originGrid"></div>
+      </div>
+      <div class="row" style="justify-content:flex-end;margin-top:14px">
+        <button class="btn ghost" id="btnCharBack">返回</button>
+        <button class="btn" id="btnCharStart">开始旅程</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 游戏 HUD ===== -->
+  <div id="hud" class="hidden">
+    <div id="hudMode">自由模式</div>
+    <div id="hudChapter"></div>
+    <div id="questBanner" class="hidden"></div>
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="ln1" id="hudLoc">—</div>
+        <div class="ln2" id="hudDate">—</div>
+      </div>
+      <div class="hud-stats">
+        <div class="stat"><span class="lab">生命</span><div class="bar"><i class="hp" id="barHp"></i></div><span class="num" id="numHp">0/0</span></div>
+        <div class="stat"><span class="lab">饱食</span><div class="bar"><i id="barHu"></i></div><span class="num" id="numHu">0</span></div>
+        <div class="stat"><span class="lab">饮水</span><div class="bar"><i class="th" id="barTh"></i></div><span class="num" id="numTh">0</span></div>
+        <div class="stat"><span class="lab">体力</span><div class="bar"><i class="en" id="barEn"></i></div><span class="num" id="numEn">0</span></div>
+      </div>
+      <div class="hud-right">
+        <div class="money" id="hudMoney">ℳ <b>0</b></div>
+        <div class="hud-btns">
+          <button class="btn small" id="btnInv">物品</button>
+          <button class="btn small" id="btnJournal">日志</button>
+          <button class="btn small" id="btnMap">地图</button>
+          <button class="btn small" id="btnParty">队伍</button>
+          <button class="btn small" id="btnMenu">菜单</button>
+        </div>
+      </div>
+    </div>
+    <div class="hud-bottom">
+      <div id="hudHint">方向键 / WASD 移动，靠近人物按 E 交谈，靠近设施按 E 使用</div>
+      <div id="minimapWrap"><canvas id="minimap" width="392" height="208"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 触屏控制 -->
+  <div id="touchPad"><div class="pad"><div class="knob" id="tk"></div></div></div>
+  <div id="touchAct">
+    <button class="btn small" id="tactE">交谈</button>
+    <button class="btn small" id="tactMenu">菜单</button>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot"></div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   HanBer THREE · 被写错的世界
+   一战反转世界观 · 1933 · 开放大地图生存 + 十二卷主线
+   ============================================================ */
+
+/* ---------- 工具函数 ---------- */
+function $(id){return document.getElementById(id)}
+function clamp(v,a,b){return v<a?a:(v>b?b:v)}
+function lerp(a,b,t){return a+(b-a)*t}
+function dist2(x1,y1,x2,y2){return Math.hypot(x2-x1,y2-y1)}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hash2(x,y){var h=(x*374761393+y*668265263)|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
+function pick(rng,arr){return arr[Math.floor(rng()*arr.length)]}
+function chance(rng,p){return rng()<p}
+function fmtMoney(n){return "ℳ "+Math.floor(n)}
+function pad2(n){return (n<10?"0":"")+n}
+function rndInt(rng,a,b){return a+Math.floor(rng()*(b-a+1))}
+
+/* 一维噪声场 */
+function makeNoise(w,h,seed,scale){
+  const rng=mulberry32(seed);
+  const gw=Math.ceil(w/scale)+2, gh=Math.ceil(h/scale)+2;
+  const g=new Float32Array(gw*gh);
+  for(let i=0;i<gw*gh;i++)g[i]=rng();
+  const out=new Float32Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const gx=x/scale, gy=y/scale;
+    const x0=Math.floor(gx), y0=Math.floor(gy);
+    const fx=gx-x0, fy=gy-y0;
+    const sx=fx*fx*(3-2*fx), sy=fy*fy*(3-2*fy);
+    const a=g[y0*gw+x0], b=g[y0*gw+x0+1], c=g[(y0+1)*gw+x0], d=g[(y0+1)*gw+x0+1];
+    out[y*w+x]=lerp(lerp(a,b,sx),lerp(c,d,sx),sy);
+  }
+  return out;
+}
+
+/* ---------- 世界常量 ---------- */
+const MAP_W=288, MAP_H=152, TILE=16;
+const WORLD_W=MAP_W*TILE, WORLD_H=MAP_H*TILE;
+const TER={
+  PLAIN:0,WATER:1,FOREST:2,MOUNTAIN:3,DESERT:4,SNOW:5,ROAD:6,CITY:7,RUIN:8,HILL:9,SWAMP:10,TUNDRA:11
+};
+const TER_PASS=[true,false,true,false,true,true,true,true,true,true,true,true];
+const TER_COST=[1,99,1.6,99,1.5,1.8,1,1,1,1.3,2,1.2];
+const TER_COL=[
+  "#9C8F6A","#2E4A63","#4E6B3A","#6E6252","#C9B26E","#DCE6E8","#8A7A52","#B08A55","#7A6A5A","#8F8A6A","#5E6B4A","#B8BCB2"
+];
+/* 气候带颜色（小地图外框） */
+
+/* ---------- 区域（国家/势力）定义 ---------- */
+/* shape: {e:[cx,cy,rx,ry]} 椭圆 或 {r:[x0,y0,x1,y1]} 矩形 */
+const REGIONS=[
+  {id:"island", name:"冰岛与格陵兰", col:"#8FA3B0", shapes:[{e:[40,8,10,7]}]},
+  {id:"scandi", name:"斯堪的纳维亚中立带", col:"#7C93A8", shapes:[{e:[84,24,16,13]},{e:[72,18,5,6]}]},
+  {id:"britain", name:"英伦联邦（孤立）", col:"#6E7F8E", shapes:[{e:[30,47,7,9]},{e:[22,52,4,4]}]},
+  {id:"lowlands", name:"低地总督区", col:"#8B7A5A", shapes:[{e:[66,47,5,4]}]},
+  {id:"france", name:"法兰西残邦", col:"#5E7C8C", shapes:[{e:[50,62,14,9]}]},
+  {id:"iberia", name:"伊比利亚同盟", col:"#A98B5E", shapes:[{e:[42,72,10,9]}]},
+  {id:"italy", name:"意大利王国", col:"#9C7C66", shapes:[{e:[70,69,4,6]},{e:[81,77,2,2]},{e:[70,77,2,3]},{e:[104,73,2,2]}]},
+  {id:"germany", name:"德意志帝国", col:"#7A6A52", shapes:[{e:[80,50,16,10]}]},
+  {id:"poland", name:"波兰总督区", col:"#9E8A6A", shapes:[{e:[88,50,8,6]}]},
+  {id:"baltics", name:"波罗的海联合公国", col:"#8A9A8A", shapes:[{e:[91,36,5,5]}]},
+  {id:"belarus", name:"白俄罗斯总署", col:"#9A8A7A", shapes:[{e:[99,40,6,5]}]},
+  {id:"ukraine", name:"乌克兰国（德属）", col:"#B09A62", shapes:[{e:[104,45,12,8]}]},
+  {id:"austria", name:"奥匈帝国", col:"#8E7A5E", shapes:[{e:[96,57,12,8]}]},
+  {id:"balkan", name:"塞尔维亚总督区", col:"#A98E6E", shapes:[{e:[106,61,8,5]}]},
+  {id:"bulgaria", name:"保加利亚王国", col:"#9E8E6A", shapes:[{e:[113,62,6,5]}]},
+  {id:"greece", name:"希腊王国", col:"#7E9A9A", shapes:[{e:[104,69,6,5]},{e:[108,75,3,2]}]},
+  {id:"ottoman", name:"奥斯曼帝国", col:"#B08A4E", shapes:[{e:[121,68,12,11]},{e:[128,80,9,8]}]},
+  {id:"egypt", name:"埃及自治领", col:"#C9A86A", shapes:[{e:[97,93,7,4]}]},
+  {id:"arabia", name:"阿拉伯部落带", col:"#C2AE7E", shapes:[{e:[136,90,12,9]},{e:[118,86,6,4]}]},
+  {id:"maghreb", name:"北非总督区", col:"#C0A068", shapes:[{e:[62,80,20,7]}]},
+  {id:"sahara", name:"撒哈拉部落带", col:"#D8C088", shapes:[{e:[88,99,34,10]}]},
+  {id:"westaf", name:"德属西非", col:"#8A9A6A", shapes:[{e:[60,106,22,9]}]},
+  {id:"mitaf", name:"德属中非", col:"#7A8A5A", shapes:[{e:[92,112,26,14]}]},
+  {id:"eastaf", name:"德属东非", col:"#6E8A5E", shapes:[{e:[138,104,18,12]}]},
+  {id:"southaf", name:"南非自治领", col:"#7E8A76", shapes:[{e:[96,136,30,12]}]},
+  {id:"persia", name:"波斯中立国", col:"#B8A078", shapes:[{e:[151,66,10,9]}]},
+  {id:"afghan", name:"阿富汗", col:"#A89A7A", shapes:[{e:[168,59,6,6]}]},
+  {id:"caucasus", name:"高加索联邦", col:"#9E8E7E", shapes:[{e:[142,59,7,6]}]},
+  {id:"cossack", name:"顿河哥萨克领", col:"#A09080", shapes:[{e:[124,52,10,7]}]},
+  {id:"moscow", name:"莫斯科白军政府", col:"#7E7260", shapes:[{e:[114,32,12,9]}]},
+  {id:"siberia", name:"西伯利亚共和国", col:"#8A96A0", shapes:[{e:[170,36,40,12]},{e:[200,50,10,7]}]},
+  {id:"far-east", name:"远东共和国", col:"#9AA8B0", shapes:[{e:[238,50,12,8]}]},
+  {id:"centralasia", name:"中亚汗国带", col:"#B0A080", shapes:[{e:[148,50,14,7]},{e:[164,50,6,5]}]},
+  {id:"raj", name:"英属印度残余", col:"#C0A078", shapes:[{e:[186,69,16,10]}]},
+  {id:"indochina", name:"印度支那联邦", col:"#7E9A6E", shapes:[{e:[216,72,10,9]}]},
+  {id:"siam", name:"暹罗王国", col:"#9A9A6E", shapes:[{e:[212,78,5,4]}]},
+  {id:"malaya", name:"海峡殖民地", col:"#8A8A6A", shapes:[{e:[227,84,4,4]}]},
+  {id:"islands", name:"南洋群岛", col:"#6E9A6E", shapes:[{e:[226,92,4,7]},{e:[233,99,6,3]},{e:[242,92,5,4]},{e:[240,100,6,4]}]},
+  {id:"chinanorth", name:"华北（德资势力圈）", col:"#A89A6A", shapes:[{e:[222,58,16,12]}]},
+  {id:"chinasouth", name:"华南军阀区", col:"#B8A878", shapes:[{e:[230,78,12,10]}]},
+  {id:"manchuria", name:"满洲国（日属）", col:"#9EA8A0", shapes:[{e:[238,56,10,8]}]},
+  {id:"japan", name:"日本帝国", col:"#C8B4A0", shapes:[{e:[252,64,4,12]},{e:[249,82,3,5]},{e:[245,80,2,3]},{e:[243,72,3,6]},{e:[252,38,5,11]}]},
+  {id:"korea", name:"朝鲜（日属）", col:"#B0B0A0", shapes:[{e:[246,62,3,7]}]},
+  {id:"himalaya", name:"喜马拉雅山国", col:"#A0A0B0", shapes:[{e:[178,62,8,5]}]},
+  {id:"swiss", name:"瑞士联邦", col:"#9A8E8E", shapes:[{e:[78,58,4,3]}]},
+  {id:"nether", name:"荷兰王国", col:"#8A7A6A", shapes:[{e:[70,50,3,3]}]},
+];
+const REGION_MAP={};
+REGIONS.forEach((r,i)=>REGION_MAP[r.id]=i);
+
+/* ---------- 城市定义 ---------- */
+/* 设施位: inn旅馆 shop商店 train车站 bounty悬赏 doc医馆 gamble赌场 black黑市 port港口 */
+const CITIES=[
+  {id:"london",  name:"伦敦",   r:"britain",  x:30,y:46, t:3, fac:"inn|shop|train|doc|black|port", desc:"雾都。英伦联邦的首都，协约国的流亡心脏，与大陆隔着封锁线遥望。"},
+  {id:"paris",   name:"巴黎·军政府", r:"france", x:50,y:61, t:3, fac:"inn|shop|train|doc|black", desc:"曾经的巴黎如今是德军驻法兰西总部，凯旋门下的阅兵换成铁十字旗。"},
+  {id:"madrid",  name:"马德里", r:"iberia",  x:42,y:72, t:2, fac:"inn|shop|train|doc", desc:"伊比利亚同盟的首都，在两大阵营之间小心保持中立。"},
+  {id:"berlin",  name:"柏林",   r:"germany", x:80,y:49, t:3, fac:"inn|shop|train|bounty|doc|gamble|black", desc:"欧陆权力的铁心。国会大厦顶端飘着帝国旗，地下档案馆藏着这个世界的秘密。"},
+  {id:"hamburg", name:"汉堡",   r:"germany", x:74,y:44, t:2, fac:"inn|shop|train|port|black", desc:"北海大港。来自中非的橡胶和来自远东的丝绸在此卸货。"},
+  {id:"munich",  name:"慕尼黑", r:"germany", x:82,y:56, t:2, fac:"inn|shop|train|gamble", desc:"巴伐利亚的啤酒与哲学，帝国南方的文化重镇。"},
+  {id:"warsaw",  name:"华沙",   r:"poland",  x:88,y:49, t:2, fac:"inn|shop|train|bounty", desc:"波兰总督区的首府，地下抵抗与帝国宪兵在街巷间角力。"},
+  {id:"krakow",  name:"克拉科夫",r:"poland", x:94,y:54, t:1, fac:"inn|shop|train", desc:"老城石阶上，波兰语仍是暗巷里最安全的语言。"},
+  {id:"riga",    name:"里加",   r:"baltics", x:91,y:36, t:2, fac:"inn|shop|train|port", desc:"波罗的海的贸易门户，德式尖顶与俄式穹顶混作一团。"},
+  {id:"minsk",   name:"明斯克", r:"belarus", x:99,y:40, t:1, fac:"inn|shop|train", desc:"白俄罗斯总署驻地，哨卡林立，通行证比钱更值钱。"},
+  {id:"kyiv",    name:"基辅",   r:"ukraine", x:101,y:43, t:2, fac:"inn|shop|train|bounty|black", desc:"乌克兰国的首府，黑土地上的粮仓与走私天堂。"},
+  {id:"odessa",  name:"敖德萨", r:"ukraine", x:106,y:51, t:2, fac:"inn|shop|train|port|black", desc:"黑海明珠。走私船、情报贩子和流亡贵族在此擦肩。"},
+  {id:"vienna",  name:"维也纳", r:"austria", x:92,y:56, t:3, fac:"inn|shop|train|doc|gamble", desc:"奥匈帝国的旧都，咖啡馆里谈论着帝国最后的黄昏。"},
+  {id:"budapest",name:"布达佩斯",r:"austria",x:99,y:59, t:2, fac:"inn|shop|train|gamble", desc:"多瑙河两岸，马扎尔人的骄傲与帝国税收同样沉重。"},
+  {id:"prague",  name:"布拉格", r:"austria", x:86,y:52, t:2, fac:"inn|shop|train|black", desc:"黄金小巷里藏着炼金术士的后代与军火掮客。"},
+  {id:"belgrade",name:"贝尔格莱德",r:"balkan",x:104,y:58, t:1, fac:"inn|shop|train|bounty", desc:"塞尔维亚总督区的首府，仇恨在废墟下生根。"},
+  {id:"sofia",   name:"索菲亚", r:"bulgaria",x:113,y:62,t:1, fac:"inn|shop|train", desc:"保加利亚王国的都城，两次巴尔干战争的老兵在街头卖勋章。"},
+  {id:"athens",  name:"雅典",   r:"greece", x:104,y:68, t:2, fac:"inn|shop|train|port", desc:"古希腊的荣光与德意志的驻军共享同一片天空。"},
+  {id:"istanbul",name:"君士坦丁堡",r:"ottoman",x:116,y:66,t:3, fac:"inn|shop|train|bounty|doc|gamble|black|port", desc:"奥斯曼帝国的心脏，横跨两洲，帝国的呼吸已近尾声。"},
+  {id:"ankara",  name:"安卡拉", r:"ottoman", x:121,y:65, t:1, fac:"inn|shop|train", desc:"安纳托利亚高原上的新城，民族主义者在茶馆里低语。"},
+  {id:"damascus",name:"大马士革",r:"ottoman",x:117,y:77,t:2, fac:"inn|shop|train|black", desc:"世界上最古老的都城之一，香料与情报一样昂贵。"},
+  {id:"baghdad", name:"巴格达", r:"ottoman", x:136,y:77, t:2, fac:"inn|shop|train|bounty", desc:"两河之间的咽喉，沙漠部落与帝国宪兵的角斗场。"},
+  {id:"basra",   name:"巴士拉", r:"ottoman", x:144,y:81, t:1, fac:"inn|shop|train|port", desc:"波斯湾的石油码头，英德两国的油轮在港外互相监视。"},
+  {id:"jerusalem",name:"耶路撒冷",r:"ottoman",x:111,y:80,t:2, fac:"inn|shop|doc|black", desc:"三教圣城，如今由奥斯曼的土耳其军官管理。"},
+  {id:"cairo",   name:"开罗",   r:"egypt",  x:97,y:92, t:2, fac:"inn|shop|train|doc|black|port", desc:"尼罗河畔的大都会，埃及自治领的总督府戒备森严。"},
+  {id:"alexandria",name:"亚历山大",r:"egypt",x:94,y:89,t:2, fac:"inn|shop|train|port", desc:"地中海的粮仓码头，灯塔的废墟俯瞰着铁甲舰。"},
+  {id:"tripoli", name:"的黎波里",r:"maghreb",x:84,y:82,t:1, fac:"inn|shop|train|port", desc:"北非总督区的首府，意大利移民与阿拉伯部落各占半边。"},
+  {id:"algiers", name:"阿尔及尔",r:"maghreb",x:63,y:79,t:2, fac:"inn|shop|train|port", desc:"白色之城，德意志总督府的旗帜在旧法国军营上飘扬。"},
+  {id:"tunis",   name:"突尼斯", r:"maghreb", x:73,y:78, t:1, fac:"inn|shop|train|port", desc:"迦太基的废墟旁，苏克市场的商贩精通六国语言。"},
+  {id:"tehran",  name:"德黑兰", r:"persia", x:152,y:65, t:2, fac:"inn|shop|train|black", desc:"波斯中立国的都城，英俄德三国使馆在街头互相渗透。"},
+  {id:"tbilisi", name:"第比利斯",r:"caucasus",x:142,y:58,t:1, fac:"inn|shop|train|black", desc:"高加索的十字路口，石油管道与古老酒窖并存。"},
+  {id:"yerevan", name:"埃里温", r:"caucasus",x:145,y:62, t:1, fac:"inn|shop|train", desc:"阿拉拉特山下的古城。站在城头，能看见雪线上的‘钟巢’灯火。"},
+  {id:"baku",    name:"巴库",   r:"caucasus",x:147,y:61,t:2, fac:"inn|shop|train|port|black", desc:"里海石油城，工人们的罢工被铁路宪兵镇压了一次又一次。"},
+  {id:"rostov",  name:"罗斯托夫",r:"cossack",x:120,y:53,t:1, fac:"inn|shop|train|bounty", desc:"顿河哥萨克的首府，马刀与机枪同样常见。"},
+  {id:"kharkov", name:"哈尔科夫",r:"cossack",x:106,y:43,t:1, fac:"inn|shop|train", desc:"顿巴斯煤铁之都，工厂烟囱日夜不熄。"},
+  {id:"moscow",  name:"莫斯科", r:"moscow", x:113,y:31, t:3, fac:"inn|shop|train|bounty|doc|black", desc:"白军政府的首都。红场上的列宁墓被封，沙皇双头鹰短暂回归后又让位于军政府。"},
+  {id:"spb",     name:"彼得格勒",r:"moscow",x:104,y:24,t:2, fac:"inn|shop|train|port|black", desc:"曾经的帝国之都，涅瓦河畔的宫殿里住着疲惫的白军将领。"},
+  {id:"kazan",   name:"喀山",   r:"moscow", x:134,y:30, t:1, fac:"inn|shop|train", desc:"伏尔加河畔，鞑靼商人与俄国难民共用一个市场。"},
+  {id:"omsk",    name:"鄂木斯克",r:"siberia",x:158,y:34,t:2, fac:"inn|shop|train|bounty", desc:"西伯利亚共和国的都城，白军余部的大本营，冬天能把钢铁冻裂。"},
+  {id:"novosibirsk",name:"新西伯利亚",r:"siberia",x:170,y:36,t:1, fac:"inn|shop|train", desc:"西伯利亚铁路的中点，流亡者的中转站。"},
+  {id:"irkutsk", name:"伊尔库茨克",r:"siberia",x:204,y:38,t:2, fac:"inn|shop|train|black", desc:"贝加尔湖畔的贸易城，茶叶、皮毛与逃亡贵族在此聚集。"},
+  {id:"vladivostok",name:"海参崴",r:"far-east",x:244,y:50,t:2, fac:"inn|shop|train|port|black", desc:"远东共和国的出海口，日本海军陆战队在码头巡逻。"},
+  {id:"harbin",  name:"哈尔滨", r:"manchuria",x:238,y:54,t:2, fac:"inn|shop|train|black", desc:"满洲的铁路都会，白俄侨民、日本商人和中国买办混居。"},
+  {id:"beijing", name:"北京",   r:"chinanorth",x:222,y:57,t:2, fac:"inn|shop|train|doc", desc:"华北德资势力圈的政治中心，紫禁城外的使馆区由德军卫戍。"},
+  {id:"tsingtao",name:"青岛",   r:"chinanorth",x:228,y:75,t:2, fac:"inn|shop|train|port|bounty", desc:"德国远东舰队的老巢，啤酒厂与炮台同守海湾。"},
+  {id:"nanjing", name:"南京",   r:"chinanorth",x:233,y:75,t:2, fac:"inn|shop|train", desc:"长江下游的重镇，北洋的德械师在此驻扎。"},
+  {id:"shanghai",name:"上海",   r:"chinanorth",x:238,y:80,t:3, fac:"inn|shop|train|bounty|doc|gamble|black|port", desc:"远东第一大港。德租界的霓虹与闸北的棚户只隔一条苏州河，主角的故乡。"},
+  {id:"canton",  name:"广州",   r:"chinasouth",x:232,y:82,t:2, fac:"inn|shop|train|port|black", desc:"华南军阀的首府，走私、华侨汇款与革命党人同在。"},
+  {id:"hk",      name:"香港",   r:"chinasouth",x:230,y:80,t:2, fac:"inn|shop|train|port|black", desc:"英国残余的东方据点，货船与情报船共用一座避风港。"},
+  {id:"delhi",   name:"德里",   r:"raj", x:182,y:67, t:2, fac:"inn|shop|train|doc", desc:"英属印度残余的首都，圣雄的和平运动在总督府外继续。"},
+  {id:"bombay",  name:"孟买",   r:"raj", x:185,y:73, t:2, fac:"inn|shop|train|port|black", desc:"阿拉伯海的门户，棉花、鸦片与革命传单一同装船。"},
+  {id:"calcutta",name:"加尔各答",r:"raj",x:196,y:71,t:2, fac:"inn|shop|train|port", desc:"恒河口的英印老都，黄麻码头的气味能飘出十里。"},
+  {id:"rangoon", name:"仰光",   r:"indochina",x:209,y:69,t:1, fac:"inn|shop|train|port", desc:"缅甸的稻米之都，佛塔的金顶在季风里发亮。"},
+  {id:"saigon",  name:"西贡",   r:"indochina",x:226,y:77,t:2, fac:"inn|shop|train|port|black", desc:"印度支那的首府，法国总督走后换了日本顾问。"},
+  {id:"bangkok", name:"曼谷",   r:"siam", x:216,y:75, t:1, fac:"inn|shop|train|port", desc:"暹罗的王都，湄南河上的水上市场热闹非凡。"},
+  {id:"manila",  name:"马尼拉", r:"islands", x:242,y:73, t:1, fac:"inn|shop|train|port", desc:"吕宋岛的大港，美国残余势力与日本商会暗中较劲。"},
+  {id:"singapore",name:"新加坡",r:"malaya",x:226,y:84,t:2, fac:"inn|shop|train|port|black", desc:"马六甲海峡的钥匙，英德日三国都在这里留了一扇门。"},
+  {id:"jakarta", name:"巴达维亚",r:"islands",x:233,y:98,t:1, fac:"inn|shop|train|port", desc:"荷属东印度的首府，橡胶园与香料群岛的财富在此汇聚。"},
+  {id:"tokyo",   name:"东京",   r:"japan", x:253,y:63, t:3, fac:"inn|shop|train|doc|black|port", desc:"日本帝国的帝都，陆海军省的大楼在霞关彼此较劲。"},
+  {id:"seoul",   name:"汉城",   r:"korea", x:246,y:61, t:1, fac:"inn|shop|train", desc:"朝鲜半岛的首府，日式街道与李氏王朝的宫殿并存。"},
+  {id:"tokio2",  name:"大阪",   r:"japan", x:252,y:68, t:2, fac:"inn|shop|train|gamble|port", desc:"日本工商业的心脏，纺织厂与造船坞昼夜不停。"},
+  {id:"kabul",   name:"喀布尔", r:"afghan", x:168,y:58, t:1, fac:"inn|shop|black", desc:"兴都库什山间的古老都城，道路尽头是帝国的坟场。"},
+  {id:"aden",    name:"亚丁",   r:"arabia", x:137,y:99, t:1, fac:"inn|shop|train|port", desc:"红海口的煤站，沙漠商队与远洋轮船在此交接。"},
+  {id:"mecca",   name:"麦加",   r:"arabia", x:124,y:91, t:1, fac:"inn|shop|doc", desc:"圣城，朝觐季节的驼队绵延数十里。"},
+  {id:"nairobi", name:"内罗毕", r:"eastaf", x:162,y:103, t:1, fac:"inn|shop|train|bounty", desc:"德属东非的首府，猎场与铁路并存，猎头公司挂出通缉令。"},
+  {id:"lagos",   name:"拉各斯", r:"westaf", x:60,y:105, t:1, fac:"inn|shop|train|port", desc:"几内亚湾的港口，棕榈油与橡胶的集散地。"},
+  {id:"cape",    name:"开普敦", r:"southaf", x:90,y:134, t:2, fac:"inn|shop|train|port|doc", desc:"好望角的欧裔飞地，英国流亡政府在此遥望大西洋。"},
+  {id:"kinshasa",name:"利奥波德维尔",r:"mitaf",x:86,y:112,t:1, fac:"inn|shop|train|port", desc:"刚果河上的枢纽，橡胶贸易的黑色记忆让每个老工人沉默。"},
+  {id:"addis",   name:"亚的斯亚贝巴",r:"eastaf",x:130,y:101,t:1, fac:"inn|shop|doc", desc:"埃塞俄比亚的群山王都，唯一顶住殖民炮火的非洲古国。"},
+  /* —— 铁路网补充城市 —— */
+  {id:"brussels",name:"布鲁塞尔",r:"lowlands",x:66,y:49,t:2, fac:"inn|shop|train", desc:"低地总督区的首府，石板街上满是帝国宪兵的皮靴声。"},
+  {id:"amsterdam",name:"阿姆斯特丹",r:"nether",x:68,y:46,t:2, fac:"inn|shop|train|port", desc:"运河之城，郁金香与走私船共享同一片水域。"},
+  {id:"bern",   name:"伯尔尼", r:"swiss",x:78,y:57,t:1, fac:"inn|shop|train", desc:"瑞士联邦的首都，中立国的钟表作坊里，时间分秒不差。"},
+  {id:"milan",  name:"米兰",   r:"italy",x:76,y:63,t:2, fac:"inn|shop|train", desc:"伦巴第的商贸重镇，时装店橱窗里陈列着帝国勋章。"},
+  {id:"rome",   name:"罗马",   r:"italy",x:70,y:71,t:2, fac:"inn|shop|train|doc", desc:"永恒之城。教皇的钟声与墨索里尼的演说隔空对峙。"},
+  {id:"copenhagen",name:"哥本哈根",r:"scandi",x:81,y:29,t:1, fac:"inn|shop|train|port", desc:"北欧的门户，童话之城在帝国的阴影下保持沉默。"},
+  {id:"oslo",   name:"奥斯陆", r:"scandi",x:76,y:23,t:1, fac:"inn|shop|train|port", desc:"峡湾之都，渔获与木材支撑着中立的生活。"},
+  {id:"stockholm",name:"斯德哥尔摩",r:"scandi",x:88,y:21,t:2, fac:"inn|shop|train|port", desc:"北方威尼斯，瑞典的中立像一柄未出鞘的剑。"},
+  {id:"helsinki",name:"赫尔辛基",r:"scandi",x:94,y:25,t:1, fac:"inn|shop|train|port", desc:"波罗的海的芬兰湾，白教堂俯瞰着冻港。"},
+  {id:"tallinn",name:"塔林",  r:"baltics",x:97,y:32,t:1, fac:"inn|shop|train|port", desc:"汉萨同盟的旧港，中世纪城墙里开着廉价酒馆。"},
+  {id:"vilna",  name:"维尔纳", r:"belarus",x:93,y:41,t:1, fac:"inn|shop|train", desc:"立陶宛的旧都，犹太街区与总督府隔河相望。"},
+  {id:"danzig", name:"但泽",  r:"poland",x:84,y:42,t:2, fac:"inn|shop|train|port", desc:"波罗的海的自由港，帝国舰队与波兰渔民共用航道。"},
+  {id:"ufa",    name:"乌法",   r:"moscow",x:140,y:31,t:1, fac:"inn|shop|train", desc:"乌拉尔山下的古城，白军把军火库藏在清真寺地窖。"},
+  {id:"semipalatinsk",name:"塞米巴拉金斯克",r:"siberia",x:168,y:42,t:1, fac:"inn|shop|train", desc:"哈萨克草原的边境站，风滚草比人多。"},
+  {id:"peshawar",name:"白沙瓦",r:"raj",x:174,y:63,t:1, fac:"inn|shop|train|black", desc:"开伯尔山口的钥匙，驼队与枪贩在此交易。"},
+  {id:"karachi",name:"卡拉奇",r:"raj",x:177,y:73,t:1, fac:"inn|shop|train|port", desc:"信德省的港口，棉花压舱，鸦片垫底。"},
+  {id:"mashhad",name:"马什哈德",r:"persia",x:158,y:61,t:1, fac:"inn|shop|train", desc:"圣城，朝圣者的驼铃日夜不绝。"},
+  {id:"bandar", name:"阿巴斯港",r:"persia",x:152,y:74,t:1, fac:"inn|shop|train|port", desc:"波斯湾的暖港，走私船在这里换旗子。"},
+  {id:"kuwait", name:"科威特", r:"arabia",x:141,y:77,t:1, fac:"inn|shop|train|port", desc:"沙漠边缘的渔港，石油的气味越来越浓。"},
+  {id:"riyadh", name:"利雅得", r:"arabia",x:138,y:86,t:1, fac:"inn|shop|doc", desc:"内志的绿洲之城，部落酋长的会客厅。"},
+  {id:"djibouti",name:"吉布提",r:"eastaf",x:122,y:95,t:1, fac:"inn|shop|train|port", desc:"红海口的中转站，法属旧港如今挂着奥斯曼旗。"},
+  {id:"benghazi",name:"班加西",r:"maghreb",x:92,y:81,t:1, fac:"inn|shop|train|port", desc:"昔兰尼加的港口，地中海的风夹着战火的味道。"},
+  {id:"casablanca",name:"卡萨布兰卡",r:"maghreb",x:46,y:79,t:2, fac:"inn|shop|train|port|black", desc:"白色城市，黑市与电影棚一样繁华。"},
+  {id:"luanda",name:"罗安达", r:"mitaf",x:88,y:125,t:1, fac:"inn|shop|train|port", desc:"安哥拉的港口，德属中非的物资通道。"},
+  {id:"mombasa",name:"蒙巴萨",r:"eastaf",x:149,y:109,t:1, fac:"inn|shop|train|port", desc:"东非的香料码头，阿拉伯帆船与帝国汽船并列。"},
+  {id:"dar",    name:"达累斯萨拉姆",r:"eastaf",x:146,y:113,t:1, fac:"inn|shop|train|port", desc:"德属东非的新都，铁路从这里通向内陆。"},
+  {id:"durba",  name:"德班",   r:"southaf",x:105,y:129,t:1, fac:"inn|shop|train|port", desc:"印度洋岸的甘蔗港，糖浆与硝烟一样甜腻。"},
+  {id:"fuzhou", name:"福州",   r:"chinasouth",x:234,y:80,t:1, fac:"inn|shop|train|port", desc:"闽江口的茶港，工夫茶与德式啤酒在此相遇。"},
+  {id:"chernigov",name:"切尔尼戈夫",r:"ukraine",x:100,y:41,t:1, fac:"inn|shop|train", desc:"第聂伯河畔的古城，教堂金顶下是德军的粮仓。"},
+  {id:"lviv",   name:"利沃夫", r:"poland",x:97,y:49,t:1, fac:"inn|shop|train", desc:"加利西亚的旧都，咖啡馆里流传着帝国末年的故事。"},
+  {id:"amman",  name:"安曼",   r:"ottoman",x:115,y:78,t:1, fac:"inn|shop|train", desc:"七山之城，罗马剧场遗址俯视着奥斯曼军营。"},
+  {id:"madras", name:"马德拉斯",r:"raj",x:192,y:76,t:1, fac:"inn|shop|train|port", desc:"科罗曼德尔海岸的都会，泰米尔商人的算盘声清脆。"},
+  {id:"mandalay",name:"曼德勒",r:"indochina",x:205,y:66,t:1, fac:"inn|shop|train", desc:"缅甸故都，佛塔的金顶在暮色里如灯。"},
+  {id:"kunming",name:"昆明",  r:"chinasouth",x:225,y:69,t:1, fac:"inn|shop|train", desc:"云贵高原的春城，滇越铁路的终点，鸦片与茶叶同行。"},
+  {id:"phnom",  name:"金边",   r:"indochina",x:222,y:79,t:1, fac:"inn|shop|train", desc:"湄公河畔的王都，高棉的微笑在废墟上依旧。"},
+  {id:"samarkand",name:"撒马尔罕",r:"centralasia",x:157,y:49,t:2, fac:"inn|shop|train|black", desc:"丝绸之路的明珠，蓝色穹顶下，帝国的骆驼换成火车。"},
+  {id:"tashkent",name:"塔什干",r:"centralasia",x:162,y:52,t:1, fac:"inn|shop|train", desc:"中亚的绿洲都会，俄式林荫道与伊斯兰老城并存。"},
+  {id:"arkhangelsk",name:"阿尔汉格尔斯克",r:"moscow",x:105,y:16,t:1, fac:"inn|shop|train|port", desc:"白海边的木材港，一年里有半年冻在冰里。"},
+  {id:"nanning",name:"南宁",  r:"chinasouth",x:230,y:86,t:1, fac:"inn|shop|train", desc:"邕江边的边城，马帮从这里进入印度支那。"},
+];
+const CITY_MAP={};CITIES.forEach(c=>CITY_MAP[c.id]=c);
+
+/* 铁路网（城市 id 对） */
+const RAILS=[
+  ["london","paris"],["paris","brussels"],["brussels","amsterdam"],["brussels","berlin"],["paris","madrid"],
+  ["paris","bern"],["bern","milan"],["milan","rome"],["rome","tunis"],["milan","vienna"],
+  ["berlin","hamburg"],["berlin","munich"],["berlin","warsaw"],["berlin","prague"],["prague","vienna"],
+  ["vienna","budapest"],["budapest","belgrade"],["belgrade","sofia"],["sofia","istanbul"],
+  ["vienna","krakow"],["krakow","warsaw"],["warsaw","minsk"],["warsaw","riga"],["riga","spb"],
+  ["minsk","kyiv"],["kyiv","kharkov"],["kharkov","rostov"],["rostov","tbilisi"],["tbilisi","baku"],
+  ["kyiv","odessa"],["odessa","istanbul"],["istanbul","ankara"],["ankara","damascus"],["damascus","baghdad"],
+  ["baghdad","basra"],["damascus","jerusalem"],["jerusalem","cairo"],["cairo","alexandria"],["alexandria","tripoli"],
+  ["cairo","khartoum"],["khartoum","nairobi"],["minsk","moscow"],["moscow","kazan"],["kazan","omsk"],
+  ["omsk","novosibirsk"],["novosibirsk","irkutsk"],["irkutsk","harbin"],["harbin","beijing"],
+  ["beijing","nanjing"],["nanjing","shanghai"],["shanghai","tsingtao"],["shanghai","canton"],
+  ["canton","hk"],["canton","nanning"],["harbin","vladivostok"],["spb","moscow"],["petersburg","helsinki"],
+  ["moscow","rostov"],["rostov","tbilisi"],["kazan","ufa"],["ufa","omsk"],["omsk","semipalatinsk"],
+  ["kabul","peshawar"],["peshawar","delhi"],["delhi","bombay"],["delhi","calcutta"],["calcutta","rangoon"],
+  ["rangoon","bangkok"],["bangkok","saigon"],["saigon","manila"],["singapore","jakarta"],["jakarta","bandung"],
+  ["shanghai","manila"],["hk","manila"],["cairo","mecca"],["mecca","aden"],["aden","bombay"],
+  ["berlin","copenhagen"],["copenhagen","oslo"],["oslo","stockholm"],["stockholm","helsinki"],
+  ["paris","london"],["hamburg","london"],["bombay","karachi"],["karachi","tehran"],["tehran","baghdad"],
+  ["tehran","baku"],["tehran","mashhad"],["mashhad","kabul"],["tehran","bandar"],
+  ["basra","kuwait"],["kuwait","riyadh"],["riyadh","mecca"],["aden","djibouti"],
+  ["alexandria","damascus"],["tripoli","benghazi"],["benghazi","cairo"],["tunis","algiers"],["algiers","casablanca"],
+  ["casablanca","madrid"],["lagos","kinshasa"],["kinshasa","luanda"],["luanda","cape"],
+  ["nairobi","mombasa"],["mombasa","dar"],["dar","kinshasa"],["cape","durba"],
+  ["shanghai","fuzhou"],["fuzhou","canton"],["tokyo","osaka"],["tokyo","seoul"],["seoul","harbin"],
+  ["moscow","arkhangelsk"],["vladivostok","tokyo"],["petersburg","tallinn"],["tallinn","riga"],
+  ["berlin","danzig"],["danzig","riga"],["minsk","vilna"],["vilna","riga"],["vilna","warsaw"],
+  ["kiev","chernigov"],["krakow","lviv"],["lviv","kiev"],["chernigov","moscow"],
+  ["jerusalem","amman"],["amman","baghdad"],["basra","bandar"],["bandar","karachi"],
+  ["bombay","madras"],["madras","calcutta"],["madras","colombo"],["rangoon","mandalay"],
+  ["mandalay","kunming"],["kunming","canton"],["saigon","phnom"],["phnom","bangkok"],
+  ["kabul","samarkand"],["samarkand","tashkent"],["tashkent","omsk"],["tashkent","tehran"],
+];
+/* 城市缺省设施补充 */
+CITIES.forEach(c=>{
+  if(!c.fac)c.fac="inn|shop";
+  c.facSet={};c.fac.split("|").forEach(f=>c.facSet[f]=true);
+});
+
+/* ---------- 地图生成 ---------- */
+function buildWorld(seed){
+  const rng=mulberry32(seed);
+  const ter=new Uint8Array(MAP_W*MAP_H);
+  const reg=new Uint8Array(MAP_W*MAP_H);
+  const n1=makeNoise(MAP_W,MAP_H,seed,7);
+  const n2=makeNoise(MAP_W,MAP_H,seed+99,3);
+  /* 1) 基底海陆 */
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    const v=n1[y*MAP_W+x]*0.6+n2[y*MAP_W+x]*0.4;
+    ter[y*MAP_W+x]= v<0.44?TER.WATER:TER.PLAIN;
+  }
+  /* 2) 强制大陆 */
+  function land(e){for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    const dx=(x-e[0])/e[2],dy=(y-e[1])/e[3];
+    if(dx*dx+dy*dy<=1)ter[y*MAP_W+x]=TER.PLAIN;}}
+  function rect(r){for(let y=r[1];y<=r[3];y++)for(let x=r[0];x<=r[2];x++)
+    if(x>=0&&x<MAP_W&&y>=0&&y<MAP_H)ter[y*MAP_W+x]=TER.PLAIN;}
+  land([92,52,66,32]);      /* 欧陆主体 */
+  land([30,47,7,9]);        /* 不列颠 */
+  land([22,52,4,4]);        /* 爱尔兰 */
+  land([84,24,16,13]);      /* 斯堪的纳维亚 */
+  land([95,104,58,42]);     /* 非洲主体 */
+  land([132,84,14,12]);     /* 阿拉伯 */
+  land([117,64,9,8]);       /* 安纳托利亚 */
+  land([186,69,16,10]);     /* 印度 */
+  land([220,74,10,9]);      /* 印度支那 */
+  land([226,86,4,4]);       /* 马来半岛 */
+  land([226,92,4,7]);       /* 苏门答腊 */
+  land([234,100,6,3]);      /* 爪哇 */
+  land([242,92,5,4]);       /* 婆罗洲 */
+  land([252,64,4,12]);      /* 日本本州 */
+  land([249,82,3,5]);       /* 四国九州 */
+  land([252,38,5,11]);      /* 北海道+库页 */
+  land([160,34,92,16]);     /* 北亚大块 */
+  land([148,52,14,8]);      /* 中亚 */
+  land([142,58,6,5]);       /* 高加索 */
+  land([152,66,10,8]);      /* 伊朗 */
+  land([246,62,3,7]);       /* 朝鲜 */
+  land([40,8,10,7]);        /* 格陵兰 */
+  land([202,28,8,6]);       /* 泰梅尔/北极 */
+  /* 3) 内海 */
+  function sea(e){for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    const dx=(x-e[0])/e[2],dy=(y-e[1])/e[3];
+    if(dx*dx+dy*dy<=1)ter[y*MAP_W+x]=TER.WATER;}}
+  sea([10,70,16,84]);       /* 大西洋 */
+  sea([34,28,18,46]);       /* 北大西洋/挪威海 */
+  sea([95,75,36,7]);        /* 地中海 */
+  sea([72,42,8,6]);         /* 北海 */
+  sea([88,34,10,8]);        /* 波罗的海 */
+  sea([84,24,2,9]);         /* 波的尼亚湾 */
+  sea([118,58,6,4]);        /* 黑海 */
+  sea([142,50,4,8]);        /* 里海 */
+  sea([118,88,2.4,8]);      /* 红海 */
+  sea([141,80,8,2]);        /* 波斯湾 */
+  sea([96,17,3,3]);         /* 白海 */
+  sea([240,38,9,7]);        /* 鄂霍次克海 */
+  sea([243,58,3,9]);        /* 日本海 */
+  sea([246,72,7,9]);        /* 东海 */
+  sea([236,88,9,9]);        /* 南海 */
+  sea([198,79,8,6]);        /* 孟加拉湾 */
+  sea([176,81,9,6]);        /* 阿拉伯海 */
+  sea([128,121,3.4,10]);    /* 莫桑比克海峡 */
+  sea([240,102,6,4]);       /* 爪哇海 */
+  sea([234,86,3,3]);        /* 马六甲海峡 */
+  sea([178,52,6,4]);        /* 里海西-咸海 */
+  sea([132,45,2.4,3]);      /* 咸海 */
+  /* 4) 岛屿补丁 */
+  land([72,70,4,6]);        /* 意大利 */
+  land([102,68,5,5]);       /* 希腊 */
+  land([82,78,2,2]);        /* 西西里 */
+  land([72,76,2,3]);        /* 撒丁 */
+  land([107,74,2,2]);       /* 克里特 */
+  land([132,118,3,10]);     /* 马达加斯加 */
+  land([245,84,2,3]);       /* 台湾 */
+  land([242,73,3,6]);       /* 菲律宾 */
+  land([248,90,2,2]);       /* 棉兰老 */
+  land([98,30,3,3]);        /* 西兰岛 */
+  land([80,26,2,4]);        /* 挪威南 */
+  land([140,112,2,3]);      /* 索科特拉? 跳过 */
+  land([40,20,5,4]);        /* 冰岛 */
+  /* 5) 气候与地形 */
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    const i=y*MAP_W+x;if(ter[i]===TER.WATER)continue;
+    const h=n2[i];
+    if(y<15)ter[i]=TER.SNOW;
+    else if(y<22){ter[i]=h<0.5?TER.SNOW:TER.TUNDRA;}
+    else if(y<27){ter[i]=h<0.35?TER.TUNDRA:TER.PLAIN;}
+    /* 山系 */
+    const alps=((x-88)/10)**2+((y-56)/3)**2;
+    const carpat=((x-102)/9)**2+((y-49)/4)**2;
+    const caucas=((x-140)/4)**2+((y-58)/2.4)**2;
+    const ural=((x-124)/2.2)**2+((y-36)/16)**2;
+    const himal=((x-176)/22)**2+((y-63)/3.5)**2;
+    const atlas=((x-55)/18)**2+((y-76)/3.5)**2;
+    const appen=((x-70)/2.5)**2+((y-69)/5)**2;
+    const balkanm=((x-112)/4)**2+((y-66)/3)**2;
+    const scandes=((x-80)/2.5)**2+((y-22)/9)**2;
+    const altai=((x-180)/8)**2+((y-44)/4)**2;
+    const transb=((x-202)/4)**2+((y-52)/4)**2;
+    const min=Math.min(alps,carpat,caucas,ural,himal,atlas,appen,balkanm,scandes,altai,transb);
+    if(min<0.9){ter[i]=TER.MOUNTAIN;continue;}
+    /* 沙漠带 */
+    if(x>36&&x<150&&y>88&&y<104){ter[i]=TER.DESERT;continue;}
+    if(x>118&&x<166&&y>76&&y<92){ter[i]=TER.DESERT;continue;}
+    if(x>136&&x<180&&y>44&&y<56&&h<0.45){ter[i]=TER.DESERT;continue;} /* 中亚 */
+    if(x>198&&x<224&&y>50&&y<58&&h<0.42){ter[i]=TER.DESERT;continue;} /* 戈壁 */
+    if(x>168&&x<196&&y>42&&y<48&&h<0.4){ter[i]=TER.DESERT;continue;} /* 哈萨克 */
+    /* 森林/沼泽 */
+    if(ter[i]===TER.PLAIN){
+      if(h>0.66)ter[i]=TER.FOREST;
+      else if(h<0.26&&y>34&&y<84)ter[i]=TER.FOREST;
+      else if(h<0.22)ter[i]=TER.SWAMP;
+      else if(h>0.56&&h<0.6&&n1[i]>0.5)ter[i]=TER.HILL;
+    }
+  }
+  /* 6) 区域归属 */
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    const i=y*MAP_W+x;if(ter[i]===TER.WATER){reg[i]=255;continue;}
+    let found=REGIONS.length-1;
+    for(let r=0;r<REGIONS.length;r++){
+      const rs=REGIONS[r].shapes;let hit=false;
+      for(let s=0;s<rs.length&&!hit;s++){
+        const sh=rs[s];
+        if(sh.e){const dx=(x-sh.e[0])/sh.e[2],dy=(y-sh.e[1])/sh.e[3];if(dx*dx+dy*dy<=1)hit=true;}
+        else if(sh.r){if(x>=sh.r[0]&&x<=sh.r[2]&&y>=sh.r[1]&&y<=sh.r[3])hit=true;}
+      }
+      if(hit){found=r;break;}
+    }
+    reg[i]=found;
+  }
+  /* 7) 道路（铁路） */
+  const roads=[];
+  RAILS.forEach(pair=>{
+    const a=CITY_MAP[pair[0]],b=CITY_MAP[pair[1]];
+    if(!a||!b)return;
+    const steps=Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))*2;
+    for(let s=0;s<=steps;s++){
+      const t=s/steps;
+      const x=Math.round(lerp(a.x,b.x,t)), y=Math.round(lerp(a.y,b.y,t));
+      const i=y*MAP_W+x;
+      if(x>=0&&x<MAP_W&&y>=0&&y<MAP_H&&ter[i]!==TER.WATER&&ter[i]!==TER.MOUNTAIN){
+        if(ter[i]!==TER.CITY)ter[i]=TER.ROAD;
+      }
+    }
+  });
+  /* 8) 城市落位 */
+  CITIES.forEach(c=>{
+    let bx=clamp(Math.round(c.x),1,MAP_W-2), by=clamp(Math.round(c.y),1,MAP_H-2);
+    if(ter[by*MAP_W+bx]===TER.WATER){
+      outer: for(let r=1;r<12;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+        const nx=bx+dx,ny=by+dy;
+        if(nx<1||nx>=MAP_W-1||ny<1||ny>=MAP_H-1)continue;
+        if(ter[ny*MAP_W+nx]!==TER.WATER){bx=nx;by=ny;break outer;}
+      }
+    }
+    c.px=bx*TILE+TILE/2;c.py=by*TILE+TILE/2;
+    ter[by*MAP_W+bx]=TER.CITY;
+    /* 城市辐射出小路 */
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+      const nx=bx+dx,ny=by+dy;
+      if(nx<1||nx>=MAP_W-1||ny<1||ny>=MAP_H-1)continue;
+      const i=ny*MAP_W+nx;
+      if(ter[i]===TER.PLAIN||ter[i]===TER.FOREST||ter[i]===TER.DESERT||ter[i]===TER.TUNDRA)ter[i]=TER.ROAD;
+    }
+  });
+  return {ter,reg};
+}
+
+/* ---------- 物品目录 ---------- */
+const ITEMS={
+  bread:{name:"黑面包",type:"food",val:22,price:4,desc:"掺了麸皮的军用面包，管饱但难以下咽。",icon:"F"},
+  meat:{name:"烤鹿肉",type:"food",val:45,price:12,desc:"猎人篝火上的战利品，香气能引来饿狼。",icon:"M"},
+  stew:{name:"热炖菜",type:"food",val:60,price:18,desc:"旅馆招牌菜，土豆、洋葱与一点点肉。",icon:"S"},
+  rice:{name:"米饭团",type:"food",val:30,price:6,desc:"东方人的干粮，配咸菜最好。",icon:"R"},
+  fish:{name:"熏鱼",type:"food",val:35,price:9,desc:"港口城市的常见口粮。",icon:"F"},
+  water:{name:"清水",type:"drink",val:30,price:2,desc:"井水或泉水，务必煮沸。",icon:"W"},
+  tea:{name:"热茶",type:"drink",val:45,price:5,desc:"红茶与热水，疲惫旅人的救星。",icon:"T"},
+  coffee:{name:"黑咖啡",type:"drink",val:25,price:8,desc:"柏林咖啡馆的味道，苦而提神。",icon:"C"},
+  wine:{name:"劣质葡萄酒",type:"drink",val:20,price:10,desc:"战后赝品泛滥，喝多了头疼。",icon:"W"},
+  bandage:{name:"绷带",type:"med",heal:25,price:8,desc:"干净的棉布绷带，处理擦伤与刀伤。",icon:"B"},
+  kit:{name:"急救包",type:"med",heal:55,price:22,desc:"碘酒、纱布与剪刀，战地医护的标配。",icon:"K"},
+  morphine:{name:"吗啡针",type:"med",heal:80,price:45,desc:"止痛奇效，但会上瘾。慎用。",icon:"M"},
+  herb:{name:"草药",type:"med",heal:35,price:6,desc:"路边的车前草与蒲公英，捣碎敷上。",icon:"H"},
+  ammo:{name:"手枪弹匣",type:"ammo",qty:6,price:8,desc:"7.65mm 手枪弹，六发一匣。",icon:"A"},
+  rifle_ammo:{name:"步枪弹带",type:"ammo",qty:5,price:12,desc:"毛瑟步枪弹，五发一夹。",icon:"A"},
+  coal:{name:"煤块",type:"misc",price:5,desc:"取暖与打铁的燃料，北方冬天离不开它。",icon:"C"},
+  cloth:{name:"布料",type:"misc",price:7,desc:"旧军服拆下来的布料，裁缝的原料。",icon:"C"},
+  iron:{name:"生铁锭",type:"misc",price:15,desc:"炼钢厂流出的边角料，铁匠铺收。",icon:"I"},
+  oil:{name:"煤油",type:"misc",price:10,desc:"灯油与打火机的燃料，黑市紧俏货。",icon:"O"},
+  silk:{name:"丝绸",type:"lux",price:60,desc:"远东的奢侈品，走私客的最爱。",icon:"S"},
+  opium:{name:"鸦片",type:"lux",price:80,desc:"违禁品。带着它过哨卡是拿命赌博。",icon:"O"},
+  jewelry:{name:"旧怀表",type:"lux",price:90,desc:"战前的好货，当铺里能换不少马克。",icon:"J"},
+  radio:{name:"电子管收音机",type:"lux",price:140,desc:"能听到大洋彼岸模糊电波的宝贝。",icon:"R"},
+  passport:{name:"帝国通行证",type:"doc",price:120,desc:"德意志帝国的合法身份证明，检查站最硬的通行牌。",icon:"P"},
+  fakeid:{name:"伪造证件",type:"doc",price:70,desc:"手艺不错的假证件，被细查就会露馅。",icon:"P"},
+  map_frag:{name:"残响地图残页",type:"quest",price:0,desc:"父亲留下的地图一角，画着一条不存在的铁路。",icon:"?"},
+  compass:{name:"黄铜罗盘",type:"quest",price:0,desc:"指向时间残响的罗盘。它从不指向北方。",icon:"C"},
+  letter:{name:"未来的信",type:"quest",price:0,desc:"邮戳是明年。信里的字迹正在一点点变化。",icon:"L"},
+  dagger:{name:"匕首",type:"weapon",atk:4,price:12,desc:"防身的小刀，巷战利器。",icon:"D"},
+  pistol:{name:"毛瑟手枪",type:"weapon",atk:12,ammo:"ammo",price:90,desc:"帝国军官的标配，八发弹匣。",icon:"P"},
+  rifle:{name:"毛瑟步枪",type:"weapon",atk:20,ammo:"rifle_ammo",price:160,desc:"一战老枪，威力可靠，装填缓慢。",icon:"R"},
+  smg:{name:"冲锋手枪",type:"weapon",atk:15,ammo:"ammo",price:180,desc:"巷战利器，连发时会咬手。",icon:"S"},
+  sabre:{name:"军官马刀",type:"weapon",atk:11,price:70,desc:"祖上传下来的军刀，挥舞生风。",icon:"S"},
+  stick:{name:"木棍",type:"weapon",atk:2,price:1,desc:"捡来的木棍，聊胜于无。",icon:"S"},
+  armor_cloth:{name:"旧军大衣",type:"armor",def:2,price:20,desc:"保暖又挡刀，北方旅人必备。",icon:"C"},
+  armor_leather:{name:"皮甲",type:"armor",def:4,price:60,desc:"皮革与铆钉，佣兵的常见装备。",icon:"L"},
+  armor_steel:{name:"防弹马甲",type:"armor",def:8,price:240,desc:"克虏伯钢片夹层，能挡住手枪弹。",icon:"A"},
+  coat:{name:"呢子大衣",type:"armor",def:1,price:35,desc:"体面的冬装，过哨卡时显得正经。",icon:"C"},
+  lantern:{name:"马灯",type:"tool",price:15,desc:"夜路与地下室的照明。",icon:"L"},
+  tent:{name:"行军帐篷",type:"tool",price:40,desc:"野外扎营必备，防雨防风。",icon:"T"},
+  shovel:{name:"工兵铲",type:"tool",price:18,desc:"挖坑、生火、格斗，一铲多用。",icon:"S"},
+  fishing:{name:"钓具",type:"tool",price:12,desc:"河边的宁静时光，运气好能钓上鱼。",icon:"F"},
+  trap:{name:"捕兽夹",type:"tool",price:14,desc:"设置陷阱捕捉猎物。",icon:"T"},
+  cigar:{name:"雪茄",type:"gift",price:10,desc:"上流社会的敲门砖，讨人喜欢的礼物。",icon:"C"},
+  brandy:{name:"白兰地",type:"gift",price:25,desc:"军官们的最爱，送礼办事两相宜。",icon:"B"},
+  tea_herb:{name:"龙井茶叶",type:"gift",price:30,desc:"杭州的明前茶，东方风味。",icon:"T"},
+};
+const ITEM_LIST=Object.keys(ITEMS);
+
+/* ---------- 敌人目录 ---------- */
+const ENEMIES={
+  wolf:{name:"野狼",hp:18,atk:5,def:1,spd:12,exp:8,money:[1,4],desc:"饿疯了的孤狼"},
+  wolves:{name:"狼群",hp:14,atk:4,def:0,spd:14,exp:10,money:[2,6],n:3,desc:"三只眼睛发绿的饿狼"},
+  bear:{name:"棕熊",hp:60,atk:12,def:3,spd:6,exp:26,money:[5,12],desc:"森林之王，别惹它"},
+  boar:{name:"野猪",hp:35,atk:8,def:2,spd:8,exp:14,money:[3,8],desc:"受伤的野猪最危险"},
+  bandit:{name:"土匪",hp:26,atk:7,def:1,spd:9,exp:12,money:[6,18],desc:"拦路的亡命徒"},
+  bandit_gun:{name:"持枪匪徒",hp:30,atk:11,def:2,spd:10,exp:18,money:[12,30],desc:"有枪的匪徒，更危险"},
+  deserter:{name:"逃兵",hp:24,atk:8,def:2,spd:8,exp:13,money:[8,20],desc:"带着军械开小差的败兵"},
+  patrol:{name:"帝国巡逻队",hp:40,atk:13,def:4,spd:9,exp:24,money:[15,35],desc:"宪兵小队，装备精良"},
+  thug:{name:"码头打手",hp:32,atk:9,def:2,spd:10,exp:15,money:[10,24],desc:"收了钱的黑帮打手"},
+  assassin:{name:"管理局特工",hp:55,atk:16,def:5,spd:13,exp:40,money:[20,50],desc:"黑色大衣，没有表情。他们不该存在。"},
+  cultist:{name:"记忆教团卫兵",hp:48,atk:14,def:4,spd:11,exp:36,money:[15,40],desc:"兜帽下的眼神狂热而空洞"},
+  refugee_guard:{name:"流亡军官",hp:34,atk:10,def:3,spd:8,exp:16,money:[10,25],desc:"落魄的白军军官，枪法仍在"},
+  hyena:{name:"鬣狗",hp:20,atk:6,def:1,spd:13,exp:9,money:[2,5],desc:"沙漠里的拾荒者"},
+  scorpion:{name:"沙蝎群",hp:12,atk:4,def:0,spd:11,exp:6,money:[1,3],n:4,desc:"毒尾乱舞，烦人至极"},
+  ghost_soldier:{name:"残响英军",hp:50,atk:15,def:4,spd:10,exp:45,money:[0,0],desc:"1916年的幽灵。他们的子弹来自另一个世界。"},
+  ghost_phantom:{name:"残响幻影",hp:70,atk:18,def:6,spd:12,exp:60,money:[0,0],desc:"扭曲的人形，由记忆构成，无法被杀死的错觉笼罩心头。"},
+};
+/* ---------- 同伴目录 ---------- */
+const COMPANIONS={
+  erine:{name:"艾琳·奥康纳",role:"爱尔兰战地护士",city:"shanghai",
+    desc:"一个在远东漂泊的爱尔兰护士。她见过太多伤口，却仍然相信善意。",
+    stats:{hp:70,atk:8,def:4,spd:9},skill:"护理",
+    join:{rep:{people:15},item:"brandy",money:0,text:"艾琳打量你片刻：“你要去的地方，总有人受伤吧？带我走，我能帮上忙。”"},
+    talk:"“我在索姆河的救护站待过三年。战争结束的方式不对——所有人都这么说，可没人敢大声讲。”"},
+  laoli:{name:"老李",role:"码头掮客",city:"shanghai",
+    desc:"上海滩的百事通，没有他打听不到的消息，也没有他不敢倒卖的货。",
+    stats:{hp:60,atk:10,def:5,spd:10},skill:"黑话",
+    join:{rep:{black:20},item:"wine",money:0,text:"老李吐了个烟圈：“小伙子，道上走，得有人搭伴。我跟你跑一趟，佣金另算。”"},
+    talk:"“上海这地方，白天是帝国的，晚上是谁的都说不准。你爹当年……咳，当我没说。”"},
+  katya:{name:"卡捷琳娜·沃尔科娃",role:"白军退役中尉",city:"moscow",
+    desc:"沙皇时代的骑兵中尉，如今在莫斯科酒馆里靠教剑术过活。眼里的火还没灭。",
+    stats:{hp:85,atk:13,def:6,spd:11},skill:"马刀",
+    join:{rep:{white:15},item:"sabre",money:200,text:"卡捷琳娜把马刀往桌上一拍：“还清我欠的酒钱，这条命就是你的。乌拉！”"},
+    talk:"“我们输掉了内战，输掉了祖国。可西伯利亚的雪，还认得我。”"},
+  osman:{name:"奥斯曼·埃芬迪",role:"帝国退役炮兵",city:"istanbul",
+    desc:"加里波利与巴勒斯坦的老兵，左腿装着木头假肢，笑容却比谁都豁达。",
+    stats:{hp:90,atk:11,def:8,spd:6},skill:"炮击",
+    join:{rep:{ottoman:15},item:"cigar",money:0,text:"奥斯曼大笑着拍拍假腿：“年轻人，去沙漠？带上我。我这腿虽然假，眼睛可没瞎。”"},
+    talk:"“奥斯曼帝国像一位垂死的老人，每个人都想分他的遗产。可老人还握着刀呢。”"},
+  fatima:{name:"法蒂玛·哈桑",role:"贝都因向导",city:"damascus",
+    desc:"沙漠部落首领之女，能读懂沙丘的风向，也能读懂人的谎言。",
+    stats:{hp:65,atk:9,def:3,spd:14},skill:"识途",
+    join:{rep:{ottoman:10,people:10},item:"tea_herb",money:0,text:"法蒂玛蒙着面纱轻笑：“你要横穿沙漠？没有我，你会成为秃鹫的午餐。”"},
+    talk:"“沙丘底下埋着罗马的军团、十字军的骨骸，还有英国人修的铁路。沙漠从不挑剔。”"},
+  aleksei:{name:"阿列克谢·彼得罗夫",role:"铁路机械师",city:"omsk",
+    desc:"西伯利亚铁路上的天才技工，醉心于蒸汽机的呼吸。修得了火车，也修得了枪。",
+    stats:{hp:75,atk:10,def:7,spd:8},skill:"修理",
+    join:{rep:{white:10,black:10},item:"iron",money:80,text:"阿列克谢从车头探出头：“带我走，你的枪卡壳、车抛锚、心发凉，都算我的。”"},
+    talk:"“这条铁路从莫斯科到海参崴，穿过七个时区。有人告诉我，其中有一个时区——不存在。”"},
+};
+
+/* ---------- NPC 目录（脚本 NPC） ---------- */
+const NPCS=[
+  /* 上海 */
+  {id:"auntmei",name:"梅婶",role:"面馆老板娘",city:"shanghai",f:"people",
+    talk:["“汉伯，又来了？一碗阳春面，多加葱花。”","“你娘走之前交代过，看着你别饿着。她啊，心里苦，嘴上硬。”"],
+    opts:[{t:"打听父亲的事",k:"lore",lines:["“你爹汉伯二世，是个德国工程师，心肠好。民国十六年说去西伯利亚考察铁路，再没回来。你娘等了他六年，头发白了一半。”"]},
+          {t:"买点吃的",k:"shop",stock:["bread","rice","fish","water","tea","stew"]}]},
+  {id:"portwang",name:"王头",role:"码头工头",city:"shanghai",f:"black",
+    talk:["“力气换钱，天经地义。扛包去不去？”"],
+    opts:[{t:"打零工（体力活）",k:"job",job:"labor"},
+          {t:"打听港口的动静",k:"lore",lines:["“昨晚有艘没旗子的船靠了岸，下来几个穿黑大衣的，径直去了你爹的老宅。王头我眼睛毒，那帮人不是善茬。”"]}]},
+  {id:"shen",name:"沈医生",role:"中医馆坐堂",city:"shanghai",f:"people",
+    talk:["“脉象浮而无力，你最近没歇好。坐下来，我给你把把脉。”"],
+    opts:[{t:"看病治疗",k:"doc",cost:12,heal:60},
+          {t:"讨教药理",k:"lore",lines:["“你娘教你的那些方子，都是祖传的。她说它们来自——她记不清了。奇怪，那么好的记性。”"]}]},
+  {id:"erine",name:"艾琳·奥康纳",role:"爱尔兰战地护士",city:"shanghai",f:"people",comp:"erine",
+    talk:["“又是你。伤口还疼吗？在远东，爱尔兰口音总能换来一点善意的笑话。”"],
+    opts:[{t:"闲聊",k:"lore",lines:["“我在索姆河见过最糟糕的一天。那天，时钟停了——我是说，所有士兵的手表，同时停了。”"]},
+          {t:"邀请同行",k:"companion",id:"erine"}]},
+  {id:"laoli",name:"老李",role:"码头掮客",city:"shanghai",f:"black",comp:"laoli",
+    talk:["“嘘——隔墙有耳。上海滩的规矩：消息换消息，货换货。”"],
+    opts:[{t:"买黑货",k:"black",stock:["opium","silk","fakeid","ammo","coffee"]},
+          {t:"打听小道消息",k:"lore",lines:["“德租界最近来了个奇怪的电报员，天天往柏林发同一封电报：'黄铜已到港'。啥意思？鬼知道。”"]},
+          {t:"邀请同行",k:"companion",id:"laoli"}]},
+  /* 柏林 */
+  {id:"gret",name:"格蕾特",role:"档案局文员",city:"berlin",f:"imperial",
+    talk:["“先生，档案局九点开门，五点关门。查阅申请请填表——三份。”"],
+    opts:[{t:"闲聊",k:"lore",lines:["“最近档案馆的旧卷宗总是不翼而飞，上头说是老鼠。哼，什么老鼠能啃穿保险柜？”"]}]},
+  {id:"hans",name:"汉斯",role:"退伍老兵",city:"berlin",f:"imperial",
+    talk:["“1918年我们在凡尔赛签的……不，不对。我们赢了。可为什么我这辈子都睡不安稳？”"],
+    opts:[{t:"听老兵讲故事",k:"lore",lines:["“停战那天，柏林全城狂欢。可第二天一早，所有报纸的头条都是'和平降临'——昨天明明写的是'胜利万岁'。我发誓我看到了两份不同的报纸。”"]}]},
+  {id:"kurt",name:"库尔特",role:"地下酒馆老板",city:"berlin",f:"black",
+    talk:["“欢迎光临'倒转的钟'。这名字是我起的，因为酒吧里那座钟，真的在倒着走。”"],
+    opts:[{t:"喝一杯（+体力）",k:"drink",cost:8,energy:40},
+          {t:"打听黑市",k:"black",stock:["fakeid","ammo","rifle_ammo","wine","opium"]},
+          {t:"买情报",k:"info",cost:20,lines:["“当局在追查'残响'，有个部门叫'管理局'，总部就在国会大厦地下。据说他们处理的不是文件，是'记忆'。”"]}]},
+  {id:"elsa",name:"埃尔莎",role:"面包房老板娘",city:"berlin",f:"people",
+    talk:["“刚出炉的黑面包！配热汤，管一天。”"],
+    opts:[{t:"买吃的",k:"shop",stock:["bread","coffee","stew","water"]}]},
+  {id:"friedrich",name:"弗里德里希",role:"帝国上校",city:"berlin",f:"imperial",
+    talk:["“年轻人，站直了。帝国的眼睛看着每一个公民。”"],
+    opts:[{t:"套话",k:"lore",lines:["“听说你的姓氏是'汉伯'？有意思。二十年前，有个叫汉伯二世的工程师，在西伯利亚铁路失踪。档案写着：意外。呵。”"]}]},
+  /* 莫斯科 */
+  {id:"katerina",name:"卡捷琳娜·沃尔科娃",role:"退役骑兵中尉",city:"moscow",f:"white",comp:"katya",
+    talk:["“酒馆里最好的位置，留给还佩着剑的人。”"],
+    opts:[{t:"请教剑术",k:"train",cost:30,atk:1},
+          {t:"闲聊",k:"lore",lines:["“沙皇被处决前夜，守卫说他听见钟声。可那座钟，1917年就拆了。”"]},
+          {t:"邀请同行",k:"companion",id:"katya"}]},
+  {id:"priest",name:"谢尔盖神父",role:"东正教神父",city:"moscow",f:"people",
+    talk:["“孩子，忏悔室的门永远敞开。”"],
+    opts:[{t:"告解（恢复心神）",k:"pray",cost:0,energy:30},
+          {t:"闲聊",k:"lore",lines:["“教区的老人们说，莫斯科地底埋着一口黄铜钟，谁敲响它，时间就会倒流。教堂的档案里，确实有一页提到'黄铜之物'——但那页被人撕走了。”"]}]},
+  {id:"gen",name:"尤德尼奇将军",role:"白军总司令",city:"moscow",f:"white",
+    talk:["“莫斯科的冬天，比任何敌人都残酷。可我们熬过来了。”"],
+    opts:[{t:"询问西伯利亚的事",k:"lore",lines:["“西伯利亚铁路沿线，总有列车凭空消失，又在几天后原封不动地出现。乘客们说，他们度过了'另一个'七天。铁路总局拒绝承认，只说是流言。”"]}]},
+  {id:"anya",name:"安妮娅",role:"孤儿院院长",city:"moscow",f:"people",
+    talk:["“这些孩子，一半是白军的遗孤，一半是红军的。战争吃掉了他们的父母，无论是哪一边。”"],
+    opts:[{t:"捐助孤儿院（-20马克，民间声望+）",k:"donate",cost:20,rep:"people"},
+          {t:"打听孤儿的事",k:"lore",lines:["“有个男孩，叫阿列克谢，十六岁就能修火车头。他说他夜里听见铁轨唱歌——唱一支1917年的歌。”"]}]},
+  /* 君士坦丁堡 */
+  {id:"osman",name:"奥斯曼·埃芬迪",role:"退役炮兵",city:"istanbul",f:"ottoman",comp:"osman",
+    talk:["“安拉作证，那门大炮我打了四年，耳朵聋了一半，换来这半条命和满身勋章。”"],
+    opts:[{t:"听战场故事",k:"lore",lines:["“加里波利之夜，我看见澳新军团的士兵像潮水一样退下去——然后，潮水又倒流回来。同一批人，同一场进攻，打了两次。军官说我们眼花了。我们二十个人发誓：没花。”"]},
+          {t:"邀请同行",k:"companion",id:"osman"}]},
+  {id:"vizier",name:"大维齐尔",role:"帝国宰相",city:"istanbul",f:"ottoman",
+    talk:["“帝国的疆域，在地图上依然辽阔。帝国的国库，只剩一把生锈的钥匙。”"],
+    opts:[{t:"试探帝国虚实",k:"lore",lines:["“苏丹陛下的病情，你最好不要打听。可如果帝国真的垮了……年轻人，你口袋里那封信，恐怕比整个帝国都值钱。”"]}]},
+  {id:"hafiz",name:"哈菲兹",role:"圣索菲亚守夜人",city:"istanbul",f:"people",
+    talk:["“这座大殿，一千五百年了。它听过拜占庭的圣歌，也听过宣礼，如今，它听见的是越来越轻的呼吸。”"],
+    opts:[{t:"询问地下传说",k:"lore",lines:["“地底有条被封死的通道，老辈人说通向'世界最初之钟'。我守夜三十年，只见过一次有人进去——那是一个中国人，拿着黄铜罗盘。那是，七年前。”"]}]},
+  /* 巴黎/伦敦 */
+  {id:"jean",name:"让·杜瓦尔",role:"地下抵抗军",city:"paris",f:"allies",
+    talk:["“巴黎还在。自由还没死。”"],
+    opts:[{t:"打听抵抗运动",k:"lore",lines:["“德国人烧掉了凡尔赛和约的原件，说是'胜利者的废纸'。可我们的人，在火堆里抢出一页——上面写的停战日期，是1918年11月11日。他们烧错了东西。”"]}]},
+  {id:"winston",name:"温斯顿",role:"情报局顾问",city:"london",f:"allies",
+    talk:["“我这一生犯过很多错误，但最大的错误，是输掉了那场战争——或者说，输掉了'记得'那场战争的能力。”"],
+    opts:[{t:"听他的疯话",k:"lore",lines:["“你相信吗，年轻人？我曾经——在另一个世界——赢得过它。我为此写了厚厚的回忆录，然后一觉醒来，回忆录变成了废纸。这个世界的墨水，会自己改写字迹。”"]}]},
+  /* 开罗 */
+  {id:"tarek",name:"塔里克",role:"骆驼商队首领",city:"cairo",f:"people",
+    talk:["“沙漠的规矩：先喝茶，再谈生意。”"],
+    opts:[{t:"买补给",k:"shop",stock:["water","dates","bread","meat"]},
+          {t:"打听商路",k:"lore",lines:["“商队从开罗到巴格达要四十天。可有一年，我们走了四十天，却提前三天到了——向导发誓说，路上有一片绿洲，我们经过了两遍。”"]}]},
+  /* 海参崴/东京 */
+  {id:"sato",name:"佐藤大尉",role:"日本陆军情报官",city:"vladivostok",f:"japan",
+    talk:["“帝国的目光，注视着大陆的每一寸土地。”"],
+    opts:[{t:"套话",k:"lore",lines:["“贵国的'时间线'，我们也有所耳闻。东京有个部门专门研究'历史的另一种写法'。机密？哈，在远东，没有秘密。”"]}]},
+  {id:"smuggler",name:"秃鹫",role:"远东走私贩",city:"hk",f:"black",
+    talk:["“从上海到加尔各答，没有我送不到的货。”"],
+    opts:[{t:"买黑货",k:"black",stock:["opium","silk","ammo","fakeid","radio"]},
+          {t:"打听残响黑市",k:"lore",lines:["“听说过'时间碎片'吗？有人出大价钱收——那些从'另一个世界'漏出来的小物件：印着陌生文字的硬币，从未发行过的邮票。我经手过一枚：上面的头像，是同一个皇帝，年轻了二十岁。”"]}]},
+  /* 大马士革 */
+  {id:"fatima",name:"法蒂玛·哈桑",role:"贝都因向导",city:"damascus",f:"people",comp:"fatima",
+    talk:["“风从沙漠来，带来三种消息：商队的消息，战争的消息，和'另一种'消息。”"],
+    opts:[{t:"请教沙漠生存",k:"train",cost:20,spd:1},
+          {t:"邀请同行",k:"companion",id:"fatima"}]},
+  /* 鄂木斯克 */
+  {id:"aleksei",name:"阿列克谢·彼得罗夫",role:"铁路机械师",city:"omsk",f:"white",comp:"aleksei",
+    talk:["“这台机车我修了七年。它的每个螺丝，我都能闭着眼睛摸出来。”"],
+    opts:[{t:"修装备",k:"repair",cost:15},
+          {t:"闲聊",k:"lore",lines:["“西伯利亚铁路有一站叫'阿兰斯'，时刻表上永远查不到，可列车长都知道：过那一站时，把所有钟都停掉，否则——乘客会看见不该看见的东西。”"]},
+          {t:"邀请同行",k:"companion",id:"aleksei"}]},
+  /* 广撒网 NPC */
+  {id:"beggar",name:"老乞丐",role:"流浪者",city:"any",f:"people",
+    talk:["“行行好，给口吃的吧。我能用故事换。”"],
+    opts:[{t:"施舍食物（+民间声望）",k:"beg",item:"bread"},
+          {t:"听故事",k:"lore",lines:["“我年轻时在凡尔赛当杂役，见过停战签字。可后来人人都说，签字的是柏林。我去问，他们都笑我老糊涂。可我记得那支笔——金笔，笔尖刻着'1918.11.11'。他们烧了它，可我记得。”"]}]},
+  {id:"merchant",name:"流动商人",role:"行商",city:"any",f:"people",
+    talk:["“南来北往，货通四方。看看我这儿的货？”"],
+    opts:[{t:"买东西",k:"shop",stock:["bread","water","cloth","iron","lantern","shovel","fishing","herb"]},
+          {t:"倒卖行情",k:"lore",lines:["“粮食在北方贵，丝绸在西方贵，鸦片在哪儿都贵。低买高卖，就看你的腿勤不勤。”"]}]},
+  {id:"officer",name:"宪兵队长",role:"帝国宪兵",city:"any",f:"imperial",
+    talk:["“站住。证件。”"],
+    opts:[{t:"出示证件",k:"check"},
+          {t:"贿赂（-30马克）",k:"bribe"},
+          {t:"硬闯（可能开战）",k:"fight"}]},
+  {id:"oldpress",name:"渡边",role:"东京老记者",city:"tokyo",f:"japan",
+    talk:["“帝国海军省说，世界地图不会变。可我的暗房里，有一卷1919年拍的胶片——上面的地图，和现在的不一样。”"],
+    opts:[{t:"看那卷胶片",k:"lore",lines:["“胶片上的欧洲，法国还是完整的，德国还叫‘第二帝国’，没有‘欧罗巴联盟’这个词。我把照片给总编看，他说是冲洗错误。冲洗错误能让整张地图变样？”"]}]},
+  {id:"ram",name:"拉姆",role:"圣雄追随者",city:"delhi",f:"people",
+    talk:["“圣雄说，非暴力是唯一不与时间作对的方式。可我总觉得，时间本身就在与我们作对。”"],
+    opts:[{t:"听拉姆讲圣雄的故事",k:"lore",lines:["“圣雄年轻时在南非当律师，有一年，他的怀表倒着走了一个月。他去找钟表匠，钟表匠说表没坏。圣雄说：那是我坏了。后来他回到印度，开始了他的‘纺车革命’。他说：车轮转太快的地方，时间会碎。”"]}]},
+  {id:"cecil",name:"塞西尔",role:"英国流亡贵族",city:"cape",f:"allies",
+    talk:["“开普敦的天气比伦敦好。可这里的晚霞，总让我想起索姆河的黄昏——那是我们输掉的战争，也是我唯一记得的战争。”"],
+    opts:[{t:"打听英国流亡政府",k:"lore",lines:["“白厅的档案室里有一间密室，门上刻着‘1918-11-11’。没人知道里面是什么。我父亲——愿他安息——临终前告诉我：那间密室的门，是从里面锁上的。”"]}]},
+  {id:"courtdoc",name:"苏丹御医",role:"宫廷御医",city:"istanbul",f:"ottoman",
+    talk:["“苏丹陛下梦见一口倒转的钟，钟声一响，帝国就年轻一岁。御医们都说这是病。我私下觉得——这是预言。”"],
+    opts:[{t:"询问苏丹的病情",k:"lore",lines:["“陛下的脉搏越来越慢，像一口钟的发条在松开。我们用了所有药，都没用。宫里流传着一个说法：帝国的命，系在那口‘地底的钟’上。钟停之日，便是改朝换代之时。”"]}]},
+  {id:"watchmaker",name:"老钟表匠",role:"莫斯科钟表匠",city:"moscow",f:"people",
+    talk:["“我修了一辈子钟。只有一种钟我修不好——那种‘记得另一段时间’的钟。”"],
+    opts:[{t:"请他修你的罗盘",k:"lore",lines:["“你这只罗盘，是用‘时间线金属’打的。七年前，有个德国工程师拿它来修，我修好了。他付给我一枚硬币——你看，这硬币上的年份是1917，可铸造厂说，那一年他们只铸了纪念币。”"]}]},
+  {id:"consul",name:"领事馆秘书",role:"德国驻沪领事馆秘书",city:"shanghai",f:"imperial",
+    talk:["“领事大人说过，上海是帝国在远东的眼睛。可我总觉得，这只眼睛，看得见不该看的东西。”"],
+    opts:[{t:"套取领事馆的情报",k:"lore",lines:["“上周，帝国远东舰队送来一只密封铁箱，直接抬进地下室。搬运工说箱子很轻，像空的。可他们说，搬的时候，箱子在轻轻地震——像里面装着一颗心脏。”"]}]},
+  {id:"stan",name:"伊万",role:"铁路站长",city:"novosibirsk",f:"white",
+    talk:["“西伯利亚铁路，我管了二十年。这条铁路最奇怪的地方不是长——是它偶尔会‘多出一站’。”"],
+    opts:[{t:"打听阿兰斯站",k:"lore",lines:["“阿兰斯？老乘务员都忌讳提这个名字。他们说，那站台底下埋着1917年的一整列军列。车厢里的士兵全睡着了，一睡就是十七年。每次列车经过，都会有人听见车厢里传出鼾声。”"]}]},
+];
+/* ---------- 出身 ---------- */
+const ORIGINS=[
+  {id:"apprentice",name:"上海学徒",d:"混血孤儿，在德租界码头长大。两手空空，但腿脚灵便，眼力过人。",
+   st:{hp:70,atk:5,def:3,spd:10},money:60,rep:{people:10,black:5},city:"shanghai",weapon:"dagger",armor:"armor_cloth",
+   text:"你叫汉伯——一个德国工程师与上海中医之女的遗孤。民国十六年，父亲在西伯利亚铁路考察时失踪，母亲半年前病倒，如今躺在面馆后屋。昨夜，你收到一封邮戳是'明年'的信。"},
+  {id:"berliner",name:"柏林流亡者",d:"战败后投奔帝国的德裔子弟。见过另一个世界的影子，擅长枪械。",
+   st:{hp:65,atk:7,def:3,spd:8},money:120,rep:{imperial:5},city:"berlin",weapon:"pistol",armor:"armor_cloth",
+   text:"你叫汉伯，一个在柏林长大的年轻人。父亲是帝国铁路局的工程师，七年前在西伯利亚失踪。昨夜，你收到一封邮戳是'明年'的信——寄信人署名：你的父亲。"},
+  {id:"whiteorphan",name:"白俄孤儿",d:"内战中被白军收养的孤儿。扛过西伯利亚的严寒，皮糙肉厚。",
+   st:{hp:85,atk:6,def:4,spd:7},money:40,rep:{white:10},city:"moscow",weapon:"sabre",armor:"armor_leather",
+   text:"你叫汉伯，一个在莫斯科孤儿院长大的年轻人。没人知道你的父母是谁，只知道你出生那年，一支奇怪的考察队路过——领队是个德国工程师，留下一个名字：汉伯。"},
+  {id:"merchant",name:"奥斯曼商人之子",d:"香料世家的少东家。会讨价还价，也见过沙漠的残酷。",
+   st:{hp:70,atk:5,def:3,spd:9},money:160,rep:{ottoman:10},city:"istanbul",weapon:"dagger",armor:"armor_cloth",
+   text:"你叫汉伯，君士坦丁堡香料商人的义子。你真正的父亲——一个德国工程师——七年前经过商队时托孤，留下一只黄铜罗盘，和一句'它会带你找到真相'。"},
+];
+
+/* ---------- 游戏状态 ---------- */
+let S=null;           /* 当前存档 */
+let WORLD=null;       /* 世界地形 */
+let GS={              /* 运行期状态（不入档） */
+  mode:"title", cam:{x:0,y:0}, keys:{}, mouse:{x:0,y:0,down:false},
+  time:0, paused:false, dayRolled:false, weather:"晴", temp:12,
+  interactTarget:null, interactNpc:null, interactFac:null,
+  floating:[], effects:[], battle:null, story:null, storyStep:null,
+  rng:mulberry32(7), exploredUpdate:false, minimapDirty:true,
+  touch:{active:false,id:-1,ox:0,oy:0,dx:0,dy:0},
+  deathReason:"", stats:{}, lastSave:0, autosaveT:0,
+};
+const REP_NAMES={imperial:"帝国当局",ottoman:"奥斯曼",white:"白俄",japan:"日本",allies:"协约残余",people:"民间声望",black:"地下世界"};
+const REP_KEYS=["imperial","ottoman","white","japan","allies","people","black"];
+
+function newState(mode,name,originId){
+  const o=ORIGINS.find(x=>x.id===originId)||ORIGINS[0];
+  const rep={};REP_KEYS.forEach(k=>rep[k]=5);
+  Object.keys(o.rep||{}).forEach(k=>rep[k]+=o.rep[k]);
+  const c=CITY_MAP[o.city];
+  return {
+    v:1, mode, name:name||"汉伯", origin:o.id, chapter:0, chapterStep:0, storyFlags:{}, flags:{},
+    x:c.px, y:c.py, region:0, day:0, minute:480,
+    hp:o.st.hp, maxhp:o.st.hp, hunger:80, thirst:80, energy:100,
+    money:o.money, level:1, exp:0, atk:o.st.atk, def:o.st.def, spd:o.st.spd, statBonus:{atk:0,def:0,spd:0},
+    inv:[{id:o.weapon,qty:1},{id:"water",qty:2},{id:"bread",qty:3},{id:"bandage",qty:1}],
+    equip:{weapon:o.weapon,armor:o.armor}, comps:[], rep,
+    quests:[], doneQuests:[], journal:[], kills:0, deaths:0, daysAlive:0,
+    explored:"", weatherSeed:0, ending:null, playTime:0, introRead:false,
+  };
+}
+
+/* 探索地图编码 */
+function exploredEncode(S){
+  let s="";
+  for(let i=0;i<WORLD.ter.length;i++)s+=String.fromCharCode(65+WORLD.explored[i]);
+  return s;
+}
+function exploredDecode(s){
+  for(let i=0;i<WORLD.ter.length;i++)WORLD.explored[i]=s&&i<s.length?Math.min(63,s.charCodeAt(i)-65):0;
+}
+
+/* ---------- 存档 ---------- */
+const SAVE_KEY="hanber3_save_";
+function saveToSlot(slot){
+  try{
+    S.explored=exploredEncode(S);
+    S.weatherSeed=GS.weatherSeed;
+    localStorage.setItem(SAVE_KEY+slot,JSON.stringify(S));
+    GS.lastSave=Date.now();
+    toast("已存档到 槽位"+slot,"good");
+    refreshSaveList();
+    return true;
+  }catch(e){toast("存档失败："+e.message,"bad");return false;}
+}
+function loadFromSlot(slot){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY+slot);
+    if(!raw)return false;
+    const s=JSON.parse(raw);
+    if(!s||!s.v)return false;
+    S=s; applyLoadedState();
+    return true;
+  }catch(e){toast("读档失败："+e.message,"bad");return false;}
+}
+function applyLoadedState(){
+  if(!WORLD)WORLD=buildWorld(S.weatherSeed||7);
+  WORLD.explored=new Uint8Array(WORLD.ter.length);
+  exploredDecode(S.explored||"");
+  GS.mode=S.mode==="story"?"story":"free";
+  GS.minimapDirty=true;
+  updateHUD();
+  enterGame();
+}
+function saveExists(slot){try{return !!localStorage.getItem(SAVE_KEY+slot)}catch(e){return false}}
+function deleteSave(slot){try{localStorage.removeItem(SAVE_KEY+slot);refreshSaveList();toast("已删除存档","good")}catch(e){toast("删除失败","bad")}}
+function exportSave(){
+  S.explored=exploredEncode(S);
+  const txt=btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+  return txt;
+}
+function importSave(txt){
+  try{
+    const s=JSON.parse(decodeURIComponent(escape(atob(txt.trim()))));
+    if(!s||!s.v)throw new Error("格式错误");
+    S=s;applyLoadedState();toast("导入成功","good");
+  }catch(e){toast("导入失败："+e.message,"bad")}
+}
+function autoSave(){
+  if(!S||GS.mode==="title")return;
+  saveToSlot(1);
+}
+
+/* ---------- 时间与天气 ---------- */
+const MONTHS=["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+const WEEK=["周日","周一","周二","周三","周四","周五","周六"];
+function gameDate(){
+  const d=new Date(1933,10,1+S.day);
+  return {y:d.getFullYear(),m:d.getMonth(),date:d.getDate(),w:(d.getDay())};
+}
+function fmtDate(){
+  const d=gameDate();
+  return d.y+"年"+(d.m+1)+"月"+d.date+"日 "+WEEK[d.w];
+}
+function fmtTime(){
+  return pad2(Math.floor(S.minute/60))+":"+pad2(S.minute%60);
+}
+function seasonName(){const m=gameDate().m;return m>=10||m<=1?"冬":m<=4?"春":m<=7?"夏":"秋"}
+function regionAt(x,y){
+  const tx=clamp(Math.floor(x/TILE),0,MAP_W-1),ty=clamp(Math.floor(y/TILE),0,MAP_H-1);
+  const ri=WORLD.reg[ty*MAP_W+tx];
+  return ri===255?null:REGIONS[ri];
+}
+function cityNear(x,y,rad){
+  let best=null,bd=rad;
+  for(const c of CITIES){const d=dist2(x,y,c.px,c.py);if(d<bd){bd=d;best=c;}}
+  return best;
+}
+function tileAt(x,y){return WORLD.ter[clamp(Math.floor(y/TILE),0,MAP_H-1)*MAP_W+clamp(Math.floor(x/TILE),0,MAP_W-1)]}
+function isPassable(x,y){
+  const tx=Math.floor(x/TILE),ty=Math.floor(y/TILE);
+  if(tx<0||tx>=MAP_W||ty<0||ty>=MAP_H)return false;
+  return TER_PASS[WORLD.ter[ty*MAP_W+tx]];
+}
+function regionClimate(ri){
+  if(ri===null)return "sea";
+  const r=REGIONS[ri];
+  const n=r.name;
+  if(n.includes("冰")||n.includes("西伯利亚")||n.includes("斯堪"))return "cold";
+  if(n.includes("沙漠")||n.includes("撒哈拉")||n.includes("阿拉伯")||n.includes("波斯"))return "hot";
+  return "temp";
+}
+function rollWeather(){
+  const cl=regionClimate(S.region);
+  const m=gameDate().m;
+  const r=GS.rng;
+  if(cl==="cold")GS.weather=r()<0.5?"雪":(r()<0.5?"阴":"晴");
+  else if(cl==="hot")GS.weather=r()<0.45?"沙尘":(r()<0.6?"晴":"酷热");
+  else GS.weather=r()<0.4?"雨":(r()<0.65?"阴":"晴");
+  if(m>=4&&m<=9&&cl==="hot"&&GS.weather==="晴"&&r()<0.3)GS.weather="酷热";
+  if(cl==="cold"&&GS.weather==="阴"&&r()<0.3)GS.weather="雪";
+}
+function calcTemp(){
+  const ty=clamp(Math.floor(S.y/TILE),0,MAP_H-1);
+  const lat=1-ty/MAP_H;            /* 0南 1北 */
+  const m=gameDate().m;
+  const seas=[0,-4,-6,-4,0,5,9,10,8,4,0,-2][m];
+  let t=-34+lat*58+seas;           /* 基础纬度温度 */
+  const h=S.minute/60;
+  t+=Math.sin((h-9)/24*Math.PI*2)*3; /* 昼夜 */
+  if(GS.weather==="雪")t-=5;
+  if(GS.weather==="雨")t-=3;
+  if(GS.weather==="沙尘")t+=4;
+  if(GS.weather==="酷热")t+=8;
+  return Math.round(t);
+}
+function advanceTime(realDt){
+  S.minute+=realDt*3;
+  S.playTime+=realDt;
+  while(S.minute>=1440){S.minute-=1440;S.day++;S.daysAlive++;GS.dayRolled=false;GS.minimapDirty=true;}
+  if(!GS.dayRolled){
+    GS.dayRolled=true;
+    GS.weatherSeed=((S.day*7919)+Math.floor(S.x/100))>>>0;
+    if(!WORLD)WORLD=buildWorld(S.weatherSeed);
+    GS.rng=mulberry32(S.weatherSeed);
+    rollWeather();
+    /* 每天结算 */
+    onNewDay();
+  }
+  GS.temp=calcTemp();
+}
+function onNewDay(){
+  if(!S)return;
+  /* 生存结算 */
+  const t=GS.temp;
+  const warm=S.equip.armor&&(ITEMS[S.equip.armor]||{}).name&&(S.equip.armor==="coat"||S.equip.armor==="armor_cloth"||S.equip.armor==="armor_leather");
+  if(t<0&&!warm&&S.energy<20){S.hp-=3;toast("严寒侵袭，你感到虚弱","bad");}
+  checkDeath("严寒与饥饿");
+  GS.minimapDirty=true;
+  /* 每日自动存档 */
+  if(localStorage.getItem("hanber3_auto")!=="0"){
+    try{
+      S.explored=exploredEncode(S);
+      localStorage.setItem(SAVE_KEY+1,JSON.stringify(S));
+    }catch(e){}
+  }
+}
+
+/* ---------- HUD ---------- */
+function updateHUD(){
+  if(!S){return;}
+  const d=gameDate();
+  $("hudLoc").textContent=locName();
+  $("hudDate").textContent=fmtDate()+"  "+fmtTime()+" · "+GS.weather+" "+GS.temp+"° · 存活"+S.daysAlive+"天";
+  $("barHp").style.width=clamp(S.hp/S.maxhp*100,0,100)+"%";
+  $("barHu").style.width=clamp(S.hunger,0,100)+"%";
+  $("barTh").style.width=clamp(S.thirst,0,100)+"%";
+  $("barEn").style.width=clamp(S.energy,0,100)+"%";
+  $("numHp").textContent=Math.ceil(S.hp)+"/"+S.maxhp;
+  $("numHu").textContent=Math.ceil(S.hunger);
+  $("numTh").textContent=Math.ceil(S.thirst);
+  $("numEn").textContent=Math.ceil(S.energy);
+  $("hudMoney").innerHTML="ℳ <b>"+Math.floor(S.money)+"</b>";
+  $("hudMode").textContent=S.mode==="story"?(S.chapter>12?"主线 · 终章后":"主线·第"+S.chapter+"卷"):"自由模式";
+  const ch=CHAPTERS[S.chapter-1];
+  $("hudChapter").textContent=S.mode==="story"&&ch?("「"+ch.meta.title+"」"):(S.mode==="story"&&S.chapter>12?"「世界，继续转动」":"");
+  /* 任务横幅 */
+  const q=S.quests.filter(q=>!q.done);
+  const qb=$("questBanner");
+  if(S.mode==="story"&&GS.objText){qb.classList.remove("hidden");qb.textContent=GS.objText;}
+  else if(q.length){qb.classList.remove("hidden");qb.textContent="目标："+q[0].text;}
+  else qb.classList.add("hidden");
+}
+function locName(){
+  const c=cityNear(S.x,S.y,80);
+  if(c)return c.name;
+  const r=regionAt(S.x,S.y);
+  return r?r.name:"荒野";
+}
+
+/* ---------- Toast ---------- */
+function toast(msg,kind){
+  const el=document.createElement("div");
+  el.className="toast"+(kind?" "+kind:"");
+  el.textContent=msg;
+  $("toastRoot").appendChild(el);
+  setTimeout(()=>{el.style.opacity="0";el.style.transition="opacity .4s";setTimeout(()=>el.remove(),420)},2600);
+}
+
+/* ---------- 通用弹窗 ---------- */
+let modalStack=[];
+function openModal(html,cls){
+  const mask=document.createElement("div");mask.className="modal-mask";
+  const m=document.createElement("div");m.className="modal panel"+(cls?" "+cls:"");
+  m.innerHTML=html;
+  mask.appendChild(m);
+  $("modalRoot").appendChild(mask);
+  mask.addEventListener("pointerdown",e=>{if(e.target===mask&&!mask.dataset.lock)closeModal(mask)});
+  modalStack.push(mask);
+  return {mask,body:m};
+}
+function closeModal(mask){
+  if(!mask){mask=modalStack.pop();}
+  else{const i=modalStack.indexOf(mask);if(i>=0)modalStack.splice(i,1);}
+  if(mask)mask.remove();
+}
+function closeAllModals(){while(modalStack.length)modalStack.pop().remove();}
+function modalTitle(t,close=true){
+  return '<h3>'+t+(close?'<span class="x" onclick="closeAllModals()">关闭</span>':'')+'</h3>';
+}
+/* ---------- NPC 实例化 ---------- */
+let npcInstances=[];
+let facInstances=[];
+function buildEntities(){
+  npcInstances=[];facInstances=[];
+  const rng=mulberry32(12345);
+  const anyPool=[];
+  NPCS.forEach(n=>{
+    if(n.city==="any"){anyPool.push(n);return;}
+    const c=CITY_MAP[n.city];if(!c)return;
+    const ang=rng()*Math.PI*2, rad=26+rng()*40;
+    npcInstances.push({npc:n,x:c.px+Math.cos(ang)*rad,y:c.py+Math.sin(ang)*rad,t:rng()*10});
+  });
+  /* 任意NPC分配到各城市 */
+  CITIES.forEach(c=>{
+    if(anyPool.length===0)return;
+    const n=anyPool[Math.floor(rng()*anyPool.length)];
+    const ang=rng()*Math.PI*2,rad=24+rng()*36;
+    npcInstances.push({npc:n,x:c.px+Math.cos(ang)*rad,y:c.py+Math.sin(ang)*rad,t:rng()*10});
+  });
+  /* 设施 */
+  const FDIRS=[["inn",-46,-26],["shop",46,-26],["train",0,-50],["bounty",-46,28],["doc",46,28],["gamble",-20,52],["black",20,52],["port",0,66]];
+  CITIES.forEach(c=>{
+    const slots=[];
+    FDIRS.forEach(f=>{if(c.facSet[f[0]])slots.push({fac:f[0],x:c.px+f[1],y:c.py+f[2]});});
+    slots.forEach(s=>{
+      let x=s.x,y=s.y;
+      if(!isPassable(x,y)){x=c.px;y=c.py-20;}
+      facInstances.push({city:c.id,fac:s.fac,x,y});
+    });
+  });
+}
+const FAC_GLYPH={inn:"宿",shop:"商",train:"车",bounty:"悬",doc:"医",gamble:"赌",black:"黑",port:"港"};
+const FAC_NAME={inn:"旅馆",shop:"商铺",train:"车站",bounty:"悬赏栏",doc:"医馆",gamble:"赌场",black:"黑市",port:"港口"};
+
+/* ---------- 输入 ---------- */
+const KEYMAP={};
+document.addEventListener("keydown",e=>{
+  KEYMAP[e.code]=true;
+  if(e.code==="KeyE")tryInteract();
+  if(e.code==="Escape"){if(GS.battle)return;if(modalStack.length)closeAllModals();else openPauseMenu();}
+  if(e.code==="KeyB"&&!modalStack.length&&!GS.battle)campMenu();
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code))e.preventDefault();
+});
+document.addEventListener("keyup",e=>{KEYMAP[e.code]=false;});
+
+/* 画布点击 */
+$("cv").addEventListener("pointerdown",e=>{
+  if(GS.mode!=="game")return;
+  if(GS.battle)return;
+  if(modalStack.length){return;}
+  const r=$("cv").getBoundingClientRect();
+  const mx=(e.clientX-r.left)/r.width*1280, my=(e.clientY-r.top)/r.height*720;
+  const wx=GS.cam.x+mx, wy=GS.cam.y+my;
+  /* 点击NPC→交谈 */
+  for(const n of npcInstances){
+    if(dist2(wx,wy,n.x,n.y)<30){interactNpc(n);return;}
+  }
+});
+$("cv").addEventListener("contextmenu",e=>e.preventDefault());
+
+/* 触屏摇杆 */
+const pad=$("touchPad"),tk=$("tk");
+pad.addEventListener("pointerdown",e=>{
+  GS.touch.active=true;GS.touch.id=e.pointerId;
+  const r=pad.getBoundingClientRect();
+  GS.touch.ox=r.left+r.width/2;GS.touch.oy=r.top+r.height/2;
+  tk.style.left="41px";tk.style.top="41px";
+  pad.setPointerCapture(e.pointerId);
+});
+pad.addEventListener("pointermove",e=>{
+  if(!GS.touch.active)return;
+  let dx=e.clientX-GS.touch.ox, dy=e.clientY-GS.touch.oy;
+  const d=Math.hypot(dx,dy),max=40;
+  if(d>max){dx=dx/d*max;dy=dy/d*max;}
+  GS.touch.dx=dx/max;GS.touch.dy=dy/max;
+  tk.style.left=(41+dx)+"px";tk.style.top=(41+dy)+"px";
+});
+pad.addEventListener("pointerup",e=>{GS.touch.active=false;GS.touch.dx=0;GS.touch.dy=0;tk.style.left="41px";tk.style.top="41px";});
+
+/* ---------- 移动 ---------- */
+function moveInput(){
+  let dx=0,dy=0;
+  if(KEYMAP["KeyW"]||KEYMAP["ArrowUp"])dy-=1;
+  if(KEYMAP["KeyS"]||KEYMAP["ArrowDown"])dy+=1;
+  if(KEYMAP["KeyA"]||KEYMAP["ArrowLeft"])dx-=1;
+  if(KEYMAP["KeyD"]||KEYMAP["ArrowRight"])dx+=1;
+  if(GS.touch.active&&(Math.abs(GS.touch.dx)>0.18||Math.abs(GS.touch.dy)>0.18)){dx=GS.touch.dx;dy=GS.touch.dy;}
+  const len=Math.hypot(dx,dy);
+  if(len<0.001)return {x:0,y:0,moving:false};
+  dx/=len;dy/=len;
+  const run=KEYMAP["ShiftLeft"]||KEYMAP["ShiftRight"];
+  const sp=(run?150:88)*(S.energy<8?0.7:1);
+  return {x:dx*sp,y:dy*sp,moving:true};
+}
+function tryMove(dt){
+  const m=moveInput();
+  if(!m.moving){S.energy=Math.min(100,S.energy+dt*0.35);return;}
+  const steps=2;
+  const px=m.x*dt/steps,py=m.y*dt/steps;
+  for(let i=0;i<steps;i++){
+    const nx=S.x+px,ny=S.y+py;
+    const nx2=S.x+px,ny2=S.y;
+    if(isPassable(nx2,ny2))S.x=nx2;
+    if(isPassable(nx,ny))S.y=ny;
+    else if(isPassable(nx2,ny))S.y=ny;
+  }
+  S.energy-=dt*0.11;
+  /* 探索标记 */
+  const tx=clamp(Math.floor(S.x/TILE),0,MAP_W-1),ty=clamp(Math.floor(S.y/TILE),0,MAP_H-1);
+  for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){
+    const gx=tx+dx,gy=ty+dy;
+    if(gx<0||gx>=MAP_W||gy<0||gy>=MAP_H)continue;
+    const i=gy*MAP_W+gx;
+    if(WORLD.explored[i]<3)WORLD.explored[i]=3;
+  }
+  GS.minimapDirty=true;
+  /* 随机遭遇 */
+  rollEncounter();
+}
+let encounterAcc=0;
+function rollEncounter(){
+  if(GS.battle||modalStack.length)return;
+  if(S.mode==="story"&&S.storyFlags.safeTravel)return;
+  const t=tileAt(S.x,S.y);
+  if(t===TER.CITY||t===TER.ROAD&&false){} 
+  const base=t===TER.FOREST?0.05:t===TER.DESERT?0.035:t===TER.PLAIN?0.028:t===TER.HILL?0.03:t===TER.SWAMP?0.04:t===TER.TUNDRA?0.02:t===TER.SNOW?0.018:0.012;
+  encounterAcc+=base*1.6;
+  if(encounterAcc>1){
+    encounterAcc=0;
+    if(Math.random()<0.55)return;
+    const g=encounterGroup();
+    if(g)startBattle(g);
+  }
+}
+function encounterGroup(){
+  const c=cityNear(S.x,S.y,140);
+  const r=regionAt(S.x,S.y);
+  const cl=regionClimate(S.region);
+  const lvl=S.level;
+  const pool=[];
+  if(cl==="cold")pool.push("wolf","wolves","refugee_guard","deserter");
+  else if(cl==="hot")pool.push("hyena","scorpion","bandit","bandit_gun");
+  else pool.push("bandit","bandit","deserter","wolf","boar");
+  if(lvl>=3&&Math.random()<0.3)pool.push("bandit_gun","thug");
+  if(lvl>=6&&Math.random()<0.25)pool.push("patrol");
+  const eid=pool[Math.floor(Math.random()*pool.length)];
+  const e=ENEMIES[eid];
+  return [{id:eid,name:e.name,hp:e.hp*(1+ (lvl-1)*0.06),maxhp:e.hp*(1+(lvl-1)*0.06),atk:e.atk+Math.floor((lvl-1)*0.4),def:e.def,spd:e.spd,exp:e.exp,money:e.money,n:e.n||1}];
+}
+
+/* ---------- 生存 ---------- */
+function survivalTick(realDt){
+  const gm=realDt*3; /* 游戏分钟 */
+  S.hunger=Math.max(0,S.hunger-gm*0.32);
+  S.thirst=Math.max(0,S.thirst-gm*0.42);
+  if(GS.temp>30)S.thirst=Math.max(0,S.thirst-gm*0.5);
+  if(GS.weather==="沙尘")S.thirst=Math.max(0,S.thirst-gm*0.45);
+  if(S.hunger<=0){S.hp-=gm*0.35;if(Math.floor(S.hunger)===0&&Math.random()<0.02)toast("你饿得头晕眼花","bad");}
+  if(S.thirst<=0){S.hp-=gm*0.5;if(Math.random()<0.02)toast("脱水，嘴唇干裂","bad");}
+  const warm=S.equip.armor&&["coat","armor_cloth","armor_leather"].includes(S.equip.armor);
+  if(GS.temp<0&&!warm){S.energy-=gm*0.25;if(Math.random()<0.01)toast("寒风刺骨","bad");}
+  checkDeath("饥渴与严寒");
+}
+function checkDeath(reason){
+  if(S&&S.hp<=0){
+    S.hp=0;S.deaths++;
+    GS.deathReason=reason||"未知原因";
+    GS.paused=true;
+    openDeathScreen();
+  }
+}
+function heal(n){S.hp=Math.min(S.maxhp,S.hp+n)}
+function eat(id,qty){
+  const it=ITEMS[id];if(!it)return;
+  if(it.type==="food"){S.hunger=Math.min(100,S.hunger+it.val);toast("吃下"+it.name,"good");}
+  else if(it.type==="drink"){S.thirst=Math.min(100,S.thirst+it.val);toast("喝下"+it.name,"good");}
+  else if(it.type==="med"){heal(it.heal||0);toast("使用"+it.name,"good");}
+  else {toast("这个不能直接使用","bad");return;}
+  addItem(id,-1);
+}
+function addItem(id,qty){
+  qty=qty||1;
+  const it=ITEMS[id];if(!it)return;
+  const slot=S.inv.find(x=>x.id===id);
+  if(slot)slot.qty+=qty;
+  else S.inv.push({id,qty});
+  if(S.inv.filter(x=>x.qty<=0).length){S.inv=S.inv.filter(x=>x.qty>0);}
+  if(qty>0)updateHUD();
+}
+function hasItem(id,qty){qty=qty||1;const s=S.inv.find(x=>x.id===id);return s&&s.qty>=qty}
+function removeItem(id,qty){addItem(id,-(qty||1));}
+function itemCount(id){const s=S.inv.find(x=>x.id===id);return s?s.qty:0}
+
+/* ---------- 战斗结算（通用） ---------- */
+function gainExp(n){
+  S.exp+=n;
+  while(S.exp>=needExp()){
+    S.exp-=needExp();S.level++;
+    S.maxhp+=6;S.hp=S.maxhp;
+    S.atk+=1;S.def+=1;
+    toast("等级提升！现在是 "+S.level+" 级","good");
+    updateHUD();
+  }
+}
+function needExp(){return Math.floor(60*Math.pow(S.level,1.25))}
+function pAtk(){return S.atk+(ITEMS[S.equip.weapon]?ITEMS[S.equip.weapon].atk||0:0)+(S.statBonus.atk||0)}
+function pDef(){return S.def+(ITEMS[S.equip.armor]?ITEMS[S.equip.armor].def||0:0)+(S.statBonus.def||0)}
+function pSpd(){return S.spd+(S.statBonus.spd||0)}
+
+/* ---------- 睡眠与扎营 ---------- */
+function campMenu(){
+  const c=cityNear(S.x,S.y,90);
+  if(c){openInnMenu(c);return;}
+  openModal(modalTitle("野外扎营")+
+    '<p>找一处背风处休息。没有帐篷的话，露宿会降低体力恢复，还有遭遇野兽的风险。</p>'+
+    '<div class="row" style="justify-content:center;flex-direction:column;align-items:stretch;gap:8px">'+
+    '<button class="btn" onclick="doCamp(true)">扎营休息（8小时）</button>'+
+    '<button class="btn ghost" onclick="wildSearch()">在附近搜索物资（约1小时）</button>'+
+    '<button class="btn ghost" onclick="closeAllModals()">取消</button></div>');
+}
+function wildSearch(){
+  closeAllModals();
+  S.minute+=60;
+  while(S.minute>=1440){S.minute-=1440;S.day++;S.daysAlive++;}
+  GS.dayRolled=false;
+  S.energy=Math.max(0,S.energy-14);
+  if(Math.random()<0.22){
+    toast("搜索时惊动了野兽！","bad");
+    startBattle([{id:"wolf",name:"野狼",hp:16,atk:5,def:0,spd:12,exp:8,money:[1,3],n:Math.random()<0.4?2:1}]);
+    return;
+  }
+  const tbl=[["herb",0.28],["meat",0.2],["fish",0.16],["ammo",0.12],["cloth",0.1],["iron",0.06],["bread",0.16]];
+  let got="";
+  const r=Math.random();
+  let acc=0,id="herb";
+  for(const [iid,p] of tbl){acc+=p;if(r<=acc){id=iid;break;}}
+  addItem(id,1);
+  got=ITEMS[id].name;
+  if(Math.random()<0.12){const i2=pick(Math.random,["herb","meat","water"]);addItem(i2,1);got+="、"+ITEMS[i2].name;}
+  toast("搜索一番，找到："+got,"good");
+  updateHUD();
+}
+function doCamp(useTent){
+  const hasTent=hasItem("tent");
+  const risk=hasTent?0.18:0.4;
+  closeAllModals();
+  if(Math.random()<risk){
+    toast("夜晚有动静……","bad");
+    const g=[{id:"wolf",name:"野狼",hp:16,atk:5,def:0,spd:12,exp:8,money:[1,3],n:Math.random()<0.5?2:1}];
+    setTimeout(()=>startBattle(g),300);
+    return;
+  }
+  sleep(8,hasTent?0.9:0.5);
+}
+function sleep(hours,quality){
+  S.minute+=hours*60;
+  while(S.minute>=1440){S.minute-=1440;S.day++;S.daysAlive++;}
+  S.hp=Math.min(S.maxhp,S.hp+Math.floor(S.maxhp*0.5*quality));
+  S.energy=Math.min(100,S.energy+55*quality);
+  S.hunger=Math.max(0,S.hunger-6);
+  S.thirst=Math.max(0,S.thirst-8);
+  GS.dayRolled=false;
+  toast("你睡了 "+hours+" 小时","good");
+  updateHUD();
+}
+
+/* ---------- 交互 ---------- */
+let nearNpc=null,nearFac=null;
+function findNear(){
+  nearNpc=null;nearFac=null;
+  let bdN=52,bdF=44;
+  for(const n of npcInstances){
+    const d=dist2(S.x,S.y,n.x,n.y);
+    if(d<bdN){bdN=d;nearNpc=n;}
+  }
+  for(const f of facInstances){
+    const d=dist2(S.x,S.y,f.x,f.y);
+    if(d<bdF){bdF=d;nearFac=f;}
+  }
+  const hint=$("hudHint");
+  if(nearNpc&&nearFac){
+    hint.textContent="E 交谈："+nearNpc.npc.name+" · E 使用："+FAC_NAME[nearFac.fac];
+  }else if(nearNpc){
+    hint.textContent="E 交谈："+nearNpc.npc.name+"（"+(nearNpc.npc.role||"路人")+"）";
+  }else if(nearFac){
+    hint.textContent="E 使用："+FAC_NAME[nearFac.fac];
+  }else{
+    const c=cityNear(S.x,S.y,70);
+    hint.textContent=c?("位于"+c.name+" · 城内可住宿/购物/乘车"):"方向键移动 · Shift 奔跑 · E 交互 · B 扎营/住宿";
+  }
+}
+function tryInteract(){
+  if(GS.mode!=="game"||GS.battle)return;
+  if(modalStack.length)return;
+  findNear();
+  if(nearNpc){interactNpc(nearNpc);return;}
+  if(nearFac){useFacility(nearFac);return;}
+  /* 城内兜底菜单 */
+  const c=cityNear(S.x,S.y,90);
+  if(c){openCityMenu(c);}
+}
+function useFacility(f){
+  const c=CITY_MAP[f.city];
+  switch(f.fac){
+    case "inn":openInnMenu(c);break;
+    case "shop":openShopMenu(c);break;
+    case "train":openTrainMenu(c);break;
+    case "bounty":openBountyMenu(c);break;
+    case "doc":openDocMenu(c);break;
+    case "gamble":openGambleMenu(c);break;
+    case "black":openBlackMenu(c);break;
+    case "port":openPortMenu(c);break;
+  }
+}
+function openCityMenu(c){
+  openModal(modalTitle(c.name)+
+    '<p class="muted">'+c.desc+'</p>'+
+    '<div class="row" style="justify-content:center;margin-top:10px">'+
+    (c.facSet.inn?'<button class="btn" onclick="openInnMenu(CITY_MAP[\''+c.id+'\'])">旅馆</button>':'')+
+    (c.facSet.shop?'<button class="btn" onclick="openShopMenu(CITY_MAP[\''+c.id+'\'])">商铺</button>':'')+
+    (c.facSet.train?'<button class="btn" onclick="openTrainMenu(CITY_MAP[\''+c.id+'\'])">车站</button>':'')+
+    (c.facSet.bounty?'<button class="btn" onclick="openBountyMenu(CITY_MAP[\''+c.id+'\'])">悬赏栏</button>':'')+
+    (c.facSet.doc?'<button class="btn" onclick="openDocMenu(CITY_MAP[\''+c.id+'\'])">医馆</button>':'')+
+    (c.facSet.gamble?'<button class="btn" onclick="openGambleMenu(CITY_MAP[\''+c.id+'\'])">赌场</button>':'')+
+    (c.facSet.black?'<button class="btn" onclick="openBlackMenu(CITY_MAP[\''+c.id+'\'])">黑市</button>':'')+
+    (c.facSet.port?'<button class="btn" onclick="openPortMenu(CITY_MAP[\''+c.id+'\'])">港口</button>':'')+
+    '</div>');
+}
+/* ---------- 渲染 ---------- */
+const CV=$("cv"),CX=CV.getContext("2d");
+let titleT=0,particles=[];
+function initParticles(){
+  particles=[];
+  const n=120;
+  for(let i=0;i<n;i++)particles.push({x:Math.random()*1280,y:Math.random()*720,vx:(Math.random()-0.5)*60,vy:30+Math.random()*60,kind:"dust"});
+}
+function drawWorld(){
+  const cam=GS.cam;
+  const x0=Math.floor(cam.x/TILE),y0=Math.floor(cam.y/TILE);
+  const x1=Math.min(MAP_W-1,Math.ceil((cam.x+1280)/TILE)),y1=Math.min(MAP_H-1,Math.ceil((cam.y+720)/TILE));
+  const ter=WORLD.ter,exp=WORLD.explored;
+  for(let ty=y0;ty<=y1;ty++){
+    for(let tx=x0;tx<=x1;tx++){
+      const i=ty*MAP_W+tx;
+      const t=ter[i];
+      let col=TER_COL[t];
+      /* 微变化 */
+      const h=hash2(tx,ty);
+      const v=0.92+h*0.16;
+      let r=parseInt(col.slice(1,3),16)*v, g=parseInt(col.slice(3,5),16)*v, b=parseInt(col.slice(5,7),16)*v;
+      const px=tx*TILE-cam.x,py=ty*TILE-cam.y;
+      if(exp[i]<1){r*=0.28;g*=0.28;b*=0.3;}
+      CX.fillStyle="rgb("+(r|0)+","+(g|0)+","+(b|0)+")";
+      CX.fillRect(px,py,TILE,TILE);
+      if(t===TER.WATER&&exp[i]>=1){
+        CX.fillStyle="rgba(255,255,255,"+(0.03+h*0.05)+")";
+        CX.fillRect(px,py+((h*7)|0)%6,TILE,1.5);
+      }
+      if(t===TER.FOREST&&exp[i]>=1&&h>0.5){
+        CX.fillStyle="rgba(20,40,15,0.25)";
+        CX.fillRect(px+4,py+6,3,4);CX.fillRect(px+9,py+8,3,4);
+      }
+      if(t===TER.SNOW&&exp[i]>=1&&h>0.6){
+        CX.fillStyle="rgba(255,255,255,0.5)";
+        CX.fillRect(px+((h*9)|0)%14,py+((h*13)|0)%14,3,2);
+      }
+      if(t===TER.DESERT&&exp[i]>=1&&h>0.62){
+        CX.fillStyle="rgba(140,110,50,0.3)";
+        CX.beginPath();CX.arc(px+((h*11)|0)%14,py+((h*7)|0)%13,1.4,0,7);CX.fill();
+      }
+    }
+  }
+  /* 区域名标签（大块） */
+  if(GS.zoomLabels!==false){
+    const drawn=new Set();
+    for(let ty=y0;ty<=y1;ty+=6)for(let tx=x0;tx<=x1;tx+=6){
+      const i=ty*MAP_W+tx;const ri=WORLD.reg[i];
+      if(ri===255||drawn.has(ri))continue;
+      const r=REGIONS[ri];
+      /* 找该区域中心 */
+      drawn.add(ri);
+      const cx=tx*TILE+TILE*3-cam.x,cy=ty*TILE-cam.y;
+      if(cx>-200&&cx<1480&&cy>-100&&cy<820){
+        CX.font="bold 11px 'Noto Serif SC',serif";
+        CX.fillStyle="rgba(39,33,26,0.55)";
+        CX.textAlign="center";
+        CX.fillText(r.name,cx,cy);
+      }
+    }
+  }
+  /* 设施图标 */
+  for(const f of facInstances){
+    const sx=f.x-cam.x,sy=f.y-cam.y;
+    if(sx<-30||sx>1310||sy<-30||sy>750)continue;
+    const tx=Math.floor(f.x/TILE),ty=Math.floor(f.y/TILE);
+    if(WORLD.explored[ty*MAP_W+tx]<1)continue;
+    const near=GS.mode==="game"&&dist2(S.x,S.y,f.x,f.y)<50;
+    CX.fillStyle=near?"rgba(185,138,47,0.95)":"rgba(74,63,48,0.85)";
+    CX.fillRect(sx-9,sy-9,18,18);
+    CX.strokeStyle="rgba(233,221,191,0.8)";CX.lineWidth=1;
+    CX.strokeRect(sx-9,sy-9,18,18);
+    CX.fillStyle="#F2E8CF";CX.font="bold 11px 'Noto Serif SC',serif";CX.textAlign="center";CX.textBaseline="middle";
+    CX.fillText(FAC_GLYPH[f.fac],sx,sy+1);
+    if(near){CX.strokeStyle="rgba(233,221,191,0.5)";CX.beginPath();CX.arc(sx,sy,16+(titleT%40)/6,0,7);CX.stroke();}
+  }
+  /* NPC */
+  for(const n of npcInstances){
+    const sx=n.x-cam.x,sy=n.y-cam.y;
+    if(sx<-40||sx>1320||sy<-40||sy>760)continue;
+    const near=GS.mode==="game"&&dist2(S.x,S.y,n.x,n.y)<52;
+    drawFigure(sx,sy,facCol(n.npc.f),near,false);
+    if(near){
+      CX.fillStyle="#27211A";CX.font="bold 12px 'Noto Serif SC',serif";CX.textAlign="center";
+      CX.fillText(n.npc.name,sx,sy-24);
+      CX.strokeStyle="rgba(163,59,46,0.7)";CX.beginPath();CX.arc(sx,sy,20+(titleT%50)/8,0,7);CX.stroke();
+    }
+  }
+  /* 同伴跟随 */
+  if(GS.mode==="game"&&S){
+    const comps=S.comps||[];
+    comps.forEach((cid,i)=>{
+      const cd=COMPANIONS[cid];if(!cd)return;
+      const off=40+i*16;
+      const sx=S.x-cam.x-Math.cos(titleT*0.6+i*1.3)*0, sy=S.y-cam.y;
+      const fx=S.x-cam.x+off*Math.cos(0.6+i*1.2)-off*0.4, fy=S.y-cam.y+off*Math.sin(0.6+i*1.2)*0.7;
+      drawFigure(fx,fy,"#4E6B3A",false,true);
+      CX.fillStyle="rgba(233,221,191,0.85)";CX.font="10px 'Noto Serif SC',serif";CX.textAlign="center";
+      CX.fillText(cd.name,fx,fy-24);
+    });
+  }
+  /* 玩家 */
+  if(GS.mode==="game"&&S){
+    const sx=S.x-cam.x,sy=S.y-cam.y;
+    drawFigure(sx,sy,"#A33B2E",true,false);
+    CX.fillStyle="#F2E8CF";CX.font="bold 12px 'Noto Serif SC',serif";CX.textAlign="center";
+    CX.fillText(S.name,sx,sy-26);
+    /* 玩家光标环 */
+    CX.strokeStyle="rgba(233,221,191,0.4)";CX.lineWidth=2;
+    CX.beginPath();CX.arc(sx,sy,13+Math.sin(titleT*2)*2,0,7);CX.stroke();
+  }
+  /* 浮动文字 */
+  for(const f of GS.floating){
+    const sx=f.x-cam.x,sy=f.y-cam.y-f.t*26;
+    CX.globalAlpha=Math.max(0,1-f.t);
+    CX.fillStyle=f.col;CX.font="bold 14px 'Noto Serif SC',serif";CX.textAlign="center";
+    CX.fillText(f.txt,sx,sy);
+    CX.globalAlpha=1;
+  }
+}
+function facCol(f){
+  const m={imperial:"#7A6A52",ottoman:"#B08A4E",white:"#7E7260",japan:"#C8B4A0",allies:"#5E7C8C",people:"#4E6B3A",black:"#5A4E3D"};
+  return m[f]||"#4E6B3A";
+}
+function drawFigure(sx,sy,col,near,small){
+  CX.save();
+  CX.fillStyle=col;
+  CX.beginPath();CX.arc(sx,sy-7,5.5,0,7);CX.fill();          /* 头 */
+  CX.fillRect(sx-6,sy-2,12,13);                               /* 身 */
+  CX.fillStyle="rgba(0,0,0,0.25)";
+  CX.fillRect(sx-6,sy-2,12,3);
+  if(near){CX.strokeStyle="rgba(233,221,191,0.9)";CX.lineWidth=2;CX.beginPath();CX.arc(sx,sy-7,9,0,7);CX.stroke();}
+  CX.restore();
+}
+function drawOverlays(){
+  /* 昼夜 */
+  const h=S?S.minute/60:12;
+  let dark=0;
+  if(h<6){dark=0.55- h/12;}
+  else if(h>19){dark=(h-19)/7*0.6;}
+  else if(h>21)dark=0.5;
+  if(GS.weather==="雨"||GS.weather==="雪"||GS.weather==="沙尘")drawWeather();
+  if(dark>0){
+    CX.fillStyle="rgba(8,10,26,"+dark+")";
+    CX.fillRect(0,0,1280,720);
+  }
+  /* 暗角 */
+  const vg=CX.createRadialGradient(640,360,260,640,360,900);
+  vg.addColorStop(0,"rgba(0,0,0,0)");
+  vg.addColorStop(1,"rgba(0,0,0,0.5)");
+  CX.fillStyle=vg;CX.fillRect(0,0,1280,720);
+  /* 季节色罩 */
+  const m=S?gameDate().m:10;
+  if(m>=10||m<=1){CX.fillStyle="rgba(120,140,170,0.06)";CX.fillRect(0,0,1280,720);}
+  else if(m>=5&&m<=8){CX.fillStyle="rgba(180,150,80,0.05)";CX.fillRect(0,0,1280,720);}
+}
+function drawWeather(){
+  const n=GS.weather==="雨"?90:GS.weather==="雪"?70:60;
+  if(particles.length!==n)initWeather(n);
+  for(const p of particles){
+    if(GS.weather==="雨"){
+      CX.strokeStyle="rgba(150,180,210,0.45)";CX.lineWidth=1;
+      CX.beginPath();CX.moveTo(p.x,p.y);CX.lineTo(p.x-2,p.y+10);CX.stroke();
+    }else if(GS.weather==="雪"){
+      CX.fillStyle="rgba(240,245,250,0.7)";
+      CX.beginPath();CX.arc(p.x,p.y,1.6,0,7);CX.fill();
+    }else{
+      CX.strokeStyle="rgba(200,170,110,0.35)";CX.lineWidth=1;
+      CX.beginPath();CX.moveTo(p.x,p.y);CX.lineTo(p.x-12,p.y+3);CX.stroke();
+    }
+  }
+}
+function initWeather(n){
+  particles=[];
+  for(let i=0;i<n;i++)particles.push({x:Math.random()*1280,y:Math.random()*720,vx:(Math.random()-0.5)*80,vy:140+Math.random()*160});
+}
+function stepWeather(dt){
+  if(!(GS.weather==="雨"||GS.weather==="雪"||GS.weather==="沙尘"))return;
+  const n=GS.weather==="雨"?90:GS.weather==="雪"?70:60;
+  if(particles.length!==n)initWeather(n);
+  for(const p of particles){
+    p.x+=p.vx*dt;p.y+=p.vy*dt;
+    if(p.y>740){p.y=-10;p.x=Math.random()*1280;}
+    if(p.x>1300)p.x=-10;
+    if(p.x<-10)p.x=1300;
+  }
+}
+/* ---------- 小地图 ---------- */
+function drawMinimap(){
+  const mc=$("minimap"),mx=mc.getContext("2d");
+  mx.clearRect(0,0,392,208);
+  if(!WORLD)return;
+  const sw=392/MAP_W,sh=208/MAP_H;
+  for(let ty=0;ty<MAP_H;ty+=2)for(let tx=0;tx<MAP_W;tx+=2){
+    const i=ty*MAP_W+tx;
+    const t=WORLD.ter[i];
+    if(t===TER.WATER){mx.fillStyle="rgba(46,74,99,0.85)";}
+    else{
+      const ri=WORLD.reg[i];
+      mx.fillStyle=ri===255?"#4a4436":REGIONS[ri].col;
+      if(WORLD.explored[i]<1)mx.fillStyle="rgba(20,17,12,0.82)";
+    }
+    mx.fillRect(tx*sw,ty*sh,sw+0.5,sh+0.5);
+  }
+  /* 城市点 */
+  mx.fillStyle="#F2E8CF";
+  for(const c of CITIES){
+    mx.fillRect(c.x*sw-1.5,c.y*sh-1.5,3,3);
+  }
+  /* 玩家 */
+  if(GS.mode==="game"&&S){
+    mx.fillStyle="#E0472E";
+    mx.beginPath();mx.arc(S.x/WORLD_W*392,S.y/WORLD_H*208,3.2,0,7);mx.fill();
+    mx.strokeStyle="#F2E8CF";mx.lineWidth=1;
+    mx.strokeRect(Math.max(0,S.x/WORLD_W*392-40),Math.max(0,S.y/WORLD_H*208-22),80,44);
+  }
+}
+/* ---------- 主循环 ---------- */
+let rafId=0,lastT=0;
+function loop(t){
+  rafId=requestAnimationFrame(loop);
+  const dt=Math.min(0.05,(t-lastT)/1000||0.016);
+  lastT=t;
+  if(GS.mode==="title"){titleT+=dt;stepWeather(dt);renderTitle(dt);return;}
+  if(GS.mode!=="game")return;
+  if(GS.paused){render();return;}
+  update(dt);
+  render();
+}
+function update(dt){
+  titleT+=dt;
+  stepWeather(dt);
+  if(GS.battle)return;
+  if(modalStack.length>0){render();return;}
+  advanceTime(dt);
+  survivalTick(dt);
+  tryMove(dt);
+  const rr=regionAt(S.x,S.y);if(rr)S.region=REGION_MAP[rr.id];
+  findNear();
+  updateFloating(dt);
+  storyTick();
+  updateHUD();
+}
+function render(){
+  if(!WORLD)return;
+  if(GS.mode==="game"&&S){
+    GS.cam.x=clamp(S.x-640,0,Math.max(0,WORLD_W-1280));
+    GS.cam.y=clamp(S.y-360,0,Math.max(0,WORLD_H-720));
+  }
+  CX.save();
+  CX.clearRect(0,0,1280,720);
+  drawWorld();
+  drawOverlays();
+  CX.restore();
+  if(GS.minimapDirty){drawMinimap();GS.minimapDirty=false;}
+}
+function renderTitle(dt){
+  if(!WORLD){WORLD=buildWorld(7);WORLD.explored=new Uint8Array(WORLD.ter.length);}
+  GS.cam={x:titleT*12%WORLD_W,y:titleT*3%WORLD_H};
+  CX.save();
+  CX.clearRect(0,0,1280,720);
+  drawWorld();
+  drawOverlays();
+  CX.restore();
+}
+function updateFloating(dt){
+  GS.floating=GS.floating.filter(f=>{f.t+=dt;return f.t<1});
+}
+function addFloat(x,y,txt,col){
+  GS.floating.push({x,y,txt:txt||"",col:col||"#F2E8CF",t:0});
+}
+/* ---------- 对话系统 ---------- */
+function interactNpc(n){
+  if(storyNpcTouched(n.npc.id))return;
+  const npc=n.npc;
+  let html=modalTitle(npc.name)+'<div class="dlg-name">'+npc.name+'<span class="role"> · '+npc.role+'</span></div>';
+  const comp=npc.comp?COMPANIONS[npc.comp]:null;
+  const joined=comp&&(S.comps||[]).includes(npc.comp);
+  const lines=npc.talk||["……"];
+  html+='<div class="dlg-text">'+lines[(S.day+npc.id.length)%lines.length]+'</div>';
+  html+='<div class="dlg-choices">';
+  (npc.opts||[]).forEach((o,i)=>{
+    if(o.k==="companion"){
+      if(joined){html+='<button class="btn ghost" onclick="companionChat(\''+npc.comp+'\')">与同伴交谈</button>';}
+      else{html+='<button class="btn" onclick="tryJoin(\''+npc.comp+'\')">邀请同行</button>';}
+      return;
+    }
+    html+='<button class="btn ghost" onclick="npcOpt(\''+npc.id+'\','+i+')">'+o.t+'</button>';
+  });
+  html+='<button class="btn olive" onclick="closeAllModals()">离开</button>';
+  html+='</div>';
+  openModal(html);
+}
+function npcOpt(npcId,i){
+  const n=NPCS.find(x=>x.id===npcId);if(!n)return;
+  const o=n.opts[i];if(!o)return;
+  switch(o.k){
+    case "lore":{
+      const m=openModal(modalTitle(n.name)+'<div class="dlg-name">'+n.name+'</div><div class="dlg-text">'+o.lines.join("<br><br>")+'</div>'+
+        '<div class="row" style="justify-content:flex-end"><button class="btn" onclick="interactNpcById(\''+npcId+'\')">继续交谈</button></div>');
+      break;}
+    case "shop":openTrade(npcId,o.stock,1);break;
+    case "black":openTrade(npcId,o.stock,2);break;
+    case "job":doLaborJob(n);break;
+    case "doc":{
+      const cost=o.cost||12;
+      if(S.money<cost){toast("钱不够","bad");break;}
+      S.money-=cost;heal(o.heal||60);
+      toast("治疗后感觉好多了","good");updateHUD();
+      closeAllModals();break;}
+    case "train":{
+      const cost=o.cost||25;
+      if(S.money<cost){toast("学费不够","bad");break;}
+      S.money-=cost;if(o.atk)S.statBonus.atk=(S.statBonus.atk||0)+1;
+      if(o.spd)S.statBonus.spd=(S.statBonus.spd||0)+1;
+      toast("训练结束，能力提升","good");updateHUD();
+      closeAllModals();break;}
+    case "info":{
+      const cost=o.cost||15;
+      if(S.money<cost){toast("钱不够","bad");break;}
+      S.money-=cost;
+      const m=openModal(modalTitle("情报")+'<div class="dlg-text">'+o.lines.join("<br><br>")+'</div>'+
+        '<div class="row" style="justify-content:flex-end"><button class="btn" onclick="interactNpcById(\''+npcId+'\')">继续交谈</button></div>');
+      updateHUD();break;}
+    case "drink":{
+      const cost=o.cost||8;
+      if(S.money<cost){toast("钱不够","bad");break;}
+      S.money-=cost;S.energy=Math.min(100,S.energy+(o.energy||40));
+      toast("畅饮一番，精神焕发","good");updateHUD();
+      closeAllModals();break;}
+    case "pray":{
+      S.energy=Math.min(100,S.energy+(o.energy||30));
+      toast("内心平静下来","good");updateHUD();
+      closeAllModals();break;}
+    case "donate":{
+      if(S.money<o.cost){toast("钱不够","bad");break;}
+      S.money-=o.cost;S.rep[o.rep||"people"]=(S.rep[o.rep||"people"]||5)+3;
+      toast("对方感激不尽（声望+3）","good");updateHUD();
+      closeAllModals();break;}
+    case "beg":{
+      if(!hasItem(o.item||"bread")){toast("你没有可施舍的食物","bad");break;}
+      removeItem(o.item||"bread",1);S.rep.people=(S.rep.people||5)+2;
+      toast("老人千恩万谢（民间声望+2）","good");updateHUD();
+      closeAllModals();break;}
+    case "check":{
+      if(hasItem("passport")){toast("证件有效，放行","good");closeAllModals();}
+      else if(hasItem("fakeid")){
+        if(Math.random()<0.4){toast("伪造证件被识破！","bad");fineOrFight(n);}
+        else{toast("侥幸蒙混过关……","good");closeAllModals();}
+      }else{fineOrFight(n);}
+      break;}
+    case "bribe":{
+      if(S.money<30){toast("你掏不出钱","bad");break;}
+      S.money-=30;S.rep.black=(S.rep.black||5)+2;
+      toast("宪兵收下钱，放你过去","good");updateHUD();
+      closeAllModals();break;}
+    case "fight":{
+      closeAllModals();
+      startBattle([{id:"patrol",name:"帝国巡逻队",hp:34,atk:11,def:3,spd:9,exp:20,money:[10,25],n:2}]);
+      break;}
+    default:closeAllModals();
+  }
+}
+function fineOrFight(n){
+  const m=openModal(modalTitle("宪兵检查")+'<p>你被拦下了。宪兵队长上下打量你：“证件呢？没有？要么交罚款，要么……跟我们去兵营谈谈。”</p>'+
+    '<div class="row" style="justify-content:center"><button class="btn" onclick="payFine()">交罚款 25 马克</button>'+
+    '<button class="btn danger" onclick="closeAllModals();startBattle([{id:\'patrol\',name:\'帝国巡逻队\',hp:34,atk:11,def:3,spd:9,exp:20,money:[10,25],n:2}])">反抗</button></div>');
+}
+function payFine(){
+  if(S.money<25){toast("钱不够，只能硬闯了","bad");closeAllModals();startBattle([{id:"patrol",name:"帝国巡逻队",hp:34,atk:11,def:3,spd:9,exp:20,money:[10,25],n:2}]);return;}
+  S.money-=25;closeAllModals();toast("罚款 25 马克","bad");updateHUD();
+}
+function interactNpcById(id){
+  const n=npcInstances.find(x=>x.npc.id===id);
+  if(n)interactNpc(n);
+  else{const nn=NPCS.find(x=>x.id===id);if(nn)openModal(modalTitle(nn.name)+'<div class="dlg-text">'+nn.talk[0]+'</div><div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeAllModals()">离开</button></div>');}
+}
+function doLaborJob(n){
+  const pay=8+Math.floor(Math.random()*10)+(n.city==="shanghai"?3:0);
+  S.money+=pay;S.energy=Math.max(0,S.energy-22);
+  toast("干完一天的苦力，挣得 "+pay+" 马克","good");
+  if(Math.random()<0.12){const drop=pick(Math.random,["bread","water","cloth","iron","herb"]);addItem(drop,1);toast("顺手捡到："+ITEMS[drop].name,"good");}
+  updateHUD();
+  closeAllModals();
+}
+
+/* ---------- 同伴 ---------- */
+function tryJoin(cid){
+  const c=COMPANIONS[cid];if(!c)return;
+  const j=c.join;
+  const miss=[];
+  for(const k in j.rep){if((S.rep[k]||0)<j.rep[k])miss.push(REP_NAMES[k]+" 需"+j.rep[k]);}
+  if(j.item&&!hasItem(j.item))miss.push("需要："+ITEMS[j.item].name);
+  if(j.money&&S.money<j.money)miss.push("需要 "+j.money+" 马克");
+  if(miss.length){
+    const m=openModal(modalTitle(c.name)+'<p>'+c.name+'摇了摇头：“'+miss.join("；")+'。”</p><div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeAllModals()">好吧</button></div>');
+    return;
+  }
+  if(j.item)removeItem(j.item,1);
+  if(j.money)S.money-=j.money;
+  S.comps=S.comps||[];
+  S.comps.push(cid);
+  S.rep.people=(S.rep.people||5)+2;
+  const m=openModal(modalTitle("新同伴！")+'<div class="dlg-name">'+c.name+'<span class="role"> · '+c.role+'</span></div>'+
+    '<div class="dlg-text">'+j.text+'</div><div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeAllModals()">欢迎入队</button></div>');
+  toast(c.name+" 加入了队伍","good");
+  updateHUD();
+}
+function companionChat(cid){
+  const c=COMPANIONS[cid];
+  const hp=S.compHp?S.compHp[cid]:c.stats.hp;
+  const m=openModal(modalTitle(c.name)+'<div class="dlg-name">'+c.name+'<span class="role"> · '+c.role+'</span></div>'+
+    '<div class="dlg-text">'+c.talk+'</div>'+
+    '<div class="row"><span class="muted">生命 '+Math.max(0,hp)+'/'+c.stats.hp+' · 特技：'+c.skill+'</span></div>'+
+    '<div class="row" style="justify-content:flex-end"><button class="btn ghost" onclick="dismissComp(\''+cid+'\')">让TA离开</button><button class="btn" onclick="closeAllModals()">继续</button></div>');
+}
+function dismissComp(cid){
+  S.comps=S.comps.filter(x=>x!==cid);
+  closeAllModals();
+  toast(COMPANIONS[cid].name+" 离开了队伍","bad");
+  updateHUD();
+}
+
+/* ---------- 交易 ---------- */
+function cityPriceMod(c){
+  return 0.85+hash2(c.x,c.y)*0.45;
+}
+let tradeCtx=null;
+function openTrade(npcId,stock,mode){
+  const n=NPCS.find(x=>x.id===npcId);
+  tradeCtx={title:(n?n.name:"交易")+(mode===2?" · 黑市":" · 交易"),stock:stock||["bread"],mode};
+  cityTradePanel(tradeCtx);
+}
+function openShopMenu(c){
+  tradeCtx={title:c.name+" · 商铺",mode:1,
+    stock:["bread","rice","fish","stew","water","tea","coffee","bandage","kit","ammo","cloth","lantern","shovel","fishing","tent","coat","dagger","armor_cloth"]};
+  cityTradePanel(tradeCtx);
+}
+function openBlackMenu(c){
+  tradeCtx={title:c.name+" · 黑市",mode:2,
+    stock:["opium","silk","fakeid","ammo","rifle_ammo","wine","radio","coffee","brandy","cigar","jewelry","passport"]};
+  cityTradePanel(tradeCtx);
+}
+function cityTradePanel(ctx){
+  const c=cityNear(S.x,S.y,200);
+  const mod=ctx.mode===2?0.68+hash2(c?c.x:0,c?c.y:0)*0.3:cityPriceMod(c||{x:S.x,y:S.y});
+  let html=modalTitle(ctx.title)+
+    '<p class="muted">'+(ctx.mode===2?"黑市的价格浮动大，风险自担。":"本地行情：出售价按市价六成。")+'</p>'+
+    '<div class="row"><b>购买：</b></div><div class="it-grid">';
+  ctx.stock.forEach(id=>{
+    const it=ITEMS[id];if(!it)return;
+    const price=Math.max(1,Math.round(it.price*mod));
+    html+='<div class="it-card" onclick="tradeBuy(\''+id+'\','+price+')"><b>'+it.name+'</b><span>'+descShort(it)+'</span><span class="qty">'+price+' 马克</span></div>';
+  });
+  html+='</div><div class="row" style="margin-top:10px"><b>出售（我的物品）：</b></div><div class="it-grid">';
+  S.inv.forEach(s=>{
+    const it=ITEMS[s.id];
+    if(!it||it.price<=0)return;
+    if(it.type==="quest")return;
+    const sell=Math.max(1,Math.round(it.price*0.55));
+    html+='<div class="it-card" onclick="tradeSell(\''+s.id+'\','+sell+')"><b>'+it.name+'</b><span>持有 '+s.qty+'</span><span class="qty">'+sell+' 马克</span></div>';
+  });
+  html+='</div><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn olive" onclick="closeAllModals()">结束交易</button></div>';
+  openModal(html);
+}
+function descShort(it){return (it.desc||"").slice(0,26)}
+function tradeBuy(id,price){
+  if(S.money<price){toast("钱不够","bad");return;}
+  S.money-=price;addItem(id,1);
+  toast("购入 "+ITEMS[id].name,"good");
+  updateHUD();
+  if(tradeCtx)cityTradePanel(tradeCtx);
+}
+function tradeSell(id,sell){
+  if(itemCount(id)<=0)return;
+  removeItem(id,1);S.money+=sell;
+  toast("卖出 "+ITEMS[id].name+" +"+sell+" 马克","good");
+  updateHUD();
+  if(tradeCtx)cityTradePanel(tradeCtx);
+}
+
+/* ---------- 旅馆 ---------- */
+function openInnMenu(c){
+  const cost=6+c.t*5;
+  const meal=cost*2;
+  let html=modalTitle(c.name+" · 旅馆")+
+    '<p class="muted">一间干净的单人房，楼下是热闹的酒馆。</p>'+
+    '<div class="row" style="justify-content:center;flex-direction:column;align-items:center">'+
+    '<button class="btn" style="width:80%" onclick="innSleep('+cost+')">住宿一夜（'+cost+' 马克）</button>'+
+    '<button class="btn" style="width:80%" onclick="innSleep('+meal+',true)">住宿+晚餐（'+meal+' 马克）</button>'+
+    '<button class="btn ghost" style="width:80%" onclick="innRumor(\''+c.id+'\')">听老板闲聊（免费）</button></div>';
+  openModal(html);
+}
+function innSleep(cost,meal){
+  if(S.money<cost){toast("钱不够","bad");return;}
+  S.money-=cost;
+  closeAllModals();
+  sleep(8,1);
+  if(meal){S.hunger=Math.min(100,S.hunger+70);S.thirst=Math.min(100,S.thirst+50);toast("晚餐很丰盛","good");}
+  toast("旅馆一夜，恢复了精神","good");
+  updateHUD();
+}
+function innRumor(cid){
+  const rumors=[
+    "“听说西伯利亚铁路新开了一趟夜车，车票上印着'终点站：不存在'，售票处说那是印刷错误。”",
+    "“柏林国会大厦的地下室，每晚都传来打字机的声音。可那层楼，没有窗户，也没有门。”",
+    "“奥斯曼的苏丹陛下已经三个月没露面了。有人说他病了，有人说……他正在跟某个'看不见的敌人'谈判。”",
+    "“远东的日本人最近在大量收购旧地图，尤其是1918年以前的。他们要地图干什么？又不是要打仗。”",
+    "“伦敦的雾今年格外浓。有人看见雾里走着穿1916年军装的队伍，唱着歌，歌词没人听得懂。”",
+    "“上海法租界的钟楼，上周停了三天。修钟匠说钟没坏——是'时间'本身慢了下来。”",
+    "“莫斯科的地铁计划停了工。工人说挖到了'不该挖的东西'，一堵写着没人认识的文字的墙。”",
+    "“帝国银行新发行的马克纸币，左下角的签字会变。昨天还是财政大臣的签名，今天就成了一个陌生人的。”",
+  ];
+  const m=openModal(modalTitle("旅馆老板的低语")+'<div class="dlg-text">'+pick(Math.random,rumors)+'</div>'+
+    '<div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeAllModals()">谢谢</button></div>');
+}
+
+/* ---------- 车站（快速旅行） ---------- */
+function railReach(cid){
+  const out=[];
+  RAILS.forEach(p=>{
+    if(p[0]===cid&&CITY_MAP[p[1]])out.push(p[1]);
+    if(p[1]===cid&&CITY_MAP[p[0]])out.push(p[0]);
+  });
+  return out;
+}
+function openTrainMenu(c){
+  const reach=railReach(c.id);
+  let html=modalTitle(c.name+" · 车站")+'<p class="muted">帝国铁路时刻表。列车准点得令人不安。</p>';
+  if(!reach.length){html+='<p>这个车站没有直达线路。</p>';}
+  else{
+    html+='<div class="row"><b>目的地：</b></div><div class="row">';
+    reach.forEach(did=>{
+      const d=CITY_MAP[did];
+      const dist=Math.round(dist2(c.x,c.y,d.x,d.y)/60);
+      const cost=Math.max(3,Math.round(dist*0.12));
+      html+='<button class="btn" style="min-width:130px" onclick="takeTrain(\''+c.id+'\',\''+did+'\','+cost+')">'+d.name+'<br><span style="font-size:10px;font-weight:400">'+dist+'站 · '+cost+' 马克</span></button>';
+    });
+    html+='</div>';
+  }
+  html+='<div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn olive" onclick="closeAllModals()">离开</button></div>';
+  openModal(html);
+}
+function takeTrain(from,to,cost){
+  if(S.money<cost){toast("车票买不起","bad");return;}
+  S.money-=cost;
+  const d=CITY_MAP[to];
+  S.x=d.px;S.y=d.py;S.minute+=180;
+  while(S.minute>=1440){S.minute-=1440;S.day++;S.daysAlive++;}
+  GS.dayRolled=false;GS.minimapDirty=true;
+  closeAllModals();
+  toast("列车抵达 "+d.name,"good");
+  updateHUD();
+  onArriveCity(to);
+}
+
+/* ---------- 港口 ---------- */
+function openPortMenu(c){
+  let html=modalTitle(c.name+" · 港口")+'<p class="muted">汽笛声声，海鸥盘旋。港口有前往沿海城市的客轮。</p><div class="row">';
+  const ports=CITIES.filter(x=>x.facSet.port&&x.id!==c.id);
+  ports.forEach(d=>{
+    const dist=Math.round(dist2(c.x,c.y,d.x,d.y)/60);
+    const cost=Math.max(4,Math.round(dist*0.16));
+    html+='<button class="btn" style="min-width:130px" onclick="takeShip(\''+c.id+'\',\''+d.id+'\','+cost+')">'+d.name+'<br><span style="font-size:10px;font-weight:400">'+cost+' 马克</span></button>';
+  });
+  html+='</div><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn olive" onclick="closeAllModals()">离开</button></div>';
+  openModal(html);
+}
+function takeShip(from,to,cost){
+  if(S.money<cost){toast("船票买不起","bad");return;}
+  S.money-=cost;
+  const d=CITY_MAP[to];
+  S.x=d.px;S.y=d.py;S.minute+=240;
+  while(S.minute>=1440){S.minute-=1440;S.day++;S.daysAlive++;}
+  GS.dayRolled=false;GS.minimapDirty=true;
+  closeAllModals();
+  toast("客轮抵达 "+d.name,"good");
+  updateHUD();
+  onArriveCity(to);
+}
+
+/* ---------- 医馆 ---------- */
+function openDocMenu(c){
+  const cost=8+c.t*4;
+  const full=cost*3;
+  openModal(modalTitle(c.name+" · 医馆")+
+    '<p class="muted">白大褂上沾着碘酒的气味。</p>'+
+    '<div class="row" style="justify-content:center;flex-direction:column;align-items:center">'+
+    '<button class="btn" style="width:80%" onclick="docTreat('+cost+')">包扎治疗（'+cost+' 马克）</button>'+
+    '<button class="btn" style="width:80%" onclick="docTreat('+full+',true)">全面检查（'+full+' 马克）</button>'+
+    '<button class="btn ghost" style="width:80%" onclick="closeAllModals()">离开</button></div>');
+}
+function docTreat(cost,full){
+  if(S.money<cost){toast("钱不够","bad");return;}
+  S.money-=cost;
+  if(full){S.hp=S.maxhp;S.hunger=Math.max(S.hunger,60);S.thirst=Math.max(S.thirst,60);}
+  else heal(Math.floor(S.maxhp*0.5));
+  toast("治疗完成","good");closeAllModals();updateHUD();
+}
+
+/* ---------- 赌场 ---------- */
+function openGambleMenu(c){
+  openModal(modalTitle(c.name+" · 赌场")+
+    '<p class="muted">“倒转的骰子”——庄家笑眯眯地推出三颗骰子。</p>'+
+    '<div class="row" style="justify-content:center">'+
+    '<button class="btn" onclick="gamble(10)">押 10</button>'+
+    '<button class="btn" onclick="gamble(25)">押 25</button>'+
+    '<button class="btn" onclick="gamble(50)">押 50</button>'+
+    '<button class="btn danger" onclick="gamble(100)">押 100</button></div>'+
+    '<p class="muted" style="text-align:center;margin-top:8px">三颗骰子总和 ≥11 为大，≤10 为小。赢则翻倍，输则全无。</p>'+
+    '<div class="row" style="justify-content:flex-end"><button class="btn olive" onclick="closeAllModals()">离开</button></div>');
+}
+function gamble(bet){
+  if(S.money<bet){toast("你连押注的钱都没有","bad");return;}
+  S.money-=bet;
+  const d1=1+Math.floor(Math.random()*6),d2=1+Math.floor(Math.random()*6),d3=1+Math.floor(Math.random()*6);
+  const sum=d1+d2+d3,big=sum>=11;
+  const guess=Math.random()<0.5;
+  const win=guess===big;
+  if(win){S.money+=bet*2;toast("骰子 "+d1+" "+d2+" "+d3+" = "+sum+"，你赢了 "+bet*2+" 马克！","good");}
+  else{toast("骰子 "+d1+" "+d2+" "+d3+" = "+sum+"，你输了 "+bet+" 马克","bad");}
+  updateHUD();
+  closeAllModals();
+  openGambleMenu(cityNear(S.x,S.y,200));
+}
+
+/* ---------- 悬赏栏 ---------- */
+function openBountyMenu(c){
+  const offers=genBounties(c);
+  let html=modalTitle(c.name+" · 悬赏栏")+'<p class="muted">通缉令上的人像模糊，赏金却写得清清楚楚。</p>';
+  if(S.quests.some(q=>q.type==="bounty"&&!q.done)){
+    html+='<div class="row"><b>进行中：</b></div>';
+    S.quests.filter(q=>q.type==="bounty"&&!q.done).forEach(q=>{
+      html+='<div class="entry"><b>'+q.text+'</b><span>进度 '+q.kills+'/'+q.count+' · 赏金 '+q.reward+' 马克</span>'+
+        (q.kills>=q.count?'<button class="btn small" onclick="claimBounty(\''+q.id+'\')">领取赏金</button>':'')+'</div>';
+    });
+  }
+  html+='<div class="row"><b>新通缉：</b></div><div class="row">';
+  offers.forEach(o=>{
+    html+='<button class="btn" style="min-width:200px" onclick="acceptBounty('+JSON.stringify(o).replace(/"/g,"&quot;")+')">'+o.text+'<br><span style="font-size:11px;font-weight:400">'+o.reward+' 马克</span></button>';
+  });
+  html+='</div><div class="row" style="justify-content:flex-end"><button class="btn olive" onclick="closeAllModals()">离开</button></div>';
+  openModal(html);
+}
+function genBounties(c){
+  const r=regionAt(c.x,c.y);
+  const cl=regionClimate(S.region);
+  const pool=cl==="cold"?[["wolves",3,45],["wolf",5,30],["deserter",2,55]]:cl==="hot"?[["hyena",4,35],["bandit",3,50],["scorpion",5,30]]:[["bandit",3,50],["wolf",4,35],["boar",2,45]];
+  const out=[];
+  for(let i=0;i<3;i++){
+    const p=pool[Math.floor(Math.random()*pool.length)];
+    const e=ENEMIES[p[0]];
+    out.push({type:"bounty",enemy:p[0],text:"消灭 "+e.name+" ×"+p[1],count:p[1],reward:p[2]+(S.level-1)*8,kills:0,city:c.id});
+  }
+  return out;
+}
+function acceptBounty(o){
+  o.id="b"+Date.now()+Math.floor(Math.random()*999);
+  S.quests.push(o);
+  toast("接下通缉："+o.text,"good");
+  closeAllModals();
+}
+function claimBounty(id){
+  const q=S.quests.find(x=>x.id===id);
+  if(!q)return;
+  S.money+=q.reward;
+  q.done=true;
+  S.rep.people=(S.rep.people||5)+2;
+  toast("赏金到手 "+q.reward+" 马克","good");
+  updateHUD();
+  closeAllModals();
+  openBountyMenu(cityNear(S.x,S.y,200));
+}
+/* 击杀计数 */
+function onKill(enemyName){
+  S.kills=(S.kills||0)+1;
+  S.quests.filter(q=>!q.done&&q.type==="bounty"&&ENEMIES[q.enemy].name===enemyName).forEach(q=>q.kills=(q.kills||0)+1);
+  S.quests.filter(q=>!q.done&&q.type==="hunt"&&ENEMIES[q.target].name===enemyName).forEach(q=>q.kills=(q.kills||0)+1);
+}
+/* 到达城市事件 */
+function onArriveCity(cid){
+  S.quests.filter(q=>!q.done&&q.type==="escort"&&q.city===cid).forEach(q=>{
+    q.done=true;S.money+=q.reward;S.rep.people=(S.rep.people||5)+3;
+    toast("护送完成，报酬 "+q.reward+" 马克","good");updateHUD();
+  });
+  storyTick();
+}
+/* ---------- 战斗系统 ---------- */
+function makeEnemy(e){
+  const n=e.n||1;
+  const out=[];
+  for(let i=0;i<n;i++){
+    out.push({id:e.id+(n>1?"#"+(i+1):""),name:e.name+(n>1?" "+"甲乙丙丁戊".charAt(i):""),hp:e.hp,maxhp:e.hp,atk:e.atk,def:e.def,spd:e.spd+(Math.random()*2|0),exp:e.exp,money:e.money,done:false,weaken:0});
+  }
+  return out;
+}
+function startBattle(group){
+  closeAllModals();
+  const party=[{name:S.name,hp:S.hp,maxhp:S.maxhp,atk:pAtk(),def:pDef(),spd:pSpd()+Math.floor(Math.random()*3),isPlayer:true,usedBao:false,aim:false}];
+  (S.comps||[]).forEach(cid=>{
+    const c=COMPANIONS[cid];
+    const chp=(S.compHp||{})[cid];
+    party.push({name:c.name,hp:chp!=null?chp:c.stats.hp,maxhp:c.stats.hp,atk:c.stats.atk,def:c.stats.def,spd:c.stats.spd,isPlayer:false,cid,skill:c.skill,usedBao:false,aim:false});
+  });
+  GS.battle={
+    enemies:makeEnemy(group[0]),
+    party, log:["——遭遇战——"], order:[], idx:0, over:false, ended:false,
+    actPending:false, reward:null, storyWin:group[0].storyWin||null,
+  };
+  buildOrder();
+  renderBattle();
+  nextTurn();
+}
+function buildOrder(){
+  const all=[];
+  GS.battle.party.forEach(p=>all.push({who:"p",p}));
+  GS.battle.enemies.forEach(e=>all.push({who:"e",e}));
+  all.sort((a,b)=>bSpeed(b)-bSpeed(a));
+  GS.battle.order=all;
+  GS.battle.idx=0;
+}
+function bSpeed(o){return o.who==="p"?o.p.spd:o.e.spd}
+function currentUnit(){return GS.battle.order[GS.battle.idx]}
+function bLog(t){GS.battle.log.push(t);if(GS.battle.log.length>40)GS.battle.log.shift();}
+function nextTurn(){
+  const b=GS.battle;
+  if(b.over||b.ended)return;
+  /* 清理死亡 */
+  b.enemies=b.enemies.filter(e=>!e.done);
+  b.party=b.party.filter(p=>p.hp>0);
+  if(!b.enemies.length){battleWin();return;}
+  if(!b.party.length){battleLose();return;}
+  buildOrder();
+  const u=currentUnit();
+  b.actPending=false;
+  if(u.who==="p"){
+    if(u.p.isPlayer)renderBattle(); /* 等待玩家操作 */
+    else setTimeout(()=>compAct(u.p),420);
+  }else{
+    setTimeout(()=>enemyAct(u.e),520);
+  }
+}
+function renderBattle(){
+  const b=GS.battle;
+  if(!b)return;
+  if(GS.battleModal){closeModal(GS.battleModal);GS.battleModal=null;}
+  let eh="";
+  b.enemies.forEach(e=>{
+    const pct=Math.max(0,e.hp/e.maxhp*100);
+    eh+='<div class="b-enemy"><b>'+e.name+'</b><div class="hpbar"><i style="width:'+pct+'%"></i></div><span class="st">'+Math.max(0,Math.ceil(e.hp))+'/'+e.maxhp+'</span></div>';
+  });
+  let ph="";
+  b.party.forEach(p=>{
+    const pct=Math.max(0,p.hp/p.maxhp*100);
+    ph+='<div class="b-pc"><b>'+p.name+(p.isPlayer?" <span style=\"color:#A33B2E\">◆</span>":"")+'</b><div class="hpbar" style="height:8px;background:#17110B;border-radius:2px;margin-top:5px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:linear-gradient(180deg,#8FA87C,#4C6340)"></i></div><span class="st">'+Math.max(0,Math.ceil(p.hp))+'/'+p.maxhp+'</span></div>';
+  });
+  let acts='';
+  if(!b.over&&!b.ended){
+    const u=currentUnit();
+    if(u&&u.who==="p"&&u.p.isPlayer){
+      const w=ITEMS[S.equip.weapon];
+      acts='<div class="battle-acts">'+
+        '<button class="btn" onclick="bAttack()">攻击'+(w&&w.name?'（'+w.name+'）':'')+'</button>'+
+        '<button class="btn" onclick="bSkill(0)"'+(u.p.usedBao?' disabled':'')+'>包扎</button>'+
+        '<button class="btn" onclick="bSkill(1)">瞄准</button>'+
+        '<button class="btn" onclick="bSkill(2)">猛击</button>'+
+        '<button class="btn" onclick="bItem()">道具</button>'+
+        '<button class="btn danger" onclick="bFlee()">逃跑</button></div>';
+    }else if(u&&u.who==="p"){
+      acts='<p class="muted" style="text-align:center">'+u.p.name+' 正在行动……</p>';
+    }else{
+      acts='<p class="muted" style="text-align:center">敌人行动中……</p>';
+    }
+  }
+  const m=openModal(
+    '<div class="battle-hero">遭遇战</div>'+
+    '<div class="battle-enemies">'+eh+'</div>'+
+    '<div class="battle-party">'+ph+'</div>'+
+    '<div class="battle-log">'+b.log.map(l=>l).join("<br>")+'</div>'+
+    acts,
+    "modal-battle");
+  m.mask.dataset.lock="1";
+  GS.battleModal=m.mask;
+  const logEl=m.body.querySelector(".battle-log");
+  if(logEl)logEl.scrollTop=logEl.scrollHeight;
+}
+function bAttack(){
+  const u=currentUnit();if(!u||u.who!=="p"||!u.p.isPlayer)return;
+  playerAttack(u.p,1);
+}
+function playerAttack(p,mult){
+  const b=GS.battle;
+  const w=ITEMS[S.equip.weapon];
+  let atk=p.atk;
+  if(w&&w.ammo){
+    if(hasItem(w.ammo)){removeItem(w.ammo,1);}
+    else{atk=p.atk;bLog("（"+p.name+" 的"+w.name+"没有弹药，只能用拳头）");}
+  }
+  if(p.aim){atk=Math.floor(atk*1.8);p.aim=false;bLog(p.name+" 的瞄准生效！");}
+  const t=aliveEnemy();
+  if(!t){return;}
+  const dmg=Math.max(1,Math.round(atk*(0.85+Math.random()*0.3)-t.def*0.5));
+  t.hp-=dmg;
+  bLog(p.name+" 攻击 "+t.name+"，造成 <span class='hl'>"+dmg+"</span> 伤害");
+  addFloat(S.x,S.y-30,"-"+dmg,"#F2E8CF");
+  if(t.hp<=0){t.done=true;bLog(t.name+" 倒下了！");}
+  endAct();
+}
+function aliveEnemy(){return GS.battle.enemies.find(e=>!e.done)}
+function aliveParty(){return GS.battle.party.find(p=>p.hp>0)}
+function bSkill(k){
+  const u=currentUnit();if(!u||u.who!=="p"||!u.p.isPlayer)return;
+  const p=u.p;
+  if(k===0){ /* 包扎 */
+    if(p.usedBao){return;}
+    p.usedBao=true;
+    const heal=Math.min(p.maxhp-p.hp,Math.floor(p.maxhp*0.35));
+    p.hp+=heal;
+    bLog(p.name+" 包扎伤口，恢复 <span class='hl'>"+heal+"</span> 生命");
+  }else if(k===1){ /* 瞄准 */
+    p.aim=true;
+    bLog(p.name+" 屏息凝神，下一击将造成重创");
+  }else{ /* 猛击 */
+    const t=aliveEnemy();
+    if(t){
+      const dmg=Math.max(1,Math.round(p.atk*1.35*(0.85+Math.random()*0.3)-t.def*0.5));
+      t.hp-=dmg;
+      bLog(p.name+" 奋力猛击 "+t.name+"，造成 <span class='hl'>"+dmg+"</span> 伤害");
+      if(t.hp<=0){t.done=true;bLog(t.name+" 倒下了！");}
+    }
+  }
+  endAct();
+}
+function bItem(){
+  const m=openModal(modalTitle("使用道具")+'<div class="it-grid">');
+  let html=m.body.innerHTML;
+  let any=false;
+  S.inv.forEach(s=>{
+    const it=ITEMS[s.id];
+    if(!it||(it.type!=="food"&&it.type!=="drink"&&it.type!=="med"))return;
+    any=true;
+    html+='<div class="it-card" onclick="bUseItem(\''+s.id+'\')"><b>'+it.name+'</b><span>'+descShort(it)+'</span><span class="qty">×'+s.qty+'</span></div>';
+  });
+  if(!any)html+='<p class="muted">没有可用的补给品</p>';
+  m.body.innerHTML=html;
+}
+function bUseItem(id){
+  const it=ITEMS[id];
+  const u=currentUnit();if(!u||u.who!=="p"){closeAllModals();return;}
+  const p=u.p;
+  if(it.type==="food"){S.hunger=Math.min(100,S.hunger+it.val);p.hp=Math.min(p.maxhp,p.hp+Math.floor(it.val*0.3));}
+  else if(it.type==="drink"){S.thirst=Math.min(100,S.thirst+it.val);p.hp=Math.min(p.maxhp,p.hp+Math.floor(it.val*0.2));}
+  else if(it.type==="med"){p.hp=Math.min(p.maxhp,p.hp+(it.heal||0));}
+  removeItem(id,1);
+  bLog(p.name+" 使用了 "+it.name);
+  closeAllModals();
+  endAct();
+}
+function bFlee(){
+  const b=GS.battle;
+  if(b.storyWin){bLog("这是命运之战，你无法逃离。");return;}
+  const avgSpd=b.enemies.reduce((s,e)=>s+e.spd,0)/b.enemies.length;
+  const chance=clamp(0.35+(pSpd()-avgSpd)*0.03,0.15,0.8);
+  if(Math.random()<chance){
+    bLog("你成功脱离了战斗！");
+    endBattle(true);
+  }else{
+    bLog("逃跑失败！");
+    endAct();
+  }
+}
+function endAct(){
+  const b=GS.battle;
+  if(b.over||b.ended)return;
+  GS.battle.idx=(GS.battle.idx+1)%GS.battle.order.length;
+  nextTurn();
+}
+function compAct(p){
+  const b=GS.battle;
+  if(b.over||b.ended)return;
+  const t=aliveEnemy();
+  if(!t){nextTurn();return;}
+  const dmg=Math.max(1,Math.round(p.atk*(0.85+Math.random()*0.3)-t.def*0.5));
+  t.hp-=dmg;
+  bLog(p.name+" 攻击 "+t.name+"，造成 <span class='hl'>"+dmg+"</span> 伤害");
+  if(t.hp<=0){t.done=true;bLog(t.name+" 倒下了！");}
+  renderBattle();
+  endAct();
+}
+function enemyAct(e){
+  const b=GS.battle;
+  if(b.over||b.ended)return;
+  const p=aliveParty();
+  if(!p){nextTurn();return;}
+  let dmg=Math.max(1,Math.round(e.atk*(0.85+Math.random()*0.3)-p.def*0.6));
+  if(e.weaken>0){dmg=Math.floor(dmg*0.7);e.weaken--;}
+  p.hp-=dmg;
+  bLog(e.name+" 攻击 "+p.name+"，造成 <span class='hl'>"+dmg+"</span> 伤害");
+  if(p.hp<=0){
+    p.hp=0;
+    bLog(p.name+" 倒下了！");
+    if(p.isPlayer){battleLose();return;}
+  }
+  renderBattle();
+  endAct();
+}
+function battleWin(){
+  const b=GS.battle;
+  if(b.over)return;
+  b.over=true;
+  const exp=b.enemies.reduce((s,e)=>s+e.exp,0);
+  const money=b.enemies.reduce((s,e)=>s+(e.money?Math.floor(e.money[0]+Math.random()*(e.money[1]-e.money[0])):0),0);
+  bLog("战斗胜利！获得经验 "+exp+", 马克 "+money);
+  const drops=[];
+  if(Math.random()<0.3)drops.push("herb");
+  if(Math.random()<0.2)drops.push("bread");
+  if(Math.random()<0.15)drops.push("ammo");
+  if(Math.random()<0.1)drops.push("cloth");
+  if(Math.random()<0.08)drops.push("iron");
+  if(Math.random()<0.05)drops.push("wine");
+  b.reward={exp,money,drops};
+  GS.battle.reward=b.reward;
+  setTimeout(()=>{
+    gainExp(exp);
+    S.money+=money;
+    drops.forEach(d=>addItem(d,1));
+    b.enemies.forEach(e=>onKill(e.name.replace(/[甲乙丙丁戊]$/,"")));
+    const compHp=S.compHp=S.compHp||{};
+    b.party.forEach(p=>{if(p.cid)compHp[p.cid]=p.hp;});
+    S.hp=b.party.find(p=>p.isPlayer).hp;
+    renderBattleResult(true);
+  },600);
+}
+function battleLose(){
+  const b=GS.battle;
+  if(b.over)return;
+  b.over=true;
+  const compHp=S.compHp=S.compHp||{};
+  b.party.forEach(p=>{if(p.cid)compHp[p.cid]=Math.max(0,p.hp);});
+  S.hp=0;
+  GS.deathReason="战斗失败";
+  setTimeout(()=>{
+    GS.battle=null;
+    closeAllModals();
+    openDeathScreen();
+  },700);
+}
+function renderBattleResult(win){
+  const b=GS.battle;if(!b)return;
+  let html='<div class="battle-hero" style="border-color:'+(win?'var(--olive)':'var(--blood)')+'">'+(win?"战斗胜利":"战斗失败")+'</div>';
+  if(win){
+    html+='<p>经验 +'+b.reward.exp+'　马克 +'+b.reward.money+'</p>';
+    if(b.reward.drops.length)html+='<p class="muted">战利品：'+b.reward.drops.map(d=>ITEMS[d].name).join("、")+'</p>';
+  }
+  html+='<div class="row" style="justify-content:center;margin-top:12px"><button class="btn" onclick="endBattle(false)">继续冒险</button></div>';
+  closeAllModals();
+  openModal(html);
+}
+function endBattle(fled){
+  const b=GS.battle;
+  if(b&&!b.ended){
+    b.ended=true;
+    if(b.storyWin){GS.storyWin=true;}
+    if(!fled){
+      const compHp=S.compHp=S.compHp||{};
+      b.party.forEach(p=>{if(p.cid)compHp[p.cid]=p.hp;});
+      const pl=b.party.find(p=>p.isPlayer);
+      if(pl)S.hp=pl.hp;
+    }
+  }
+  GS.battle=null;
+  encounterAcc=0;
+  closeAllModals();
+  if(S.hp<=0){GS.deathReason="战斗失利";openDeathScreen();return;}
+  updateHUD();
+  if(b&&b.storyWin){/* 剧情战斗胜利后的延续由 storyTick 处理 */}
+}
+/* ---------- 物品栏 / 装备 ---------- */
+function openInventory(){
+  let html=modalTitle("物品 · 装备")+
+    '<div class="row"><b>装备：</b></div><div class="row">'+
+    '<span class="muted">武器：</span>'+(ITEMS[S.equip.weapon]?ITEMS[S.equip.weapon].name:"空手")+
+    '　<span class="muted">护甲：</span>'+(ITEMS[S.equip.armor]?ITEMS[S.equip.armor].name:"无")+
+    '</div><div class="row" style="margin-top:6px"><span class="muted">战力：'+pAtk()+'　防御：'+pDef()+'　速度：'+pSpd()+'</span></div>'+
+    '<div class="row"><b>物品：</b></div><div class="it-grid">';
+  S.inv.forEach(s=>{
+    const it=ITEMS[s.id];if(!it)return;
+    const tag=it.type==="food"?"食":it.type==="drink"?"饮":it.type==="med"?"药":it.type==="ammo"?"弹":it.type==="weapon"?"武":it.type==="armor"?"甲":it.type==="quest"?"要":"杂";
+    html+='<div class="it-card" onclick="itemDetail(\''+s.id+'\')"><span class="tag">'+tag+'</span><b>'+it.name+'</b><span>'+descShort(it)+'</span><span class="qty">×'+s.qty+'</span></div>';
+  });
+  if(!S.inv.length)html+='<p class="muted">空空如也。你连一个铜板都翻不出来。</p>';
+  html+='</div><div class="row" style="justify-content:flex-end"><button class="btn olive" onclick="closeAllModals()">关闭</button></div>';
+  openModal(html,"modal-inv");
+}
+function itemDetail(id){
+  const it=ITEMS[id];
+  const s=S.inv.find(x=>x.id===id);
+  if(!it||!s)return;
+  let acts='';
+  if(it.type==="food"||it.type==="drink"||it.type==="med"){
+    acts+='<button class="btn" onclick="useFromInv(\''+id+'\')">使用</button>';
+  }
+  if(it.type==="weapon")acts+='<button class="btn" onclick="equipWeapon(\''+id+'\')">装备</button>';
+  if(it.type==="armor")acts+='<button class="btn" onclick="equipArmor(\''+id+'\')">穿上</button>';
+  acts+='<button class="btn danger" onclick="dropItem(\''+id+'\')">丢弃 1</button>';
+  const m=openModal(modalTitle(it.name)+
+    '<div class="it-detail"><b>'+it.name+'</b>　<span class="muted">持有 ×'+s.qty+'</span><br>'+it.desc+
+    (it.atk?'<br>攻击 +'+it.atk:'')+(it.def?'<br>防御 +'+it.def:'')+(it.heal?'<br>回复 '+it.heal:'')+
+    (it.price?'<br>参考市价 '+it.price+' 马克':'')+'</div>'+
+    '<div class="row" style="justify-content:flex-end">'+acts+'<button class="btn ghost" onclick="openInventory()">返回</button></div>');
+}
+function useFromInv(id){
+  eat(id,1);
+  closeAllModals();
+  openInventory();
+}
+function equipWeapon(id){
+  if(S.equip.weapon)S.inv.push({id:S.equip.weapon,qty:1});
+  S.equip.weapon=id;
+  const s=S.inv.find(x=>x.id===id);if(s)s.qty-=1;
+  S.inv=S.inv.filter(x=>x.qty>0);
+  toast("装备 "+ITEMS[id].name,"good");
+  closeAllModals();openInventory();
+}
+function equipArmor(id){
+  if(S.equip.armor)S.inv.push({id:S.equip.armor,qty:1});
+  S.equip.armor=id;
+  const s=S.inv.find(x=>x.id===id);if(s)s.qty-=1;
+  S.inv=S.inv.filter(x=>x.qty>0);
+  toast("穿上 "+ITEMS[id].name,"good");
+  closeAllModals();openInventory();
+}
+function dropItem(id){
+  removeItem(id,1);
+  toast("丢弃了 1 份"+ITEMS[id].name,"bad");
+  closeAllModals();openInventory();
+}
+
+/* ---------- 队伍 ---------- */
+function openParty(){
+  let html=modalTitle("队伍")+
+    '<div class="entry"><b>'+S.name+'（主角）</b><span>Lv.'+S.level+'　生命 '+Math.ceil(S.hp)+'/'+S.maxhp+'　攻击 '+pAtk()+'　防御 '+pDef()+'　速度 '+pSpd()+'</span></div>';
+  (S.comps||[]).forEach(cid=>{
+    const c=COMPANIONS[cid];
+    const hp=(S.compHp||{})[cid]!=null?(S.compHp||{})[cid]:c.stats.hp;
+    html+='<div class="entry"><b>'+c.name+'</b><span>'+c.role+' · '+c.skill+'　生命 '+Math.max(0,hp)+'/'+c.stats.hp+'<br>'+c.desc+'</span></div>';
+  });
+  if(!(S.comps||[]).length)html+='<p class="muted">队伍里只有你一个人。在旅途中结识可靠的人，他们或许愿意同行。</p>';
+  html+='<div class="row" style="justify-content:flex-end"><button class="btn olive" onclick="closeAllModals()">关闭</button></div>';
+  openModal(html);
+}
+
+/* ---------- 图鉴数据 ---------- */
+const LORE_FACTIONS={
+  imperial:{n:"德意志帝国",t:"赢得一战的胜利者。疆域从中欧延伸到乌克兰与波罗的海，在远东保有一支舰队。表面铁板一块，地下却流传着'管理局'的传说——一个不受法律约束、处理'记忆'的部门。"},
+  ottoman:{n:"奥斯曼帝国",t:"病夫未死。保住了安纳托利亚、新月沃地与圣城，却债台高筑。苏丹年迈，帝国议会与民族主义者在茶馆里争夺未来。"},
+  white:{n:"莫斯科白军政府",t:"布尔什维克被镇压后，白军在莫斯科建立了军政府。他们赢得了内战，却输掉了民心。铁路沿线盗匪横行，教堂的钟声里藏着秘密。"},
+  japan:{n:"日本帝国",t:"在欧战废墟上扩张的东方帝国。占据朝鲜、满洲与西伯利亚东部，与柏林维持着脆弱的同盟，互不信任。"},
+  allies:{n:"协约国残余",t:"英国退守不列颠与印度，法国沦为军政府统治的残邦。他们失去了战争，却没失去记忆——以及'记得另一场结局'的人。"},
+  people:{n:"民间",t:"无论旗帜如何变换，平民要的只是面包与平安。在这条被写错的时间线上，每个普通人都可能在某天清晨，发现昨天的报纸变成了另一个版本。"},
+  black:{n:"地下世界",t:"黑市、赌场、情报贩子与走私船。战争改写了国界，却改不掉人性的影子。在这里，只要出得起价，连'时间碎片'都有得卖。"},
+};
+const LORE_ANOMALY=[
+  {t:"残响",d:"这个世界不断出现'来自另一条时间线'的痕迹：倒走的钟、写错日期的报纸、凭空多出来的铁路站。当局称之为'残响'，并极力掩盖。有一种说法：这些不是幻觉，而是被写错的世界的记忆在渗漏。"},
+  {t:"管理局",d:"一个没有番号、没有制服、只穿黑大衣的部门。据说它直属帝国总理府，负责'处理'残响与知道太多的人。没有人知道它在哪里办公——除了那些进去过、又出来的人。"},
+  {t:"黄铜罗盘",d:"主角父亲留下的遗物。它不指向北方，而指向残响的源头。传说这样的罗盘一共有七只，散落在七个曾经血流成河的地方。"},
+  {t:"记忆教团",d:"一个古老的组织，相信'被写错的世界'终将崩溃，而他们有责任加速这一过程。信徒们收集残响碎片，把它们称作'世界最初的钟声'。"},
+  {t:"1918年11月11日",d:"在残响里反复出现的一个日期。德国人烧毁了凡尔赛和约的原件，宣称那是'胜利者的废纸'。可总有人记得——那支笔尖上刻着这个日期。"},
+  {t:"阿兰斯站",d:"西伯利亚铁路上一个不在任何时刻表里的车站。列车经过时，所有钟表都会停摆。有人在那里看见过穿1917年军装的人。"},
+];
+
+/* ---------- 日志 / 图鉴 ---------- */
+let journalTab="main";
+function openJournal(){
+  const tabs=[["main","主线"],["faction","势力"],["comp","人物"],["anom","残响档案"],["chapters","更新日志"]];
+  let html=modalTitle("日志 · 图鉴")+'<div class="journal-tabs">'+
+    tabs.map(t=>'<button class="btn small '+(journalTab===t[0]?"":"ghost")+'" onclick="journalSwitch(\''+t[0]+'\')">'+t[1]+'</button>').join("")+
+    '</div><div id="journalBody"></div>';
+  const m=openModal(html,"modal-journal");
+  journalRender();
+}
+function journalSwitch(t){journalTab=t;journalRender();}
+function journalRender(){
+  const body=document.getElementById("journalBody");
+  if(!body)return;
+  let h="";
+  if(journalTab==="main"){
+    const entries=S.journal||[];
+    if(!entries.length)h+='<p class="muted">还没有日志。你的故事从旅程开始。</p>';
+    entries.forEach((e,i)=>{h+='<div class="entry'+(i===entries.length-1?" new":"")+'"><b>'+e.t+'</b><span>'+e.d+'</span></div>';});
+  }else if(journalTab==="faction"){
+    Object.keys(LORE_FACTIONS).forEach(k=>{
+      const f=LORE_FACTIONS[k];
+      h+='<div class="entry"><b>'+f.n+'</b><span>'+f.t+'</span></div>';
+    });
+  }else if(journalTab==="comp"){
+    Object.keys(COMPANIONS).forEach(k=>{
+      const c=COMPANIONS[k];
+      const joined=(S.comps||[]).includes(k);
+      h+='<div class="entry'+(joined?" new":"")+'"><b>'+c.name+(joined?"（同行中）":"")+'</b><span>'+c.role+'<br>'+c.desc+'</span></div>';
+    });
+  }else if(journalTab==="anom"){
+    LORE_ANOMALY.forEach(a=>{h+='<div class="entry"><b>'+a.t+'</b><span>'+a.d+'</span></div>';});
+  }else if(journalTab==="chapters"){
+    h+='<p class="muted">主线十二卷 · 每月更新一卷（1933.11—1934.10）</p><div class="chapter-list">';
+    CHAPTERS.forEach(ch=>{
+      const done=S.chapter>ch.num||S.chapter===ch.num&&S.chapterStep>=ch.steps.length;
+      const cur=S.chapter===ch.num;
+      h+='<div class="ch-item '+(done?"done":cur?"":"locked")+'"><b>第'+ch.num+'卷 · '+ch.meta.title+(done?' <span class="st">完</span>':cur?' <span class="st">进行中</span>':' <span class="st">未解锁</span>')+'</b><span>'+ch.meta.month+' · '+ch.meta.loc+'<br>'+ch.meta.teaser+'</span></div>';
+    });
+    h+='</div>';
+  }
+  body.innerHTML=h;
+}
+function addJournal(t,d){
+  S.journal=S.journal||[];
+  if(!S.journal.find(e=>e.t===t))S.journal.push({t,d});
+}
+
+/* ---------- 世界地图 ---------- */
+function openMap(){
+  const m=openModal(modalTitle("世界地图 · 1933年（欧亚非大陆）")+'<canvas id="mapCanvas" width="820" height="410" style="width:100%"></canvas>'+
+    '<div class="legend-line"><span class="swatch" style="background:#7A6A52"></span>德意志帝国　<span class="swatch" style="background:#B08A4E"></span>奥斯曼　<span class="swatch" style="background:#7E7260"></span>白俄　<span class="swatch" style="background:#C8B4A0"></span>日本　<span class="swatch" style="background:#5E7C8C"></span>协约残余　<span class="swatch" style="background:#A89A6A"></span>中国势力圈　<span class="swatch" style="background:#2E4A63"></span>海洋</div>'+
+    '<div class="row" style="justify-content:flex-end"><button class="btn olive" onclick="closeAllModals()">关闭</button></div>',"map-panel");
+  const mc=$("mapCanvas");
+  const mx=mc.getContext("2d");
+  const sx=mc.width/MAP_W, sy=mc.height/MAP_H;
+  for(let ty=0;ty<MAP_H;ty++)for(let tx=0;tx<MAP_W;tx++){
+    const i=ty*MAP_W+tx;
+    const t=WORLD.ter[i];
+    if(t===TER.WATER)mx.fillStyle="#2E4A63";
+    else{
+      const ri=WORLD.reg[i];
+      mx.fillStyle=ri===255?"#4a4436":REGIONS[ri].col;
+    }
+    mx.fillRect(tx*sx,ty*sy,sx+0.5,sy+0.5);
+  }
+  mx.strokeStyle="rgba(30,20,10,0.6)";mx.lineWidth=1;
+  CITIES.forEach(c=>{
+    mx.fillStyle="#F2E8CF";
+    mx.beginPath();mx.arc(c.x*sx,c.y*sy,2,0,7);mx.fill();
+  });
+  mx.font="9px 'Noto Sans SC',sans-serif";mx.fillStyle="rgba(30,24,16,0.85)";mx.textAlign="center";
+  CITIES.forEach(c=>{if(c.t>=2)mx.fillText(c.name,c.x*sx,c.y*sy-5);});
+  if(S){
+    mx.fillStyle="#E0472E";
+    mx.beginPath();mx.arc(S.x/WORLD_W*mc.width,S.y/WORLD_H*mc.height,3.5,0,7);mx.fill();
+  }
+  mc.addEventListener("click",e=>{
+    const r=mc.getBoundingClientRect();
+    const mxp=(e.clientX-r.left)/r.width*mc.width;
+    const myp=(e.clientY-r.top)/r.height*mc.height;
+    let best=null,bd=8;
+    CITIES.forEach(c=>{
+      const d=Math.hypot(c.x/WORLD_W*mc.width-mxp,c.y/WORLD_H*mc.height-myp);
+      if(d<bd){bd=d;best=c;}
+    });
+    if(best){
+      const dist=Math.round(dist2(S.x,S.y,best.px,best.py)/60);
+      toast(best.name+" · 距离约 "+dist+" 站","good");
+    }
+  });
+}
+
+/* ---------- 暂停菜单 ---------- */
+function openPauseMenu(){
+  openModal(modalTitle("菜单")+
+    '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px">'+
+    '<button class="btn" onclick="closeAllModals()">继续游戏</button>'+
+    '<button class="btn" onclick="openSaveUI()">存档 / 读档</button>'+
+    '<button class="btn" onclick="openSettings()">设置</button>'+
+    '<button class="btn ghost" onclick="closeAllModals();toTitle()">返回标题</button></div>');
+}
+function toTitle(){
+  closeAllModals();
+  GS.mode="title";
+  $("hud").classList.add("hidden");
+  $("titleScreen").classList.remove("hidden");
+  GS.paused=false;
+  if(rafId){cancelAnimationFrame(rafId);rafId=0;}
+  lastT=performance.now();
+  rafId=requestAnimationFrame(loop);
+}
+
+/* ---------- 存档界面 ---------- */
+function openSaveUI(){
+  let html=modalTitle("存档 · 读档")+
+    '<p class="muted">本地存档（浏览器 localStorage）。可导出为文本备份到别处。</p><div id="saveList"></div>'+
+    '<div class="row" style="justify-content:space-between;align-items:center">'+
+    '<button class="btn small" onclick="saveCurrent()">存到当前槽位(1)</button>'+
+    '<button class="btn small ghost" onclick="exportSaveUI()">导出存档</button>'+
+    '<button class="btn small ghost" onclick="importSaveUI()">导入存档</button></div>';
+  openModal(html);
+  refreshSaveList();
+}
+function refreshSaveList(){
+  const box=document.getElementById("saveList");
+  if(!box)return;
+  let h="";
+  for(let i=1;i<=3;i++){
+    const raw=localStorage.getItem(SAVE_KEY+i);
+    if(raw){
+      try{
+        const s=JSON.parse(raw);
+        const d=new Date(1933,10,1+s.day);
+        h+='<div class="save-slot"><b>槽位'+i+' · '+s.name+'（'+(s.mode==="story"?"主线 第"+s.chapter+"卷":"自由")+'）</b>'+
+          '<span>'+(d.getFullYear())+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日 · 等级"+s.level+' · 存活'+s.daysAlive+'天 · 马克'+Math.floor(s.money)+'</span>'+
+          '<div class="row" style="margin-top:6px"><button class="btn small" onclick="loadSlot('+i+')">读取</button>'+
+          '<button class="btn small ghost" onclick="saveSlot('+i+')">覆盖</button>'+
+          '<button class="btn small danger" onclick="deleteSave('+i+')">删除</button></div></div>';
+      }catch(e){
+        h+='<div class="save-slot"><b>槽位'+i+' · 损坏的存档</b><div class="row"><button class="btn small danger" onclick="deleteSave('+i+')">删除</button></div></div>';
+      }
+    }else{
+      h+='<div class="save-slot empty"><b>槽位'+i+' · 空</b><span>点击下方“存到当前槽位”或“覆盖”写入。</span></div>';
+    }
+  }
+  box.innerHTML=h;
+}
+function saveCurrent(){saveToSlot(1);refreshSaveList();}
+function saveSlot(i){saveToSlot(i);refreshSaveList();}
+function loadSlot(i){
+  if(loadFromSlot(i)){closeAllModals();toast("读取成功","good");}
+  else toast("读取失败","bad");
+}
+function exportSaveUI(){
+  const txt=exportSave();
+  const m=openModal(modalTitle("导出存档")+
+    '<p class="muted">复制下面这段文本保存好，将来可以导入恢复进度。</p>'+
+    '<textarea id="exportBox" readonly style="width:100%;height:130px;font-size:11px;background:var(--paper3);border:1px solid var(--ink2);padding:6px">'+txt+'</textarea>'+
+    '<div class="row" style="justify-content:flex-end"><button class="btn" onclick="copyExport()">复制</button><button class="btn ghost" onclick="closeAllModals()">关闭</button></div>');
+}
+function copyExport(){
+  const box=document.getElementById("exportBox");
+  if(!box)return;
+  box.select();box.setSelectionRange(0,999999);
+  try{document.execCommand("copy");toast("已复制","good");}catch(e){toast("请手动复制","bad");}
+}
+function importSaveUI(){
+  const m=openModal(modalTitle("导入存档")+
+    '<p class="muted">粘贴之前导出的存档文本。</p>'+
+    '<textarea id="importBox" style="width:100%;height:110px;font-size:11px;background:var(--paper3);border:1px solid var(--ink2);padding:6px" placeholder="粘贴存档文本……"></textarea>'+
+    '<div class="row" style="justify-content:flex-end"><button class="btn" onclick="doImport()">导入</button><button class="btn ghost" onclick="closeAllModals()">取消</button></div>');
+}
+function doImport(){
+  const box=document.getElementById("importBox");
+  if(!box)return;
+  importSave(box.value);
+  if(GS.mode==="game")closeAllModals();
+}
+
+/* ---------- 设置 ---------- */
+function openSettings(){
+  const auto=localStorage.getItem("hanber3_auto")!=="0";
+  const label=localStorage.getItem("hanber3_labels")!=="0";
+  openModal(modalTitle("设置")+
+    '<div class="entry"><b>自动存档</b><span>进入新的一天时自动保存到槽位1。</span>'+
+    '<div class="row"><button class="btn small '+(auto?"":"ghost")+'" onclick="setAuto(true)">开</button><button class="btn small '+(auto?"ghost":"")+'" onclick="setAuto(false)">关</button></div></div>'+
+    '<div class="entry"><b>地图区域标签</b><span>主画面上显示势力区域名称。</span>'+
+    '<div class="row"><button class="btn small '+(label?"":"ghost")+'" onclick="setLabels(true)">显示</button><button class="btn small '+(label?"ghost":"")+'" onclick="setLabels(false)">隐藏</button></div></div>'+
+    '<div class="row" style="justify-content:flex-end"><button class="btn olive" onclick="closeAllModals()">关闭</button></div>');
+}
+function setAuto(v){localStorage.setItem("hanber3_auto",v?"1":"0");toast(v?"自动存档已开启":"自动存档已关闭","good");openSettings();}
+function setLabels(v){localStorage.setItem("hanber3_labels",v?"1":"0");GS.zoomLabels=v;toast(v?"已显示区域标签":"已隐藏区域标签","good");openSettings();}
+
+/* ---------- 死亡结算 ---------- */
+function openDeathScreen(){
+  closeAllModals();
+  const d=gameDate();
+  const openModalEl=openModal('<div class="battle-hero" style="border-color:var(--blood)">你死了</div>'+
+    '<p class="muted" style="text-align:center">'+GS.deathReason+'</p>'+
+    '<p style="text-align:center;margin-top:8px">你活到了 '+d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+'日<br>生存 '+S.daysAlive+' 天 · 击杀 '+S.kills+' · 等级 '+S.level+'<br>'+
+    (S.mode==="story"?"主线进度：第"+S.chapter+"卷":"自由模式：你在这片大地上留下的足迹")+'</p>'+
+    '<div class="row" style="justify-content:center;margin-top:14px">'+
+    '<button class="btn" onclick="restartRun()">再活一次</button>'+
+    '<button class="btn ghost" onclick="closeAllModals();openSaveUI()">读取存档</button>'+
+    '<button class="btn ghost" onclick="closeAllModals();toTitle()">回到标题</button></div>');
+}
+function restartRun(){
+  const name=S.name,origin=S.origin,mode=S.mode;
+  S=newState(mode,name,origin);
+  S.mode=mode;
+  WORLD=buildWorld(S.weatherSeed||7);
+  WORLD.explored=new Uint8Array(WORLD.ter.length);
+  buildEntities();
+  GS.mode=mode;
+  GS.battle=null;GS.paused=false;GS.minimapDirty=true;
+  closeAllModals();
+  updateHUD();
+  toast("新的开始……","good");
+  if(mode==="story")storyStartChapter(1);
+}
+
+/* ---------- 操作说明 / 关于 ---------- */
+function openGuide(){
+  openModal(modalTitle("操作说明")+
+    '<p><b>移动</b>　WASD / 方向键（触屏：左下摇杆）</p>'+
+    '<p><b>奔跑</b>　按住 Shift</p>'+
+    '<p><b>交互</b>　靠近人物或设施按 E（触屏：右下“交谈”按钮）；点击画面中的人物也可以交谈</p>'+
+    '<p><b>扎营 / 住宿</b>　按 B，或在城内靠近旅馆使用 E</p>'+
+    '<p><b>菜单</b>　ESC 或右上角按钮</p>'+
+    '<p><b>存档</b>　菜单→存档/读档；每天自动存档（可在设置中关闭）</p>'+
+    '<p><b>生存</b>　注意生命、饱食、饮水与体力。寒冷需要冬衣，沙漠需要水源。天黑后尽量进城。</p>'+
+    '<p><b>模式</b>　自由模式目标只有一个：活下去。主线模式将随十二卷剧情推进。</p>'+
+    '<div class="row" style="justify-content:flex-end"><button class="btn olive" onclick="closeAllModals()">明白了</button></div>');
+}
+function openAbout(){
+  openModal(modalTitle("关于《HanBer THREE》")+
+    '<p><b>背景设定</b>　1918年，一战以同盟国胜利告终。柏林没有失败。十五年后——1933年——世界被德意志帝国、奥斯曼帝国、白俄军政府与日本帝国重新瓜分。可这个世界出了些毛病：时钟倒走，报纸改字，死去的人出现在不该出现的年代。人们把这叫作“残响”。</p>'+
+    '<p><b>主角</b>　汉伯（HanBer）——一个混血孤儿，你。你收到一封来自“明年”的信，从此被卷入“被写错的世界”的真相。</p>'+
+    '<p><b>更新计划</b>　主线共十二卷（1933.11—1934.10，每月一卷），已全部内置。每卷结尾留有悬念。</p>'+
+    '<p class="muted">本作完全单机，进度保存在本地浏览器。可部署到 GitHub Pages 与任意静态托管。</p>'+
+    '<div class="row" style="justify-content:flex-end"><button class="btn olive" onclick="closeAllModals()">关闭</button></div>');
+}
+
+/* ---------- 标题 / 建档 ---------- */
+let chosenMode="free";
+function bindMenu(){
+  $("btnNew").addEventListener("click",()=>{
+    openModal(modalTitle("开始游戏")+
+      '<p>选择你要体验的模式。</p>'+
+      '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px">'+
+      '<button class="btn" onclick="chooseMode(\'story\')">主线模式<br><span style="font-size:11px;font-weight:400">十二卷剧情 · 探索被写错的世界</span></button>'+
+      '<button class="btn olive" onclick="chooseMode(\'free\')">自由模式<br><span style="font-size:11px;font-weight:400">目标只有一个：活下去 · 开放世界探索</span></button></div>');
+  });
+  $("btnLoad").addEventListener("click",()=>{openSaveUI()});
+  $("btnGuide").addEventListener("click",openGuide);
+  $("btnAbout").addEventListener("click",openAbout);
+  $("btnCharBack").addEventListener("click",()=>{$("charScreen").classList.add("hidden");$("titleScreen").classList.remove("hidden");});
+  $("btnCharStart").addEventListener("click",()=>{
+    const name=$("inpName").value.trim();
+    S=newState(chosenMode,name,GS.chosenOrigin||"apprentice");
+    S.mode=chosenMode;
+    WORLD=buildWorld(S.weatherSeed||7);
+    WORLD.explored=new Uint8Array(WORLD.ter.length);
+    buildEntities();
+    enterGame();
+  });
+  /* HUD 按钮 */
+  $("btnInv").addEventListener("click",openInventory);
+  $("btnJournal").addEventListener("click",openJournal);
+  $("btnMap").addEventListener("click",openMap);
+  $("btnParty").addEventListener("click",openParty);
+  $("btnMenu").addEventListener("click",openPauseMenu);
+  $("tactE").addEventListener("click",tryInteract);
+  $("tactMenu").addEventListener("click",openPauseMenu);
+}
+function chooseMode(m){
+  chosenMode=m;
+  closeAllModals();
+  GS.chosenOrigin=GS.chosenOrigin||"apprentice";
+  renderOrigins();
+  $("titleScreen").classList.add("hidden");
+  $("charScreen").classList.remove("hidden");
+}
+function renderOrigins(){
+  const grid=$("originGrid");
+  grid.innerHTML="";
+  ORIGINS.forEach(o=>{
+    const d=document.createElement("div");
+    d.className="origin-card"+(GS.chosenOrigin===o.id?" sel":"");
+    d.innerHTML="<b>"+o.name+"</b><span>"+o.d+"</span>";
+    d.addEventListener("click",()=>{GS.chosenOrigin=o.id;renderOrigins();});
+    grid.appendChild(d);
+  });
+}
+function enterGame(){
+  $("titleScreen").classList.add("hidden");
+  $("charScreen").classList.add("hidden");
+  $("hud").classList.remove("hidden");
+  GS.mode=S.mode==="story"?"story":"free";
+  GS.paused=false;GS.minimapDirty=true;
+  GS.battle=null;
+  closeAllModals();
+  if(!rafId){lastT=performance.now();rafId=requestAnimationFrame(loop);}
+  updateHUD();
+  detectTouch();
+  if(S.mode==="story"&&S.chapter===0&&!S.introRead){
+    S.introRead=true;storyStartChapter(1);
+  }else if(S.mode==="story"&&S.chapter>0){
+    storyResume();
+  }else if(S.mode!=="story"){
+    toast("自由模式开始。活下去。","good");
+  }
+}
+function detectTouch(){
+  const t=("ontouchstart" in window)||navigator.maxTouchPoints>0;
+  $("touchPad").classList.toggle("show",t);
+  $("touchAct").classList.toggle("show",t);
+}
+/* ============================================================
+   主线十二卷 · 剧情数据（1933.11 — 1934.10）
+   每卷结尾留有悬念，全部内置，逐卷解锁
+   ============================================================ */
+const CHAPTERS=[
+/* ---------- 第一卷 黄铜信笺 ---------- */
+{num:1, meta:{title:"黄铜信笺",month:"1933年11月",loc:"上海",teaser:"邮戳是明年。寄信人，是你父亲。",stamp:"残响·壹"},
+ steps:[
+  {k:"text",head:"第一卷 · 黄铜信笺",date:"1933年11月1日 · 上海",
+   pages:[
+    ["","一九三三年十一月一日，上海，德租界。苏州河的水是铅灰色的，海关大钟指着下午四点——可那只钟，已经慢了十七分钟。"],
+    ["","你叫汉伯。父亲是德国铁路工程师汉伯二世，母亲林慧兰是这条街上有名的中医。父亲民国十六年去西伯利亚考察铁路，一去不回。母亲半年前病倒，如今躺在面馆后屋，药石无用。"],
+    ["梅婶","“汉伯，你娘今天的药……唉，别愣着了，你爹的老宅，房东又来催租了。他说要是月底再交不上，就把你爹那些破箱子扔进苏州河。”"],
+    ["","你回到父亲留下的老宅。木箱积灰，里面是图纸、罗盘、几封旧信——和一封崭新的、火漆完好的信。信封上的邮戳让你后颈发凉：一九三四年四月七日。"],
+    ["","你撕开信。笔迹是父亲的，可信里的字，正在你眼前缓缓地、一点点地变化——像是墨水还活着。"]],
+   foot:"“汉伯，我是你父亲。如果你读到这封信，说明时间线还没有彻底崩溃。不要相信柏林派来的任何人。去莫斯科，找一只黄铜罗盘。它在你母亲手里。”"},
+  {k:"give",items:[["letter",1]],note:"获得「未来的信」"},
+  {k:"obj",note:"回面馆后屋，询问母亲",city:"shanghai"},
+  {k:"talk",npc:"shen",scene:["沈医生","“你娘这病，脉象里带着寒气。她说不是风寒——是‘记性’坏了。她总念叨：‘我快把另一件事忘了，忘了我就不在了。’汉伯，你娘说，她见过你父亲回来过一次。就在上个月。”"],
+   note:"与沈医生交谈"},
+  {k:"talk",npc:"auntmei",scene:["梅婶","“你娘病倒前，把一样东西交给我收着——一只黄铜罗盘，指针不指北，指哪儿都没准头。她说等你满二十岁再给你。可她说，如果有一天，你收到一封‘明年’的信，就立刻把罗盘给你，并且让你——离开上海。”"],
+   note:"与梅婶交谈，取回罗盘"},
+  {k:"give",items:[["compass",1]],note:"获得「黄铜罗盘」"},
+  {k:"text",head:"第一卷 · 黄铜信笺",date:"当晚",
+   pages:[
+    ["","罗盘在你掌心微微发烫。指针没有指向北方，而是固执地指着——苏州河对岸，那座废弃的教堂。"],
+    ["","你穿过闸北的夜巷。教堂尖顶剪开铅灰色的天空，半掩的地窖门缝里漏出灯光。你听见有人在搬东西，用的是德语。"],
+    ["","你推开门。三个穿黑大衣的人正在把木箱装上马车。为首的男人回头，脸上没有表情：“汉伯先生的儿子？来得正好。请把不属于这个世界的东西，交出来。”"]],
+   foot:"“黄铜罗盘。还有你手里那封信。它们属于管理局——属于时间线的秩序。”"},
+  {k:"battle",enemies:[{id:"thug",name:"码头打手",hp:28,atk:8,def:1,spd:9,exp:14,money:[8,16],n:2}],note:"击退黑大衣的打手"},
+  {k:"text",head:"第一卷 · 黄铜信笺",date:"深夜",
+   pages:[
+    ["","你夺路而逃。黑大衣们在身后追赶，可他们没有开枪——仿佛忌惮着什么。老李的船就泊在苏州河上，他叼着烟卷朝你招手。"],
+    ["老李","“快上船！那帮人是‘管理局’的，专管‘记性’。我说小子，你爹到底留了什么东西，值得他们半夜三更来抄家？”"],
+    ["","船离岸时，你看见教堂的方向腾起火光。你的家——父亲的老宅——正在燃烧。火焰里，似乎有什么东西在倒着飘，像一卷被倒放的胶片。"],
+    ["艾琳","“上帝啊——火是倒着烧的。我从没见过……不对，我在索姆河见过一次。战地医院里，一位士兵的怀表倒着走了三天，然后他死了，死前说：‘世界记错了，世界记错了。’”"]],
+   foot:"第二天清晨，上海各大报纸头版：“闸北教堂大火，无人员伤亡”。只有你注意到，报纸角落有一条寻人启事：寻找工程师汉伯二世，如有消息，请往柏林档案局投递。"},
+  {k:"end",next:2,suspense:"罗盘的指针转了一整圈，最后停在你自己的胸口。它指的不是教堂，不是柏林——是你。",
+   pages:[
+    ["","信还在你的口袋里。你借着火光又读了一遍。这一次，信尾多了一行字，字迹比你父亲的更年轻，也更潦草："],
+    ["","“不要相信任何人。包括你。”"],
+    ["","罗盘的指针微微颤动，指向东方——莫斯科的方向。西伯利亚铁路的汽笛，在雾气里长长地响了一声。"]]},
+ ]},
+/* ---------- 第二卷 逆流的列车 ---------- */
+{num:2, meta:{title:"逆流的列车",month:"1933年12月",loc:"上海—莫斯科",teaser:"列车时刻表上，有一站不存在。",stamp:"残响·贰"},
+ steps:[
+  {k:"text",head:"第二卷 · 逆流的列车",date:"1933年12月 · 上海北站",
+   pages:[
+    ["","艾琳决定跟你同行。“反正我在远东也没什么牵挂。而且——我想再看看那种‘倒着走的时间’。它让我想起一个人。”"],
+    ["","老李留在上海替你盯着管理局的动静。临行前他塞给你一张票：“西伯利亚快车，终点莫斯科。记住，过了乌兰乌德，有一站叫阿兰斯——不在时刻表上。列车长会提前把所有钟停掉。如果钟没停，你就别下车，闭上眼睛，数到一百。”"],
+    ["","汽笛长鸣。列车碾过铁轨，向北，向西，向着欧亚大陆的深处驶去。三等车厢里挤满了流亡者、商人、退役军官——和一个裹着灰披风、一直在看一本倒拿着的书的男人。"]],
+   foot:"列车驶入西伯利亚的第一夜，你发现窗外下着雪。可你明明记得，出发时还是深秋。"},
+  {k:"obj",note:"在列车上四处走走（与乘客交谈）",city:"novosibirsk"},
+  {k:"talk",npc:"beggar",scene:["老乞丐","“行行好，给口吃的吧。……噢，你闻起来像上海。我年轻时在凡尔赛当杂役，见过停战签字。可后来人人都说，签字的是柏林。他们烧了那支笔。可我记得——金笔，笔尖刻着‘1918.11.11’。”"],
+   note:"与老乞丐交谈"},
+  {k:"talk",npc:"katerina",scene:["卡捷琳娜","“站住。你的罗盘——哪儿来的？”她按住马刀，眼神锐利，“那是沃尔科夫家的东西。我祖父用它指挥骑兵团，1916年，在布加勒斯特。然后战争……变了。所有人都说是我们赢了。可我祖父的日记里写的是：我们输了。”"],
+   note:"与灰披风的女子交谈"},
+  {k:"battle",enemies:[{id:"assassin",name:"管理局特工",hp:40,atk:12,def:3,spd:12,exp:30,money:[10,25],n:1,storyWin:true}],note:"击退列车上的特工"},
+  {k:"text",head:"第二卷 · 逆流的列车",date:"深夜 · 卧铺车厢",
+   pages:[
+    ["","特工被制服后，灰披风的女人摘下兜帽。她叫卡捷琳娜·沃尔科娃，白军退役中尉，正赶往莫斯科。“你父亲，”她说，“七年前在西伯利亚铁路失踪。可上个月，有人在莫斯科的旧货市场，看见一个酷似他的人，买走了半张铁路图。”"],
+    ["卡捷琳娜","“那些黑大衣的，不只是冲你来的。他们在找‘会倒着走的东西’。而我——我欠沃尔科夫家族一个真相。让我同行，直到莫斯科。”"],
+    ["","你答应了。窗外，雪越下越大。你掏出罗盘，它的指针正对着车尾——车尾的方向，是东方，是你来的地方。"],
+    ["","列车员推着餐车经过，托盘上摆着热茶。他压低声音对你说：“先生，再过二十分钟，就是阿兰斯站。请把所有钟——包括您那只罗盘——收进包里。记住，不管听见什么，别往窗外看。”"]],
+   foot:"列车开始减速。汽笛声在旷野里回响，像一声被拖长的叹息。"},
+  {k:"choice",text:"列车驶入阿兰斯站。窗外一片漆黑，可你分明听见：马蹄声、炮声、还有成千上万人的呐喊，从黑暗里涌来。卡捷琳娜脸色苍白：“这是……布加勒斯特战役的声音。1916年。”",
+   options:[
+    {t:"闭上眼睛，数到一百（遵从列车员的警告）",to:8,set:{arans:"blind"}},
+    {t:"睁开眼睛，看清窗外（真相在呼唤你）",to:9,set:{arans:"look"}}
+   ]},
+  {k:"text",head:"第二卷 · 逆流的列车",date:"阿兰斯站",
+   pages:[
+    ["","你闭上眼睛。黑暗里，声音仍在——冲锋号、马蹄、机枪的点射。你数到一百，声音戛然而止。列车重新加速，窗外是正常的风雪。"],
+    ["卡捷琳娜","“你做得对。阿兰斯不是车站，是伤口。是这条时间线缝合最粗糙的地方。我祖父的日记说，他的骑兵团死在这里——可这个世界，没有这场战役的记载。他们把它‘烧掉’了。”"],
+    ["","你睁开眼睛的瞬间，看见车窗玻璃上，有一张脸的倒影。那张脸年轻、陌生，可眉眼之间，与你惊人地相似。它对你笑了笑，然后消失了。"]],
+   foot:"你不敢告诉任何人。那张脸——像是另一个你，从车窗的另一面，看着你。"},
+  {k:"text",head:"第二卷 · 逆流的列车",date:"阿兰斯站",
+   pages:[
+    ["","你睁开眼。窗外的黑暗裂开一条缝——你看见了战场。没有雪，没有铁轨，只有1916年的布加勒斯特：燃烧的村庄，溃退的军队，以及一支不该存在的、举着铁十字旗的骑兵团——他们正举着枪，瞄准你。"],
+    ["","你猛地闭上眼睛。可那一瞬的景象已经烙进视网膜。等列车驶过阿兰斯，你浑身冷汗，罗盘在口袋里滚烫——指针断了。"],
+    ["艾琳","“你看见了什么？你的脸色——”她没问完。因为整个车厢的乘客，同时抬起头，看向车顶。所有人都听见了：头顶传来一声叹息，苍老，疲惫，像整个时代在喘气。”"]],
+   foot:"罗盘的指针断了，可它仍在跳动——断口处的铜丝，在微微发光。"},
+  {k:"end",next:3,suspense:"罗盘断针指向的，是莫斯科地底的某个坐标。而列车长在交班时，把一张泛黄的火车票塞进你手里——票面上印着两个日期：1917年3月8日，和1934年2月1日。",
+   pages:[
+    ["","列车在黎明时分驶入莫斯科。雪覆盖了红场，军政府的旗帜在风中猎猎作响。你握着断掉的罗盘，想起母亲说过的话：罗盘不会说谎，它只是不说人话。"],
+    ["","卡捷琳娜站在你身边，轻声说：“欢迎来到莫斯科。这里的冬天，比任何敌人都残酷——除了记忆。”"],
+    ["","远处，克里姆林宫的钟楼敲响了。钟声沉闷，像敲在一口空棺上。"]]},
+ ]},
+/* ---------- 第三卷 柏林之影 ---------- */
+{num:3, meta:{title:"柏林之影",month:"1934年1月",loc:"莫斯科—柏林",teaser:"通缉令上的那张脸，与你一模一样——只是老了二十年。",stamp:"残响·叁"},
+ steps:[
+  {k:"text",head:"第三卷 · 柏林之影",date:"1934年1月 · 莫斯科",
+   pages:[
+    ["","莫斯科的白军档案局里，你终于找到了父亲的卷宗。照片上的汉伯二世戴着圆框眼镜，微笑温和。档案末尾有一行红字批注：『该员于1927年接受管理局任务，赴西伯利亚铁路执行时间锚点勘察，后因故失踪。档案封存。』"],
+    ["卡捷琳娜","“时间锚点……果然是管理局。他们一直在找‘世界最初的钟声’。你父亲不是失踪——他是被管理局‘买’走的。”"],
+    ["","你顺着档案的线索追查，发现父亲最后发回的电报，来自柏林——国会大厦地下的档案库。而你刚到柏林车站，就看见了月台上的通缉令。照片上的人叫『汉伯·冯·艾登』，帝国叛徒，赏金十万马克。那张脸，与你一模一样——只是老了二十年。"],
+    ["","你低头压低帽檐。照片上的人，是你父亲的哥哥？还是……另一个时间线上的你？"]],
+   foot:"柏林档案馆的门口，黑大衣的特工正在盘查每一个进出的身影。"},
+  {k:"obj",note:"潜入柏林档案馆（东区侧门）",city:"berlin"},
+  {k:"talk",npc:"gret",scene:["格蕾特","“先生？档案局九点开门——等等，你看上去……像一个人。那位冯·艾登先生，上个月来过，查阅了同一份卷宗：西伯利亚铁路阿兰斯站。他说那是他弟弟的旧档。可档案上的弟弟，1927年就死了。死人怎么会写信？”"],
+   note:"与档案局文员交谈"},
+  {k:"battle",enemies:[{id:"patrol",name:"帝国巡逻队",hp:34,atk:11,def:3,spd:9,exp:20,money:[12,26],n:2,storyWin:true}],note:"突破档案馆守卫"},
+  {k:"text",head:"第三卷 · 柏林之影",date:"档案馆地下三层",
+   pages:[
+    ["","你撬开铁柜，找到了标记『时间锚点-E11』的卷宗。里面只有一张纸，纸上是一幅手绘的地图，画着七只罗盘的分布，和一条贯穿欧亚的虚线——虚线终点，在莫斯科，标着『原初节点』。"],
+    ["","纸的背面，是父亲的字迹：“如果世界是一本书，那么我们所在的这一页，被人撕掉重写了。七只罗盘是书签，标记着被改写的地方。找到所有书签，才能翻开真正的那一页。”"],
+    ["","你正要离开，档案室的门开了。走进来的人穿着黑大衣，袖口绣着一枚黄铜徽记。他看见你，先是一愣，然后缓缓笑了：“汉伯先生。或者说——冯·艾登先生的……侄子？有趣。你们家族，总是往不该去的地方钻。”"]],
+   foot:"“我是克劳斯，管理局驻柏林办事处处长。你父亲曾是我最好的特工。直到他决定——‘看书’。”"},
+  {k:"choice",text:"克劳斯没有拔枪，只是背着手，像在打量一件旧家具：“把罗盘交出来，我放你离开柏林。你的通缉令，我也可以撤销。怎么样？这是帝国最慷慨的价码了。”",
+   options:[
+    {t:"虚与委蛇，交出假罗盘，趁机脱身",to:6,set:{klaus:"deceive"}},
+    {t:"拒绝，直面管理局的威压",to:7,set:{klaus:"defy"}}
+   ]},
+  {k:"text",head:"第三卷 · 柏林之影",date:"档案馆地下三层",
+   pages:[
+    ["","你从怀里摸出一只‘罗盘’——其实是旅馆房间里顺手拿的铜质烟灰缸。克劳斯接过去，掂了掂，笑容不变：“有意思。你父亲当年，也是用这一招骗过我的。”"],
+    ["","就在他低头验货的瞬间，你掀翻档案柜，灰尘与纸张炸开。你冲出档案室，身后传来克劳斯平静的声音：“年轻人。你以为你在逃，其实你在赴约。”"],
+    ["","你跑出档案馆，寒风扑面。通缉令在路灯下飘动，照片上那双与你一模一样的眼睛，正注视着你。"]],
+   foot:"柏林一夜之间戒严。所有的出城列车，都在接受检查。"},
+  {k:"text",head:"第三卷 · 柏林之影",date:"档案馆地下三层",
+   pages:[
+    ["","“我父亲为你们工作到失踪。现在，轮到我来问问题。”你上前一步，“时间锚点是什么？我父亲在哪里？”"],
+    ["","克劳斯沉默片刻。“……你父亲是自愿留下的。锚点需要有人看守，否则时间线会崩成碎片。他选了莫斯科那一个，因为那里最靠近‘原初’。”他侧身让开路，“走吧。帝国杀不掉你——因为杀死你，会让某条时间线发出回声。管理局承受不起第二次残响。”"],
+    ["","你走出档案馆。身后，克劳斯的声音追上来：“替我告诉你父亲——他欠帝国一个结局。”"]],
+   foot:"柏林戒严的消息传来，你必须在城门关闭前离开。"},
+  {k:"obj",note:"从柏林车站搭乘列车离开（回莫斯科方向）",city:"warsaw"},
+  {k:"end",next:4,suspense:"你在列车餐车上捡到一张当天的报纸。头版是帝国总理的演讲，配图是国会大厦。而大厦顶层的窗户里，你看见一个人影——戴着圆框眼镜，正在目送你的列车远去。",
+   pages:[
+    ["","列车驶离柏林。你展开那张卷宗上的地图，七只罗盘分布在：上海、莫斯科、君士坦丁堡、开罗、德里、伦敦、柏林。你握着一只——还差六只。"],
+    ["","卡捷琳娜看着窗外越来越远的国会大厦：“他还在那里。你父亲——他还在看着你。”"],
+    ["","你闭上眼睛。列车向北，向着莫斯科，向着那个标着『原初节点』的红点，驶去。"]]},
+ ]},
+/* ---------- 第四卷 黄铜罗盘 ---------- */
+{num:4, meta:{title:"黄铜罗盘",month:"1934年2月",loc:"莫斯科",teaser:"罗盘的指针，指向的不是北方——是你自己。",stamp:"残响·肆"},
+ steps:[
+  {k:"text",head:"第四卷 · 黄铜罗盘",date:"1934年2月 · 莫斯科",
+   pages:[
+    ["","回到莫斯科，你在旧货市场的角落里找到了父亲买走半张铁路图的那家铺子。老板是个瞎了一只眼的鞑靼老人，他认出了你手里的断罗盘：“七年前，一个德国人拿这罗盘来修。他说，罗盘坏了，因为时间坏了。”"],
+    ["","老人把罗盘还给你。断掉的指针已经被重新接好，铜丝在断口处拧成一枚小小的、发光的结。“它现在能用了。但记住——它指的不是方向。它指的，是‘偏离’。”"],
+    ["","你握着修好的罗盘走出铺子。指针转动，最终稳稳停住——指向你自己。你转动手腕，指针跟着你的胸口转动。卡捷琳娜皱眉：“它指着你。为什么会指着你？”"],
+    ["","你没有回答。因为你的胸口，那封‘未来的信’的位置，正在发烫。"]],
+   foot:"你想起母亲说过：罗盘不会说谎。它指着你，说明——你就是偏离本身。"},
+  {k:"obj",note:"前往莫斯科大教堂地下的封印室",city:"moscow"},
+  {k:"talk",npc:"priest",scene:["谢尔盖神父","“孩子，你身上带着钟声的味道。教堂地底有一条被封死的甬道，通向‘原初’。我守了三十年，只让一个人进去过——一个德国工程师，七年前。他说他要去‘看着钟’。他再也没出来。可他每个月，都会通过地缝递出一张纸条。你看，这是上个月的。”纸条上只有一行字：“钟还走着。它快停了。”"],
+   note:"与神父交谈，取得父亲的消息"},
+  {k:"text",head:"第四卷 · 黄铜罗盘",date:"教堂地底 · 时间锚点",
+   pages:[
+    ["","甬道尽头，是一扇黄铜大门。门上刻着密密麻麻的刻度，像一口被横放的钟。你推开门的瞬间，灰尘与光同时涌出。"],
+    ["","门后是一个圆厅。圆厅中央，一口巨大的铜钟悬浮在虚空中，钟面没有指针——只有一圈刻度，从1914到1918。钟摆每一次晃动，圆厅的墙壁就透明一分，露出后面的景象：那是另一个世界。你的世界——那个同盟国战败、凡尔赛条约、你父母相爱的世界。"],
+    ["","钟下坐着一个人。他背对着你，穿着铁路工程师的制服，头发花白。他没有回头：“你来了。比我预计的，早了三年。”"]],
+   foot:"他缓缓转过椅子。圆框眼镜，温和的皱纹。七年前在西伯利亚失踪的汉伯二世，就坐在你面前。"},
+  {k:"talk",npc:"gen",scene:["尤德尼奇将军","“你父亲？哦，那位工程师先生。他每年冬天来我的司令部，借阅铁路地图。他说他在找一个‘不存在的车站’。临走前他把这张图留给我——说是如果有个年轻人来找他，就把图给他。”将军递给你一张泛黄的铁路图，上面标注着一个红圈：阿兰斯。旁边写着一行小字：“罗盘指北者，人；罗盘指己者，钟。”"],
+   note:"与将军交谈"},
+  {k:"text",head:"第四卷 · 黄铜罗盘",date:"教堂地底 · 时间锚点",
+   pages:[
+    ["","父亲摘下眼镜，揉了揉眼睛。他比你记忆中的更老——老得不正常，仿佛七年里，他过了七十年。“这里是时间锚点。钟每摆动一次，世界就被‘校准’一次。我在这里看守了七年，亲眼看着这个被写错的世界，一天比一天更……错。”"],
+    ["","“你母亲知道锚点的存在。我走后，她把罗盘给了你——因为罗盘会指向‘偏离者’。汉伯，你听我说：这个世界的你，本不该存在。你本该出生在另一个世界——那个世界，同盟国战败了，凡尔赛条约签署了，你母亲和我在上海相遇、相爱、生下了你。而现在这个世界，是被人重写的。”"],
+    ["","他站起来，钟摆在他身后晃动：“我守在这里，不是守护这个世界。我是守护‘钟’——等一个能决定它命运的人来。那个人，是你。”"]],
+   foot:"你终于明白那封信的含义：你不是这个世界的人。你是另一个世界的回声——一个本不该存在的‘残响’。"},
+  {k:"choice",text:"父亲递给你一只旧的怀表，表盖内侧刻着母亲的名字：“莫斯科不是终点。罗盘指向你自己，是因为你身上带着‘原初’的碎片——你出生那天的钟声。下一站，去君士坦丁堡。那里有第二只罗盘，和一位守钟人。”",
+   options:[
+    {t:"接受父亲的指引，前往君士坦丁堡",to:7,set:{path:"east"}},
+    {t:"追问父亲的真实身份（他为什么会在管理局的档案里）",to:8,set:{path:"truth"}}
+   ]},
+  {k:"text",head:"第四卷 · 黄铜罗盘",date:"教堂地底 · 时间锚点",
+   pages:[
+    ["","“君士坦丁堡？好。”你把罗盘收进怀里。父亲笑了笑：“你和你母亲一样，决定了就不回头。”"],
+    ["","他交给你一张旧车票：“坐黑海的船，比走陆地快。奥斯曼帝国——苏丹快不行了。帝国一垮，第二只罗盘就会被埋在废墟下。快去。”"],
+    ["","你转身离开圆厅。身后，钟摆晃动，世界在你背后轻轻‘咯吱’了一声，像一扇门被推开了一条缝。"]],
+   foot:"走出教堂，莫斯科开始下雪。你的下一站，是黑海彼岸的君士坦丁堡。"},
+  {k:"text",head:"第四卷 · 黄铜罗盘",date:"教堂地底 · 时间锚点",
+   pages:[
+    ["","“管理局的档案里，你是他们的特工。”你直视他，“你到底是看守者，还是帮凶？”"],
+    ["","父亲沉默了很久。钟摆声在圆厅里回荡。“……都当过。”他苦笑，“我年轻时相信帝国的秩序，为管理局勘察锚点。直到我发现，他们在‘校对’这个世界——把不该存在的记忆，一条条删掉。包括你的母亲，包括你。”"],
+    ["","“我叛逃了。他们追到西伯利亚，我躲进阿兰斯——然后我发现，那口钟，也需要有人看着。我欠这个世界的，比欠帝国的多。”他抬眼看你，“去吧，去君士坦丁堡。别再像我一样，半辈子都在还债。”"]],
+   foot:"离开时，你回头看了一眼。父亲重新坐回钟下，背影佝偻，像一枚钉在时间里的钉子。"},
+  {k:"obj",note:"离开莫斯科，南下前往君士坦丁堡（乘火车至敖德萨，转船）",city:"odessa"},
+  {k:"end",next:5,suspense:"黑海的夜航船上，你在甲板上展开罗盘。指针在君士坦丁堡的方向剧烈颤动——而你的倒影里，那个‘另一个你’再次出现。这一次，他开口说话了。",
+   pages:[
+    ["","夜航船切开黑海的墨色。卡捷琳娜在船舱里擦拭马刀，艾琳在给伤员换药。你一个人站在船头，风把大衣吹得猎猎作响。"],
+    ["","你低头看罗盘。指针疯狂颤动，像一只受惊的鸟。海面倒映着月亮——也倒映着一个人影，站在你身后。你猛地回头。没有人。"],
+    ["","可海面的倒影里，那个人没有动。他隔着水面看着你，嘴唇翕动。你读懂了他的口型：“别去。那里是陷阱。”"],
+    ["","船笛长鸣。君士坦丁堡的灯火，出现在天际线。"]]},
+ ]},
+/* ---------- 第五卷 奥斯曼的钟 ---------- */
+{num:5, meta:{title:"奥斯曼的钟",month:"1934年3月",loc:"君士坦丁堡",teaser:"圣索菲亚的地底，有一座不会走的钟。",stamp:"残响·伍"},
+ steps:[
+  {k:"text",head:"第五卷 · 奥斯曼的钟",date:"1934年3月 · 君士坦丁堡",
+   pages:[
+    ["","君士坦丁堡笼罩在帝国最后的黄昏里。苏丹病危的消息像野火一样传遍大街小巷，咖啡馆里人人都在谈论帝国的遗产分配。而你握着罗盘，站在圣索菲亚大教堂前——指针直直地指向地底。"],
+    ["","守夜人哈菲兹认出了你的罗盘：“七年了，又来一只。”他带你穿过回廊，掀开一块地毯，露出一道通往地底的石阶。“下面是拜占庭人的蓄水池，再往下——是‘钟室’。帝国历代苏丹都知道它的存在，没人敢碰。那口钟，不走。”"]],
+   foot:"石阶向下延伸，水声与霉味一同涌来。你的脚步声在空旷的地下空间里，激起漫长的回声。"},
+  {k:"obj",note:"进入圣索菲亚地下的钟室",city:"istanbul"},
+  {k:"talk",npc:"osman",scene:["奥斯曼·埃芬迪","“年轻人，别急着下去。”一个拄着木拐的老兵拦住了你，“我叫奥斯曼，退役炮兵。这座地底我守了二十年——不是帝国让我守的，是我自己。因为我知道，那口钟下面，埋着帝国真正的秘密：帝国之所以能赢得那场战争，是因为有人在钟上动了手脚。”他顿了顿，“带我一程。我也想知道，这二十年的谎言，到底是谁写的。”"],
+   note:"与守钟的老兵交谈"},
+  {k:"text",head:"第五卷 · 奥斯曼的钟",date:"钟室",
+   pages:[
+    ["","钟室比想象中大得多。穹顶高达十丈，四壁刻满了奥斯曼、拜占庭与拉丁文的铭文。中央的铜钟有三人高，表面布满锈迹，却一尘不染——像是被人擦拭了千年。"],
+    ["","钟面没有指针。只有一个刻度盘，从1914到1918。你掏出罗盘，断针剧烈旋转，最终停在1917。"],
+    ["奥斯曼","“1917……那一年，帝国从巴勒斯坦撤军，英军眼看要打进大马士革。然后——一夜之间，战场倒转。英国人消失了，我们的士兵记得‘打过仗’，却不记得怎么赢的。原来，是钟被拨过。”"],
+    ["","你伸手抚摸钟面。钟身冰凉，却在你掌心下微微震颤，像一只沉睡的巨兽，被惊动了。"]],
+   foot:"你在钟座底部发现一行新刻的字——字迹与你父亲的如出一辙：“不要相信记忆。记忆是最容易被重写的东西。”"},
+  {k:"battle",enemies:[{id:"cultist",name:"记忆教团卫兵",hp:44,atk:13,def:3,spd:11,exp:32,money:[12,26],n:2,storyWin:true}],note:"击退记忆教团的守卫"},
+  {k:"text",head:"第五卷 · 奥斯曼的钟",date:"钟室 · 变故",
+   pages:[
+    ["","教团卫兵倒下的瞬间，钟室深处亮起烛火。一个披着灰袍的身影从阴影里走出，他的兜帽下是一张看不出年龄的脸——或者说，是一张会变化的脸，像水面上的倒影，不断被风吹皱。"],
+    ["灰袍人","“欢迎，第四位守钟人的孩子。”他的声音苍老而年轻，像两把琴同时奏响，“我是记忆教团的大祭司。我们收集残响，因为残响是‘真历史’的碎片。这个被写错的世界，建立在无数人的遗忘之上——而我们，负责唤醒他们。”"],
+    ["","“你父亲看守锚点，以为能维持平衡。但平衡正在崩坏。钟快停了。当钟彻底停摆，这个世界……会像一页被撕掉的书，永远消失。而另一个世界——真正的那一页——会重新翻开。”他伸出手，“加入我们。让世界回到它本来的样子。”"]],
+   foot:"大祭司的兜帽下，那双眼睛看着你，像看着一件早已写好的结局。"},
+  {k:"choice",text:"大祭司说，你身上的‘原初碎片’，是唤醒钟的最后一把钥匙。“你母亲用残响之力重写了你——你是这个世界唯一的‘活书签’。牺牲你，就能翻回正确的那一页。当然，你也可以拒绝。但钟停之后，所有人都将不复存在——包括你爱的人。”",
+   options:[
+    {t:"拒绝：没有人有权替世界做选择",to:8,set:{cult:"refuse"}},
+    {t:"追问：你们想牺牲多少人？",to:9,set:{cult:"ask"}}
+   ]},
+  {k:"text",head:"第五卷 · 奥斯曼的钟",date:"钟室",
+   pages:[
+    ["","“世界不该由牺牲来纠正。”你后退一步，把罗盘收进怀里，“如果正确的那一页，需要踩着我母亲、我父亲、还有这世界上几十亿人的尸骨翻开——那它就不是正确，只是另一种错误。”"],
+    ["","大祭司沉默。烛火在他兜帽下摇曳。“……你和他，说了一样的话。”他说，“你父亲拒绝我的时候，也是这么说的。然后他选择了第三种办法：让钟继续走。既不让世界崩坏，也不让世界重写——让一切，停在错误里。”"],
+    ["","“可钟快停了，年轻人。错误，终归会自己结束。”他转身，融入阴影，“我们还会再见。在钟停的那一天。”"]],
+   foot:"灰袍人消失后，钟室的烛火同时熄灭。黑暗中，只有你的罗盘在发光。"},
+  {k:"text",head:"第五卷 · 奥斯曼的钟",date:"钟室",
+   pages:[
+    ["","“牺牲多少人？”你问，“这个世界有多少人？你们要让他们全部消失，就为了一个‘正确’的结局？”"],
+    ["","大祭司没有立刻回答。“……你问到了问题的核心。”他说，“所以教团内部也有分歧。有人认为该唤醒钟，让世界重写；有人认为该维持现状，哪怕它是错的——因为活着的人，有权活着。”"],
+    ["","“这就是我找你的原因。你的身体里，同时流着两个世界的血。你是唯一能同时理解两边的人。”他递给你一枚铜片，上面刻着一只眼睛，“这是教团的信物。当你想好了，用它来找我。我赌你会选择——第三条路。”"]],
+   foot:"你接过铜片。它冰凉，像一枚小小的、等待被敲响的钟。"},
+  {k:"obj",note:"带着疑问离开君士坦丁堡，前往开罗",city:"cairo"},
+  {k:"end",next:6,suspense:"夜航的渡轮上，你打开那封‘未来的信’。信上的字迹又变了——这一次，它写满了整页，用的是你自己的笔迹。",
+   pages:[
+    ["","“第三只罗盘在开罗，苏丹的旧国库里。但那里已经没有钟了——钟在1917年被搬走，运往阿拉拉特山。你父亲说钟在莫斯科，是骗你的。他骗了所有人，包括管理局。”"],
+    ["","信的落款，是你的名字。日期：1934年10月。"],
+    ["","船身摇晃。你握着那页信，指尖发凉。写信的人，是七个月后的你。他为什么要告诉过去的自己，父亲在说谎？"],
+    ["","沙漠的风从南方吹来，带着黄沙与骆驼的气息。开罗的灯火，出现在尼罗河的天际线上。"]]},
+ ]},
+/* ---------- 第六卷 沙漠信使 ---------- */
+{num:6, meta:{title:"沙漠信使",month:"1934年4月",loc:"开罗—大马士革",teaser:"沙漠深处，1916年的英军仍在行军。",stamp:"残响·陆"},
+ steps:[
+  {k:"text",head:"第六卷 · 沙漠信使",date:"1934年4月 · 开罗",
+   pages:[
+    ["","开罗的旧国库里，第三只罗盘静静躺在木匣中——苏丹的管家说，这是‘胜利者的贡品’，1918年从凡尔赛运来的。你打开木匣的瞬间，整座国库的钟表同时停了。三秒后，又同时走动，分毫不差。"],
+    ["","第三只罗盘的指针，指向东南——阿拉伯半岛的深处，阿拉拉特山的方向。与信上写的一致。"],
+    ["","你正准备启程，一位蒙着面纱的贝都因女子拦住了你：“你带着钟的味道。长老要见你——他见过你的父亲。七年前，你父亲横穿沙漠，带着一口‘会走路的钟’。他把它藏在了阿拉拉特山的雪线以上。”"]],
+   foot:"法蒂玛递给你一囊水：“沙漠的规矩：先喝水，再听故事。”"},
+  {k:"talk",npc:"fatima",scene:["法蒂玛","“我叫法蒂玛，贝都因向导。长老说，你父亲当年雇我们部落带路，报酬是一箱银币和一台能收听到‘另一个世界’的收音机。收音机坏了之后，长老就一直说：你父亲还会回来。他说对了。”"],
+   note:"与法蒂玛交谈，获得向导"},
+  {k:"obj",note:"跟随商队穿越沙漠，前往大马士革",city:"damascus"},
+  {k:"text",head:"第六卷 · 沙漠信使",date:"沙漠 · 第七日",
+   pages:[
+    ["","商队在第七日的黄昏，遇上了‘幽灵’。先是地平线上浮起海市蜃楼——然后是整齐的脚步声，由远及近。一支1916年军装的英国军队，从沙丘后面列队走来。他们的军装完好，刺刀反着光，可他们的影子，全都朝着一个方向——朝着他们行进方向的反方向。"],
+    ["法蒂玛","“别出声。这是残响军团。他们不是鬼魂——他们是‘被删掉的记忆’。”她压低声音，“这支军队本该在1916年的加沙战死。可战争被改写了，他们就没死成。于是他们永远在这片沙漠里行军，找不到战场，也找不到坟墓。”"],
+    ["","队伍从你们身旁走过。你看见士兵们的脸上没有表情，只有一种茫然的、等待的神色。队伍最后，一个下士抬起头，看了你一眼。他的嘴唇动了动，没有声音。可你读懂了：他在说——‘钟’。"]],
+   foot:"残响军团消失在沙丘后面，像一阵被风抹平的水渍。"},
+  {k:"battle",enemies:[{id:"ghost_soldier",name:"残响英军",hp:46,atk:14,def:3,spd:10,exp:40,money:[0,0],n:2,storyWin:true}],note:"击退拦路的残响英军"},
+  {k:"battle",enemies:[{id:"ghost_soldier",name:"残响英军",hp:46,atk:14,def:3,spd:10,exp:40,money:[0,0],n:2,storyWin:true}],note:"击退拦路的残响英军"},
+  {k:"text",head:"第六卷 · 沙漠信使",date:"大马士革 · 长老的帐篷",
+   pages:[
+    ["","大马士革城外的贝都因营地，长老的帐篷里点着酥油灯。长老已经很老了，老得像一块风化的石头。他看见你的罗盘，浑浊的眼睛亮了一瞬：“你父亲的罗盘。他把它留在了沙漠里，用一块银币和一根骆驼骨，换走了我的部落最年轻的两个骑手。”"],
+    ["长老","“他要去阿拉拉特山。他说，山上有一口钟，钟里住着‘世界的锚’。他要在钟停之前，把锚修好。”长老咳嗽起来，“他走了三个月，回来时，只剩下半条命。他说，钟修好了，但他把自己锁在了里面。”"],
+    ["","你看着长老。他的眼神不像在说谎。可那封信说，父亲骗了所有人。到底谁在说谎？"]],
+   foot:"长老递给你一卷羊皮：“他留下的。说等一个拿罗盘的年轻人来，就交给他。”羊皮上画着阿拉拉特山的地形，山顶标着一个红叉——『锚点·圣所』。"},
+  {k:"choice",text:"法蒂玛望着你：“你父亲说，如果他没能回来，就让拿到羊皮的人替他完成最后一件事——把钟拨回正确的刻度。可我问你：哪个刻度，是正确的？”",
+   options:[
+    {t:"相信父亲：去阿拉拉特山修钟",to:8,set:{truth:"father"}},
+    {t:"相信那封信：父亲在说谎，真相在别处",to:9,set:{truth:"letter"}}
+   ]},
+  {k:"text",head:"第六卷 · 沙漠信使",date:"营地之夜",
+   pages:[
+    ["","“我父亲修了一辈子钟。如果他选择把自己锁在山里，那一定是因为——钟不能停。”你收起羊皮，“我要去阿拉拉特山。如果那封信是错的，至少我还能救出他。”"],
+    ["","法蒂玛沉默了一会儿，然后笑了：“长老说你会这么说。他让我告诉你：阿拉拉特山不是沙漠的尽头，是沙漠开始的地方。带上三天的水，还有——一匹好骆驼。”"]],
+   foot:"夜风里传来驼铃。队伍朝着东北方向，向着高加索的群山，出发了。"},
+  {k:"text",head:"第六卷 · 沙漠信使",date:"营地之夜",
+   pages:[
+    ["","你摊开那封信。七个月后的你亲笔写的信，说你父亲在说谎。可长老说，你父亲把锚修好了。如果写信的你是对的，那长老、父亲、还有整个贝都因部落的记忆，都被改写过——被谁？被管理局？还是被……未来的你？"],
+    ["","“我不确定谁在说谎。”你对法蒂玛说，“所以我都要查。先去阿拉拉特山，看看那口钟到底是好是坏。如果钟是好的，那封信就是假的——我就去查写信的人。”"],
+    ["","法蒂玛点头：“聪明的做法。不选边，先看证据。长老果然没看错人。”"]],
+   foot:"队伍朝着东北方向，向着高加索的群山出发。罗盘在夜色里微微发光。"},
+  {k:"end",next:7,suspense:"抵达阿拉拉特山脚的前夜，你听见山里传来钟声。钟声只响了一下——然后，你口袋里的三只罗盘，同时指向天空。",
+   pages:[
+    ["","山影在月光下像一头蹲伏的巨兽。雪线以上的峰顶，隐约有一点灯火，像一颗不肯熄灭的星。"],
+    ["","法蒂玛勒住骆驼：“那就是你父亲的地方。贝都因人叫它‘钟巢’——鸟筑巢是为了生蛋，他筑巢，是为了守钟。”"],
+    ["","你抬头望着那点灯火。钟声，又响了一下。这一次更近，像是在回应你的到来。"],
+    ["","山风呼啸。你握紧三只罗盘，开始登山。"]]},
+ ]},
+/* ---------- 第七卷 阿拉拉特 ---------- */
+{num:7, meta:{title:"阿拉拉特",month:"1934年5月",loc:"阿拉拉特山",teaser:"父亲的日记最后一页写着：对不起，我选了另一边。",stamp:"残响·柒"},
+ steps:[
+  {k:"text",head:"第七卷 · 阿拉拉特",date:"1934年5月 · 雪线",
+   pages:[
+    ["","登山第五天，暴风雪来临。你们在岩石后支起帐篷，风力大到能把骆驼吹下悬崖。卡捷琳娜的刀鞘冻在皮带上，奥斯曼的假腿在雪里咯咯作响。只有法蒂玛像一片贴在山壁上的叶子，安静地辨认着风的方向。"],
+    ["","雪停之后，你们在冰缝里发现了第一块人类活动的痕迹：一截铁轨。它嵌在冻土里，锈迹斑斑，枕木上刻着编号——『E-11 · 阿兰斯』。西伯利亚铁路的铁轨，怎么会出现在阿拉拉特山上？"],
+    ["","你沿着铁轨向上走。风雪之外，山峰的阴影里，出现了一座建筑：一半是拜占庭式教堂，一半是蒸汽时代的钢铁车间。屋顶的烟囱里，冒着白色的蒸汽。"]],
+   foot:"这就是父亲筑的‘钟巢’。它像一座倒扣在山顶的钟。"},
+  {k:"obj",note:"进入钟巢",city:"yerevan"},
+  {k:"text",head:"第七卷 · 阿拉拉特",date:"钟巢内部",
+   pages:[
+    ["","钟巢内部比外表更大——像是有人把一座圣殿和一座工厂焊在了一起。巨大的齿轮墙缓缓转动，每转动一圈，墙上就有一幅壁画亮起：凡尔赛宫的签字仪式、索姆河的弹坑、沙皇退位的月台……你认出来了——这些不是‘这个世界的记忆’，是‘另一个世界’的。"],
+    ["","墙角的书桌上，摊着一本日记。父亲的笔迹，日期：1934年5月。最后一页只写了一行字：『对不起，我选了另一边。』"],
+    ["","你翻开日记。前面几页写满了编号：E-01 上海，E-02 莫斯科，E-03 君士坦丁堡……每一页都画着一只罗盘的位置。只有最后一页，画着一支笔。旁边标注：『原初节点 · 1918.11.11 · 柏林国会大厦地库 · 守笔人：汉伯二世』。"]],
+   foot:"你盯着那行字。守笔人：汉伯二世。你父亲同时守着钟，和笔？"},
+  {k:"talk",npc:"aleksei",scene:["阿列克谢","“你们是来找那位工程师的吧？我是铁路机械师，七年前被他雇来修这条山里的铁路。他付钱爽快，就是不让问问题。我只知道：每隔三个月，会有一列没有编号的火车上山，卸下一批铜件，再拉走一批‘时钟’。”他顿了顿，压低声音，“上个月，火车来的时候，车厢里坐着穿黑大衣的人。工程师看见他们，脸色变了。他说了句话，我一直记着——他说：‘他们还是找到了。’”"],
+   note:"与机械师交谈"},
+  {k:"battle",enemies:[{id:"assassin",name:"管理局特工",hp:50,atk:15,def:4,spd:13,exp:38,money:[15,35],n:2,storyWin:true}],note:"击退突袭钟巢的管理局特工"},
+  {k:"text",head:"第七卷 · 阿拉拉特",date:"钟巢 · 钟室",
+   pages:[
+    ["","击退特工后，你顺着齿轮墙的阶梯下到最底层。这里没有钟——只有一支笔，悬浮在玻璃柜里。黑色的钢笔，笔尖刻着『1918.11.11』。你父亲站在玻璃柜前，背对着你，手里握着一只黄铜钥匙。"],
+    ["","“你来得正好。”他没有回头，“这支笔，就是‘原初节点’。1918年11月11日，凡尔赛，停战条约——签下它的人，决定了世界的样子。有人重写了那一天，于是世界变成了现在这样。而重写一支笔的代价，是让整条时间线都在流血。”"],
+    ["","“我用七年时间，把钟修好了——但钟只是‘稳定器’。要让世界真正痊愈，只有两个选择：让钟永远走下去，世界继续活在这个错误里；或者，拿起这支笔，签下‘正确的停战’，让世界重写——然后，你、我、你母亲，所有活在这条时间线上的人，都会像墨水一样，被抹去。”"]],
+   foot:"他转过身来。你看见他的眼睛——那里面有疲惫，有愧疚，还有一种近乎释然的平静。“所以我选了第三条路。我把钟和自己锁在这里。只要我活着，钟就不会停，这个世界就不会崩。可我快撑不住了，汉伯。钟，快停了。”"},
+  {k:"choice",text:"父亲把黄铜钥匙递给你：“这是钟的钥匙。我死后，你可以选择：拧紧发条，让这个世界继续——它错，但它活着。或者松开发条，让世界重写——它‘对’，但我们都将消失。或者……拿走这支笔，找到‘真正的原初节点’，做第三个选择。我不知道第三个选择存不存在，但你母亲说，你会找到的。”",
+   options:[
+    {t:"接过钥匙，承诺守住钟（暂缓选择）",to:7,set:{key:"take"}},
+    {t:"拒绝钥匙：你不该由父亲决定命运",to:8,set:{key:"refuse"}}
+   ]},
+  {k:"text",head:"第七卷 · 阿拉拉特",date:"钟室",
+   pages:[
+    ["","你接过钥匙。钥匙在掌心冰凉，刻着一圈细密的刻度，像一口微缩的钟。“我会守住它。”你说，“但我不签任何字，不松任何发条。我要先弄清全部真相——谁重写了1918年，为什么重写，重写的人，现在在哪里。”"],
+    ["","父亲笑了。那笑容里有你记忆中的温和：“你母亲也会这么说。她总说，药要三副才见效，急不得。去吧。你母亲知道的一切，比我多。回上海，问她。”"],
+    ["","“她……”你犹豫了一下，“她病得很重。”"],
+    ["","父亲的笑容凝固了一瞬。他缓缓点头，声音很轻：“我知道。她是在用最后一点力气，撑着等你回去。”"]],
+   foot:"下山的路比上山更难。暴风雪又起了，可你的心，比风雪更冷。"},
+  {k:"text",head:"第七卷 · 阿拉拉特",date:"钟室",
+   pages:[
+    ["","“我拒绝。”你把钥匙推回去，“父亲，你把我的一生都安排好了——先让我收到信，再让我找到罗盘，现在又让我接你的钟。可你问过我，想不想活在这个世界吗？”"],
+    ["","父亲沉默了。钟室的齿轮声像一首沉重的摇篮曲。很久，他才开口：“……没有。你出生那年，我做了一个决定，替你选了这个世界。你母亲为此恨了我很多年。她说，孩子该自己选。”"],
+    ["","他收回钥匙，放进怀里：“那我不替你选了。但记住——钟停的那天，世界不会等你慢慢选。”他顿了顿，声音软下来，“……回家去吧。你母亲，在等你。”"]],
+   foot:"你转身离开钟巢。风雪里，你听见身后的门，缓缓关上。齿轮转动的声音，像一声很轻的叹息。"},
+  {k:"end",next:8,suspense:"回程的火车上，你打开那封‘未来的信’。信的末尾，字迹再次变化——这一次，它变成了你母亲的笔迹：“汉伯，如果我走了，就去老宅地窖，打开那只樟木箱。里面没有药方。有你出生那天的全部真相。”",
+   pages:[
+    ["","火车穿过高加索，穿过黑海，穿过整片欧亚大陆，向东方驶去。你在三等车厢里，一遍一遍摩挲着黄铜钥匙的刻度。"],
+    ["","窗外，雪原在暮色里燃烧成金色。你想起母亲的脸，想起她总是说：“汉伯，你的名字是外公起的。他说，你出生那天，全城的钟都停了。”"],
+    ["","全城的钟都停了。你终于知道，那不是一句玩笑。"],
+    ["","列车在黎明抵达上海。苏州河的雾气里，海关大钟指着七点——可你记得，你离开时，它慢了十七分钟。现在，它准了。"]]},
+ ]},
+/* ---------- 第八卷 归途 ---------- */
+{num:8, meta:{title:"归途",month:"1934年6月",loc:"上海",teaser:"你出生那天，全城的钟都停了。",stamp:"残响·捌"},
+ steps:[
+  {k:"text",head:"第八卷 · 归途",date:"1934年6月 · 上海",
+   pages:[
+    ["","你回到上海。面馆的招牌还在，梅婶在后厨熬药，药味顺着街角飘出来，熟悉得让人眼眶发酸。你推开后屋的门，母亲靠在窗边，手里握着一只旧怀表，表盖内侧刻着她的名字。她看见你，笑了：“回来啦。瘦了。”"],
+    ["","她比离开时更虚弱，可精神出奇地好——像一盏即将燃尽的灯，最后用力地亮了一下。“你见到你父亲了。”她说，不是疑问句，“他是不是让你选？别理他。他啊，一辈子都在替别人做决定，就这一次——把决定权还给你了，还算他做了件对事。”"],
+    ["","她把手里的怀表放进你手心：“你出生那年的东西。打开看看。”你打开表盖。表盘上没有指针——只有一根，停在『11』的位置。表的背面刻着一行小字：『1916.11.11 · 晨』。"]],
+   foot:"“1916年11月11日，”母亲说，“你出生那天。全上海的钟，都停了。”"},
+  {k:"text",head:"第八卷 · 归途",date:"上海 · 老宅地窖",
+   pages:[
+    ["","母亲让你打开老宅地窖的樟木箱。箱底，是厚厚一沓病历与笔记，还有一本用油布包着的、边角发黄的日记。日记第一页，是母亲的笔迹：『民国五年，冬。我接生了一个死婴。』"],
+    ["","你握着那本日记，指节发白。母亲的声音从背后传来，平静得像在讲别人的故事：“你生下来就没有呼吸。我守了你一整夜，天快亮的时候——全城的钟停了。然后你哭了。哭声很响，不像个刚出生的孩子，倒像……一只被关了很多年的鸟，终于听见了门开的声音。”"],
+    ["","“我知道那不是医理。那是你父亲用黄铜罗盘换来的——他那时已经在为管理局做事了。他用‘时间锚点’的力量，把你的命，从另一条时间线上‘借’了过来。你活下来了。代价是：你成了这个世界的一部分——不是这个世界的人。”"]],
+   foot:"“汉伯，你不是残响的受害者。你，就是残响本身。”"},
+  {k:"choice",text:"母亲剧烈地咳嗽起来，她按住你的手：“听我说完。管理局这些年追捕‘残响’，不是怕世界崩坏——是怕有人发现真相：世界是被重写的，而重写者……还活着。1918年，重写停战的人，没有离开柏林。他把自己写进了历史里，成了历史的一部分。”",
+   options:[
+    {t:"追问：重写者是谁？",to:4,set:{ask:"who"}},
+    {t:"追问：父亲知道吗？他为什么不说？",to:5,set:{ask:"father"}}
+   ]},
+  {k:"text",head:"第八卷 · 归途",date:"上海 · 老宅",
+   pages:[
+    ["","“重写者是谁？”母亲望着窗外的苏州河，“我不知道他的名字。我只知道，你父亲为他工作了很多年，直到发现——那个人也在重写‘自己’。他每重写一次世界，就让自己变得更年轻、更强大、更不像人。”她顿了顿，“你父亲说，那个人现在住在柏林。国会大厦下面。他叫自己——‘钟匠’。”"],
+    ["","钟匠。你想起君士坦丁堡的守钟人说的话，想起教团大祭司提起的‘世界最初的钟声’。原来从始至终，只有一口钟。而敲钟的人，住在柏林。"]],
+   foot:"“去找他之前，”母亲说，“先回家睡一觉。你看起来，比我还累。”"},
+  {k:"text",head:"第八卷 · 归途",date:"上海 · 老宅",
+   pages:[
+    ["","“父亲知道重写者是谁吗？”你问，“他守了七年钟，为什么从不告诉我真相？”"],
+    ["","母亲沉默了一会儿。“他知道。他比谁都清楚。但他说，有些真相，说出来的那一刻，就会变成谎言。”她看着你，“你父亲不是不说。他是不敢说——因为他怕说出来，你就会恨他。”"],
+    ["","“恨他？为什么？”"],
+    ["","“因为1918年，重写停战的人，用的是你父亲的笔。那支刻着‘1918.11.11’的钢笔，是他年少时送给钟匠的礼物。他亲手把‘笔’递给了那个改写世界的人。”"]],
+   foot:"窗外，海关大钟敲响。钟声一下一下，像敲在你心上。"},
+  {k:"text",head:"第八卷 · 归途",date:"上海 · 深夜",
+   pages:[
+    ["","夜深了。母亲睡着后，你守在床边。月光从窗缝漏进来，落在她苍白的手背上。她忽然开口，没有睁眼：“汉伯。如果有一天，世界要重写……你替妈妈做一个决定。”"],
+    ["","“什么决定？”"],
+    ["","“如果重写之后，那个世界的我——你真正的母亲——还活着，就让她活着。她没受过这些苦。她该有完整的一生。”她睁开眼睛，目光清澈如水，“至于这个世界受苦的我……已经活够了。见过你长大，就够本了。”"],
+    ["","你握着她的手，说不出话。她笑了笑，像小时候哄你一样：“别哭。你可是全城的钟，都为他停过的人。”"]],
+   foot:"天快亮的时候，母亲的手，凉了。你守到太阳升起。苏州河的雾气散开，海关大钟指向七点——分秒不差。这是这座钟，第一次走得这么准。"},
+  {k:"end",next:9,suspense:"处理完母亲的后事，你在整理遗物时，发现怀表的夹层里藏着一张纸条，是母亲的笔迹，日期却是十年前：“钟匠不是一个人。他们是两个人。你父亲当年送出的那支笔，现在握在‘未来的你’手里。”",
+   pages:[
+    ["","你把纸条翻来覆去地看。母亲的笔迹，没有错。可日期是十年前——那时你才十四岁，父亲还在西伯利亚，谁都没有见过‘未来的你’。"],
+    ["","你想起在列车上、在海面上看见的那个‘另一个你’。他隔着水面，对你说：‘别去。那里是陷阱。’"],
+    ["","如果你听从的是未来的你，而未来的你……就是钟匠呢？"],
+    ["","你收起纸条，锁好老宅的门。上海在身后渐远。这一次，你的目的地是柏林——国会大厦的地底。那里有你的父亲，有你父亲的笔，还有一个自称‘钟匠’的人。"]]},
+ ]},
+/* ---------- 第九卷 两封信 ---------- */
+{num:9, meta:{title:"两封信",month:"1934年7月",loc:"上海—柏林",teaser:"教团首领摘下兜帽——那是一张你的脸。",stamp:"残响·玖"},
+ steps:[
+  {k:"text",head:"第九卷 · 两封信",date:"1934年7月 · 上海",
+   pages:[
+    ["","启程去柏林的前夜，两封邀请同时送到。一封是黑信封，封口压着管理局的黄铜徽记：『汉伯先生：帝国愿意以‘时间锚点’的全部档案，换取你的合作。柏林，档案馆，克劳斯。』另一封是灰信封，封口压着一枚眼睛纹章：『守钟人的孩子：钟停之日将近。教团愿意告诉你，你父亲与钟匠的全部往事。君士坦丁堡，钟室。』"],
+    ["","你把两封信摆在桌上。艾琳看了一眼：“他们都在赌你会选谁。”她顿了顿，“老李有话说。”"],
+    ["","老李从后厨转出来，难得没有叼烟：“小子，有件事我一直没告诉你。我以前，也是管理局的人。叛逃的。七年前你父亲失踪那会儿，就是我放的水。”他吐出一口烟，“我不站管理局，也不站教团。我站你。”"]],
+   foot:"老李的坦白让你重新审视每一段旅程。这个世界，到处都是叛逃者、守夜人、和两难的人。"},
+  {k:"talk",npc:"laoli",scene:["老李","“管理局不是铁板一块。克劳斯是‘钟匠派’——他信钟匠能稳定世界。可局里还有一派人，叫‘还原派’，他们想重写世界，让历史回到‘正确’的样子。你父亲当年叛逃，就是发现钟匠派的‘稳定’，靠的是不断抹除记忆。”他压低声音，“还有件事：教团大祭司，认识你父亲。他们不是敌人。他们是你父亲的老朋友——被你父亲亲手送进监狱的那种朋友。”"],
+   note:"听老李讲管理局的内幕"},
+  {k:"choice",text:"艾琳站在码头边，海风吹起她的围巾：“我陪你去柏林。但在这之前——我想知道你的答案。你会选择哪一边？管理局说，维护秩序；教团说，还世界真相。可我不信这两边。你信什么？”",
+   options:[
+    {t:"信证据：先去柏林看那支笔，再决定",to:3,set:{faith:"evidence"}},
+    {t:"信父亲：他守钟七年，不会错",to:4,set:{faith:"father"}}
+   ]},
+  {k:"text",head:"第九卷 · 两封信",date:"上海 · 码头",
+   pages:[
+    ["","“我不信旗子，也不信教义。我信笔。”你说，“那支笔决定过世界一次。我要亲眼看见它，摸到它，再决定它该不该再决定一次。”"],
+    ["","艾琳点头：“好。那我们就去柏林，看笔。”她回头看了一眼上海的天际线，“回来的时候，我想吃梅婶的阳春面。”"]],
+   foot:"汽笛响起。你、艾琳、卡捷琳娜、奥斯曼、法蒂玛、阿列克谢——一支七拼八凑的队伍，踏上了前往柏林的旅程。"},
+  {k:"text",head:"第九卷 · 两封信",date:"上海 · 码头",
+   pages:[
+    ["","“我信我父亲。”你说，“他守了七年钟。如果他觉得钟该停，他早就停了。他撑着，一定有他的理由。我要去柏林，不是为了选边——是为了替他问钟匠一句话：值得吗？”"],
+    ["","艾琳沉默了一会儿，笑了：“你父亲有你这样的儿子，挺幸运的。”她拍了拍你的肩，“走吧。别让钟匠等太久。”"]],
+   foot:"汽笛响起。队伍踏上前往柏林的旅程。你怀里的罗盘，在轻轻发烫。"},
+  {k:"obj",note:"抵达柏林，潜入国会大厦周边",city:"berlin"},
+  {k:"text",head:"第九卷 · 两封信",date:"柏林 · 国会大厦外",
+   pages:[
+    ["","国会大厦在暮色里像一头铁灰色的巨兽。广场上军乐队正在排练，乐声在石柱间回荡。你绕到西侧的下水道入口——克劳斯给的档案里画着这条暗道，通往地库。"],
+    ["","下水道的铁门虚掩着。你侧身挤进去。黑暗里，有人先开口：“你终于来了。”"],
+    ["","是教团大祭司。他站在一盏孤灯下，兜帽压低：“我等你很久了。钟停之前，我要给你看一样东西——你父亲的旧信。他写给钟匠的，又亲手从钟匠那里偷了回来。”他递过来一沓发黄的信纸，“读读吧。读完，你就知道，你父亲为什么守钟，为什么锁自己，为什么……不肯告诉你全部真相。”"]],
+   foot:"你接过信纸。第一封信的日期，是1917年。"},
+  {k:"text",head:"第九卷 · 两封信",date:"下水道 · 灯下",
+   pages:[
+    ["","信纸很薄，字迹在潮湿的空气里洇开。你读得很慢。"],
+    ["","1917年，父亲写给钟匠：“……你说要修正这场战争。我劝过你，战争是人打的，历史是人写的，人不能既当裁判又当球员。你不听。你问我，如果世界注定要错下去，为什么不能让错误变得‘好一点’？我不知道怎么回答。”"],
+    ["","1918年，父亲写给钟匠：“……你签了。你用我的笔，签了另一个停战。我看着世界在我眼前改变：报纸、地图、人们的记忆。我的母亲——她记不得我的父亲战死了，她以为他退伍回了家。所有人都在笑，只有我在哭。你造了一个没有伤口的时代，可伤口还在，只是被藏起来了。”"],
+    ["","1927年，父亲写给钟匠，最后一封：“……我找到锚点了。我会去守它。这不是为了你，是为了所有被你藏起来的伤口。钟停那天，请你亲自来。我们把这件事，做个了断。”"]],
+   foot:"你读完信，抬起头。大祭司摘下兜帽。烛光下，那张脸，是你自己的脸——只是更成熟，更疲惫，眼角的皱纹里，藏着你看不懂的沧桑。"},
+  {k:"text",head:"第九卷 · 两封信",date:"下水道 · 灯下",
+   pages:[
+    ["","“你……”你的声音发紧。“你是我。”"],
+    ["","“我是你。或者说，是七个月后的你。”他笑了笑，那笑容让你毛骨悚然——因为那确实是你会有的笑容，“从你收到那封信开始，每一步都是我安排的。信是我写的，罗盘是我让梅婶交给你的，连你父亲的位置，也是我透露给你的。”"],
+    ["","“为什么？”你问，“你为什么要骗过去的自己？”"],
+    ["","他收起笑容：“因为未来的我，犯了一个错误。我选择了‘重写世界’——我拿起了那支笔，签下了正确的停战。然后，世界变了。可我还记得这个世界。我记得母亲、老李、艾琳——他们全都消失了。只有我记得。你明白那种感觉吗？全世界的幸福，压在你一个人的记忆上。”他低头看着自己的手，“所以我回到过去，阻止我自己。帮过去的我，找到第三条路。”"]],
+   foot:"“你，未来的我，是来阻止你的。”"},
+  {k:"end",next:10,suspense:"大祭司——未来的你——把一枚铜钥匙放进你手心：“钟停还有一个月。去阿拉拉特，取回你父亲藏的那支真笔。假的还在柏林地库，引开钟匠。然后，去凡尔赛——真正的原初节点，在凡尔赛宫的镜厅。1918年11月11日，钟匠重写世界时，把‘真笔’留在了那里，作为锚。去吧。一个月后，我们镜厅见。”",
+   pages:[
+    ["","你握着那枚铜钥匙。它与父亲给你的黄铜钥匙不同——更轻，更旧，钥匙齿上沾着干涸的墨迹。"],
+    ["","“如果我把真笔取回来，”你问，“会发生什么？”"],
+    ["","他沉默了很久：“你会成为新的钟匠。拥有重写世界的能力。然后，你会面临我当初的选择——而且这次，没有未来的你来提醒你了。”"],
+    ["","“那你呢？如果我不重写世界，你会怎样？”"],
+    ["","他笑了笑：“我会消失。因为未来的我，是在‘重写’之后诞生的。你不重写，我就不存在。……也好。这个世界，不该有两个汉伯。”"],
+    ["","他转身走进黑暗。灯熄灭了。你握着钥匙，站在原地，很久很久。"]]},
+ ]},
+/* ---------- 第十卷 回声战争 ---------- */
+{num:10, meta:{title:"回声战争",month:"1934年8月",loc:"欧洲",teaser:"整个欧洲，同时想起了另一场战争。",stamp:"残响·拾"},
+ steps:[
+  {k:"text",head:"第十卷 · 回声战争",date:"1934年8月 · 柏林",
+   pages:[
+    ["","残响爆发了。不是一处，而是整片大陆同时发作：柏林的市民在清晨醒来，发现街上多了许多‘不该存在’的店铺——卖的是法棍、煎饼和英国红茶；巴黎的德军士兵开始用英语唱歌，他们不知道歌词是什么意思；莫斯科的广场上，有人举着红旗游行，嘴里喊着被禁止了十六年的口号。"],
+    ["","钟，快停了。世界像一台过热的机器，所有齿轮都在发出尖叫。"],
+    ["","克劳斯在地下车站找到了你。他的黑大衣破了一角，头发乱糟糟的，再没有上次见面的从容：“帝国要完了。钟匠启动了‘大共鸣’——他要让所有残响一次性爆发，然后全部抹平。世界要么重写，要么崩溃。没有中间选项了。”他递给你一张通行证，“国会大厦地库的钥匙，我给你。去拿那支笔——在你父亲来之前。”"]],
+   foot:"克劳斯顿了顿：“告诉你父亲——他说得对。我早就该听他的。”"},
+  {k:"obj",note:"穿过混乱的柏林，进入国会大厦地库",city:"berlin"},
+  {k:"battle",enemies:[{id:"patrol",name:"失控的巡逻队",hp:40,atk:14,def:4,spd:10,exp:34,money:[15,30],n:3,storyWin:true}],note:"突破失控的守军"},
+  {k:"text",head:"第十卷 · 回声战争",date:"国会大厦地库",
+   pages:[
+    ["","地库比想象中深。你穿过三层铁门，每一层都刻着同一个日期：1918.11.11。最深处，是一间圆形密室。密室中央的石台上，放着一支钢笔——就是你父亲守卫的那支，笔尖刻着那个日期。假笔。你父亲把它藏在这里，引开钟匠的耳目。"],
+    ["","你伸手握住假笔。笔身冰凉。忽然，密室四壁的灯同时亮起。一个声音从头顶传来，苍老，却带着金属般的回响：“放下。那不是你的。”"],
+    ["","你抬头。密室的穹顶裂开一道缝，一个人影缓缓降下。他穿着1900年代的旧式礼服，戴着金丝眼镜，面容儒雅——看上去不到四十岁。可他的眼睛，像一口深不见底的钟井。“自我介绍一下。他们叫我，钟匠。”他微笑着说，“也就是，重写这个世界的人。”"]],
+   foot:"钟匠的袖口，绣着与管理局徽记一样的黄铜纹——只是反过来，像一面镜子。"},
+  {k:"text",head:"第十卷 · 回声战争",date:"国会大厦地库",
+   pages:[
+    ["","“你父亲把真笔藏起来了，对吧？”钟匠绕着石台踱步，像在欣赏一件古董，“他以为我找不到。可我不需要找到它。只要那支笔存在，我就能感应到它的位置——它和我的命运，绑在同一条时间线上。”他停下来，看着你，“它在阿拉拉特。你父亲守了七年。他以为守着笔，就是守着世界的锚。可他错了。”"],
+    ["","“错在哪里？”你问。"],
+    ["","“错在他以为，笔是用来写字的。”钟匠笑了笑，“笔是用来记住的。我重写世界之后，唯一能证明‘旧世界存在过’的，就是那支笔。只要它还在，残响就会一直渗漏。你父亲守的不是锚——他守的是一枚定时炸弹。”他伸出手，“把假笔给我。然后，去阿拉拉特，把真笔带回来。我们做个了断：我重写世界，让所有人解脱；而你，继承我的位置，成为新的钟匠。如何？”"]],
+   foot:"“这个世界已经病了。你听见了吗？整个欧洲，都在同时想起另一场战争。让它们解脱，才是慈悲。”"},
+  {k:"choice",text:"钟匠向你伸出手。地库深处，隐约传来整个柏林混乱的喧响。你的同伴们在铁门外与失控的守军缠斗，时间不多。",
+   options:[
+    {t:"假意答应，趁机夺回假笔，突围",to:7,set:{trick:"yes"}},
+    {t:"拒绝：世界不需要第二个钟匠",to:8,set:{trick:"no"}}
+   ]},
+  {k:"text",head:"第十卷 · 回声战争",date:"国会大厦地库",
+   pages:[
+    ["","你上前一步，像是要交出假笔。就在钟匠伸手接过的刹那，你手腕一翻，假笔刺向他的胸口——笔尖在离他衣襟一寸处停住。他纹丝未动，只是低头看了一眼：“有趣。你父亲教你的？”"],
+    ["","“不。你教我的。”你收回假笔，后退，“你刚才说，笔是用来记住的。那我用笔记住一件事——你不配决定世界。”你撞开密室侧门，冲进黑暗。身后，钟匠没有追。他的声音追上来：“年轻人，记住：你每次拒绝我，世界就离崩溃近一步。这不是威胁，是数学。”"]],
+   foot:"你冲出地库，与同伴汇合。柏林上空，乌云翻涌，像一口倒扣的钟。"},
+  {k:"text",head:"第十卷 · 回声战争",date:"国会大厦地库",
+   pages:[
+    ["","“我不当钟匠。”你说，“这个世界是错的，可它是活的。你们这些能重写世界的人，总是忘记一件事：活着的人，有权决定自己活在哪一页。”"],
+    ["","钟匠的笑容淡了。“……你和他，真像。”他说，“你父亲也说过类似的话。然后他守了七年钟，看着世界一天天烂下去。”他转身，走向穹顶的裂缝，“那就让世界烂吧。等它烂到极点，自然会有新的钟匠出现。你拦不住的。”"],
+    ["","“我不拦。”你说，“我会找到那支真笔，然后——签一个你们都不敢签的停战。”"]],
+   foot:"你转身离开。身后，钟匠的笑声在地库里回荡：“那就让我们看看，你签下的停战，能活几年。”"},
+  {k:"end",next:11,suspense:"你带着同伴离开柏林，直奔阿拉拉特。可当你们爬上雪线，钟巢的灯火已经熄灭。铁门洞开，里面空无一人——只有墙上多了一行字，是你的笔迹：“父亲，笔我带走了。去凡尔赛。1918年11月11日，镜厅见。——未来的你”",
+   pages:[
+    ["","你站在空荡荡的钟巢里，浑身发冷。那行字，是未来的你写的。他已经取走了真笔。"],
+    ["","法蒂玛蹲下，摸了摸地面的灰烬：“他来过。而且……走了没多久。顺着山脊，往西。”"],
+    ["","往西，是欧洲。是凡尔赛。是你答应与他会面的地方。"],
+    ["","卡捷琳娜按住刀柄：“追？”你望着西沉的太阳，摇了摇头：“不。去凡尔赛。他说了，镜厅见——那就镜厅见。”"]],
+   foot:"罗盘在你的口袋里，指针直直地指着西方，纹丝不动，像一枚被钉死的箭。"},
+ ]},
+/* ---------- 第十一卷 最后的停战 ---------- */
+{num:11, meta:{title:"最后的停战",month:"1934年9月",loc:"凡尔赛",teaser:"父亲是守笔人。而他守的，是一个谎言。",stamp:"残响·拾壹"},
+ steps:[
+  {k:"text",head:"第十一卷 · 最后的停战",date:"1934年9月 · 凡尔赛",
+   pages:[
+    ["","凡尔赛宫笼罩在秋雨里。镜厅的玻璃映着铅灰色的天空，水晶吊灯在风中轻轻晃动——这座宫殿早已不再接待访客，帝国用铁栅栏把它围了起来，理由是‘保护胜利者的遗产’。"],
+    ["","你从侧门的排水沟潜入。走廊里空无一人，只有雨声敲打着窗玻璃。你推开镜厅的大门——十七面镜子同时映出你的身影。厅中央，摆着一张长桌。桌上放着一支钢笔。笔尖在灯下，泛着温润的铜光。"],
+    ["","‘真笔’安静地躺在那里，像等了十六年。你走向它。指尖碰到笔杆的瞬间，镜厅所有的镜子，同时亮了。镜子里映出的，不是你的倒影——是另一个世界：1918年11月11日，凡尔赛，协约国代表正在签字。而你父亲，就站在签字席旁，年轻了十六岁，手里捧着墨水瓶。"]],
+   foot:"你终于看见了‘重写’发生的那一刻。而镜子里的父亲，缓缓抬起头，穿过十六年的时光，看着你。"},
+  {k:"text",head:"第十一卷 · 最后的停战",date:"镜厅",
+   pages:[
+    ["","你伸手拿起真笔。笔身温热，像是被谁握了很久。你转身，看见镜厅的另一头，站着两个人。"],
+    ["","一个是你父亲。他穿着七年前那件铁路工程师的制服，头发灰白，手里握着黄铜钥匙。另一个是未来的你——大祭司——他穿着灰袍，兜帽褪下，脸上是你熟悉的、疲惫的笑容。"],
+    ["父亲","“你来了。”他像是等了很久，“我猜到你会的。未来的你告诉我，你会选择这条路——亲眼来看，而不是听谁说。”"],
+    ["","你握着笔：“父亲。1918年，是你把笔递给钟匠的。为什么？”"],
+    ["","父亲沉默了很久。雨声填满了镜厅。“因为那天，我以为我在阻止一场更大的灾难。我以为，只要签下‘另一个停战’，世界就不用再流血。可我错了。我亲手把笔递给了一个疯子，还替他守了十六年的秘密。”他看着你，“汉伯，我不求你原谅我。我只求你——用这支笔，做一个比我更好的决定。”"]],
+   foot:"未来的你站在一旁，没有说话。镜子里，那个1918年的世界，还在继续。"},
+  {k:"text",head:"第十一卷 · 最后的停战",date:"镜厅",
+   pages:[
+    ["","你握着笔，笔尖悬在桌面上方。镜厅里，十七面镜子映出十七个你——或者说，十七种可能。"],
+    ["","你父亲上前一步，轻轻按住你的手腕：“汉伯。无论你选哪条路，我都支持你。这一次，我不替你决定。”"],
+    ["","未来的你站在另一边，目光平静：“我该走了。不管你怎么选，未来都会改变。……替我活下去，选一条不后悔的路。”他转身，走向镜厅深处。镜子里的他，像墨水一样，缓缓消散。"],
+    ["","你闭上眼睛。雨声、风声、心跳声。你想起母亲，想起老李，想起艾琳，想起每一个在这条时间线上活着的人。"],
+    ["","然后，你睁开眼，握紧了笔。钟匠的脚步声，正从走廊尽头传来——他没有离开凡尔赛。他一直在等。"]]},
+  {k:"choice",text:"钟匠推开门，站在镜厅门口。他看了一眼桌上的真笔，又看了一眼你，微笑：“你拿到它了。很好。现在，让我们谈谈条件——把笔给我，我让这个世界体面地结束；或者，你自己落笔，承担后果。”你握紧笔，没有让开。你的回答，将决定你最终的选择方向。",
+   options:[
+    {t:"“我选：让世界活下去——哪怕它是错的”（倾向结局A）",to:4,set:{final:"keep"}},
+    {t:"“我选：让历史回到正确——哪怕代价是我消失”（倾向结局B）",to:4,set:{final:"rewrite"}},
+    {t:"“我选：让世界自己写自己——我不替任何人决定”（倾向结局C）",to:4,set:{final:"chaos"}}
+   ]},
+  {k:"end",next:12,suspense:"钟匠听到你的回答，笑容第一次消失了。他后退一步，退进走廊的阴影里：“有意思。十六年前，有个人也说过类似的话。他叫汉伯二世——然后，他守了七年钟。”走廊深处传来他的声音：“我在时间的尽头等你。年轻人，别让我等太久。”",
+   pages:[
+    ["","钟匠消失在阴影里。镜厅重新安静下来，只有雨声。"],
+    ["","你父亲走到你身边，摘下眼镜：“他会在‘钟停’的时刻出手。那口钟停摆的瞬间，世界会失去一切稳定——那是他唯一能重写世界的机会。也是你唯一能阻止他的机会。”"],
+    ["","“钟什么时候停？”你问。"],
+    ["","父亲看向窗外。凡尔赛的秋雨，落在十七世纪的庭院里：“十月。第十一个月圆之夜。”他顿了顿，“也就是，明天。”"],
+    ["","你握着笔，站在镜厅中央。雨声里，全世界的钟，都在做最后的倒计时。"]]},
+ ]},
+/* ---------- 第十二卷 第三次选择 ---------- */
+{num:12, meta:{title:"第三次选择",month:"1934年10月",loc:"凡尔赛—全世界",teaser:"第三次选择，没有人能替你。",stamp:"残响·拾贰"},
+ steps:[
+  {k:"text",head:"第十二卷 · 第三次选择",date:"1934年10月 · 镜厅",
+   pages:[
+    ["","钟停的瞬间，世界安静了一秒。然后，残响如潮水般涌来：全世界的钟表同时停摆，所有电台同时播出同一个声音——那是1918年停战签字时的现场录音，混着炮火、欢呼、和笔尖划过纸面的沙沙声。"],
+    ["","你站在镜厅中央，握着那支决定过世界的笔。同伴们站在你身后：艾琳、卡捷琳娜、奥斯曼、法蒂玛、阿列克谢、老李。他们跨越了整片大陆追随你，此刻只是安静地站着，等你落笔。"],
+    ["","你父亲站在长桌另一头。他摘下圆框眼镜，用袖子擦了擦，重新戴上：“无论你写下什么，都是你的选择。我只是你父亲。”"],
+    ["","笔尖悬在纸上。你的心跳，像全世界的钟，同时敲响。"]]},
+  {k:"choice",text:"现在是最后的时刻。选择世界的命运——",
+   options:[
+    {t:"结局A · 定格：把笔放回原处，锁死残响，让这个世界继续活下来",to:2,set:{ending:"A"}},
+    {t:"结局B · 重写：用真笔签下1918年真正的停战，让历史回到正确",to:3,set:{ending:"B"}},
+    {t:"结局C · 自焚：烧掉笔，砸碎锚点，让时间线崩解成无限可能",to:4,set:{ending:"C"}}
+   ]},
+  {k:"ending",opt:"A",head:"结局A · 定格",
+   pages:[
+    ["","你把笔轻轻放回桌面。镜厅里，十七面镜子的倒影同时舒了口气。"],
+    ["","“我选让这个世界活下去。”你对父亲说，“它是错的。可它是我母亲、老李、艾琳他们活着的世界。我不替他们决定消失。”"],
+    ["","父亲沉默了一会儿，然后点头：“好。那我替你把锚点锁死。这是我能为你做的最后一件事。”他握紧黄铜钥匙，走向镜厅深处。那里，有一口你从未注意过的、巨大的钟。"],
+    ["","钟，重新走动了。残响像退潮一样，从世界的每个角落缓缓消退。柏林的市民忘了昨天看见的‘法棍店’，巴黎的德军重新唱起德语的军歌，莫斯科的广场恢复了寂静。世界，继续活着。带着它所有的伤口，继续活着。"],
+    ["","你成为了新的守钟人。每三个月，你会乘火车去阿拉拉特，给那口钟上发条，顺路看看父亲留下的齿轮。艾琳在凡尔赛开了一家小诊所。老李在上海滩继续倒卖他的货。卡捷琳娜回了莫斯科，偶尔写信来，信里夹着一朵压干的野花。"],
+    ["","多年以后，你坐在上海老宅的院子里，阳光很好。你掏出那只黄铜罗盘——它的指针，已经很多年没有动过了。你笑了笑，把它放回木箱。世界或许错了，但你的日子，是对的。"]],
+   epilogue:"「定格」——你选择了活在一个错误的、但活着的世界里。残响并没有消失，只是睡着了。你听见地底深处，钟还在走。",
+   },
+  {k:"ending",opt:"B",head:"结局B · 重写",
+   pages:[
+    ["","你提起笔。笔尖落在纸上，沙沙作响，像十六年前那个男人做过的那样——只是这一次，你写下的是真正的停战。"],
+    ["","世界在笔尖下重写。镜厅的镜子依次碎裂，每一片碎片里，都是一个正在改变的世界：报纸重新印刷，地图重新绘制，人们的记忆像潮水一样退去，露出底下真实的礁石。"],
+    ["","你感觉到自己正在变淡。手指，然后是手臂，然后是身体——像墨水一样，从这个世界上溶解。你听见艾琳在喊你的名字，声音越来越远：“汉伯！汉伯——”"],
+    ["","最后一个消失的，是你的记忆。你想起母亲，想起全城停摆的钟，想起苏州河的雾，想起那封来自明年的信……然后，什么都不剩了。"],
+    ["","1918年11月11日，凡尔赛宫镜厅。协约国与同盟国代表签署停战条约。人群欢呼。一个年轻的德国工程师——汉伯二世——站在人群边缘，望着签字台，忽然觉得眼眶发酸。他不知道为什么。他只知道，这一天，世界是对的。"],
+    ["","很多年后，上海。一位姓林的女中医抱着一个婴儿，对丈夫说：“这孩子出生的时候，全城的钟都停了一瞬。真是奇了。”丈夫——一位德国工程师——笑着接过孩子：“那就叫他汉伯吧。纪念一位……连我自己都记不清的朋友。”"]],
+   epilogue:"「重写」——世界回到了它‘正确’的样子。没有人记得那条被写错的时间线，也没有人记得那个从错误世界里走来的汉伯。只有你——作为最后的回声，在某个清晨，路过苏州河时，听见海关大钟敲了一下，比平时，多敲了一下。",
+   },
+  {k:"ending",opt:"C",head:"结局C · 自焚",
+   pages:[
+    ["","你把笔举到灯前。笔尖的铜光在秋雨里摇曳。“世界不该只有一种写法。”你说，“无论是谁写的——钟匠、教团、还是我自己——都不该替所有人决定。”"],
+    ["","你松开手。笔落入长桌中央的烛火。火焰舔上笔杆，笔尖在高温中弯曲、变形、融化。与此同时，镜厅的十七面镜子同时炸裂——碎片没有落地，而是悬浮在半空，每一片碎片里，都映出一个不同的世界。"],
+    ["","“来吧。”你看着那些碎片，“让世界自己写自己。”"],
+    ["","锚点开始崩塌。阿拉拉特的钟巢，君士坦丁堡的钟室，莫斯科的圆厅，柏林的笔库——所有被钉死的‘刻度’，同时松动。时间线像绷断的琴弦，剧烈震颤，然后——炸开成无数条细线，像光穿过棱镜。"],
+    ["","你闭上眼睛。再睁开时，你站在一片白光里。无数个你，从无数个方向走来：有穿着礼服的你，有扛着步枪的你，有老态龙钟的你，有还是婴儿的你。他们朝你点头，然后各自走向不同的方向。"],
+    ["","白光尽头，隐约传来一句话，带着回响：“HanBer THREE……第四次选择，还在等你。”"],
+    ["","你笑了。向前走去。故事，还没有结束。"]],
+   epilogue:"「自焚」——时间线崩解为无限可能。没有哪个世界是‘唯一正确’的，每一页书，都在被重新书写。而那个来自被写错世界的汉伯，带着所有的记忆，走向了第四个故事。",
+   },
+ ]},
+];
+/* ============================================================
+   剧情引擎
+   ============================================================ */
+function curChapter(){return CHAPTERS[S.chapter-1]}
+function curStep(){const c=curChapter();return c?c.steps[S.chapterStep]:null}
+function storyStartChapter(n){
+  if(!S)return;
+  S.chapter=n;S.chapterStep=0;GS.storyBattle=false;GS.storyWin=false;GS.objText="";
+  const ch=curChapter();
+  addJournal("第"+ch.num+"卷 · "+ch.meta.title,ch.meta.month+" · "+ch.meta.loc+"："+ch.meta.teaser);
+  if(localStorage.getItem("hanber3_auto")!=="0")saveToSlot(1);
+  storyTick();
+}
+function storyTick(){
+  if(!S||S.mode!=="story")return;
+  if(GS.battle||modalStack.length)return;
+  const st=curStep();
+  if(!st)return;
+  switch(st.k){
+    case "text": runStoryText(st);break;
+    case "choice": runStoryChoice(st);break;
+    case "give": st.items.forEach(it=>addItem(it[0],it[1]||1));toast("获得："+st.items.map(it=>ITEMS[it[0]]?ITEMS[it[0]].name:it[0]).join("、"),"good");advanceStep();break;
+    case "flag": applySets(st.set);advanceStep();break;
+    case "obj": GS.objText=st.note||"";if(storyObjDone(st)){GS.objText="";advanceStep();}break;
+    case "talk": GS.objText=st.note||"";break;
+    case "battle":
+      GS.objText=st.note||"";
+      if(!GS.storyBattle){GS.storyBattle=true;GS.storyWin=false;startBattle(st.enemies);}
+      else if(GS.storyWin){GS.storyWin=false;GS.storyBattle=false;GS.objText="";advanceStep();}
+      break;
+    case "end": runStoryEnd(st);break;
+    case "ending": runStoryEnding(st);break;
+    default: advanceStep();
+  }
+}
+function applySets(set){
+  if(!set)return;
+  for(const k in set)S.storyFlags[k]=set[k];
+}
+function advanceStep(){
+  S.chapterStep++;
+  GS.objText="";
+  const c=curChapter();
+  if(!c){/* 终章后自由漫游 */return;}
+  if(S.chapterStep>=c.steps.length){
+    /* 章节完成保护 */
+    S.chapterStep=c.steps.length-1;
+  }
+  storyTick();
+}
+function storyObjDone(st){
+  if(st.city){const c=CITY_MAP[st.city];return c&&dist2(S.x,S.y,c.px,c.py)<85;}
+  if(st.x!=null)return dist2(S.x,S.y,st.x,st.y)<85;
+  return false;
+}
+function storyNpcTouched(npcId){
+  if(!S||S.mode!=="story")return false;
+  const st=curStep();
+  if(!st||st.k!=="talk"||st.npc!==npcId)return false;
+  runStoryTalk(st);
+  return true;
+}
+function storyResume(){GS.objText="";storyTick();}
+function storyPageHTML(pages){
+  return pages.map((p,i)=>{
+    const spk=p[0],txt=p[1]||"";
+    return '<div class="story-page'+(i===0?" on":"")+'" data-p="'+i+'">'+
+      (spk?'<div class="spk">'+spk+'</div>':'')+
+      '<div class="story-body">'+txt+'</div></div>';
+  }).join("");
+}
+function openStoryModal(head,date,pages,foot,btnLabel,onDone,extra){
+  const m=openModal('<div class="story-paper" style="width:min(760px,94vw)">'+
+    '<div class="story-head"><span class="ch">'+head+'</span><span class="date">'+(date||"")+'</span></div>'+
+    '<div id="spPages">'+storyPageHTML(pages)+'</div>'+
+    (foot?'<div class="story-foot" style="margin-top:14px;border-top:1px dashed var(--ink2);padding-top:10px;font-size:13px;color:var(--ink3);font-style:italic">'+foot+'</div>':'')+
+    (extra||"")+
+    '<div class="story-nav"><span class="stamp">档案</span><button class="btn" id="spNext">'+(btnLabel||"继续 ▸")+'</button></div></div>');
+  m.mask.dataset.lock="1";
+  const pagesEl=m.body.querySelectorAll(".story-page");
+  let idx=0;
+  const btn=m.body.querySelector("#spNext");
+  btn.addEventListener("click",()=>{
+    idx++;
+    if(idx<pagesEl.length){
+      pagesEl.forEach(p=>p.classList.remove("on"));
+      pagesEl[idx].classList.add("on");
+      btn.textContent=idx===pagesEl.length-1?(btnLabel==="继续 ▸"?"继续 ▸":btnLabel):"继续 ▸";
+    }else{
+      closeModal(m.mask);
+      onDone&&onDone();
+    }
+  });
+  return m;
+}
+function runStoryText(st){
+  openStoryModal(st.head||"",st.date||"",st.pages,st.foot,"继续 ▸",()=>{advanceStep();});
+}
+function runStoryTalk(st){
+  const scene=st.scene;
+  const pages=scene.map((s,i)=>(i%2===0?[s,""]:[scene[i-1],s])).filter(p=>p[1]);
+  openStoryModal("交谈",st.date||"",pages.length?pages:[[scene[0]||"","……"]],"","继续 ▸",()=>{GS.objText="";advanceStep();});
+}
+function runStoryChoice(st){
+  let opts="";
+  st.options.forEach((o,i)=>{
+    opts+='<button class="btn" style="text-align:left;white-space:normal;line-height:1.6" onclick="storyChoose('+i+')">'+o.t+'</button>';
+  });
+  const m=openModal('<div class="story-paper" style="width:min(760px,94vw)">'+
+    '<div class="story-head"><span class="ch">'+st.head+'</span><span class="date">'+(st.date||"")+'</span></div>'+
+    '<div class="story-body">'+st.text+'</div>'+
+    '<div class="story-choices">'+opts+'</div></div>');
+  m.mask.dataset.lock="1";
+  GS.storyChoice=st;
+}
+function storyChoose(i){
+  const st=GS.storyChoice;
+  if(!st)return;
+  const o=st.options[i];
+  applySets(o.set);
+  GS.storyChoice=null;
+  closeAllModals();
+  S.chapterStep=o.to!=null?o.to:S.chapterStep+1;
+  storyTick();
+}
+function runStoryEnd(st){
+  const pages=st.pages||[];
+  openStoryModal(st.head||"卷终",st.date||"",pages,st.suspense?"悬念 · "+st.suspense:"","卷终 ▸",()=>{
+    const next=st.next;
+    addJournal("第"+S.chapter+"卷 · 完","（本卷完）下一卷："+(next&&CHAPTERS[next-1]?CHAPTERS[next-1].meta.title:"——"));
+    toast("第"+S.chapter+"卷 完结","good");
+    if(next&&CHAPTERS[next-1]){
+      if(localStorage.getItem("hanber3_auto")!=="0")saveToSlot(1);
+      storyStartChapter(next);
+    }
+  });
+}
+function runStoryEnding(st){
+  const pages=st.pages||[];
+  openStoryModal(st.head||"终局",st.date||"",pages,st.epilogue?"尾声 · "+st.epilogue:"","落幕 ▸",()=>{
+    S.ending=st.opt;
+    S.chapter=13;S.chapterStep=0;
+    addJournal("终章 · 结局"+st.opt+"「"+(st.opt==="A"?"定格":st.opt==="B"?"重写":"自焚")+"」",st.epilogue||"");
+    if(localStorage.getItem("hanber3_auto")!=="0")saveToSlot(1);
+    toast("主线完结。世界继续转动。","good");
+    updateHUD();
+  });
+}
+/* 主线剧情内的“到达城市”联动 */
+function storyCityArrive(cid){
+  if(!S||S.mode!=="story")return;
+  const st=curStep();
+  if(st&&st.k==="obj"&&st.city===cid)storyTick();
+}
+
+/* ---------- 启动 ---------- */
+function boot(){
+  renderOrigins();
+  initParticles();
+  bindMenu();
+  document.addEventListener("visibilitychange",()=>{
+    if(document.hidden){
+      if(rafId){cancelAnimationFrame(rafId);rafId=0;}
+    }else{
+      if(!rafId){lastT=performance.now();rafId=requestAnimationFrame(loop);}
+    }
+  });
+  WORLD=buildWorld(7);
+  WORLD.explored=new Uint8Array(WORLD.ter.length);
+  GS.mode="title";
+  GS.zoomLabels=localStorage.getItem("hanber3_labels")!=="0";
+  lastT=performance.now();
+  rafId=requestAnimationFrame(loop);
+}
+/* 修复：HUD 章节索引 */
+/* (updateHUD 中的 CHAPTERS[S.chapter] 已在下方修正为 CHAPTERS[S.chapter-1]) */
+boot();
+
+</script>
+</body>
+</html>
