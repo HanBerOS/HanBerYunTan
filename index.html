@@ -165159,13 +165159,28 @@ function openAvatarCropModal(dataUrl, onDone) {
 var GITHUB_REPO = 'hanberos/HanBerYunTan';
 var GH_CACHE = { games: null, themes: null, music: null, loadedAt: 0 };
 function ghListDir(dir) {
+  /* sessionStorage 缓存 5 分钟，避免每次打开都请求 GitHub */
+  var sk = 'ghdir_' + dir;
+  try {
+    var cached = sessionStorage.getItem(sk);
+    if (cached) {
+      var parsed = JSON.parse(cached);
+      if (Date.now() - parsed.at < 5 * 60 * 1000) return Promise.resolve(parsed.list);
+    }
+  } catch (e) {}
+  /* 8 秒超时，超时就算失败，不拖慢页面 */
+  var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 8000);
   return fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + dir, {
-    headers: { 'Accept': 'application/vnd.github+json' }
+    headers: { 'Accept': 'application/vnd.github+json' },
+    signal: ctrl ? ctrl.signal : undefined
   }).then(function (r) {
     if (!r.ok) throw new Error('GitHub API ' + r.status);
     return r.json();
   }).then(function (list) {
-    return (list || []).filter(function (f) { return f.type === 'file'; });
+    var files = (list || []).filter(function (f) { return f.type === 'file'; });
+    try { sessionStorage.setItem(sk, JSON.stringify({ at: Date.now(), list: files })); } catch (e) {}
+    return files;
   }).catch(function () { return []; });
 }
 function ghRefreshAll() {
