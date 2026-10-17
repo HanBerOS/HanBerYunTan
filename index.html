@@ -165733,8 +165733,6 @@ setInterval(tickScheduled, 30000);
 setTimeout(tickScheduled, 3000);
 
 (function init() {
-  /* 预拉 GitHub 仓库目录，让新上传的游戏/音乐/主题自动出现 */
-  ghRefreshAll();
   /* v6.5 不再自动注册 Service Worker：sw.js 会缓存旧版 index.html，导致刷新永远看到旧版。
      改为：仅当用户未开启通知推送时，注销已注册的 SW 并清空缓存（避免旧缓存影响）；
      若用户已开启通知（存在推送订阅），则保留 SW，保证通知功能正常 */
@@ -165831,6 +165829,12 @@ setTimeout(tickScheduled, 3000);
   else window.addEventListener('load', hideSplash);
   setTimeout(fadeOut, 5000);
 })();
+/* 首屏渲染完后，再后台拉 GitHub 仓库目录（不阻塞进首页） */
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    try { ghRefreshAll(); } catch (e) {}
+  }, 800);
+});
 
 </script>
 
