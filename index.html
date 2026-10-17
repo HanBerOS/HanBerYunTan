@@ -162693,6 +162693,12 @@ function enablePush() {
   Notification.requestPermission().then(function (perm) {
     if (perm !== 'granted') { toast('未授权通知权限'); renderPushPanel(); return; }
     toast('正在开启…');
+    /* 监听 sw 发来的"发现新版"消息，自动刷新一次 */
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'hanber-new-version') { try { location.reload(); } catch (err) {} }
+      });
+    }
     navigator.serviceWorker.register('sw.js').then(function () {
       /* 等待 Service Worker 激活完成（ready 会等它变为 active） */
       return navigator.serviceWorker.ready;
