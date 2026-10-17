@@ -165829,12 +165829,6 @@ setTimeout(tickScheduled, 3000);
   else window.addEventListener('load', hideSplash);
   setTimeout(fadeOut, 5000);
 })();
-/* 首屏渲染完后，再后台拉 GitHub 仓库目录（不阻塞进首页） */
-window.addEventListener('load', function () {
-  setTimeout(function () {
-    try { ghRefreshAll(); } catch (e) {}
-  }, 800);
-});
 
 </script>
 
