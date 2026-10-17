@@ -1,5 +1,5 @@
 /* HanBer云坛 - Service Worker
- * 策略：HTML 先读缓存秒开 → 后台静默拉新版 → 发现变化自动刷新一次
+ * 策略：HTML 先读缓存秒开 → 后台静默拉新版 → 发现变化通知页面显示刷新条（不自动 reload）
  * 部署时如需强制更新所有人，改一下 CACHE 版本号即可 */
 var CACHE = 'hanber-v6-3';
 
