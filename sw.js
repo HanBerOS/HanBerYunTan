@@ -1,7 +1,7 @@
 /* HanBer云坛 - Service Worker
- * 接收服务器推送 + 静态资源缓存（首次后秒开）
- * 部署：和 index.html 一起放到站点根目录 */
-var CACHE = 'hanber-v6-1';
+ * 策略：HTML 先读缓存秒开 → 后台静默拉新版 → 发现变化自动刷新一次
+ * 部署时如需强制更新所有人，改一下 CACHE 版本号即可 */
+var CACHE = 'hanber-v6-3';
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();
@@ -22,31 +22,48 @@ self.addEventListener('activate', function (e) {
   );
 });
 
-/* 缓存策略：HTML 导航 network-first（更新后立即拿新版，离线才用缓存兜底）；静态资源 cache-first；API 直连 */
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
-  // supabase / 后端 API 不缓存，保证实时
+  // supabase / 后端 API 不缓存
   if (url.hostname.indexOf('supabase') >= 0 || url.pathname.indexOf('/rest/v') >= 0 || url.pathname.indexOf('/auth/v1') >= 0) return;
 
-  // 页面导航：优先网络拿最新版，失败再读缓存（离线可开）
+  // 页面导航：cache-first，然后后台比对新版
   if (req.mode === 'navigate' || (req.destination === 'document')) {
     e.respondWith(
-      fetch(req).then(function (resp) {
-        if (resp && resp.status === 200) {
-          var clone = resp.clone();
-          caches.open(CACHE).then(function (c) { c.put('./index.html', clone); });
-        }
-        return resp;
-      }).catch(function () {
-        return caches.match('./index.html');
+      caches.open(CACHE).then(function (c) {
+        return c.match('./index.html').then(function (cached) {
+          // 后台静默拉新版，和缓存比对，不同就更新并通知页面刷新
+          fetch(req).then(function (resp) {
+            if (!resp || resp.status !== 200) return;
+            var respClone = resp.clone();
+            c.match('./index.html').then(function (old) {
+              if (!old) { c.put('./index.html', respClone); return; }
+              // 比较字节长度（简单可靠，省得读整个 body）
+              respClone.arrayBuffer().then(function (buf) {
+                old.arrayBuffer().then(function (oldBuf) {
+                  if (buf.byteLength !== oldBuf.byteLength) {
+                    c.put('./index.html', new Response(buf, { headers: resp.headers }));
+                    // 通知所有标签页刷新
+                    self.clients.matchAll({ type: 'window' }).then(function (clients) {
+                      clients.forEach(function (win) {
+                        try { win.postMessage({ type: 'hanber-new-version' }); } catch (e) {}
+                      });
+                    });
+                  }
+                });
+              });
+            });
+          }).catch(function () {});
+          return cached || fetch(req);
+        });
       })
     );
     return;
   }
 
-  // 其他静态资源（css/js/图片/游戏/音频）：cache-first，后台补缓存
+  // 静态资源：cache-first
   e.respondWith(
     caches.match(req).then(function (cached) {
       if (cached) return cached;
@@ -61,7 +78,6 @@ self.addEventListener('fetch', function (e) {
   );
 });
 
-/* 收到推送 → 弹出系统通知 */
 self.addEventListener('push', function (e) {
   var data = {};
   try { data = e.data ? e.data.json() : {}; } catch (err) {}
@@ -75,7 +91,6 @@ self.addEventListener('push', function (e) {
   e.waitUntil(self.registration.showNotification(title, options));
 });
 
-/* 点击通知 → 打开对应页面 */
 self.addEventListener('notificationclick', function (e) {
   e.notification.close();
   var url = (e.notification.data && e.notification.data.url) || '/';
