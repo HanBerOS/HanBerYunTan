@@ -161221,6 +161221,40 @@ function renderApps() {
     out += hanberApps.map(cardHtml).join('');
   }
   grid.innerHTML = out;
+  /* GitHub 自动扫描：追加 games/ 目录里未硬编码的新游戏 */
+  (function appendGhGames() {
+    var known = {};
+    apps.forEach(function (a) { known[a.src] = true; });
+    function build(list) {
+      if (!list) return;
+      var newOnes = list.filter(function (f) {
+        if (!/\.html?$/i.test(f.name)) return false;
+        return !known['games/' + f.name];
+      });
+      if (!newOnes.length) return;
+      var extra = newOnes.map(function (f) {
+        var nm = f.name.replace(/\.html?$/i, '');
+        return '<div class="app-card" data-src="games/' + encodeURIComponent(f.name) + '" data-name="' + esc(nm) + '">'
+          + '<div class="app-icon">🎮</div><h3>' + esc(nm) + '</h3>'
+          + '<p>GitHub 自动扫描 · games/' + esc(f.name) + '</p><span class="app-tag">新上传</span></div>';
+      }).join('');
+      var div = document.createElement('div');
+      div.style.gridColumn = '1/-1';
+      div.innerHTML = extra;
+      div.querySelectorAll('.app-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+          grid.style.display = 'none';
+          $('#apps-user-line').style.display = 'none';
+          wrap.className = 'active';
+          var f = $('#apps-frame');
+          f.src = card.getAttribute('data-src');
+        });
+      });
+      div.querySelectorAll('.app-card').forEach(function (c) { grid.appendChild(c); });
+    }
+    if (GH_CACHE.games) build(GH_CACHE.games);
+    else ghListDir('games').then(function (l) { GH_CACHE.games = l; build(l); });
+  })();
   grid.querySelectorAll('.app-card').forEach(function (card) {
     card.addEventListener('click', function () {
       if(card.getAttribute('data-locked') === '1'){
@@ -162417,6 +162451,35 @@ function renderThemePicker() {
       }
       html += '</div></div>';
     });
+    /* GitHub 自动扫描：themes/ 目录里的图片自动成为新主题 */
+    function renderDynThemes() {
+      if (!GH_CACHE.themes) return;
+      var knownImgs = {};
+      THEME_GROUPS.forEach(function (g) {
+        g.themes.forEach(function (th) {
+          if (th.imgFile) knownImgs[th.imgFile] = true;
+        });
+      });
+      var dynList = GH_CACHE.themes.filter(function (f) {
+        if (!/\.(jpg|jpeg|png|webp)$/i.test(f.name)) return false;
+        return !knownImgs[f.name];
+      });
+      if (!dynList.length) return;
+      var dhtml = '<div class="theme-section"><div class="theme-section-title">📥 上传主题</div><div class="theme-grid">';
+      dynList.forEach(function (f) {
+        var id = 'dyn-' + f.name.replace(/\.(jpg|jpeg|png|webp)$/i, '');
+        var nm = f.name.replace(/\.(jpg|jpeg|png|webp)$/i, '');
+        DYN_THEMES[id] = { label: nm, img: 'themes/' + f.name };
+        dhtml += '<div class="theme-item' + (currentTheme === id ? ' active' : '') + '" data-theme-id="' + id + '">'
+          + '<div class="theme-swatch" style="background:url(\'themes/' + f.name + '\') center/cover"></div>' + esc(nm) + '</div>';
+      });
+      dhtml += '</div></div>';
+      picker.innerHTML += dhtml;
+    }
+    renderDynThemes();
+    if (!GH_CACHE.themes) {
+      ghListDir('themes').then(function (l) { GH_CACHE.themes = l; renderThemePicker(); });
+    }
     picker.innerHTML = html;
   }).catch(function () { picker.innerHTML = '<div class="empty">加载失败</div>'; });
 }
@@ -162522,6 +162585,19 @@ function renderChat(otherId) {
 /* ============================================================
  * 主题系统
  * ============================================================ */
+/* GitHub 自动扫描主题：themes/ 目录里的图片自动成为新主题 */
+var DYN_THEMES = {};
+function ensureDynThemeCss(id) {
+  var th = DYN_THEMES[id];
+  if (!th) return;
+  var styleId = 'dyn-theme-' + id;
+  if (document.getElementById(styleId)) return;
+  var st = document.createElement('style');
+  st.id = styleId;
+  st.textContent = 'body[data-theme="' + id + '"] { --theme-bg: url("' + th.img + '") center/cover no-repeat; }'
+    + 'body[data-theme="' + id + '"].dark-theme::before { filter: brightness(0.38) saturate(1.15); }';
+  document.head.appendChild(st);
+}
 var THEME_GROUPS = [
   {
     key: 'settings.official', name: '官方',
@@ -162620,8 +162696,10 @@ function setTheme(themeId) {
   document.body.classList.remove('light-theme');
   document.body.classList.toggle('glassable', !!(themeId && GLASS_THEMES.indexOf(themeId) >= 0));
   if (themeId && themeId !== 'default') {
+    /* GitHub 动态主题：注入背景 CSS */
+    if (DYN_THEMES[themeId]) { ensureDynThemeCss(themeId); }
     document.body.setAttribute('data-theme', themeId);
-    if (DARK_THEMES.indexOf(themeId) >= 0) {
+    if (DYN_THEMES[themeId] || DARK_THEMES.indexOf(themeId) >= 0) {
       document.body.classList.add('dark-theme');
     } else if (LIGHT_THEMES.indexOf(themeId) >= 0) {
       document.body.classList.add('light-theme');
@@ -165076,6 +165154,29 @@ function openAvatarCropModal(dataUrl, onDone) {
 });
 
 /* ============================================================
+ * GitHub 自动扫描：上传文件到仓库后云坛自动识别
+ * ============================================================ */
+var GITHUB_REPO = 'hanberos/HanBerYunTan';
+var GH_CACHE = { games: null, themes: null, music: null, loadedAt: 0 };
+function ghListDir(dir) {
+  return fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + dir, {
+    headers: { 'Accept': 'application/vnd.github+json' }
+  }).then(function (r) {
+    if (!r.ok) throw new Error('GitHub API ' + r.status);
+    return r.json();
+  }).then(function (list) {
+    return (list || []).filter(function (f) { return f.type === 'file'; });
+  }).catch(function () { return []; });
+}
+function ghRefreshAll() {
+  return Promise.all([
+    ghListDir('games').then(function (l) { GH_CACHE.games = l; }),
+    ghListDir('themes').then(function (l) { GH_CACHE.themes = l; }),
+    ghListDir('sounds/hanber').then(function (l) { GH_CACHE.music = l; })
+  ]).then(function () { GH_CACHE.loadedAt = Date.now(); });
+}
+
+/* ============================================================
  * 背景音（白噪音）系统
  * ============================================================ */
 var SOUND_PRESETS = [
@@ -165400,7 +165501,19 @@ function renderSoundPanel() {
   /* 翰巴歌单 · 后朋克严选 */
   html += '<div style="margin-top:18px;font-size:13px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:8px">🎸 翰巴歌单 <span style="font-weight:400;font-size:11px;color:var(--ink-3)">后朋克严选 · ЧанБер</span></div>';
   html += '<div style="margin-top:8px;border:1px solid var(--line);border-radius:12px;overflow:hidden">';
-  HANBER_PLAYLIST.forEach(function (tr, idx) {
+  /* 合并硬编码歌单 + GitHub 自动扫描到的新 mp3 */
+  var knownMusic = {};
+  HANBER_PLAYLIST.forEach(function (tr) { knownMusic[tr.file] = true; });
+  var merged = HANBER_PLAYLIST.slice();
+  if (GH_CACHE.music) {
+    GH_CACHE.music.forEach(function (f) {
+      if (!/\.mp3$/i.test(f.name)) return;
+      var fp = 'sounds/hanber/' + f.name;
+      if (knownMusic[fp]) return;
+      merged.push({ file: fp, title: f.name.replace(/\.mp3$/i, ''), artist: 'GitHub 上传' });
+    });
+  }
+  merged.forEach(function (tr, idx) {
     var fid = '_folder_' + tr.file;
     var active = curId === fid && SoundEngine.state.enabled;
     html += '<div class="sound-row' + (active ? ' active playing' : '') + '" data-sound-id="' + fid + '" style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13px;' + (active ? 'background:var(--accent-soft);' : '') + '">'
@@ -165411,8 +165524,12 @@ function renderSoundPanel() {
       + '</div>';
   });
   html += '</div>';
-  html += '<p style="font-size:11px;color:var(--ink-3);margin:8px 0 0">音频文件就位前点击会提示“待投稿”；把 mp3 放进 sounds/hanber/ 即可循环播放。</p>';
+  html += '<p style="font-size:11px;color:var(--ink-3);margin:8px 0 0">把 mp3 放进 sounds/hanber/ 目录即自动出现在歌单里。</p>';
   box.innerHTML = html;
+  /* 若音乐目录还没拉到，异步拉取后重渲染 */
+  if (!GH_CACHE.music) {
+    ghListDir('sounds/hanber').then(function (l) { GH_CACHE.music = l; renderSoundPanel(); });
+  }
 }
 
 /* 背景音事件 */
@@ -165591,6 +165708,8 @@ setInterval(tickScheduled, 30000);
 setTimeout(tickScheduled, 3000);
 
 (function init() {
+  /* 预拉 GitHub 仓库目录，让新上传的游戏/音乐/主题自动出现 */
+  ghRefreshAll();
   /* v6.5 不再自动注册 Service Worker：sw.js 会缓存旧版 index.html，导致刷新永远看到旧版。
      改为：仅当用户未开启通知推送时，注销已注册的 SW 并清空缓存（避免旧缓存影响）；
      若用户已开启通知（存在推送订阅），则保留 SW，保证通知功能正常 */
