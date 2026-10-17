@@ -1,8 +1,65 @@
-/* HanBer云坛 - Service Worker（v6.5 精简版）
- * 只负责通知推送，不再缓存任何页面/资源：
- * - 去掉 App Shell 缓存（旧版缓存旧 index.html 导致刷新永远旧版）
- * - 去掉 fetch 拦截（页面一律走网络，更新即所见）
- * 部署：和 index.html 一起放到 GitHub Pages 站点根目录 */
+/* HanBer云坛 - Service Worker
+ * 接收服务器推送 + 静态资源缓存（首次后秒开）
+ * 部署：和 index.html 一起放到站点根目录 */
+var CACHE = 'hanber-v6-1';
+
+self.addEventListener('install', function (e) {
+  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE).then(function (c) {
+      return c.addAll(['./', './index.html']);
+    }).catch(function () {})
+  );
+});
+
+self.addEventListener('activate', function (e) {
+  e.waitUntil(
+    caches.keys().then(function (keys) {
+      return Promise.all(keys.map(function (k) {
+        if (k !== CACHE) return caches.delete(k);
+      }));
+    }).then(function () { return self.clients.claim(); })
+  );
+});
+
+/* 缓存策略：HTML 导航 network-first（更新后立即拿新版，离线才用缓存兜底）；静态资源 cache-first；API 直连 */
+self.addEventListener('fetch', function (e) {
+  var req = e.request;
+  if (req.method !== 'GET') return;
+  var url = new URL(req.url);
+  // supabase / 后端 API 不缓存，保证实时
+  if (url.hostname.indexOf('supabase') >= 0 || url.pathname.indexOf('/rest/v') >= 0 || url.pathname.indexOf('/auth/v1') >= 0) return;
+
+  // 页面导航：优先网络拿最新版，失败再读缓存（离线可开）
+  if (req.mode === 'navigate' || (req.destination === 'document')) {
+    e.respondWith(
+      fetch(req).then(function (resp) {
+        if (resp && resp.status === 200) {
+          var clone = resp.clone();
+          caches.open(CACHE).then(function (c) { c.put('./index.html', clone); });
+        }
+        return resp;
+      }).catch(function () {
+        return caches.match('./index.html');
+      })
+    );
+    return;
+  }
+
+  // 其他静态资源（css/js/图片/游戏/音频）：cache-first，后台补缓存
+  e.respondWith(
+    caches.match(req).then(function (cached) {
+      if (cached) return cached;
+      return fetch(req).then(function (resp) {
+        if (resp && resp.status === 200 && resp.type === 'basic') {
+          var clone = resp.clone();
+          caches.open(CACHE).then(function (c) { c.put(req, clone); });
+        }
+        return resp;
+      }).catch(function () { return cached; });
+    })
+  );
+});
 
 /* 收到推送 → 弹出系统通知 */
 self.addEventListener('push', function (e) {
@@ -31,19 +88,3 @@ self.addEventListener('notificationclick', function (e) {
     })
   );
 });
-
-/* 激活时清理旧版 PWA 缓存（yuntan-pwa-v1/v2 等），确保不残留旧页面 */
-self.addEventListener('activate', function (e) {
-  e.waitUntil(
-    Promise.all([
-      self.clients.claim(),
-      caches.keys().then(function (keys) {
-        return Promise.all(keys.map(function (k) {
-          if (k.indexOf('yuntan-pwa') === 0) return caches.delete(k);
-        }));
-      })
-    ])
-  );
-});
-
-/* 不拦截任何网络请求：页面/资源一律走网络，绝不返回缓存旧版 */
