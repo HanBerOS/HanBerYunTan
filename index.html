@@ -10,22 +10,129 @@
 /* 点击劫持防护：禁止本页被 iframe 嵌入 */
 if (window.top !== window.self) { window.top.location = window.self.location; }
 </script>
-<script>
-/* 启动加载页兜底（v6.5.1）：独立于 8MB 主脚本，主脚本任何异常也能按时关闭加载页 */
-(function () {
-  function __fadeSplash() {
-    var s = document.getElementById('splash-screen');
-    if (!s || s.__faded) return;
-    s.__faded = true;
-    s.classList.add('splash-hide');
-    setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 600);
-  }
-  window.addEventListener('load', function () { setTimeout(__fadeSplash, 300); });
-  setTimeout(__fadeSplash, 5000);
-})();
-</script>
 <link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;600;700&display=swap"></noscript>
+<script>
+/* 启动加载页 + 真实进度条（v6.7.0）：独立于 8MB 主脚本，主脚本任何异常也不卡加载页
+ * 苹果设备：进度条真实走完（window.load）才进入论坛
+ * 安卓/桌面：DOM 就绪后先进去，剩余加载用顶部细进度条继续显示 */
+(function () {
+  var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  var startTime = Date.now();
+  var displayed = 0;    /* 平滑后的展示进度 */
+  var target = 0;       /* 真实进度目标 */
+  var loaded = false;   /* window.load 是否已触发 */
+  var entered = false;  /* 是否已进入论坛 */
+  var topDone = false;  /* 顶部细条是否已收尾 */
+  var lastRender = 0, lastShown = -1;
+  var splash = null, fill = null, pct = null, topbar = null, topFill = null;
+
+  function grab() {
+    if (!splash) splash = document.getElementById('splash-screen');
+    if (splash && !fill) fill = splash.querySelector('.splash-bar i');
+    if (splash && !pct) pct = splash.querySelector('.splash-pct');
+    if (!topbar) topbar = document.getElementById('splash-progress-top');
+    if (topbar && !topFill) topFill = topbar.querySelector('i');
+  }
+
+  function calcTarget() {
+    if (loaded) return 100;
+    var rs = document.readyState;
+    var base = rs === 'complete' ? 85 : (rs === 'interactive' ? 45 : 10);
+    var extra = 17; /* 资源计数精修（最多 +35），取不到就按一半走 */
+    try {
+      var els = document.querySelectorAll('img, script, link[rel~="stylesheet"], audio, video, source, iframe');
+      var done = performance.getEntriesByType('resource').length;
+      if (els.length) extra = Math.min(35, done / els.length * 35);
+    } catch (e) {}
+    var creep = Math.min(15, (Date.now() - startTime) / 800); /* 时间蠕变：慢网也保持前进 */
+    return Math.min(96, base + extra + creep);
+  }
+
+  function render(force) {
+    var now = Date.now();
+    if (!force && now - lastRender < 50) return; /* 限频到 ~20fps，顺滑跟手又省性能 */
+    lastRender = now;
+    grab();
+    var shown = Math.round(displayed * 10) / 10;
+    if (shown === lastShown) return;
+    lastShown = shown;
+    if (fill) fill.style.width = shown + '%';
+    if (pct) pct.textContent = Math.round(shown) + '%';
+    if (topFill) topFill.style.width = shown + '%';
+  }
+
+  function tick() {
+    target = calcTarget();
+    /* 加载中缓动逼近；load 后全速冲 100%，进场零拖沓 */
+    displayed += (target - displayed) * (loaded ? 0.35 : 0.15) + (loaded ? 0.2 : 0.06);
+    if (displayed > 100) displayed = 100;
+    if (entered && !topDone && displayed >= 99.4) {
+      topDone = true;
+      if (topbar) {
+        topbar.classList.add('done');
+        setTimeout(function () { if (topbar.parentNode) topbar.parentNode.removeChild(topbar); }, 600);
+      }
+    }
+    render(false);
+    requestAnimationFrame(tick);
+  }
+
+  function fadeSplash() {
+    grab();
+    entered = true;
+    if (splash && !splash.__faded) {
+      splash.__faded = true;
+      splash.classList.add('splash-hide');
+      setTimeout(function () { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 380);
+    }
+    if (!IS_IOS && !loaded) {
+      /* 安卓式：进场后顶部细条接着显示剩余进度 */
+      if (topbar) topbar.classList.add('on');
+    } else if (topbar) {
+      topbar.classList.add('done');
+      setTimeout(function () { if (topbar.parentNode) topbar.parentNode.removeChild(topbar); }, 600);
+    }
+    setTimeout(function () { loaded = true; }, 15000); /* 进场后最多再等 15s，条必收尾 */
+  }
+
+  function finishBarThenEnter() {
+    /* 苹果式：进度条先真实走到 100% 再进场（冲线加速，约 0.3s） */
+    if (loaded) return;
+    loaded = true;
+    var t0 = Date.now();
+    (function wait() {
+      if (displayed >= 99.4 || Date.now() - t0 > 800) {
+        render(true);
+        setTimeout(fadeSplash, 120);
+      } else setTimeout(wait, 40);
+    })();
+  }
+
+  window.addEventListener('load', function () {
+    if (IS_IOS) finishBarThenEnter();
+    else loaded = true; /* 安卓/桌面：load 后让顶部细条收尾 */
+  });
+
+  if (IS_IOS) {
+    setTimeout(finishBarThenEnter, 30000); /* 兜底：极端网络下 30s 必进场 */
+  } else {
+    /* 先进去：最短展示 0.5s 且 DOM 就绪后立刻进场，最多等 2.5s */
+    var minShow = new Promise(function (r) { setTimeout(r, 500); });
+    var domReady = new Promise(function (r) {
+      if (document.readyState !== 'loading') r();
+      else document.addEventListener('DOMContentLoaded', r);
+    });
+    var maxWait = new Promise(function (r) { setTimeout(r, 2500); });
+    Promise.race([Promise.all([minShow, domReady]), maxWait]).then(fadeSplash);
+  }
+
+  render(true);
+  requestAnimationFrame(tick);
+})();
+</script>
 <style>
 /* ===== 基础 ===== */
 *, *::before, *::after { box-sizing: border-box; }
@@ -2119,10 +2226,25 @@ body[data-theme="tno"] .auth-tab.active { background: #3a1a14; color: #ffe9b0; }
 @keyframes splashFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .splash-bar { width: 150px; height: 3px; border-radius: 99px; background: rgba(255,255,255,.22); overflow: hidden; margin-top: 6px; }
 .splash-bar i {
-  display: block; height: 100%; width: 40%; border-radius: 99px;
+  display: block; height: 100%; width: 0; border-radius: 99px;
   background: linear-gradient(90deg, #fbbf24, #f59e0b);
-  animation: splashSlide 1.15s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(251,191,36,.45);
+  transition: width .12s linear;
 }
+.splash-pct { font-size: 11px; color: rgba(255,255,255,.62); letter-spacing: 1px; margin-top: -6px; font-variant-numeric: tabular-nums; animation: splashFade 1.8s ease; }
+/* 顶部细进度条（安卓式：先进去，剩余加载在顶部继续） */
+#splash-progress-top {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 99998;
+  background: transparent; opacity: 0; transition: opacity .3s ease; pointer-events: none;
+}
+#splash-progress-top.on { opacity: 1; }
+#splash-progress-top i {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  box-shadow: 0 0 10px rgba(251,191,36,.65);
+  transition: width .12s linear;
+}
+#splash-progress-top.done { opacity: 0; transition: opacity .45s ease .15s; }
 @keyframes splashSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
 
 /* ===== 加载面板（申城暮色风格，用于帖子/详情/私信/后台加载） ===== */
@@ -2359,6 +2481,11 @@ body[data-glass] .modal-mask {
   <div class="splash-name">HanBer云坛</div>
   <div class="splash-sub">HANBER FORUM</div>
   <div class="splash-bar"><i></i></div>
+  <div class="splash-pct">0%</div>
+</div>
+<!-- 顶部细进度条：安卓/桌面先进场后，剩余加载在这里继续 -->
+<div id="splash-progress-top"><i></i></div>
+
 </div>
 
 <!-- 顶栏 -->
@@ -2402,6 +2529,7 @@ body[data-glass] .modal-mask {
     <h2 class="section-title" data-i18n="new.title">发新帖</h2>
     <p class="section-sub" data-i18n="new.sub">写下你想聊的话题，标题要让人一眼看懂。</p>
     <form id="new-post-form" class="card pad" style="max-width:680px">
+      <div style="margin-bottom:10px;text-align:right"><button type="button" class="btn btn-ghost btn-sm" data-hbact="quiz-from-post">📝 顺手建个默契问卷</button></div>
       <div class="form-row">
         <label class="form-label" data-i18n="new.t">标题</label>
         <input class="input" id="np-title" maxlength="60" placeholder="一句话说清主题" data-i18n-ph="new.phTitle" required>
@@ -2699,9 +2827,21 @@ body[data-glass] .modal-mask {
      <p class="section-sub" style="text-align:center;margin:8px 0 18px" data-i18n="reading.sub">11 部世界文学经典 · 作者 / 国家 / 年代 / 一句话导读</p>
      <div id="reading-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;max-width:920px;margin:0 auto;padding-bottom:30px"></div>
    </section>
+  <!-- 活动中心 -->
+  <section class="route" id="route-activities">
+    <div id="activities-panel"></div>
+  </section>
+  <!-- 金币银行 -->
+  <section class="route" id="route-bank">
+    <div id="bank-panel"></div>
+  </section>
+  <!-- 默契问卷 -->
+  <section class="route" id="route-quiz">
+    <div id="quiz-panel"></div>
+  </section>
 </main>
 
-<div class="footer">HanBer云坛 · <span id="ver-stamp" style="opacity:.6;cursor:default">HanBerOS 6.4.6</span></div>
+<div class="footer">HanBer云坛 · <span id="ver-stamp" style="opacity:.6;cursor:default">HanBerOS 6.7.0</span></div>
 
 <!-- 管理员登录弹窗已移除 -->
 
@@ -2929,7 +3069,7 @@ var I18N = {
     'settings.themeSaved': '主题已切换', 'settings.saveFail': '保存失败：', 'settings.glassOnDone': '液态玻璃已开启', 'settings.glassOffDone': '液态玻璃已关闭',
     'settings.glassColorDone': '玻璃颜色已更新', 'settings.glassAlphaDone': '玻璃透明度已更新', 'settings.langDone': '语言已切换',
     'welcome': '欢迎回来，', 'signupOk': '注册成功，欢迎加入HanBer云坛', 'pleaseLogin': '请先登录', 'uploadFail': '上传失败', 'netErr': '请求超时',
-    'footer': 'HanBerOS 6.4.6', 'nav.signin': '签到', 'report.title': '举报', 'report.reason': '举报理由（必填）', 'report.detail': '补充说明（选填）', 'report.ok': '举报已提交，管理员会尽快处理', 'pin.admin': '置顶', 'pin.adminOff': '取消置顶', 'admin.reports': '举报管理', 'admin.handle': '处理', 'admin.ignore': '忽略', 'admin.actionPh': '处理方式（如：删除帖子/封禁7天）', 'admin.signins': '签到记录', 'admin.audit': '操作日志', 'admin.export': '导出用户数据', 'admin.exportPh': '输入用户名或ID', 'export.title': '数据导出', 'export.mine': '导出我的全部数据', 'export.admin': '导出该用户数据', 'export.need': '导出你在云坛的全部数据（帖子、回帖、私信、通知、签到），JSON 格式，仅自己可看。',
+    'footer': 'HanBerOS 6.7.0', 'nav.signin': '签到', 'report.title': '举报', 'report.reason': '举报理由（必填）', 'report.detail': '补充说明（选填）', 'report.ok': '举报已提交，管理员会尽快处理', 'pin.admin': '置顶', 'pin.adminOff': '取消置顶', 'admin.reports': '举报管理', 'admin.handle': '处理', 'admin.ignore': '忽略', 'admin.actionPh': '处理方式（如：删除帖子/封禁7天）', 'admin.signins': '签到记录', 'admin.audit': '操作日志', 'admin.export': '导出用户数据', 'admin.exportPh': '输入用户名或ID', 'export.title': '数据导出', 'export.mine': '导出我的全部数据', 'export.admin': '导出该用户数据', 'export.need': '导出你在云坛的全部数据（帖子、回帖、私信、通知、签到），JSON 格式，仅自己可看。',
     'nav.notifClear': '清除已读',
     'nav.notifCleared': '已清除已读通知',
     'apps.login.ok1': '✅ 已通过云坛登录：',
@@ -3071,7 +3211,7 @@ var I18N = {
     'skin.using': '使用中',
     'skin.use': '使用',
     'skin.noCoins': '金币不足，快去任务页赚金币吧',
-    'skin.bought': '购买成功！','task.spinning': '转盘中…', 'shop.items': '道具', 'shop.renameCard': '✏️ 改名卡 · 立即使用', 'shop.petRenameCard': '🐾 宠物改名卡 · 立即使用', 'settings.renamePh': '输入新昵称（至少2个字）','shop.back': '返回', 'shop.titleCard': '自定义头衔 · 立即使用', 'shop.renamePrice': '改名卡 · 50🪙', 'shop.renameFree': '新用户首改免费', 'shop.tiers': '头衔', 'shop.tier1': '素色头衔', 'shop.tier2': '金色头衔', 'shop.tier3': '炫彩头衔', 'shop.tier4': '自定义颜色头衔', 'shop.colorPh': '输入颜色（如 #ff6b81 或 红色）', 'shop.titlePh': '输入自定义头衔（不超过30字）', 'shop.actions': '动作卡', 'shop.owned': '已拥有', 'shop.buy': '购买', 'action.walk': '走动', 'action.jump': '跳跃', 'action.sit': '坐下', 'action.lie': '躺下', 'action.twirl': '转圈', 'skin.custom1': '阿绿', 'skin.custom2': '花卷', 'skin.custom3': '糖豆', 'skin.custom4': '波波',  
+    'skin.bought': '购买成功！','task.spinning': '转盘中…', 'shop.items': '道具', 'shop.renameCard': '✏️ 改名卡 · 立即使用', 'shop.petRenameCard': '🐾 宠物改名卡 · 立即使用', 'settings.renamePh': '输入新昵称（至少2个字）','shop.back': '返回', 'shop.titleCard': '自定义头衔 · 立即使用', 'shop.renamePrice': '改名卡 · 50🪙', 'shop.renameFree': '新用户首改免费', 'shop.tiers': '头衔', 'shop.tier1': '素色头衔', 'shop.tier2': '金色头衔', 'shop.tier3': '炫彩头衔', 'shop.tier4': '自定义颜色头衔', 'shop.colorPh': '输入颜色（如 #ff6b81 或 红色）', 'shop.titlePh': '输入自定义头衔（不超过30字）', 'shop.actions': '动作卡', 'shop.owned': '已拥有', 'shop.buy': '购买', 'action.walk': '走动', 'action.jump': '跳跃', 'action.sit': '坐下', 'action.lie': '躺下', 'action.twirl': '转圈', 'skin.custom1': '阿绿', 'skin.custom2': '花卷', 'skin.custom3': '糖豆', 'skin.custom4': '波波', 'skin.ren_mantang': '满糖', 'skin.ren_maoniang': '猫娘', 'skin.ren_wangsichuai': '王死踹', 'skin.ren_mifeng': '蜜蜂', 'skin.ren_yabo': '鸭脖', 'skin.ren_mading': '马ding', 'skin.ren_bachidaren': '八尺大人', 'skin.ren_yiquanchaoren': '一拳超人', 'skin.ren_xiaoxiao': '萧萧', 'skin.ren_baozhatou': '爆炸头', 'skin.ren_zhongyuqing': '钟雨清', 'skin.ren_puffer': 'Puffer', 'skin.ren_fenggou': '疯狗', 'skin.ren_xzq': 'xzq', 'skin.ren_yangsiyuan': '杨思远', 'skin.ren_lijirou': '里脊肉', 'skin.ren_kly': 'kly', 'skin.ren_zidingyi1': '自定义名称1', 'skin.ren_wangyunfeng': '王云峰', 'skin.ren_zhuangyunqi': '庄云起', 'skin.ren_cjw': 'cjw', 'skin.ren_hama': '蛤蟆', 'skin.ren_zhongyuqing2': '钟雨晴', 'skin.ren_tudidilei': '土豆地雷', 'skin.ren_ximi': '虾米', 'skin.ren_fenggou_sunglasses': '疯狗（墨镜版）', 'skin.ren_qingshuruwenben': '请输入文本', 'skin.ren_mike': 'Mike', 'skin.ren_nanliang': '南梁', 'skin.ren_zhongyuqing_sunglasses': '钟雨清（墨镜版）', 'skin.ren_yangsiyuan_sunglasses': '杨思远（墨镜版）', 'skin.ren_python_shenzuo': '？python爬虫又一神作？',  
     'skin.used': '已换上新皮肤',
     'skin.fail': '皮肤操作失败',
     'skin.19.13.47': '面条',
@@ -3656,7 +3796,7 @@ var I18N = {
     'settings.themeSaved': 'Theme switched', 'settings.saveFail': 'Save failed: ', 'settings.glassOnDone': 'Liquid glass enabled', 'settings.glassOffDone': 'Liquid glass disabled',
     'settings.glassColorDone': 'Glass color updated', 'settings.glassAlphaDone': 'Glass opacity updated', 'settings.langDone': 'Language switched',
     'welcome': 'Welcome back, ', 'signupOk': 'Signed up successfully. Welcome to HanBer Forum!', 'pleaseLogin': 'Please log in first', 'uploadFail': 'Upload failed', 'netErr': 'Request timed out',
-    'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Report', 'report.reason': 'Reason (required)', 'report.detail': 'Details (optional)', 'report.ok': 'Report submitted, admins will review soon', 'pin.admin': 'Pin', 'pin.adminOff': 'Unpin', 'admin.reports': 'Report Management', 'admin.handle': 'Handle', 'admin.ignore': 'Ignore', 'admin.actionPh': 'Action (e.g. delete post / ban 7d)', 'admin.signins': 'Check-in Records', 'admin.audit': 'Operation Log', 'admin.export': 'Export User Data', 'admin.exportPh': 'Enter username or ID', 'export.title': 'Data Export', 'export.mine': 'Export All My Data', 'export.admin': 'Export This User', 'export.need': 'Export all your forum data (posts, replies, messages, notifications, check-ins) as JSON. Only you can see it.',
+    'footer': 'HanBerOS 6.7.0', 'nav.signin': 'Check-in', 'report.title': 'Report', 'report.reason': 'Reason (required)', 'report.detail': 'Details (optional)', 'report.ok': 'Report submitted, admins will review soon', 'pin.admin': 'Pin', 'pin.adminOff': 'Unpin', 'admin.reports': 'Report Management', 'admin.handle': 'Handle', 'admin.ignore': 'Ignore', 'admin.actionPh': 'Action (e.g. delete post / ban 7d)', 'admin.signins': 'Check-in Records', 'admin.audit': 'Operation Log', 'admin.export': 'Export User Data', 'admin.exportPh': 'Enter username or ID', 'export.title': 'Data Export', 'export.mine': 'Export All My Data', 'export.admin': 'Export This User', 'export.need': 'Export all your forum data (posts, replies, messages, notifications, check-ins) as JSON. Only you can see it.',
     'nav.notifClear': 'Clear Read',
     'nav.notifCleared': 'Read notifications cleared',
     'apps.login.ok1': '✅ Logged in via YunTan: ',
@@ -4127,7 +4267,7 @@ var I18N = {
     'settings.themeSaved': 'Tema cambiado', 'settings.saveFail': 'Error al guardar: ', 'settings.glassOnDone': 'Vidrio líquido activado', 'settings.glassOffDone': 'Vidrio líquido desactivado',
     'settings.glassColorDone': 'Color del vidrio actualizado', 'settings.glassAlphaDone': 'Opacidad del vidrio actualizada', 'settings.langDone': 'Idioma cambiado',
     'welcome': 'Bienvenido de nuevo, ', 'signupOk': '¡Registro exitoso! Bienvenido al foro HanBer', 'pleaseLogin': 'Inicia sesión primero', 'uploadFail': 'Error de subida', 'netErr': 'Tiempo de espera agotado',
-    'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Registro diario', 'report.title': 'Reportar', 'report.reason': 'Motivo (obligatorio)', 'report.detail': 'Detalles (opcional)', 'report.ok': 'Reporte enviado, los admins lo revisarán', 'pin.admin': 'Fijar', 'pin.adminOff': 'Desfijar', 'admin.reports': 'Gestión de Reportes', 'admin.handle': 'Procesar', 'admin.ignore': 'Ignorar', 'admin.actionPh': 'Acción (ej. borrar / ban 7d)', 'admin.signins': 'Registros de Firma', 'admin.audit': 'Registro de Operaciones', 'admin.export': 'Exportar Datos', 'admin.exportPh': 'Ingrese nombre o ID', 'export.title': 'Exportación de Datos', 'export.mine': 'Exportar Mis Datos', 'export.admin': 'Exportar Este Usuario', 'export.need': 'Exporta todos tus datos (publicaciones, respuestas, mensajes, notificaciones, registros) en JSON. Solo tú puedes verlo.',
+    'footer': 'HanBerOS 6.7.0', 'nav.signin': 'Registro diario', 'report.title': 'Reportar', 'report.reason': 'Motivo (obligatorio)', 'report.detail': 'Detalles (opcional)', 'report.ok': 'Reporte enviado, los admins lo revisarán', 'pin.admin': 'Fijar', 'pin.adminOff': 'Desfijar', 'admin.reports': 'Gestión de Reportes', 'admin.handle': 'Procesar', 'admin.ignore': 'Ignorar', 'admin.actionPh': 'Acción (ej. borrar / ban 7d)', 'admin.signins': 'Registros de Firma', 'admin.audit': 'Registro de Operaciones', 'admin.export': 'Exportar Datos', 'admin.exportPh': 'Ingrese nombre o ID', 'export.title': 'Exportación de Datos', 'export.mine': 'Exportar Mis Datos', 'export.admin': 'Exportar Este Usuario', 'export.need': 'Exporta todos tus datos (publicaciones, respuestas, mensajes, notificaciones, registros) en JSON. Solo tú puedes verlo.',
     'nav.notifClear': 'Limpiar leídas',
     'nav.notifCleared': 'Notificaciones leídas borradas',
     'apps.login.ok1': '✅ Conectado vía YunTan: ',
@@ -4613,7 +4753,7 @@ var I18N = {
     'settings.themeSaved': 'Тема изменена', 'settings.saveFail': 'Ошибка сохранения: ', 'settings.glassOnDone': 'Жидкое стекло включено', 'settings.glassOffDone': 'Жидкое стекло выключено',
     'settings.glassColorDone': 'Цвет стекла обновлён', 'settings.glassAlphaDone': 'Прозрачность обновлена', 'settings.langDone': 'Язык изменён',
     'welcome': 'С возвращением, ', 'signupOk': 'Регистрация успешна. Добро пожаловать на форум HanBer!', 'pleaseLogin': 'Сначала войдите', 'uploadFail': 'Ошибка загрузки', 'netErr': 'Тайм-аут запроса',
-    'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Отметка', 'report.title': 'Пожаловаться', 'report.reason': 'Причина (обязательно)', 'report.detail': 'Подробности (необязательно)', 'report.ok': 'Жалоба отправлена, админы проверят', 'pin.admin': 'Закрепить', 'pin.adminOff': 'Открепить', 'admin.reports': 'Управление жалобами', 'admin.handle': 'Обработать', 'admin.ignore': 'Игнорировать', 'admin.actionPh': 'Действие (напр. удалить / бан 7д)', 'admin.signins': 'Журнал отметок', 'admin.audit': 'Журнал операций', 'admin.export': 'Экспорт данных', 'admin.exportPh': 'Введите имя или ID', 'export.title': 'Экспорт данных', 'export.mine': 'Экспортировать мои данные', 'export.admin': 'Экспорт пользователя', 'export.need': 'Экспорт всех ваших данных (посты, ответы, сообщения, уведомления, отметки) в JSON. Виден только вам.',
+    'footer': 'HanBerOS 6.7.0', 'nav.signin': 'Отметка', 'report.title': 'Пожаловаться', 'report.reason': 'Причина (обязательно)', 'report.detail': 'Подробности (необязательно)', 'report.ok': 'Жалоба отправлена, админы проверят', 'pin.admin': 'Закрепить', 'pin.adminOff': 'Открепить', 'admin.reports': 'Управление жалобами', 'admin.handle': 'Обработать', 'admin.ignore': 'Игнорировать', 'admin.actionPh': 'Действие (напр. удалить / бан 7д)', 'admin.signins': 'Журнал отметок', 'admin.audit': 'Журнал операций', 'admin.export': 'Экспорт данных', 'admin.exportPh': 'Введите имя или ID', 'export.title': 'Экспорт данных', 'export.mine': 'Экспортировать мои данные', 'export.admin': 'Экспорт пользователя', 'export.need': 'Экспорт всех ваших данных (посты, ответы, сообщения, уведомления, отметки) в JSON. Виден только вам.',
     'nav.notifClear': 'Очистить прочитанные',
     'nav.notifCleared': 'Прочитанные уведомления удалены',
     'apps.login.ok1': '✅ Вход через YunTan: ',
@@ -5080,7 +5220,7 @@ var I18N = {
     'post.retry': '再試行',
     'notif.empty': '通知はありません',
     'toast.alreadySigned': '今日はすでにチェックインしました',
-    'nav.home': 'ホーム', 'nav.new': '投稿', 'nav.chat': 'メッセージ', 'nav.notif': '通知', 'nav.apps': 'ミニアプリ', 'nav.login': 'ログイン', 'nav.signup': '登録', 'nav.logout': 'ログアウト', 'search.ph': '投稿を検索…', 'cat.all': 'すべて', 'cat.chat': '雑談', 'cat.study': '勉強', 'cat.game': 'ゲーム', 'cat.tech': '技術', 'cat.announce': 'お知らせ','cat.life': '生活', 'cat.emotion': '感情', 'cat.resource': '資源共有', 'cat.music': '音楽', 'cat.movie': '映画・ドラマ', 'cat.anime': '二次元', 'cat.campus': '学園', 'cat.career': '仕事', 'cat.digital': 'デジタル', 'cat.local': '地元', 'cat.pet': 'ペット', 'cat.food': 'グルメ', 'cat.travel': '旅行', 'cat.sports': 'スポーツ', 'cat.photo': '写真', 'cat.reading': '読書',  'login.title': '雲壇に参加', 'login.sub': '1つのアカウントですべての端末で使えます。', 'login.account': '電話番号またはメール', 'login.password': 'パスワード', 'login.captcha': '答えを入力', 'login.submit': 'ログイン', 'login.noAcc': 'アカウントがありませんか？', 'login.gotoSignup': '登録へ', 'login.haveAcc': 'アカウントをお持ちですか？', 'login.gotoLogin': 'ログインへ', 'signup.title': 'アカウント作成', 'signup.sub': '専用アカウントを登録します。', 'signup.username': 'ユーザー名', 'signup.submit': '登録', 'new.title': '新規投稿', 'new.sub': '話したいテーマを、一目でわかるタイトルで書こう。', 'new.t': 'タイトル', 'new.cat': 'カテゴリ', 'new.body': '内容', 'new.file': '添付（任意）', 'new.filePick': 'クリックしてファイルを選択', 'new.submit': '投稿する', 'new.phTitle': 'テーマを一言で', 'new.phBody': '詳しく書く…（改行対応）', 'post.back': '← ホームに戻る', 'post.reply': '返信', 'post.replies': '件の返信', 'post.confirmDelete': 'この投稿を削除しますか？元に戻せません。', 'post.deleted': '投稿を削除しました', 'post.confirmDelComment': 'この返信を削除しますか？元に戻せません。', 'post.commentDeleted': '返信を削除しました', 'settings.theme': 'テーマ', 'settings.themeHint': '好きな画面スタイルを選ぼう', 'settings.official': '公式', 'settings.solid': '単色', 'settings.gradient': 'グラデーション', 'settings.culture': 'カルチャー', 'settings.default': 'デフォルト', 'settings.glass': 'リキッドガラス', 'settings.glassHint': '「単色」「グラデーション」テーマ限定。ガラス質感＋色と透明度を設定できます', 'settings.glassOn': 'リキッドガラスモードを有効化', 'settings.glassColor': 'ガラスの色', 'settings.opacity': '透明度', 'settings.lang': '表示言語', 'settings.langHint': '画面表示言語を切り替え', 'settings.pwd': 'パスワード変更', 'settings.save': '保存して接続', 'settings.clear': '設定を消去', 'settings.themeSaved': 'テーマを変更しました', 'settings.saveFail': '保存失敗：', 'settings.glassOnDone': 'リキッドガラスを有効にしました', 'settings.glassOffDone': 'リキッドガラスを無効にしました', 'settings.glassColorDone': 'ガラスの色を更新しました', 'settings.glassAlphaDone': 'ガラスの透明度を更新しました', 'settings.langDone': '言語を変更しました', 'welcome': 'おかえりなさい、', 'signupOk': '登録完了。HanBer雲壇へようこそ', 'pleaseLogin': '先にログインしてください', 'uploadFail': 'アップロード失敗', 'netErr': 'リクエストがタイムアウトしました', 'footer': 'HanBerOS 6.4.6', 'nav.signin': 'チェックイン', 'report.title': '通報', 'report.reason': '理由（必須）', 'report.detail': '補足（任意）', 'report.ok': '通報を送信しました。管理者が確認します', 'pin.admin': 'ピン留め', 'pin.adminOff': 'ピン外し', 'admin.reports': '通報管理', 'admin.handle': '処理', 'admin.ignore': '無視', 'admin.actionPh': '対応（例：削除 / 7日BAN）', 'admin.signins': 'チェックイン記録', 'admin.audit': '操作ログ', 'admin.export': 'ユーザーデータ出力', 'admin.exportPh': 'ユーザー名かID', 'export.title': 'データ出力', 'export.mine': '自分の全データを出力', 'export.admin': 'このユーザーを出力', 'export.need': '雲壇の全データ（投稿・返信・メッセージ・通知・チェックイン）をJSONで出力。自分にしか見えません。', 'nav.notifClear': '既読をクリア', 'nav.notifCleared': '既読通知をクリアしました', 'apps.login.ok1': '✅ 雲壇でログイン済み：', 'apps.login.ok2': '—— ゲームに自動でアカウントが入ります', 'apps.login.no1': '🔒 雲壇に未ログイン、', 'apps.login.no2': 'ゲーム内でワンタップログインできます（ログインなしでも試遊OK）', 'apps.needlogin': 'このゲームは雲壇ログインが必要です。先にログインしてください', 'apps.fs.on': '⛶ 全画面を終了', 'apps.fs.off': '⛶ 全画面', 'apps.name.bread': 'パンキル・群雄争覇', 'apps.tag.bread': '共同制作・プレイ前に宣言あり', 'apps.desc.bread': '三国志系カードバトル：マッチング/ランク、武将スキル、装備・計略フル手札。Han Ber & Bread Guard Team 共同制作。', 'apps.name.gta': 'GTA・上海ピクセルシティ', 'apps.tag.gta': 'オフライン遊び', 'apps.desc.gta': '2Dピクセルオープンワールド：12行政区、産業経営、貨物/護送/レース任務、手配・追跡。ブラウザにローカル保存。', 'apps.name.tank': '鉄甲戦史2D', 'apps.tag.tank': '雲壇ワンタップログイン', 'apps.desc.tank': '4つの戦役の戦争ゲーム：鉄甲の奔流、兵種相性、陣地進撃。装甲部隊を指揮しよう。', 'apps.name.century': '世紀戦争', 'apps.tag.century': '雲壇ワンタップログイン', 'apps.desc.century': '100年をまたぐ4大戦役：塹壕から電撃戦まで、名戦史のターン制対決。', 'apps.name.game': 'ゲーム理論・均衡ラボ', 'apps.tag.game': '雲壇ワンタップログイン', 'apps.desc.game': '名作ゲーム理論を人機対戦で：囚人のジレンマ、ナッシュ均衡、チキンゲーム。遊びながら学べる。', 'apps.name.potato': 'クレイジーポテト', 'apps.tag.potato': '雲壇ワンタップログイン', 'apps.desc.potato': 'ジャガイモ叩きのカジュアルゲーム：反射神経チャレンジ、やめられない。', 'apps.name.puff': 'フグふくらみPuff!', 'apps.tag.puff': '雲壇ワンタップログイン', 'apps.desc.puff': 'フグのカジュアルゲーム：ふくらませて、転がして、止まらない。', 'apps.name.mist': '白霧レクイエム', 'apps.tag.mist': 'オフライン', 'apps.desc.mist': '2Dピクセル探索：霧の町、記憶を失った主人公。白い霧を払い真実を見つけよう。', 'apps.name.hanba': '旱魃伝奇', 'apps.tag.hanba': '雲壇ワンタップログイン', 'apps.desc.hanba': 'HANBA LEGEND：東洋伝説の冒険。旱魃を退け、中原を駆けろ。', 'apps.name.croissant': 'クロワッサン伝説', 'apps.tag.croissant': '雲壇ワンタップログイン', 'apps.desc.croissant': 'Croissant Legend：パン屋の世界の冒険物語。サクサクのヒーローがパリを救う。', 'apps.name.panglong': 'ぷにぷにダイエット', 'apps.tag.panglong': '雲壇ワンタップログイン', 'apps.desc.panglong': '食べすぎ小竜のスリム大作戦。食事をコントロールして動こう！', 'apps.name.weiren': '偽人・偽人シミュレーション研究所', 'apps.tag.weiren': 'オフライン', 'apps.desc.weiren': '観察し、見分け、模倣する。真実と偽りの間で選択を。', 'apps.name.star': '星の旅人', 'apps.tag.star': '雲壇ワンタップログイン', 'apps.desc.star': 'Star Voyager：星と宇宙の探検。宇宙船で星の海を渡ろう。', 'apps.name.lovezone': '恋の禁区', 'apps.tag.lovezone': 'ダークウェブ限定・解除で解放', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE：ダークウェブの奥の禁断の物語。あなたの選択が結末を決める。', 'apps.name.faceless': '顔のない人', 'apps.tag.faceless': '反戦ピクセル', 'apps.desc.faceless': 'THE FACELESS：反戦ピクセルゲーム。戦争は地獄だ。', 'apps.lovezone.locked': '🔒 まずダークウェブで取得してください（ページ下部のバージョン番号を5回連打）', 'settings.sound': '背景音', 'settings.soundHint': 'ホワイトノイズや環境音を選んで、途切れなくループ再生します', 'settings.soundOn': '背景音を有効にする', 'settings.volume': '音量', 'sound.balance': 'バランスノイズ', 'sound.bright': 'ブライトノイズ', 'sound.dark': 'ダークノイズ', 'sound.rain': '雨音', 'sound.ocean': '海の波音', 'sound.stream': 'せせらぎ', 'sound.night': '夜の静けさ', 'sound.fire': '焚き火', 'sound.steam': '蒸気', 'sound.fan': '扇風機', 'sound.white': 'ホワイトノイズ', 'chat.empty': 'まだメッセージはありません。あいさつしてみましょう', 'chat.copy': 'コピー', 'chat.translate': '翻訳', 'chat.recall': '撤回', 'chat.delete': '削除', 'chat.recalled': 'メッセージは撤回されました', 'chat.recalledByOther': '相手がメッセージを撤回しました', 'chat.copied': 'コピーしました', 'chat.recallOk': '撤回しました', 'chat.deleteOk': '削除しました（自分にのみ非表示）', 'chat.recallTimeout': '2分を過ぎると削除のみ可能です', 'chat.translating': '翻訳中…', 'chat.you': '私', 'profile.follow': 'フォロー', 'profile.following': 'フォロー中', 'profile.followed': 'フォローしました', 'profile.unfollowed': 'フォロー解除', 'profile.sendMsg': 'メッセージ', 'profile.block': 'ブロック', 'profile.unblock': 'ブロック解除', 'profile.unblocked': 'ブロックを解除しました', 'profile.confirmBlock': 'このユーザーをブロックしますか？ブロック後、相手の内容は表示されなくなります。', 'profile.blocked': 'ブロックしました', 'profile.mutual': '相互フォロー中 · メッセージ可', 'profile.joinedAt': '参加日', 'profile.noBio': 'このユーザーはまだプロフィールを書いていません。', 'admin.confirmRemove': 'この管理者を一般ユーザーに降格しますか？', 'admin.removeDone': '一般ユーザーに降格しました', 'admin.confirmDisable': 'この管理者を無効にしますか？直ちに管理権限が失効します。', 'admin.confirmEnable': 'この管理者を有効にしますか？', 'admin.disableDone': '無効にしました', 'expandAll': 'すべて表示（{0}）', 'admin.enableDone': '有効にしました',      'settings.title': '設定',
+    'nav.home': 'ホーム', 'nav.new': '投稿', 'nav.chat': 'メッセージ', 'nav.notif': '通知', 'nav.apps': 'ミニアプリ', 'nav.login': 'ログイン', 'nav.signup': '登録', 'nav.logout': 'ログアウト', 'search.ph': '投稿を検索…', 'cat.all': 'すべて', 'cat.chat': '雑談', 'cat.study': '勉強', 'cat.game': 'ゲーム', 'cat.tech': '技術', 'cat.announce': 'お知らせ','cat.life': '生活', 'cat.emotion': '感情', 'cat.resource': '資源共有', 'cat.music': '音楽', 'cat.movie': '映画・ドラマ', 'cat.anime': '二次元', 'cat.campus': '学園', 'cat.career': '仕事', 'cat.digital': 'デジタル', 'cat.local': '地元', 'cat.pet': 'ペット', 'cat.food': 'グルメ', 'cat.travel': '旅行', 'cat.sports': 'スポーツ', 'cat.photo': '写真', 'cat.reading': '読書',  'login.title': '雲壇に参加', 'login.sub': '1つのアカウントですべての端末で使えます。', 'login.account': '電話番号またはメール', 'login.password': 'パスワード', 'login.captcha': '答えを入力', 'login.submit': 'ログイン', 'login.noAcc': 'アカウントがありませんか？', 'login.gotoSignup': '登録へ', 'login.haveAcc': 'アカウントをお持ちですか？', 'login.gotoLogin': 'ログインへ', 'signup.title': 'アカウント作成', 'signup.sub': '専用アカウントを登録します。', 'signup.username': 'ユーザー名', 'signup.submit': '登録', 'new.title': '新規投稿', 'new.sub': '話したいテーマを、一目でわかるタイトルで書こう。', 'new.t': 'タイトル', 'new.cat': 'カテゴリ', 'new.body': '内容', 'new.file': '添付（任意）', 'new.filePick': 'クリックしてファイルを選択', 'new.submit': '投稿する', 'new.phTitle': 'テーマを一言で', 'new.phBody': '詳しく書く…（改行対応）', 'post.back': '← ホームに戻る', 'post.reply': '返信', 'post.replies': '件の返信', 'post.confirmDelete': 'この投稿を削除しますか？元に戻せません。', 'post.deleted': '投稿を削除しました', 'post.confirmDelComment': 'この返信を削除しますか？元に戻せません。', 'post.commentDeleted': '返信を削除しました', 'settings.theme': 'テーマ', 'settings.themeHint': '好きな画面スタイルを選ぼう', 'settings.official': '公式', 'settings.solid': '単色', 'settings.gradient': 'グラデーション', 'settings.culture': 'カルチャー', 'settings.default': 'デフォルト', 'settings.glass': 'リキッドガラス', 'settings.glassHint': '「単色」「グラデーション」テーマ限定。ガラス質感＋色と透明度を設定できます', 'settings.glassOn': 'リキッドガラスモードを有効化', 'settings.glassColor': 'ガラスの色', 'settings.opacity': '透明度', 'settings.lang': '表示言語', 'settings.langHint': '画面表示言語を切り替え', 'settings.pwd': 'パスワード変更', 'settings.save': '保存して接続', 'settings.clear': '設定を消去', 'settings.themeSaved': 'テーマを変更しました', 'settings.saveFail': '保存失敗：', 'settings.glassOnDone': 'リキッドガラスを有効にしました', 'settings.glassOffDone': 'リキッドガラスを無効にしました', 'settings.glassColorDone': 'ガラスの色を更新しました', 'settings.glassAlphaDone': 'ガラスの透明度を更新しました', 'settings.langDone': '言語を変更しました', 'welcome': 'おかえりなさい、', 'signupOk': '登録完了。HanBer雲壇へようこそ', 'pleaseLogin': '先にログインしてください', 'uploadFail': 'アップロード失敗', 'netErr': 'リクエストがタイムアウトしました', 'footer': 'HanBerOS 6.7.0', 'nav.signin': 'チェックイン', 'report.title': '通報', 'report.reason': '理由（必須）', 'report.detail': '補足（任意）', 'report.ok': '通報を送信しました。管理者が確認します', 'pin.admin': 'ピン留め', 'pin.adminOff': 'ピン外し', 'admin.reports': '通報管理', 'admin.handle': '処理', 'admin.ignore': '無視', 'admin.actionPh': '対応（例：削除 / 7日BAN）', 'admin.signins': 'チェックイン記録', 'admin.audit': '操作ログ', 'admin.export': 'ユーザーデータ出力', 'admin.exportPh': 'ユーザー名かID', 'export.title': 'データ出力', 'export.mine': '自分の全データを出力', 'export.admin': 'このユーザーを出力', 'export.need': '雲壇の全データ（投稿・返信・メッセージ・通知・チェックイン）をJSONで出力。自分にしか見えません。', 'nav.notifClear': '既読をクリア', 'nav.notifCleared': '既読通知をクリアしました', 'apps.login.ok1': '✅ 雲壇でログイン済み：', 'apps.login.ok2': '—— ゲームに自動でアカウントが入ります', 'apps.login.no1': '🔒 雲壇に未ログイン、', 'apps.login.no2': 'ゲーム内でワンタップログインできます（ログインなしでも試遊OK）', 'apps.needlogin': 'このゲームは雲壇ログインが必要です。先にログインしてください', 'apps.fs.on': '⛶ 全画面を終了', 'apps.fs.off': '⛶ 全画面', 'apps.name.bread': 'パンキル・群雄争覇', 'apps.tag.bread': '共同制作・プレイ前に宣言あり', 'apps.desc.bread': '三国志系カードバトル：マッチング/ランク、武将スキル、装備・計略フル手札。Han Ber & Bread Guard Team 共同制作。', 'apps.name.gta': 'GTA・上海ピクセルシティ', 'apps.tag.gta': 'オフライン遊び', 'apps.desc.gta': '2Dピクセルオープンワールド：12行政区、産業経営、貨物/護送/レース任務、手配・追跡。ブラウザにローカル保存。', 'apps.name.tank': '鉄甲戦史2D', 'apps.tag.tank': '雲壇ワンタップログイン', 'apps.desc.tank': '4つの戦役の戦争ゲーム：鉄甲の奔流、兵種相性、陣地進撃。装甲部隊を指揮しよう。', 'apps.name.century': '世紀戦争', 'apps.tag.century': '雲壇ワンタップログイン', 'apps.desc.century': '100年をまたぐ4大戦役：塹壕から電撃戦まで、名戦史のターン制対決。', 'apps.name.game': 'ゲーム理論・均衡ラボ', 'apps.tag.game': '雲壇ワンタップログイン', 'apps.desc.game': '名作ゲーム理論を人機対戦で：囚人のジレンマ、ナッシュ均衡、チキンゲーム。遊びながら学べる。', 'apps.name.potato': 'クレイジーポテト', 'apps.tag.potato': '雲壇ワンタップログイン', 'apps.desc.potato': 'ジャガイモ叩きのカジュアルゲーム：反射神経チャレンジ、やめられない。', 'apps.name.puff': 'フグふくらみPuff!', 'apps.tag.puff': '雲壇ワンタップログイン', 'apps.desc.puff': 'フグのカジュアルゲーム：ふくらませて、転がして、止まらない。', 'apps.name.mist': '白霧レクイエム', 'apps.tag.mist': 'オフライン', 'apps.desc.mist': '2Dピクセル探索：霧の町、記憶を失った主人公。白い霧を払い真実を見つけよう。', 'apps.name.hanba': '旱魃伝奇', 'apps.tag.hanba': '雲壇ワンタップログイン', 'apps.desc.hanba': 'HANBA LEGEND：東洋伝説の冒険。旱魃を退け、中原を駆けろ。', 'apps.name.croissant': 'クロワッサン伝説', 'apps.tag.croissant': '雲壇ワンタップログイン', 'apps.desc.croissant': 'Croissant Legend：パン屋の世界の冒険物語。サクサクのヒーローがパリを救う。', 'apps.name.panglong': 'ぷにぷにダイエット', 'apps.tag.panglong': '雲壇ワンタップログイン', 'apps.desc.panglong': '食べすぎ小竜のスリム大作戦。食事をコントロールして動こう！', 'apps.name.weiren': '偽人・偽人シミュレーション研究所', 'apps.tag.weiren': 'オフライン', 'apps.desc.weiren': '観察し、見分け、模倣する。真実と偽りの間で選択を。', 'apps.name.star': '星の旅人', 'apps.tag.star': '雲壇ワンタップログイン', 'apps.desc.star': 'Star Voyager：星と宇宙の探検。宇宙船で星の海を渡ろう。', 'apps.name.lovezone': '恋の禁区', 'apps.tag.lovezone': 'ダークウェブ限定・解除で解放', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE：ダークウェブの奥の禁断の物語。あなたの選択が結末を決める。', 'apps.name.faceless': '顔のない人', 'apps.tag.faceless': '反戦ピクセル', 'apps.desc.faceless': 'THE FACELESS：反戦ピクセルゲーム。戦争は地獄だ。', 'apps.lovezone.locked': '🔒 まずダークウェブで取得してください（ページ下部のバージョン番号を5回連打）', 'settings.sound': '背景音', 'settings.soundHint': 'ホワイトノイズや環境音を選んで、途切れなくループ再生します', 'settings.soundOn': '背景音を有効にする', 'settings.volume': '音量', 'sound.balance': 'バランスノイズ', 'sound.bright': 'ブライトノイズ', 'sound.dark': 'ダークノイズ', 'sound.rain': '雨音', 'sound.ocean': '海の波音', 'sound.stream': 'せせらぎ', 'sound.night': '夜の静けさ', 'sound.fire': '焚き火', 'sound.steam': '蒸気', 'sound.fan': '扇風機', 'sound.white': 'ホワイトノイズ', 'chat.empty': 'まだメッセージはありません。あいさつしてみましょう', 'chat.copy': 'コピー', 'chat.translate': '翻訳', 'chat.recall': '撤回', 'chat.delete': '削除', 'chat.recalled': 'メッセージは撤回されました', 'chat.recalledByOther': '相手がメッセージを撤回しました', 'chat.copied': 'コピーしました', 'chat.recallOk': '撤回しました', 'chat.deleteOk': '削除しました（自分にのみ非表示）', 'chat.recallTimeout': '2分を過ぎると削除のみ可能です', 'chat.translating': '翻訳中…', 'chat.you': '私', 'profile.follow': 'フォロー', 'profile.following': 'フォロー中', 'profile.followed': 'フォローしました', 'profile.unfollowed': 'フォロー解除', 'profile.sendMsg': 'メッセージ', 'profile.block': 'ブロック', 'profile.unblock': 'ブロック解除', 'profile.unblocked': 'ブロックを解除しました', 'profile.confirmBlock': 'このユーザーをブロックしますか？ブロック後、相手の内容は表示されなくなります。', 'profile.blocked': 'ブロックしました', 'profile.mutual': '相互フォロー中 · メッセージ可', 'profile.joinedAt': '参加日', 'profile.noBio': 'このユーザーはまだプロフィールを書いていません。', 'admin.confirmRemove': 'この管理者を一般ユーザーに降格しますか？', 'admin.removeDone': '一般ユーザーに降格しました', 'admin.confirmDisable': 'この管理者を無効にしますか？直ちに管理権限が失効します。', 'admin.confirmEnable': 'この管理者を有効にしますか？', 'admin.disableDone': '無効にしました', 'expandAll': 'すべて表示（{0}）', 'admin.enableDone': '有効にしました',      'settings.title': '設定',
     'settings.sub': '雲壇の体験をカスタマイズ',
     'apps.title': 'ミニアプリ',
     'apps.sub': '内蔵ミニゲーム · ログインでアカウント連携',
@@ -5491,7 +5631,7 @@ var I18N = {
     'post.retry': '다시 시도',
     'notif.empty': '알림 없음',
     'toast.alreadySigned': '오늘 이미 출석했습니다',
-    'nav.home': '홈', 'nav.new': '글쓰기', 'nav.chat': '쪽지', 'nav.notif': '알림', 'nav.apps': '미니앱', 'nav.login': '로그인', 'nav.signup': '가입', 'nav.logout': '로그아웃', 'search.ph': '게시글 검색…', 'cat.all': '전체', 'cat.chat': '잡담', 'cat.study': '공부', 'cat.game': '게임', 'cat.tech': '기술', 'cat.announce': '공지','cat.life': '생활', 'cat.emotion': '감정', 'cat.resource': '자료공유', 'cat.music': '음악', 'cat.movie': '영화', 'cat.anime': '2차원', 'cat.campus': '캠퍼스', 'cat.career': '직장', 'cat.digital': '디지털', 'cat.local': '동네', 'cat.pet': '반려동물', 'cat.food': '맛집', 'cat.travel': '여행', 'cat.sports': '운동', 'cat.photo': '사진', 'cat.reading': '독서',  'login.title': '운단에 가입', 'login.sub': '하나의 계정으로 모든 기기에서 사용 가능합니다.', 'login.account': '휴대폰 번호 또는 이메일', 'login.password': '비밀번호', 'login.captcha': '답 입력', 'login.submit': '로그인', 'login.noAcc': '계정이 없으신가요?', 'login.gotoSignup': '가입하기', 'login.haveAcc': '계정이 있으신가요?', 'login.gotoLogin': '로그인하기', 'signup.title': '계정 만들기', 'signup.sub': '전용 계정을 등록합니다.', 'signup.username': '사용자 이름', 'signup.submit': '가입', 'new.title': '새 글', 'new.sub': '한눈에 알아볼 수 있는 제목으로 이야기를 시작하세요.', 'new.t': '제목', 'new.cat': '분류', 'new.body': '내용', 'new.file': '첨부(선택)', 'new.filePick': '클릭하여 파일 선택', 'new.submit': '게시', 'new.phTitle': '주제를 한 줄로', 'new.phBody': '자세히…(줄바꿈 지원)', 'post.back': '← 홈으로', 'post.reply': '답글', 'post.replies': '개의 답글', 'post.confirmDelete': '이 게시글을 삭제할까요? 되돌릴 수 없습니다.', 'post.deleted': '게시글이 삭제되었습니다', 'post.confirmDelComment': '이 답글을 삭제할까요? 되돌릴 수 없습니다.', 'post.commentDeleted': '답글이 삭제되었습니다', 'settings.theme': '테마', 'settings.themeHint': '마음에 드는 화면 스타일을 선택하세요', 'settings.official': '공식', 'settings.solid': '단색', 'settings.gradient': '그라데이션', 'settings.culture': '문화', 'settings.default': '기본', 'settings.glass': '리퀴드 글라스', 'settings.glassHint': '「단색」「그라데이션」테마에서만 사용 가능. 유리 질감 + 색상·투명도 설정', 'settings.glassOn': '리퀴드 글라스 모드 켜기', 'settings.glassColor': '유리 색상', 'settings.opacity': '투명도', 'settings.lang': '표시 언어', 'settings.langHint': '화면 표시 언어 전환', 'settings.pwd': '비밀번호 변경', 'settings.save': '저장 후 연결', 'settings.clear': '설정 지우기', 'settings.themeSaved': '테마를 변경했습니다', 'settings.saveFail': '저장 실패:', 'settings.glassOnDone': '리퀴드 글라스 켜짐', 'settings.glassOffDone': '리퀴드 글라스 꺼짐', 'settings.glassColorDone': '유리 색상을 업데이트했습니다', 'settings.glassAlphaDone': '유리 투명도를 업데이트했습니다', 'settings.langDone': '언어를 변경했습니다', 'welcome': '환영합니다,', 'signupOk': '가입 완료. HanBer 운단에 오신 것을 환영합니다', 'pleaseLogin': '먼저 로그인하세요', 'uploadFail': '업로드 실패', 'netErr': '요청 시간 초과', 'footer': 'HanBerOS 6.4.6', 'nav.signin': '출석', 'report.title': '신고', 'report.reason': '신고 사유(필수)', 'report.detail': '상세(선택)', 'report.ok': '신고가 접수되었습니다. 관리자가 확인합니다', 'pin.admin': '고정', 'pin.adminOff': '고정 해제', 'admin.reports': '신고 관리', 'admin.handle': '처리', 'admin.ignore': '무시', 'admin.actionPh': '조치(예: 삭제 / 7일 정지)', 'admin.signins': '출석 기록', 'admin.audit': '조작 로그', 'admin.export': '사용자 데이터 내보내기', 'admin.exportPh': '이름 또는 ID 입력', 'export.title': '데이터 내보내기', 'export.mine': '내 전체 데이터 내보내기', 'export.admin': '이 사용자 내보내기', 'export.need': '운단의 모든 데이터(게시글·댓글·쪽지·알림·출석)를 JSON으로 내보냅니다. 나만 볼 수 있습니다.', 'nav.notifClear': '읽음 지우기', 'nav.notifCleared': '읽은 알림을 지웠습니다', 'apps.login.ok1': '✅ 운단으로 로그인됨:', 'apps.login.ok2': '—— 게임에 자동으로 계정이 들어갑니다', 'apps.login.no1': '🔒 운단에 로그인하지 않음,', 'apps.login.no2': '게임에서 원탭 로그인 가능(로그인 없이도 체험 가능)', 'apps.needlogin': '이 게임은 운단 로그인이 필요합니다. 먼저 로그인하세요', 'apps.fs.on': '⛶ 전체 화면 종료', 'apps.fs.off': '⛶ 전체 화면', 'apps.name.bread': '빵킬·군웅쟁패', 'apps.tag.bread': '공동 제작 · 플레이 전 선언 필요', 'apps.desc.bread': '삼국지풍 카드 배틀: 매칭/랭크, 장수 스킬, 장비·계략 풀패. Han Ber & Bread Guard Team 공동 제작.', 'apps.name.gta': 'GTA·상하이 픽셀 시티', 'apps.tag.gta': '오프라인 플레이', 'apps.desc.gta': '2D 픽셀 오픈월드: 12개 행정구, 산업 경영, 화물/호송/레이스 임무, 지명 수배, 브라우저 로컬 저장.', 'apps.name.tank': '철갑전사 2D', 'apps.tag.tank': '운단 원탭 로그인', 'apps.desc.tank': '4개 전역의 전쟁 게임: 철갑의 파도, 병종 상성, 진지 전진. 기갑 부대를 지휘하세요.', 'apps.name.century': '세기 전쟁', 'apps.tag.century': '운단 원탭 로그인', 'apps.desc.century': '100년을 아우르는 4대 전역: 참호전에서 전격전까지, 명장면 턴제 대결.', 'apps.name.game': '게임이론·균형 연구소', 'apps.tag.game': '운단 원탭 로그인', 'apps.desc.game': '고전 게임이론 인공지능 대전: 죄수의 딜레마, 내시 균형, 돼지 게임. 배우며 즐기세요.', 'apps.name.potato': '크레이지 감자', 'apps.tag.potato': '운단 원탭 로그인', 'apps.desc.potato': '감자 치기 캐주얼 게임: 반사 신경 도전, 멈출 수 없음.', 'apps.name.puff': '부풀복어 Puff!', 'apps.tag.puff': '운단 원탭 로그인', 'apps.desc.puff': '복어 캐주얼 게임: 부풀고, 뒤집고, 멈출 수 없음.', 'apps.name.mist': '백무 진혼곡', 'apps.tag.mist': '오프라인', 'apps.desc.mist': '2D 픽셀 탐험: 안개 마을, 기억을 잃은 주인공. 흰 안개를 헤치고 진실을 찾아라.', 'apps.name.hanba': '한발 전설', 'apps.tag.hanba': '운단 원탭 로그인', 'apps.desc.hanba': 'HANBA LEGEND: 동방 전설 모험. 가뭄을 물리치고 중원을 누비라.', 'apps.name.croissant': '크루아상 전설', 'apps.tag.croissant': '운단 원탭 로그인', 'apps.desc.croissant': 'Croissant Legend: 제과 세계의 모험담. 바삭한 영웅이 파리를 구한다.', 'apps.name.panglong': '뚱보용 다이어트', 'apps.tag.panglong': '운단 원탭 로그인', 'apps.desc.panglong': '먹보 작은용의 다이어트 대작전. 식이조절하고 움직여라!', 'apps.name.weiren': '위인·위인 시뮬레이션 연구소', 'apps.tag.weiren': '오프라인', 'apps.desc.weiren': '관찰하고, 구별하고, 모방하라. 진짜와 가짜 사이에서 선택하라.', 'apps.name.star': '별의 여행자', 'apps.tag.star': '운단 원탭 로그인', 'apps.desc.star': 'Star Voyager: 별과 우주 탐험. 우주선을 타고 별바다를 건너세요.', 'apps.name.lovezone': '사랑의 금지구역', 'apps.tag.lovezone': '다크웹 한정 · 해금 필요', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: 다크웹 깊은 곳의 금기 서사. 당신의 선택이 결말을 정합니다.', 'apps.name.faceless': '얼굴 없는 사람', 'apps.tag.faceless': '반전 픽셀', 'apps.desc.faceless': 'THE FACELESS: 반전 픽셀 게임. 전쟁은 지옥이다.', 'apps.lovezone.locked': '🔒 먼저 다크웹에서 획득해야 함(페이지 하단 버전 번호 5번 연타)', 'settings.sound': '배경음', 'settings.soundHint': '화이트 노이즈나 환경음을 선택해 끊김 없이 반복 재생합니다', 'settings.soundOn': '배경음 켜기', 'settings.volume': '볼륨', 'sound.balance': '균형 노이즈', 'sound.bright': '밝은 노이즈', 'sound.dark': '어두운 노이즈', 'sound.rain': '빗소리', 'sound.ocean': '파도 소리', 'sound.stream': '시냇물', 'sound.night': '밤의 고요', 'sound.fire': '모닥불', 'sound.steam': '증기', 'sound.fan': '선풍기', 'sound.white': '화이트 노이즈', 'chat.empty': '아직 메시지가 없습니다. 인사해 보세요', 'chat.copy': '복사', 'chat.translate': '번역', 'chat.recall': '회수', 'chat.delete': '삭제', 'chat.recalled': '메시지가 회수되었습니다', 'chat.recalledByOther': '상대방이 메시지를 회수했습니다', 'chat.copied': '복사되었습니다', 'chat.recallOk': '회수되었습니다', 'chat.deleteOk': '삭제되었습니다(나만 안 보임)', 'chat.recallTimeout': '2분이 지나면 삭제만 가능합니다', 'chat.translating': '번역 중…', 'chat.you': '나', 'profile.follow': '팔로우', 'profile.following': '팔로우 중', 'profile.followed': '팔로우함', 'profile.unfollowed': '팔로우 취소', 'profile.sendMsg': '쪽지 보내기', 'profile.block': '차단', 'profile.unblock': '차단 해제', 'profile.unblocked': '차단 해제됨', 'profile.confirmBlock': '이 사용자를 차단할까요? 차단하면 상대의 콘텐츠를 볼 수 없습니다.', 'profile.blocked': '차단됨', 'profile.mutual': '맞팔로우 · 쪽지 가능', 'profile.joinedAt': '가입일', 'profile.noBio': '이 사용자는 아직 프로필을 작성하지 않았습니다.', 'admin.confirmRemove': '이 관리자를 일반 사용자로 강등할까요?', 'admin.removeDone': '일반 사용자로 강등됨', 'admin.confirmDisable': '이 관리자를 비활성화할까요? 관리 권한이 즉시 소멸됩니다.', 'admin.confirmEnable': '이 관리자를 활성화할까요?', 'admin.disableDone': '비활성화됨', 'expandAll': '모두 보기 ({0})', 'admin.enableDone': '활성화됨',      'settings.title': '설정',
+    'nav.home': '홈', 'nav.new': '글쓰기', 'nav.chat': '쪽지', 'nav.notif': '알림', 'nav.apps': '미니앱', 'nav.login': '로그인', 'nav.signup': '가입', 'nav.logout': '로그아웃', 'search.ph': '게시글 검색…', 'cat.all': '전체', 'cat.chat': '잡담', 'cat.study': '공부', 'cat.game': '게임', 'cat.tech': '기술', 'cat.announce': '공지','cat.life': '생활', 'cat.emotion': '감정', 'cat.resource': '자료공유', 'cat.music': '음악', 'cat.movie': '영화', 'cat.anime': '2차원', 'cat.campus': '캠퍼스', 'cat.career': '직장', 'cat.digital': '디지털', 'cat.local': '동네', 'cat.pet': '반려동물', 'cat.food': '맛집', 'cat.travel': '여행', 'cat.sports': '운동', 'cat.photo': '사진', 'cat.reading': '독서',  'login.title': '운단에 가입', 'login.sub': '하나의 계정으로 모든 기기에서 사용 가능합니다.', 'login.account': '휴대폰 번호 또는 이메일', 'login.password': '비밀번호', 'login.captcha': '답 입력', 'login.submit': '로그인', 'login.noAcc': '계정이 없으신가요?', 'login.gotoSignup': '가입하기', 'login.haveAcc': '계정이 있으신가요?', 'login.gotoLogin': '로그인하기', 'signup.title': '계정 만들기', 'signup.sub': '전용 계정을 등록합니다.', 'signup.username': '사용자 이름', 'signup.submit': '가입', 'new.title': '새 글', 'new.sub': '한눈에 알아볼 수 있는 제목으로 이야기를 시작하세요.', 'new.t': '제목', 'new.cat': '분류', 'new.body': '내용', 'new.file': '첨부(선택)', 'new.filePick': '클릭하여 파일 선택', 'new.submit': '게시', 'new.phTitle': '주제를 한 줄로', 'new.phBody': '자세히…(줄바꿈 지원)', 'post.back': '← 홈으로', 'post.reply': '답글', 'post.replies': '개의 답글', 'post.confirmDelete': '이 게시글을 삭제할까요? 되돌릴 수 없습니다.', 'post.deleted': '게시글이 삭제되었습니다', 'post.confirmDelComment': '이 답글을 삭제할까요? 되돌릴 수 없습니다.', 'post.commentDeleted': '답글이 삭제되었습니다', 'settings.theme': '테마', 'settings.themeHint': '마음에 드는 화면 스타일을 선택하세요', 'settings.official': '공식', 'settings.solid': '단색', 'settings.gradient': '그라데이션', 'settings.culture': '문화', 'settings.default': '기본', 'settings.glass': '리퀴드 글라스', 'settings.glassHint': '「단색」「그라데이션」테마에서만 사용 가능. 유리 질감 + 색상·투명도 설정', 'settings.glassOn': '리퀴드 글라스 모드 켜기', 'settings.glassColor': '유리 색상', 'settings.opacity': '투명도', 'settings.lang': '표시 언어', 'settings.langHint': '화면 표시 언어 전환', 'settings.pwd': '비밀번호 변경', 'settings.save': '저장 후 연결', 'settings.clear': '설정 지우기', 'settings.themeSaved': '테마를 변경했습니다', 'settings.saveFail': '저장 실패:', 'settings.glassOnDone': '리퀴드 글라스 켜짐', 'settings.glassOffDone': '리퀴드 글라스 꺼짐', 'settings.glassColorDone': '유리 색상을 업데이트했습니다', 'settings.glassAlphaDone': '유리 투명도를 업데이트했습니다', 'settings.langDone': '언어를 변경했습니다', 'welcome': '환영합니다,', 'signupOk': '가입 완료. HanBer 운단에 오신 것을 환영합니다', 'pleaseLogin': '먼저 로그인하세요', 'uploadFail': '업로드 실패', 'netErr': '요청 시간 초과', 'footer': 'HanBerOS 6.7.0', 'nav.signin': '출석', 'report.title': '신고', 'report.reason': '신고 사유(필수)', 'report.detail': '상세(선택)', 'report.ok': '신고가 접수되었습니다. 관리자가 확인합니다', 'pin.admin': '고정', 'pin.adminOff': '고정 해제', 'admin.reports': '신고 관리', 'admin.handle': '처리', 'admin.ignore': '무시', 'admin.actionPh': '조치(예: 삭제 / 7일 정지)', 'admin.signins': '출석 기록', 'admin.audit': '조작 로그', 'admin.export': '사용자 데이터 내보내기', 'admin.exportPh': '이름 또는 ID 입력', 'export.title': '데이터 내보내기', 'export.mine': '내 전체 데이터 내보내기', 'export.admin': '이 사용자 내보내기', 'export.need': '운단의 모든 데이터(게시글·댓글·쪽지·알림·출석)를 JSON으로 내보냅니다. 나만 볼 수 있습니다.', 'nav.notifClear': '읽음 지우기', 'nav.notifCleared': '읽은 알림을 지웠습니다', 'apps.login.ok1': '✅ 운단으로 로그인됨:', 'apps.login.ok2': '—— 게임에 자동으로 계정이 들어갑니다', 'apps.login.no1': '🔒 운단에 로그인하지 않음,', 'apps.login.no2': '게임에서 원탭 로그인 가능(로그인 없이도 체험 가능)', 'apps.needlogin': '이 게임은 운단 로그인이 필요합니다. 먼저 로그인하세요', 'apps.fs.on': '⛶ 전체 화면 종료', 'apps.fs.off': '⛶ 전체 화면', 'apps.name.bread': '빵킬·군웅쟁패', 'apps.tag.bread': '공동 제작 · 플레이 전 선언 필요', 'apps.desc.bread': '삼국지풍 카드 배틀: 매칭/랭크, 장수 스킬, 장비·계략 풀패. Han Ber & Bread Guard Team 공동 제작.', 'apps.name.gta': 'GTA·상하이 픽셀 시티', 'apps.tag.gta': '오프라인 플레이', 'apps.desc.gta': '2D 픽셀 오픈월드: 12개 행정구, 산업 경영, 화물/호송/레이스 임무, 지명 수배, 브라우저 로컬 저장.', 'apps.name.tank': '철갑전사 2D', 'apps.tag.tank': '운단 원탭 로그인', 'apps.desc.tank': '4개 전역의 전쟁 게임: 철갑의 파도, 병종 상성, 진지 전진. 기갑 부대를 지휘하세요.', 'apps.name.century': '세기 전쟁', 'apps.tag.century': '운단 원탭 로그인', 'apps.desc.century': '100년을 아우르는 4대 전역: 참호전에서 전격전까지, 명장면 턴제 대결.', 'apps.name.game': '게임이론·균형 연구소', 'apps.tag.game': '운단 원탭 로그인', 'apps.desc.game': '고전 게임이론 인공지능 대전: 죄수의 딜레마, 내시 균형, 돼지 게임. 배우며 즐기세요.', 'apps.name.potato': '크레이지 감자', 'apps.tag.potato': '운단 원탭 로그인', 'apps.desc.potato': '감자 치기 캐주얼 게임: 반사 신경 도전, 멈출 수 없음.', 'apps.name.puff': '부풀복어 Puff!', 'apps.tag.puff': '운단 원탭 로그인', 'apps.desc.puff': '복어 캐주얼 게임: 부풀고, 뒤집고, 멈출 수 없음.', 'apps.name.mist': '백무 진혼곡', 'apps.tag.mist': '오프라인', 'apps.desc.mist': '2D 픽셀 탐험: 안개 마을, 기억을 잃은 주인공. 흰 안개를 헤치고 진실을 찾아라.', 'apps.name.hanba': '한발 전설', 'apps.tag.hanba': '운단 원탭 로그인', 'apps.desc.hanba': 'HANBA LEGEND: 동방 전설 모험. 가뭄을 물리치고 중원을 누비라.', 'apps.name.croissant': '크루아상 전설', 'apps.tag.croissant': '운단 원탭 로그인', 'apps.desc.croissant': 'Croissant Legend: 제과 세계의 모험담. 바삭한 영웅이 파리를 구한다.', 'apps.name.panglong': '뚱보용 다이어트', 'apps.tag.panglong': '운단 원탭 로그인', 'apps.desc.panglong': '먹보 작은용의 다이어트 대작전. 식이조절하고 움직여라!', 'apps.name.weiren': '위인·위인 시뮬레이션 연구소', 'apps.tag.weiren': '오프라인', 'apps.desc.weiren': '관찰하고, 구별하고, 모방하라. 진짜와 가짜 사이에서 선택하라.', 'apps.name.star': '별의 여행자', 'apps.tag.star': '운단 원탭 로그인', 'apps.desc.star': 'Star Voyager: 별과 우주 탐험. 우주선을 타고 별바다를 건너세요.', 'apps.name.lovezone': '사랑의 금지구역', 'apps.tag.lovezone': '다크웹 한정 · 해금 필요', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: 다크웹 깊은 곳의 금기 서사. 당신의 선택이 결말을 정합니다.', 'apps.name.faceless': '얼굴 없는 사람', 'apps.tag.faceless': '반전 픽셀', 'apps.desc.faceless': 'THE FACELESS: 반전 픽셀 게임. 전쟁은 지옥이다.', 'apps.lovezone.locked': '🔒 먼저 다크웹에서 획득해야 함(페이지 하단 버전 번호 5번 연타)', 'settings.sound': '배경음', 'settings.soundHint': '화이트 노이즈나 환경음을 선택해 끊김 없이 반복 재생합니다', 'settings.soundOn': '배경음 켜기', 'settings.volume': '볼륨', 'sound.balance': '균형 노이즈', 'sound.bright': '밝은 노이즈', 'sound.dark': '어두운 노이즈', 'sound.rain': '빗소리', 'sound.ocean': '파도 소리', 'sound.stream': '시냇물', 'sound.night': '밤의 고요', 'sound.fire': '모닥불', 'sound.steam': '증기', 'sound.fan': '선풍기', 'sound.white': '화이트 노이즈', 'chat.empty': '아직 메시지가 없습니다. 인사해 보세요', 'chat.copy': '복사', 'chat.translate': '번역', 'chat.recall': '회수', 'chat.delete': '삭제', 'chat.recalled': '메시지가 회수되었습니다', 'chat.recalledByOther': '상대방이 메시지를 회수했습니다', 'chat.copied': '복사되었습니다', 'chat.recallOk': '회수되었습니다', 'chat.deleteOk': '삭제되었습니다(나만 안 보임)', 'chat.recallTimeout': '2분이 지나면 삭제만 가능합니다', 'chat.translating': '번역 중…', 'chat.you': '나', 'profile.follow': '팔로우', 'profile.following': '팔로우 중', 'profile.followed': '팔로우함', 'profile.unfollowed': '팔로우 취소', 'profile.sendMsg': '쪽지 보내기', 'profile.block': '차단', 'profile.unblock': '차단 해제', 'profile.unblocked': '차단 해제됨', 'profile.confirmBlock': '이 사용자를 차단할까요? 차단하면 상대의 콘텐츠를 볼 수 없습니다.', 'profile.blocked': '차단됨', 'profile.mutual': '맞팔로우 · 쪽지 가능', 'profile.joinedAt': '가입일', 'profile.noBio': '이 사용자는 아직 프로필을 작성하지 않았습니다.', 'admin.confirmRemove': '이 관리자를 일반 사용자로 강등할까요?', 'admin.removeDone': '일반 사용자로 강등됨', 'admin.confirmDisable': '이 관리자를 비활성화할까요? 관리 권한이 즉시 소멸됩니다.', 'admin.confirmEnable': '이 관리자를 활성화할까요?', 'admin.disableDone': '비활성화됨', 'expandAll': '모두 보기 ({0})', 'admin.enableDone': '활성화됨',      'settings.title': '설정',
     'settings.sub': 'Yuntan 경험을 맞춤설정하세요',
     'apps.title': '미니 앱',
     'apps.sub': '내장 미니 게임 · 로그인 시 자동 연동',
@@ -5902,7 +6042,7 @@ var I18N = {
     'post.retry': 'Tentar novamente',
     'notif.empty': 'Sem notificações',
     'toast.alreadySigned': 'Já fez check-in hoje',
-    'nav.home': 'Início', 'nav.new': 'Publicar', 'nav.chat': 'Mensagens', 'nav.notif': 'Notificações', 'nav.apps': 'Mini Apps', 'nav.login': 'Entrar', 'nav.signup': 'Cadastrar', 'nav.logout': 'Sair', 'search.ph': 'Pesquisar posts…', 'cat.all': 'Tudo', 'cat.chat': 'Papo', 'cat.study': 'Estudos', 'cat.game': 'Jogos', 'cat.tech': 'Tecnologia', 'cat.announce': 'Notícias','cat.life': 'Vida', 'cat.emotion': 'Emoções', 'cat.resource': 'Recursos', 'cat.music': 'Música', 'cat.movie': 'Filmes', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Carreira', 'cat.digital': 'Digital', 'cat.local': 'Local', 'cat.pet': 'Animais', 'cat.food': 'Comida', 'cat.travel': 'Viagens', 'cat.sports': 'Desporto', 'cat.photo': 'Fotografia', 'cat.reading': 'Leitura',  'login.title': 'Entre no Fórum', 'login.sub': 'Uma conta para todos os dispositivos.', 'login.account': 'Telefone ou e-mail', 'login.password': 'Senha', 'login.captcha': 'Digite a resposta', 'login.submit': 'Entrar', 'login.noAcc': 'Sem conta?', 'login.gotoSignup': 'Cadastre-se', 'login.haveAcc': 'Já tem conta?', 'login.gotoLogin': 'Entrar', 'signup.title': 'Criar Conta', 'signup.sub': 'Registre uma conta exclusiva.', 'signup.username': 'Nome de usuário', 'signup.submit': 'Cadastrar', 'new.title': 'Novo Post', 'new.sub': 'Escreva um tema que dê para entender de primeira.', 'new.t': 'Título', 'new.cat': 'Categoria', 'new.body': 'Conteúdo', 'new.file': 'Anexo (opcional)', 'new.filePick': 'Clique para escolher arquivos', 'new.submit': 'Publicar', 'new.phTitle': 'Resuma o tema em uma frase', 'new.phBody': 'Detalhes… (quebras de linha suportadas)', 'post.back': '← Voltar ao início', 'post.reply': 'Responder', 'post.replies': ' respostas', 'post.confirmDelete': 'Eliminar esta publicação? Não dá para desfazer.', 'post.deleted': 'Publicação eliminada', 'post.confirmDelComment': 'Eliminar esta resposta? Não dá para desfazer.', 'post.commentDeleted': 'Resposta eliminada', 'settings.theme': 'Aparência do tema', 'settings.themeHint': 'Escolha seu estilo de interface', 'settings.official': 'Oficial', 'settings.solid': 'Sólido', 'settings.gradient': 'Gradiente', 'settings.culture': 'Cultural', 'settings.default': 'Padrão', 'settings.glass': 'Vidro líquido', 'settings.glassHint': 'Disponível apenas nos temas "Sólido" e "Gradiente". Visual de vidro + cor e opacidade opcionais', 'settings.glassOn': 'Ativar modo vidro líquido', 'settings.glassColor': 'Cor do vidro', 'settings.opacity': 'Opacidade', 'settings.lang': 'Idioma da interface', 'settings.langHint': 'Alterar o idioma da interface', 'settings.pwd': 'Alterar senha', 'settings.save': 'Salvar e conectar', 'settings.clear': 'Limpar configuração', 'settings.themeSaved': 'Tema alterado', 'settings.saveFail': 'Falha ao salvar:', 'settings.glassOnDone': 'Vidro líquido ativado', 'settings.glassOffDone': 'Vidro líquido desativado', 'settings.glassColorDone': 'Cor do vidro atualizada', 'settings.glassAlphaDone': 'Opacidade do vidro atualizada', 'settings.langDone': 'Idioma alterado', 'welcome': 'Bem-vindo de volta,', 'signupOk': 'Cadastro concluído. Bem-vindo ao HanBer Fórum', 'pleaseLogin': 'Faça login primeiro', 'uploadFail': 'Falha no upload', 'netErr': 'Tempo de solicitação esgotado', 'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Denunciar', 'report.reason': 'Motivo (obrigatório)', 'report.detail': 'Detalhes (opcional)', 'report.ok': 'Denúncia enviada, os admins vão analisar', 'pin.admin': 'Fixar', 'pin.adminOff': 'Desafixar', 'admin.reports': 'Gestão de Denúncias', 'admin.handle': 'Processar', 'admin.ignore': 'Ignorar', 'admin.actionPh': 'Ação (ex. apagar / ban 7d)', 'admin.signins': 'Registos de Check-in', 'admin.audit': 'Registo de Operações', 'admin.export': 'Exportar Dados', 'admin.exportPh': 'Insira nome ou ID', 'export.title': 'Exportação de Dados', 'export.mine': 'Exportar Todos os Meus Dados', 'export.admin': 'Exportar Este Utilizador', 'export.need': 'Exporta todos os teus dados (posts, respostas, mensagens, notificações, check-ins) em JSON. Só tu podes ver.', 'nav.notifClear': 'Limpar lidas', 'nav.notifCleared': 'Notificações lidas limpas', 'apps.login.ok1': '✅ Conectado pelo Fórum:', 'apps.login.ok2': '—— o jogo entra com sua conta automaticamente', 'apps.login.no1': '🔒 Não conectado ao Fórum,', 'apps.login.no2': 'faça login em um toque no jogo (dá para jogar sem login)', 'apps.needlogin': 'Este jogo precisa do login do Fórum. Entre primeiro', 'apps.fs.on': '⛶ Sair da tela cheia', 'apps.fs.off': '⛶ Tela cheia', 'apps.name.bread': 'Pão Mortal · Batalha dos Heróis', 'apps.tag.bread': 'Produção conjunta · leia o aviso antes de entrar', 'apps.desc.bread': 'Batalha de cartas estilo Três Reinos: match/ranqueada, habilidades de generais, equipamentos e estratagemas. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Cidade Pixel de Xangai', 'apps.tag.gta': 'Jogo offline', 'apps.desc.gta': 'Mundo aberto 2D pixel: 12 distritos, gestão de negócios, missões de carga/escolta/corrida, perseguição. Salvo no navegador.', 'apps.name.tank': 'História Blindada 2D', 'apps.tag.tank': 'Login em um toque', 'apps.desc.tank': 'Jogo de guerra com 4 campanhas: onda blindada, contração entre tropas, avanço de posição. Comande suas forças blindadas.', 'apps.name.century': 'Guerra dos Séculos', 'apps.tag.century': 'Login em um toque', 'apps.desc.century': 'Quatro grandes batalhas por cem anos: das trincheiras à guerra-relâmpago, confrontos de turnos.', 'apps.name.game': 'Teoria dos Jogos · Lab de Equilíbrio', 'apps.tag.game': 'Login em um toque', 'apps.desc.game': 'Casos clássicos contra a IA: dilema do prisioneiro, equilíbrio de Nash, jogo do porco. Aprenda jogando.', 'apps.name.potato': 'Batata Maluca', 'apps.tag.potato': 'Login em um toque', 'apps.desc.potato': 'Jogo casual de bater na batata: desafio de reflexos, vicia.', 'apps.name.puff': 'Baiacu Puff!', 'apps.tag.puff': 'Login em um toque', 'apps.desc.puff': 'Jogo casual do baiacu: sopre, infle, vire. Não consegue parar.', 'apps.name.mist': 'Réquiem na Névoa', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Exploração 2D pixel: cidade enevoada, protagonista sem memória. Descubra a verdade na névoa.', 'apps.name.hanba': 'Lenda de Hanba', 'apps.tag.hanba': 'Login em um toque', 'apps.desc.hanba': 'HANBA LEGEND: aventura de lendas orientais. Domine a seca e conquiste a planície central.', 'apps.name.croissant': 'Lenda do Croissant', 'apps.tag.croissant': 'Login em um toque', 'apps.desc.croissant': 'Croissant Legend: aventura no mundo da confeitaria. Um herói crocante salva Paris.', 'apps.name.panglong': 'Dieta do Dragão Gordo', 'apps.tag.panglong': 'Login em um toque', 'apps.desc.panglong': 'A grande batalha de emagrecimento de um pequeno dragão guloso. Cuide da dieta e mexa-se!', 'apps.name.weiren': 'Wei Ren · Instituto de Simulação', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Observe, distinga, simule. Escolha entre o real e o falso.', 'apps.name.star': 'Viajante das Estrelas', 'apps.tag.star': 'Login em um toque', 'apps.desc.star': 'Star Voyager: exploração de estrelas e espaço. Pilote sua nave pelo mar de estrelas.', 'apps.name.lovezone': 'Zona Proibida do Amor', 'apps.tag.lovezone': 'Limitado à deep web · desbloqueio', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: uma narrativa proibida nas profundezas da deep web. Sua escolha define o fim.', 'apps.name.faceless': 'O Homem Sem Rosto', 'apps.tag.faceless': 'Pixel antiguerra', 'apps.desc.faceless': 'THE FACELESS: um jogo pixel antiguerra. A guerra é o inferno.', 'apps.lovezone.locked': '🔒 É preciso obter na deep web (toque 5 vezes no número de versão no rodapé)', 'settings.sound': 'Som de fundo', 'settings.soundHint': 'Escolha um ruído branco ou som ambiente para tocar em loop sem parar', 'settings.soundOn': 'Ativar som de fundo', 'settings.volume': 'Volume', 'sound.balance': 'Ruído balanceado', 'sound.bright': 'Ruído brilhante', 'sound.dark': 'Ruído escuro', 'sound.rain': 'Chuva', 'sound.ocean': 'Oceano', 'sound.stream': 'Riacho', 'sound.night': 'Noite', 'sound.fire': 'Fogueira', 'sound.steam': 'Vapor', 'sound.fan': 'Ventilador', 'sound.white': 'Ruído branco', 'chat.empty': 'Ainda não há mensagens. Diga olá!', 'chat.copy': 'Copiar', 'chat.translate': 'Traduzir', 'chat.recall': 'Retirar', 'chat.delete': 'Excluir', 'chat.recalled': 'Mensagem retirada', 'chat.recalledByOther': 'A outra pessoa retirou uma mensagem', 'chat.copied': 'Copiado', 'chat.recallOk': 'Retirada', 'chat.deleteOk': 'Excluída (oculta só para você)', 'chat.recallTimeout': 'Após 2 minutos só dá para excluir', 'chat.translating': 'Traduzindo…', 'chat.you': 'Eu', 'profile.follow': 'Seguir', 'profile.following': 'Seguindo', 'profile.followed': 'Seguiu', 'profile.unfollowed': 'Deixou de seguir', 'profile.sendMsg': 'Enviar mensagem', 'profile.block': 'Bloquear', 'profile.unblock': 'Desbloquear', 'profile.unblocked': 'Desbloqueado', 'profile.confirmBlock': 'Bloquear este utilizador? Deixarás de ver o conteúdo dele.', 'profile.blocked': 'Bloqueado', 'profile.mutual': 'Seguem-se mutuamente · podem conversar', 'profile.joinedAt': 'Entrou em', 'profile.noBio': 'Este utilizador ainda não escreveu uma biografia.', 'admin.confirmRemove': 'Rebaixar este administrador para utilizador normal?', 'admin.removeDone': 'Rebaixado para utilizador normal', 'admin.confirmDisable': 'Desativar este administrador? Os privilégios de admin serão revogados imediatamente.', 'admin.confirmEnable': 'Ativar este administrador?', 'admin.disableDone': 'Desativado', 'expandAll': 'Mostrar tudo ({0})', 'admin.enableDone': 'Ativado',      'settings.title': 'Configurações',
+    'nav.home': 'Início', 'nav.new': 'Publicar', 'nav.chat': 'Mensagens', 'nav.notif': 'Notificações', 'nav.apps': 'Mini Apps', 'nav.login': 'Entrar', 'nav.signup': 'Cadastrar', 'nav.logout': 'Sair', 'search.ph': 'Pesquisar posts…', 'cat.all': 'Tudo', 'cat.chat': 'Papo', 'cat.study': 'Estudos', 'cat.game': 'Jogos', 'cat.tech': 'Tecnologia', 'cat.announce': 'Notícias','cat.life': 'Vida', 'cat.emotion': 'Emoções', 'cat.resource': 'Recursos', 'cat.music': 'Música', 'cat.movie': 'Filmes', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Carreira', 'cat.digital': 'Digital', 'cat.local': 'Local', 'cat.pet': 'Animais', 'cat.food': 'Comida', 'cat.travel': 'Viagens', 'cat.sports': 'Desporto', 'cat.photo': 'Fotografia', 'cat.reading': 'Leitura',  'login.title': 'Entre no Fórum', 'login.sub': 'Uma conta para todos os dispositivos.', 'login.account': 'Telefone ou e-mail', 'login.password': 'Senha', 'login.captcha': 'Digite a resposta', 'login.submit': 'Entrar', 'login.noAcc': 'Sem conta?', 'login.gotoSignup': 'Cadastre-se', 'login.haveAcc': 'Já tem conta?', 'login.gotoLogin': 'Entrar', 'signup.title': 'Criar Conta', 'signup.sub': 'Registre uma conta exclusiva.', 'signup.username': 'Nome de usuário', 'signup.submit': 'Cadastrar', 'new.title': 'Novo Post', 'new.sub': 'Escreva um tema que dê para entender de primeira.', 'new.t': 'Título', 'new.cat': 'Categoria', 'new.body': 'Conteúdo', 'new.file': 'Anexo (opcional)', 'new.filePick': 'Clique para escolher arquivos', 'new.submit': 'Publicar', 'new.phTitle': 'Resuma o tema em uma frase', 'new.phBody': 'Detalhes… (quebras de linha suportadas)', 'post.back': '← Voltar ao início', 'post.reply': 'Responder', 'post.replies': ' respostas', 'post.confirmDelete': 'Eliminar esta publicação? Não dá para desfazer.', 'post.deleted': 'Publicação eliminada', 'post.confirmDelComment': 'Eliminar esta resposta? Não dá para desfazer.', 'post.commentDeleted': 'Resposta eliminada', 'settings.theme': 'Aparência do tema', 'settings.themeHint': 'Escolha seu estilo de interface', 'settings.official': 'Oficial', 'settings.solid': 'Sólido', 'settings.gradient': 'Gradiente', 'settings.culture': 'Cultural', 'settings.default': 'Padrão', 'settings.glass': 'Vidro líquido', 'settings.glassHint': 'Disponível apenas nos temas "Sólido" e "Gradiente". Visual de vidro + cor e opacidade opcionais', 'settings.glassOn': 'Ativar modo vidro líquido', 'settings.glassColor': 'Cor do vidro', 'settings.opacity': 'Opacidade', 'settings.lang': 'Idioma da interface', 'settings.langHint': 'Alterar o idioma da interface', 'settings.pwd': 'Alterar senha', 'settings.save': 'Salvar e conectar', 'settings.clear': 'Limpar configuração', 'settings.themeSaved': 'Tema alterado', 'settings.saveFail': 'Falha ao salvar:', 'settings.glassOnDone': 'Vidro líquido ativado', 'settings.glassOffDone': 'Vidro líquido desativado', 'settings.glassColorDone': 'Cor do vidro atualizada', 'settings.glassAlphaDone': 'Opacidade do vidro atualizada', 'settings.langDone': 'Idioma alterado', 'welcome': 'Bem-vindo de volta,', 'signupOk': 'Cadastro concluído. Bem-vindo ao HanBer Fórum', 'pleaseLogin': 'Faça login primeiro', 'uploadFail': 'Falha no upload', 'netErr': 'Tempo de solicitação esgotado', 'footer': 'HanBerOS 6.7.0', 'nav.signin': 'Check-in', 'report.title': 'Denunciar', 'report.reason': 'Motivo (obrigatório)', 'report.detail': 'Detalhes (opcional)', 'report.ok': 'Denúncia enviada, os admins vão analisar', 'pin.admin': 'Fixar', 'pin.adminOff': 'Desafixar', 'admin.reports': 'Gestão de Denúncias', 'admin.handle': 'Processar', 'admin.ignore': 'Ignorar', 'admin.actionPh': 'Ação (ex. apagar / ban 7d)', 'admin.signins': 'Registos de Check-in', 'admin.audit': 'Registo de Operações', 'admin.export': 'Exportar Dados', 'admin.exportPh': 'Insira nome ou ID', 'export.title': 'Exportação de Dados', 'export.mine': 'Exportar Todos os Meus Dados', 'export.admin': 'Exportar Este Utilizador', 'export.need': 'Exporta todos os teus dados (posts, respostas, mensagens, notificações, check-ins) em JSON. Só tu podes ver.', 'nav.notifClear': 'Limpar lidas', 'nav.notifCleared': 'Notificações lidas limpas', 'apps.login.ok1': '✅ Conectado pelo Fórum:', 'apps.login.ok2': '—— o jogo entra com sua conta automaticamente', 'apps.login.no1': '🔒 Não conectado ao Fórum,', 'apps.login.no2': 'faça login em um toque no jogo (dá para jogar sem login)', 'apps.needlogin': 'Este jogo precisa do login do Fórum. Entre primeiro', 'apps.fs.on': '⛶ Sair da tela cheia', 'apps.fs.off': '⛶ Tela cheia', 'apps.name.bread': 'Pão Mortal · Batalha dos Heróis', 'apps.tag.bread': 'Produção conjunta · leia o aviso antes de entrar', 'apps.desc.bread': 'Batalha de cartas estilo Três Reinos: match/ranqueada, habilidades de generais, equipamentos e estratagemas. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Cidade Pixel de Xangai', 'apps.tag.gta': 'Jogo offline', 'apps.desc.gta': 'Mundo aberto 2D pixel: 12 distritos, gestão de negócios, missões de carga/escolta/corrida, perseguição. Salvo no navegador.', 'apps.name.tank': 'História Blindada 2D', 'apps.tag.tank': 'Login em um toque', 'apps.desc.tank': 'Jogo de guerra com 4 campanhas: onda blindada, contração entre tropas, avanço de posição. Comande suas forças blindadas.', 'apps.name.century': 'Guerra dos Séculos', 'apps.tag.century': 'Login em um toque', 'apps.desc.century': 'Quatro grandes batalhas por cem anos: das trincheiras à guerra-relâmpago, confrontos de turnos.', 'apps.name.game': 'Teoria dos Jogos · Lab de Equilíbrio', 'apps.tag.game': 'Login em um toque', 'apps.desc.game': 'Casos clássicos contra a IA: dilema do prisioneiro, equilíbrio de Nash, jogo do porco. Aprenda jogando.', 'apps.name.potato': 'Batata Maluca', 'apps.tag.potato': 'Login em um toque', 'apps.desc.potato': 'Jogo casual de bater na batata: desafio de reflexos, vicia.', 'apps.name.puff': 'Baiacu Puff!', 'apps.tag.puff': 'Login em um toque', 'apps.desc.puff': 'Jogo casual do baiacu: sopre, infle, vire. Não consegue parar.', 'apps.name.mist': 'Réquiem na Névoa', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Exploração 2D pixel: cidade enevoada, protagonista sem memória. Descubra a verdade na névoa.', 'apps.name.hanba': 'Lenda de Hanba', 'apps.tag.hanba': 'Login em um toque', 'apps.desc.hanba': 'HANBA LEGEND: aventura de lendas orientais. Domine a seca e conquiste a planície central.', 'apps.name.croissant': 'Lenda do Croissant', 'apps.tag.croissant': 'Login em um toque', 'apps.desc.croissant': 'Croissant Legend: aventura no mundo da confeitaria. Um herói crocante salva Paris.', 'apps.name.panglong': 'Dieta do Dragão Gordo', 'apps.tag.panglong': 'Login em um toque', 'apps.desc.panglong': 'A grande batalha de emagrecimento de um pequeno dragão guloso. Cuide da dieta e mexa-se!', 'apps.name.weiren': 'Wei Ren · Instituto de Simulação', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Observe, distinga, simule. Escolha entre o real e o falso.', 'apps.name.star': 'Viajante das Estrelas', 'apps.tag.star': 'Login em um toque', 'apps.desc.star': 'Star Voyager: exploração de estrelas e espaço. Pilote sua nave pelo mar de estrelas.', 'apps.name.lovezone': 'Zona Proibida do Amor', 'apps.tag.lovezone': 'Limitado à deep web · desbloqueio', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: uma narrativa proibida nas profundezas da deep web. Sua escolha define o fim.', 'apps.name.faceless': 'O Homem Sem Rosto', 'apps.tag.faceless': 'Pixel antiguerra', 'apps.desc.faceless': 'THE FACELESS: um jogo pixel antiguerra. A guerra é o inferno.', 'apps.lovezone.locked': '🔒 É preciso obter na deep web (toque 5 vezes no número de versão no rodapé)', 'settings.sound': 'Som de fundo', 'settings.soundHint': 'Escolha um ruído branco ou som ambiente para tocar em loop sem parar', 'settings.soundOn': 'Ativar som de fundo', 'settings.volume': 'Volume', 'sound.balance': 'Ruído balanceado', 'sound.bright': 'Ruído brilhante', 'sound.dark': 'Ruído escuro', 'sound.rain': 'Chuva', 'sound.ocean': 'Oceano', 'sound.stream': 'Riacho', 'sound.night': 'Noite', 'sound.fire': 'Fogueira', 'sound.steam': 'Vapor', 'sound.fan': 'Ventilador', 'sound.white': 'Ruído branco', 'chat.empty': 'Ainda não há mensagens. Diga olá!', 'chat.copy': 'Copiar', 'chat.translate': 'Traduzir', 'chat.recall': 'Retirar', 'chat.delete': 'Excluir', 'chat.recalled': 'Mensagem retirada', 'chat.recalledByOther': 'A outra pessoa retirou uma mensagem', 'chat.copied': 'Copiado', 'chat.recallOk': 'Retirada', 'chat.deleteOk': 'Excluída (oculta só para você)', 'chat.recallTimeout': 'Após 2 minutos só dá para excluir', 'chat.translating': 'Traduzindo…', 'chat.you': 'Eu', 'profile.follow': 'Seguir', 'profile.following': 'Seguindo', 'profile.followed': 'Seguiu', 'profile.unfollowed': 'Deixou de seguir', 'profile.sendMsg': 'Enviar mensagem', 'profile.block': 'Bloquear', 'profile.unblock': 'Desbloquear', 'profile.unblocked': 'Desbloqueado', 'profile.confirmBlock': 'Bloquear este utilizador? Deixarás de ver o conteúdo dele.', 'profile.blocked': 'Bloqueado', 'profile.mutual': 'Seguem-se mutuamente · podem conversar', 'profile.joinedAt': 'Entrou em', 'profile.noBio': 'Este utilizador ainda não escreveu uma biografia.', 'admin.confirmRemove': 'Rebaixar este administrador para utilizador normal?', 'admin.removeDone': 'Rebaixado para utilizador normal', 'admin.confirmDisable': 'Desativar este administrador? Os privilégios de admin serão revogados imediatamente.', 'admin.confirmEnable': 'Ativar este administrador?', 'admin.disableDone': 'Desativado', 'expandAll': 'Mostrar tudo ({0})', 'admin.enableDone': 'Ativado',      'settings.title': 'Configurações',
     'settings.sub': 'Personalize sua experiência no Yuntan.',
     'apps.title': 'Mini aplicativos',
     'apps.sub': 'Mini-jogos integrados · vínculo automático.',
@@ -6313,7 +6453,7 @@ var I18N = {
     'post.retry': 'Erneut versuchen',
     'notif.empty': 'Keine Benachrichtigungen',
     'toast.alreadySigned': 'Heute bereits eingecheckt',
-    'nav.home': 'Startseite', 'nav.new': 'Neuer Beitrag', 'nav.chat': 'Nachrichten', 'nav.notif': 'Benachrichtigungen', 'nav.apps': 'Mini-Apps', 'nav.login': 'Anmelden', 'nav.signup': 'Registrieren', 'nav.logout': 'Abmelden', 'search.ph': 'Beiträge suchen…', 'cat.all': 'Alle', 'cat.chat': 'Plaudern', 'cat.study': 'Lernen', 'cat.game': 'Spiele', 'cat.tech': 'Technik', 'cat.announce': 'Ankündigungen','cat.life': 'Leben', 'cat.emotion': 'Gefühle', 'cat.resource': 'Ressourcen', 'cat.music': 'Musik', 'cat.movie': 'Filme', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Karriere', 'cat.digital': 'Digital', 'cat.local': 'Lokal', 'cat.pet': 'Haustiere', 'cat.food': 'Essen', 'cat.travel': 'Reisen', 'cat.sports': 'Sport', 'cat.photo': 'Fotografie', 'cat.reading': 'Lesen',  'login.title': 'Dem Forum beitreten', 'login.sub': 'Ein Konto für alle Geräte.', 'login.account': 'Telefon oder E-Mail', 'login.password': 'Passwort', 'login.captcha': 'Antwort eingeben', 'login.submit': 'Anmelden', 'login.noAcc': 'Kein Konto?', 'login.gotoSignup': 'Registrieren', 'login.haveAcc': 'Schon ein Konto?', 'login.gotoLogin': 'Anmelden', 'signup.title': 'Konto erstellen', 'signup.sub': 'Registriere ein eigenes Konto.', 'signup.username': 'Benutzername', 'signup.submit': 'Registrieren', 'new.title': 'Neuer Beitrag', 'new.sub': 'Schreibe ein Thema, dessen Titel sofort klar ist.', 'new.t': 'Titel', 'new.cat': 'Kategorie', 'new.body': 'Inhalt', 'new.file': 'Anhang (optional)', 'new.filePick': 'Klicken zum Auswählen', 'new.submit': 'Veröffentlichen', 'new.phTitle': 'Thema in einem Satz', 'new.phBody': 'Details… (Zeilenumbrüche möglich)', 'post.back': '← Zurück zur Startseite', 'post.reply': 'Antworten', 'post.replies': ' Antworten', 'post.confirmDelete': 'Diesen Beitrag löschen? Das kann nicht rückgängig gemacht werden.', 'post.deleted': 'Beitrag gelöscht', 'post.confirmDelComment': 'Diese Antwort löschen? Das kann nicht rückgängig gemacht werden.', 'post.commentDeleted': 'Antwort gelöscht', 'settings.theme': 'Design', 'settings.themeHint': 'Wähle deinen Lieblingsstil', 'settings.official': 'Offiziell', 'settings.solid': 'Einfarbig', 'settings.gradient': 'Verlauf', 'settings.culture': 'Kulturell', 'settings.default': 'Standard', 'settings.glass': 'Flüssigglas', 'settings.glassHint': 'Nur für „Einfarbig“ und „Verlauf“ verfügbar. Glas-Optik + wählbare Farbe und Transparenz', 'settings.glassOn': 'Flüssigglas-Modus aktivieren', 'settings.glassColor': 'Glasfarbe', 'settings.opacity': 'Transparenz', 'settings.lang': 'Sprache', 'settings.langHint': 'Sprache der Oberfläche wechseln', 'settings.pwd': 'Passwort ändern', 'settings.save': 'Speichern & verbinden', 'settings.clear': 'Konfiguration löschen', 'settings.themeSaved': 'Design gewechselt', 'settings.saveFail': 'Speichern fehlgeschlagen:', 'settings.glassOnDone': 'Flüssigglas aktiviert', 'settings.glassOffDone': 'Flüssigglas deaktiviert', 'settings.glassColorDone': 'Glasfarbe aktualisiert', 'settings.glassAlphaDone': 'Transparenz aktualisiert', 'settings.langDone': 'Sprache gewechselt', 'welcome': 'Willkommen zurück,', 'signupOk': 'Registrierung erfolgreich. Willkommen im HanBer Forum', 'pleaseLogin': 'Bitte zuerst anmelden', 'uploadFail': 'Upload fehlgeschlagen', 'netErr': 'Zeitüberschreitung', 'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Melden', 'report.reason': 'Grund (Pflicht)', 'report.detail': 'Details (optional)', 'report.ok': 'Meldung gesendet, Admins prüfen bald', 'pin.admin': 'Anheften', 'pin.adminOff': 'Lösen', 'admin.reports': 'Report-Verwaltung', 'admin.handle': 'Bearbeiten', 'admin.ignore': 'Ignorieren', 'admin.actionPh': 'Maßnahme (z.B. löschen / 7d Bann)', 'admin.signins': 'Check-in-Protokoll', 'admin.audit': 'Operationsprotokoll', 'admin.export': 'Daten exportieren', 'admin.exportPh': 'Benutzername oder ID', 'export.title': 'Datenexport', 'export.mine': 'Alle meine Daten exportieren', 'export.admin': 'Diesen Nutzer exportieren', 'export.need': 'Exportiere alle deine Forum-Daten (Beiträge, Antworten, Nachrichten, Benachrichtigungen, Check-ins) als JSON. Nur du kannst sie sehen.', 'nav.notifClear': 'Gelesene löschen', 'nav.notifCleared': 'Gelesene Benachrichtigungen gelöscht', 'apps.login.ok1': '✅ Über das Forum angemeldet:', 'apps.login.ok2': '—— das Spiel übernimmt dein Konto automatisch', 'apps.login.no1': '🔒 Nicht im Forum angemeldet,', 'apps.login.no2': 'im Spiel mit einem Klick anmelden (auch ohne Anmeldung spielbar)', 'apps.needlogin': 'Dieses Spiel erfordert die Forum-Anmeldung. Bitte zuerst anmelden', 'apps.fs.on': '⛶ Vollbild beenden', 'apps.fs.off': '⛶ Vollbild', 'apps.name.bread': 'Brot-Killer · Kampf der Helden', 'apps.tag.bread': 'Gemeinschaftsproduktion · Hinweis vor dem Spiel lesen', 'apps.desc.bread': 'Kartenschlacht im Stil der Drei Reiche: Match/Platzierung, Generalsfähigkeiten, Ausrüstung und Strategien. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Offline spielen', 'apps.desc.gta': '2D-Pixel-Open-World: 12 Bezirke, Industrie-Management, Fracht/Eskorte/Rennmissionen, Fahndung. Lokal im Browser gespeichert.', 'apps.name.tank': 'Panzergeschichte 2D', 'apps.tag.tank': '1-Klick-Anmeldung', 'apps.desc.tank': 'Kriegsspiel mit 4 Kampagnen: Panzerwelle, Einheiten-Counter, Stellungsvorstoß. Führe deine Panzertruppen.', 'apps.name.century': 'Jahrhundert-Krieg', 'apps.tag.century': '1-Klick-Anmeldung', 'apps.desc.century': 'Vier Schlachten über hundert Jahre: vom Grabenkrieg zum Blitzkrieg, klassische Runden-Duelle.', 'apps.name.game': 'Spieltheorie · Gleichgewichtslabor', 'apps.tag.game': '1-Klick-Anmeldung', 'apps.desc.game': 'Klassische Spieltheorie gegen die KI: Gefangenendilemma, Nash-Gleichgewicht, Schwein-Spiel. Spielend lernen.', 'apps.name.potato': 'Verrückte Kartoffel', 'apps.tag.potato': '1-Klick-Anmeldung', 'apps.desc.potato': 'Lässiges Kartoffel-Hämmern: Reaktions-Challenge, macht süchtig.', 'apps.name.puff': 'Kugelfisch Puff!', 'apps.tag.puff': '1-Klick-Anmeldung', 'apps.desc.puff': 'Lässiges Kugelfisch-Spiel: pusten, aufblähen, drehen. Unaufhörlich.', 'apps.name.mist': 'Requiem im Nebel', 'apps.tag.mist': 'Offline', 'apps.desc.mist': '2D-Pixel-Erkundung: Nebelstadt, Protagonist mit Amnesie. Finde die Wahrheit im weißen Nebel.', 'apps.name.hanba': 'Hanba-Legende', 'apps.tag.hanba': '1-Klick-Anmeldung', 'apps.desc.hanba': 'HANBA LEGEND: Abenteuer der östlichen Legenden. Bezwinge die Dürre, erobere das Kernland.', 'apps.name.croissant': 'Croissant-Legende', 'apps.tag.croissant': '1-Klick-Anmeldung', 'apps.desc.croissant': 'Croissant Legend: Abenteuer in der Backwelt. Ein knuspriger Held rettet Paris.', 'apps.name.panglong': 'Dicker-Drachen-Diät', 'apps.tag.panglong': '1-Klick-Anmeldung', 'apps.desc.panglong': 'Die Schlankheits-Operation eines gefräßigen Drachens. Kontrolliere die Ernährung, beweg dich!', 'apps.name.weiren': 'Wei Ren · Institut für Simulation', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Beobachte, unterscheide, simuliere. Wähle zwischen echt und falsch.', 'apps.name.star': 'Sternenreisender', 'apps.tag.star': '1-Klick-Anmeldung', 'apps.desc.star': 'Star Voyager: Stern- und Weltraum-Erkundung. Fliege dein Raumschiff durch das Sternenmeer.', 'apps.name.lovezone': 'Verbotene Liebeszone', 'apps.tag.lovezone': 'Darknet-exklusiv · Freischaltung', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: eine verbotene Erzählung in den Tiefen des Darknets. Deine Wahl bestimmt das Ende.', 'apps.name.faceless': 'Der Mann ohne Gesicht', 'apps.tag.faceless': 'Antikriegs-Pixel', 'apps.desc.faceless': 'THE FACELESS: ein Antikriegs-Pixelspiel. Krieg ist die Hölle.', 'apps.lovezone.locked': '🔒 Erst im Darknet holen (5-mal auf die Versionsnummer im Fußbereich tippen)', 'settings.sound': 'Hintergrundgeräusch', 'settings.soundHint': 'Wähle ein Rauschen oder Ambiente für durchgehende Schleife', 'settings.soundOn': 'Hintergrundgeräusch aktivieren', 'settings.volume': 'Lautstärke', 'sound.balance': 'Ausgewogenes Rauschen', 'sound.bright': 'Helles Rauschen', 'sound.dark': 'Dunkles Rauschen', 'sound.rain': 'Regen', 'sound.ocean': 'Ozean', 'sound.stream': 'Bach', 'sound.night': 'Nacht', 'sound.fire': 'Feuer', 'sound.steam': 'Dampf', 'sound.fan': 'Ventilator', 'sound.white': 'Weißes Rauschen', 'chat.empty': 'Noch keine Nachrichten. Sag hallo!', 'chat.copy': 'Kopieren', 'chat.translate': 'Übersetzen', 'chat.recall': 'Zurückziehen', 'chat.delete': 'Löschen', 'chat.recalled': 'Nachricht zurückgezogen', 'chat.recalledByOther': 'Die andere Person hat eine Nachricht zurückgezogen', 'chat.copied': 'Kopiert', 'chat.recallOk': 'Zurückgezogen', 'chat.deleteOk': 'Gelöscht (nur für dich unsichtbar)', 'chat.recallTimeout': 'Nach 2 Minuten ist nur Löschen möglich', 'chat.translating': 'Übersetzen…', 'chat.you': 'Ich', 'profile.follow': 'Folgen', 'profile.following': 'Gefolgt', 'profile.followed': 'Gefolgt', 'profile.unfollowed': 'Entfolgt', 'profile.sendMsg': 'Nachricht', 'profile.block': 'Blockieren', 'profile.unblock': 'Entblockieren', 'profile.unblocked': 'Entblockiert', 'profile.confirmBlock': 'Diesen Nutzer blockieren? Du siehst seine Inhalte dann nicht mehr.', 'profile.blocked': 'Blockiert', 'profile.mutual': 'Folgt euch gegenseitig · Nachricht möglich', 'profile.joinedAt': 'Beigetreten', 'profile.noBio': 'Dieser Nutzer hat noch keine Bio.', 'admin.confirmRemove': 'Diesen Admin zu einem normalen Nutzer herabstufen?', 'admin.removeDone': 'Zu normalem Nutzer herabgestuft', 'admin.confirmDisable': 'Diesen Admin deaktivieren? Seine Rechte werden sofort entzogen.', 'admin.confirmEnable': 'Diesen Admin aktivieren?', 'admin.disableDone': 'Deaktiviert', 'expandAll': 'Alle anzeigen ({0})', 'admin.enableDone': 'Aktiviert',      'settings.title': 'Einstellungen',
+    'nav.home': 'Startseite', 'nav.new': 'Neuer Beitrag', 'nav.chat': 'Nachrichten', 'nav.notif': 'Benachrichtigungen', 'nav.apps': 'Mini-Apps', 'nav.login': 'Anmelden', 'nav.signup': 'Registrieren', 'nav.logout': 'Abmelden', 'search.ph': 'Beiträge suchen…', 'cat.all': 'Alle', 'cat.chat': 'Plaudern', 'cat.study': 'Lernen', 'cat.game': 'Spiele', 'cat.tech': 'Technik', 'cat.announce': 'Ankündigungen','cat.life': 'Leben', 'cat.emotion': 'Gefühle', 'cat.resource': 'Ressourcen', 'cat.music': 'Musik', 'cat.movie': 'Filme', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Karriere', 'cat.digital': 'Digital', 'cat.local': 'Lokal', 'cat.pet': 'Haustiere', 'cat.food': 'Essen', 'cat.travel': 'Reisen', 'cat.sports': 'Sport', 'cat.photo': 'Fotografie', 'cat.reading': 'Lesen',  'login.title': 'Dem Forum beitreten', 'login.sub': 'Ein Konto für alle Geräte.', 'login.account': 'Telefon oder E-Mail', 'login.password': 'Passwort', 'login.captcha': 'Antwort eingeben', 'login.submit': 'Anmelden', 'login.noAcc': 'Kein Konto?', 'login.gotoSignup': 'Registrieren', 'login.haveAcc': 'Schon ein Konto?', 'login.gotoLogin': 'Anmelden', 'signup.title': 'Konto erstellen', 'signup.sub': 'Registriere ein eigenes Konto.', 'signup.username': 'Benutzername', 'signup.submit': 'Registrieren', 'new.title': 'Neuer Beitrag', 'new.sub': 'Schreibe ein Thema, dessen Titel sofort klar ist.', 'new.t': 'Titel', 'new.cat': 'Kategorie', 'new.body': 'Inhalt', 'new.file': 'Anhang (optional)', 'new.filePick': 'Klicken zum Auswählen', 'new.submit': 'Veröffentlichen', 'new.phTitle': 'Thema in einem Satz', 'new.phBody': 'Details… (Zeilenumbrüche möglich)', 'post.back': '← Zurück zur Startseite', 'post.reply': 'Antworten', 'post.replies': ' Antworten', 'post.confirmDelete': 'Diesen Beitrag löschen? Das kann nicht rückgängig gemacht werden.', 'post.deleted': 'Beitrag gelöscht', 'post.confirmDelComment': 'Diese Antwort löschen? Das kann nicht rückgängig gemacht werden.', 'post.commentDeleted': 'Antwort gelöscht', 'settings.theme': 'Design', 'settings.themeHint': 'Wähle deinen Lieblingsstil', 'settings.official': 'Offiziell', 'settings.solid': 'Einfarbig', 'settings.gradient': 'Verlauf', 'settings.culture': 'Kulturell', 'settings.default': 'Standard', 'settings.glass': 'Flüssigglas', 'settings.glassHint': 'Nur für „Einfarbig“ und „Verlauf“ verfügbar. Glas-Optik + wählbare Farbe und Transparenz', 'settings.glassOn': 'Flüssigglas-Modus aktivieren', 'settings.glassColor': 'Glasfarbe', 'settings.opacity': 'Transparenz', 'settings.lang': 'Sprache', 'settings.langHint': 'Sprache der Oberfläche wechseln', 'settings.pwd': 'Passwort ändern', 'settings.save': 'Speichern & verbinden', 'settings.clear': 'Konfiguration löschen', 'settings.themeSaved': 'Design gewechselt', 'settings.saveFail': 'Speichern fehlgeschlagen:', 'settings.glassOnDone': 'Flüssigglas aktiviert', 'settings.glassOffDone': 'Flüssigglas deaktiviert', 'settings.glassColorDone': 'Glasfarbe aktualisiert', 'settings.glassAlphaDone': 'Transparenz aktualisiert', 'settings.langDone': 'Sprache gewechselt', 'welcome': 'Willkommen zurück,', 'signupOk': 'Registrierung erfolgreich. Willkommen im HanBer Forum', 'pleaseLogin': 'Bitte zuerst anmelden', 'uploadFail': 'Upload fehlgeschlagen', 'netErr': 'Zeitüberschreitung', 'footer': 'HanBerOS 6.7.0', 'nav.signin': 'Check-in', 'report.title': 'Melden', 'report.reason': 'Grund (Pflicht)', 'report.detail': 'Details (optional)', 'report.ok': 'Meldung gesendet, Admins prüfen bald', 'pin.admin': 'Anheften', 'pin.adminOff': 'Lösen', 'admin.reports': 'Report-Verwaltung', 'admin.handle': 'Bearbeiten', 'admin.ignore': 'Ignorieren', 'admin.actionPh': 'Maßnahme (z.B. löschen / 7d Bann)', 'admin.signins': 'Check-in-Protokoll', 'admin.audit': 'Operationsprotokoll', 'admin.export': 'Daten exportieren', 'admin.exportPh': 'Benutzername oder ID', 'export.title': 'Datenexport', 'export.mine': 'Alle meine Daten exportieren', 'export.admin': 'Diesen Nutzer exportieren', 'export.need': 'Exportiere alle deine Forum-Daten (Beiträge, Antworten, Nachrichten, Benachrichtigungen, Check-ins) als JSON. Nur du kannst sie sehen.', 'nav.notifClear': 'Gelesene löschen', 'nav.notifCleared': 'Gelesene Benachrichtigungen gelöscht', 'apps.login.ok1': '✅ Über das Forum angemeldet:', 'apps.login.ok2': '—— das Spiel übernimmt dein Konto automatisch', 'apps.login.no1': '🔒 Nicht im Forum angemeldet,', 'apps.login.no2': 'im Spiel mit einem Klick anmelden (auch ohne Anmeldung spielbar)', 'apps.needlogin': 'Dieses Spiel erfordert die Forum-Anmeldung. Bitte zuerst anmelden', 'apps.fs.on': '⛶ Vollbild beenden', 'apps.fs.off': '⛶ Vollbild', 'apps.name.bread': 'Brot-Killer · Kampf der Helden', 'apps.tag.bread': 'Gemeinschaftsproduktion · Hinweis vor dem Spiel lesen', 'apps.desc.bread': 'Kartenschlacht im Stil der Drei Reiche: Match/Platzierung, Generalsfähigkeiten, Ausrüstung und Strategien. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Offline spielen', 'apps.desc.gta': '2D-Pixel-Open-World: 12 Bezirke, Industrie-Management, Fracht/Eskorte/Rennmissionen, Fahndung. Lokal im Browser gespeichert.', 'apps.name.tank': 'Panzergeschichte 2D', 'apps.tag.tank': '1-Klick-Anmeldung', 'apps.desc.tank': 'Kriegsspiel mit 4 Kampagnen: Panzerwelle, Einheiten-Counter, Stellungsvorstoß. Führe deine Panzertruppen.', 'apps.name.century': 'Jahrhundert-Krieg', 'apps.tag.century': '1-Klick-Anmeldung', 'apps.desc.century': 'Vier Schlachten über hundert Jahre: vom Grabenkrieg zum Blitzkrieg, klassische Runden-Duelle.', 'apps.name.game': 'Spieltheorie · Gleichgewichtslabor', 'apps.tag.game': '1-Klick-Anmeldung', 'apps.desc.game': 'Klassische Spieltheorie gegen die KI: Gefangenendilemma, Nash-Gleichgewicht, Schwein-Spiel. Spielend lernen.', 'apps.name.potato': 'Verrückte Kartoffel', 'apps.tag.potato': '1-Klick-Anmeldung', 'apps.desc.potato': 'Lässiges Kartoffel-Hämmern: Reaktions-Challenge, macht süchtig.', 'apps.name.puff': 'Kugelfisch Puff!', 'apps.tag.puff': '1-Klick-Anmeldung', 'apps.desc.puff': 'Lässiges Kugelfisch-Spiel: pusten, aufblähen, drehen. Unaufhörlich.', 'apps.name.mist': 'Requiem im Nebel', 'apps.tag.mist': 'Offline', 'apps.desc.mist': '2D-Pixel-Erkundung: Nebelstadt, Protagonist mit Amnesie. Finde die Wahrheit im weißen Nebel.', 'apps.name.hanba': 'Hanba-Legende', 'apps.tag.hanba': '1-Klick-Anmeldung', 'apps.desc.hanba': 'HANBA LEGEND: Abenteuer der östlichen Legenden. Bezwinge die Dürre, erobere das Kernland.', 'apps.name.croissant': 'Croissant-Legende', 'apps.tag.croissant': '1-Klick-Anmeldung', 'apps.desc.croissant': 'Croissant Legend: Abenteuer in der Backwelt. Ein knuspriger Held rettet Paris.', 'apps.name.panglong': 'Dicker-Drachen-Diät', 'apps.tag.panglong': '1-Klick-Anmeldung', 'apps.desc.panglong': 'Die Schlankheits-Operation eines gefräßigen Drachens. Kontrolliere die Ernährung, beweg dich!', 'apps.name.weiren': 'Wei Ren · Institut für Simulation', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Beobachte, unterscheide, simuliere. Wähle zwischen echt und falsch.', 'apps.name.star': 'Sternenreisender', 'apps.tag.star': '1-Klick-Anmeldung', 'apps.desc.star': 'Star Voyager: Stern- und Weltraum-Erkundung. Fliege dein Raumschiff durch das Sternenmeer.', 'apps.name.lovezone': 'Verbotene Liebeszone', 'apps.tag.lovezone': 'Darknet-exklusiv · Freischaltung', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: eine verbotene Erzählung in den Tiefen des Darknets. Deine Wahl bestimmt das Ende.', 'apps.name.faceless': 'Der Mann ohne Gesicht', 'apps.tag.faceless': 'Antikriegs-Pixel', 'apps.desc.faceless': 'THE FACELESS: ein Antikriegs-Pixelspiel. Krieg ist die Hölle.', 'apps.lovezone.locked': '🔒 Erst im Darknet holen (5-mal auf die Versionsnummer im Fußbereich tippen)', 'settings.sound': 'Hintergrundgeräusch', 'settings.soundHint': 'Wähle ein Rauschen oder Ambiente für durchgehende Schleife', 'settings.soundOn': 'Hintergrundgeräusch aktivieren', 'settings.volume': 'Lautstärke', 'sound.balance': 'Ausgewogenes Rauschen', 'sound.bright': 'Helles Rauschen', 'sound.dark': 'Dunkles Rauschen', 'sound.rain': 'Regen', 'sound.ocean': 'Ozean', 'sound.stream': 'Bach', 'sound.night': 'Nacht', 'sound.fire': 'Feuer', 'sound.steam': 'Dampf', 'sound.fan': 'Ventilator', 'sound.white': 'Weißes Rauschen', 'chat.empty': 'Noch keine Nachrichten. Sag hallo!', 'chat.copy': 'Kopieren', 'chat.translate': 'Übersetzen', 'chat.recall': 'Zurückziehen', 'chat.delete': 'Löschen', 'chat.recalled': 'Nachricht zurückgezogen', 'chat.recalledByOther': 'Die andere Person hat eine Nachricht zurückgezogen', 'chat.copied': 'Kopiert', 'chat.recallOk': 'Zurückgezogen', 'chat.deleteOk': 'Gelöscht (nur für dich unsichtbar)', 'chat.recallTimeout': 'Nach 2 Minuten ist nur Löschen möglich', 'chat.translating': 'Übersetzen…', 'chat.you': 'Ich', 'profile.follow': 'Folgen', 'profile.following': 'Gefolgt', 'profile.followed': 'Gefolgt', 'profile.unfollowed': 'Entfolgt', 'profile.sendMsg': 'Nachricht', 'profile.block': 'Blockieren', 'profile.unblock': 'Entblockieren', 'profile.unblocked': 'Entblockiert', 'profile.confirmBlock': 'Diesen Nutzer blockieren? Du siehst seine Inhalte dann nicht mehr.', 'profile.blocked': 'Blockiert', 'profile.mutual': 'Folgt euch gegenseitig · Nachricht möglich', 'profile.joinedAt': 'Beigetreten', 'profile.noBio': 'Dieser Nutzer hat noch keine Bio.', 'admin.confirmRemove': 'Diesen Admin zu einem normalen Nutzer herabstufen?', 'admin.removeDone': 'Zu normalem Nutzer herabgestuft', 'admin.confirmDisable': 'Diesen Admin deaktivieren? Seine Rechte werden sofort entzogen.', 'admin.confirmEnable': 'Diesen Admin aktivieren?', 'admin.disableDone': 'Deaktiviert', 'expandAll': 'Alle anzeigen ({0})', 'admin.enableDone': 'Aktiviert',      'settings.title': 'Einstellungen',
     'settings.sub': 'Personalisieren Sie Ihr Yuntan-Erlebnis.',
     'apps.title': 'Mini-Apps',
     'apps.sub': 'Integrierte Minispiele · Konto wird automatisch verknüpft.',
@@ -6724,7 +6864,7 @@ var I18N = {
     'post.retry': 'Riprova',
     'notif.empty': 'Nessuna notifica',
     'toast.alreadySigned': 'Check-in già fatto oggi',
-    'nav.home': 'Home', 'nav.new': 'Nuovo Post', 'nav.chat': 'Messaggi', 'nav.notif': 'Notifiche', 'nav.apps': 'Mini App', 'nav.login': 'Accedi', 'nav.signup': 'Registrati', 'nav.logout': 'Esci', 'search.ph': 'Cerca post…', 'cat.all': 'Tutto', 'cat.chat': 'Chiacchiere', 'cat.study': 'Studio', 'cat.game': 'Giochi', 'cat.tech': 'Tech', 'cat.announce': 'Notizie','cat.life': 'Vita', 'cat.emotion': 'Emozioni', 'cat.resource': 'Risorse', 'cat.music': 'Musica', 'cat.movie': 'Film', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Lavoro', 'cat.digital': 'Digitale', 'cat.local': 'Locale', 'cat.pet': 'Animali', 'cat.food': 'Cibo', 'cat.travel': 'Viaggi', 'cat.sports': 'Sport', 'cat.photo': 'Fotografia', 'cat.reading': 'Lettura',  'login.title': 'Entra nel Forum', 'login.sub': 'Un account per tutti i dispositivi.', 'login.account': 'Telefono o email', 'login.password': 'Password', 'login.captcha': 'Inserisci la risposta', 'login.submit': 'Accedi', 'login.noAcc': 'Nessun account?', 'login.gotoSignup': 'Registrati', 'login.haveAcc': 'Hai già un account?', 'login.gotoLogin': 'Accedi', 'signup.title': 'Crea Account', 'signup.sub': 'Registra un account personale.', 'signup.username': 'Nome utente', 'signup.submit': 'Registrati', 'new.title': 'Nuovo Post', 'new.sub': 'Scrivi un argomento con un titolo chiaro.', 'new.t': 'Titolo', 'new.cat': 'Categoria', 'new.body': 'Contenuto', 'new.file': 'Allegato (facoltativo)', 'new.filePick': 'Clicca per scegliere i file', 'new.submit': 'Pubblica', 'new.phTitle': 'Riassumi il tema in una frase', 'new.phBody': 'Dettagli… (supporta a capo)', 'post.back': '← Torna alla home', 'post.reply': 'Rispondi', 'post.replies': ' risposte', 'post.confirmDelete': 'Eliminare questo post? Non si può annullare.', 'post.deleted': 'Post eliminato', 'post.confirmDelComment': 'Eliminare questa risposta? Non si può annullare.', 'post.commentDeleted': 'Risposta eliminata', 'settings.theme': 'Aspetto', 'settings.themeHint': 'Scegli lo stile che preferisci', 'settings.official': 'Ufficiale', 'settings.solid': 'Tinta unita', 'settings.gradient': 'Gradiente', 'settings.culture': 'Culturale', 'settings.default': 'Predefinito', 'settings.glass': 'Vetro liquido', 'settings.glassHint': 'Solo per i temi "Tinta unita" e "Gradiente". Effetto vetro + colore e trasparenza opzionali', 'settings.glassOn': 'Attiva modalità vetro liquido', 'settings.glassColor': 'Colore del vetro', 'settings.opacity': 'Trasparenza', 'settings.lang': 'Lingua dell\'interfaccia', 'settings.langHint': 'Cambia la lingua dell\'interfaccia', 'settings.pwd': 'Cambia password', 'settings.save': 'Salva e connetti', 'settings.clear': 'Svuota configurazione', 'settings.themeSaved': 'Tema cambiato', 'settings.saveFail': 'Salvataggio fallito:', 'settings.glassOnDone': 'Vetro liquido attivato', 'settings.glassOffDone': 'Vetro liquido disattivato', 'settings.glassColorDone': 'Colore del vetro aggiornato', 'settings.glassAlphaDone': 'Trasparenza del vetro aggiornata', 'settings.langDone': 'Lingua cambiata', 'welcome': 'Bentornato,', 'signupOk': 'Registrazione completata. Benvenuto nel Forum HanBer', 'pleaseLogin': 'Accedi prima', 'uploadFail': 'Upload fallito', 'netErr': 'Richiesta scaduta', 'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Segnala', 'report.reason': 'Motivo (obbligatorio)', 'report.detail': 'Dettagli (facoltativi)', 'report.ok': 'Segnalazione inviata, gli admin la esamineranno', 'pin.admin': 'In alto', 'pin.adminOff': 'Togli in alto', 'admin.reports': 'Gestione Segnalazioni', 'admin.handle': 'Gestisci', 'admin.ignore': 'Ignora', 'admin.actionPh': 'Azione (es. elimina / ban 7g)', 'admin.signins': 'Registri Check-in', 'admin.audit': 'Registro Operazioni', 'admin.export': 'Esporta Dati', 'admin.exportPh': 'Inserisci nome o ID', 'export.title': 'Esportazione Dati', 'export.mine': 'Esporta Tutti i Miei Dati', 'export.admin': 'Esporta Questo Utente', 'export.need': 'Esporta tutti i tuoi dati (post, risposte, messaggi, notifiche, check-in) in JSON. Solo tu puoi vederli.', 'nav.notifClear': 'Pulisci lette', 'nav.notifCleared': 'Notifiche lette cancellate', 'apps.login.ok1': '✅ Connesso tramite il Forum:', 'apps.login.ok2': '—— il gioco usa automaticamente il tuo account', 'apps.login.no1': '🔒 Non connesso al Forum,', 'apps.login.no2': 'accedi in un tocco nel gioco (si può provare anche senza)', 'apps.needlogin': 'Questo gioco richiede l\'accesso al Forum. Accedi prima', 'apps.fs.on': '⛶ Esci da schermo intero', 'apps.fs.off': '⛶ Schermo intero', 'apps.name.bread': 'Pane Mortale · Battaglia degli Eroi', 'apps.tag.bread': 'Produzione congiunta · leggi l\'avviso prima di entrare', 'apps.desc.bread': 'Battaglia di carte stile Tre Regni: match/ranked, abilità dei generali, equipaggiamento e strategie. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Gioco offline', 'apps.desc.gta': 'Mondo aperto 2D pixel: 12 distretti, gestione industriale, missioni cargo/scorta/gara, caccia. Salvato nel browser.', 'apps.name.tank': 'Storia Corazzata 2D', 'apps.tag.tank': 'Accesso in un tocco', 'apps.desc.tank': 'Gioco di guerra con 4 campagne: ondata corazzata, contro delle unità, avanzata su posizione. Guida le tue truppe corazzate.', 'apps.name.century': 'Guerra dei Secoli', 'apps.tag.century': 'Accesso in un tocco', 'apps.desc.century': 'Quattro battaglie su cento anni: dalle trincee alla guerra lampo, duelli a turni.', 'apps.name.game': 'Teoria dei Giochi · Lab dell\'Equilibrio', 'apps.tag.game': 'Accesso in un tocco', 'apps.desc.game': 'Casi classici contro l\'IA: dilemma del prigioniero, equilibrio di Nash, gioco del maiale. Impara giocando.', 'apps.name.potato': 'Patata Pazza', 'apps.tag.potato': 'Accesso in un tocco', 'apps.desc.potato': 'Gioco casuale di schiacciare patate: sfida di riflessi, non smetti più.', 'apps.name.puff': 'Pesce palla Puff!', 'apps.tag.puff': 'Accesso in un tocco', 'apps.desc.puff': 'Gioco casuale del pesce palla: soffia, gonfia, rigira. Non riesci a smettere.', 'apps.name.mist': 'Requiem nella Nebbia', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Esplorazione 2D pixel: città nebbiosa, protagonista senza memoria. Scopri la verità nella nebbia.', 'apps.name.hanba': 'Leggenda di Hanba', 'apps.tag.hanba': 'Accesso in un tocco', 'apps.desc.hanba': 'HANBA LEGEND: avventura delle leggende orientali. Sconfiggi la siccità, conquista la pianura.', 'apps.name.croissant': 'Leggenda del Croissant', 'apps.tag.croissant': 'Accesso in un tocco', 'apps.desc.croissant': 'Croissant Legend: avventura nel mondo della pasticceria. Un eroe croccante salva Parigi.', 'apps.name.panglong': 'Dieta del Dragone Ciccione', 'apps.tag.panglong': 'Accesso in un tocco', 'apps.desc.panglong': 'La grande sfida dimagrante di un draghetto goloso. Controlla la dieta e muoviti!', 'apps.name.weiren': 'Wei Ren · Istituto di Simulazione', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Osserva, distingui, simula. Scegli tra vero e falso.', 'apps.name.star': 'Viaggiatore delle Stelle', 'apps.tag.star': 'Accesso in un tocco', 'apps.desc.star': 'Star Voyager: esplorazione di stelle e spazio. Pilota la tua nave nel mare di stelle.', 'apps.name.lovezone': 'Zona Proibita dell\'Amore', 'apps.tag.lovezone': 'Solo dark web · sblocco', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: una narrazione proibita nelle profondità del dark web. La tua scelta decide il finale.', 'apps.name.faceless': 'L\'Uomo Senza Volto', 'apps.tag.faceless': 'Pixel contro la guerra', 'apps.desc.faceless': 'THE FACELESS: un gioco pixel contro la guerra. La guerra è l\'inferno.', 'apps.lovezone.locked': '🔒 Da ottenere prima nel dark web (tocca 5 volte il numero di versione nel piè di pagina)', 'settings.sound': 'Suono di sottofondo', 'settings.soundHint': 'Scegli un rumore bianco o un suono ambientale da riprodurre in loop senza interruzioni', 'settings.soundOn': 'Attiva il suono di sottofondo', 'settings.volume': 'Volume', 'sound.balance': 'Rumore bilanciato', 'sound.bright': 'Rumore brillante', 'sound.dark': 'Rumore scuro', 'sound.rain': 'Pioggia', 'sound.ocean': 'Oceano', 'sound.stream': 'Ruscello', 'sound.night': 'Notte', 'sound.fire': 'Fuoco', 'sound.steam': 'Vapore', 'sound.fan': 'Ventilatore', 'sound.white': 'Rumore bianco', 'chat.empty': 'Non ci sono ancora messaggi. Saluta!', 'chat.copy': 'Copia', 'chat.translate': 'Traduci', 'chat.recall': 'Ritira', 'chat.delete': 'Elimina', 'chat.recalled': 'Messaggio ritirato', 'chat.recalledByOther': 'L’altra persona ha ritirato un messaggio', 'chat.copied': 'Copiato', 'chat.recallOk': 'Ritirato', 'chat.deleteOk': 'Eliminato (invisibile solo per te)', 'chat.recallTimeout': 'Dopo 2 minuti puoi solo eliminare', 'chat.translating': 'Traduzione…', 'chat.you': 'Io', 'profile.follow': 'Segui', 'profile.following': 'Seguito', 'profile.followed': 'Seguito', 'profile.unfollowed': 'Non seguito', 'profile.sendMsg': 'Invia messaggio', 'profile.block': 'Blocca', 'profile.unblock': 'Sblocca', 'profile.unblocked': 'Sbloccato', 'profile.confirmBlock': 'Bloccare questo utente? Non vedrai più i suoi contenuti.', 'profile.blocked': 'Bloccato', 'profile.mutual': 'Follow reciproco · puoi scrivere', 'profile.joinedAt': 'Iscritto il', 'profile.noBio': 'Questo utente non ha ancora scritto una bio.', 'admin.confirmRemove': 'Retrocedere questo amministratore a utente normale?', 'admin.removeDone': 'Retrocesso a utente normale', 'admin.confirmDisable': 'Disattivare questo amministratore? I suoi permessi verranno revocati subito.', 'admin.confirmEnable': 'Attivare questo amministratore?', 'admin.disableDone': 'Disattivato', 'expandAll': 'Mostra tutto ({0})', 'admin.enableDone': 'Attivato',      'settings.title': 'Impostazioni',
+    'nav.home': 'Home', 'nav.new': 'Nuovo Post', 'nav.chat': 'Messaggi', 'nav.notif': 'Notifiche', 'nav.apps': 'Mini App', 'nav.login': 'Accedi', 'nav.signup': 'Registrati', 'nav.logout': 'Esci', 'search.ph': 'Cerca post…', 'cat.all': 'Tutto', 'cat.chat': 'Chiacchiere', 'cat.study': 'Studio', 'cat.game': 'Giochi', 'cat.tech': 'Tech', 'cat.announce': 'Notizie','cat.life': 'Vita', 'cat.emotion': 'Emozioni', 'cat.resource': 'Risorse', 'cat.music': 'Musica', 'cat.movie': 'Film', 'cat.anime': 'Anime', 'cat.campus': 'Campus', 'cat.career': 'Lavoro', 'cat.digital': 'Digitale', 'cat.local': 'Locale', 'cat.pet': 'Animali', 'cat.food': 'Cibo', 'cat.travel': 'Viaggi', 'cat.sports': 'Sport', 'cat.photo': 'Fotografia', 'cat.reading': 'Lettura',  'login.title': 'Entra nel Forum', 'login.sub': 'Un account per tutti i dispositivi.', 'login.account': 'Telefono o email', 'login.password': 'Password', 'login.captcha': 'Inserisci la risposta', 'login.submit': 'Accedi', 'login.noAcc': 'Nessun account?', 'login.gotoSignup': 'Registrati', 'login.haveAcc': 'Hai già un account?', 'login.gotoLogin': 'Accedi', 'signup.title': 'Crea Account', 'signup.sub': 'Registra un account personale.', 'signup.username': 'Nome utente', 'signup.submit': 'Registrati', 'new.title': 'Nuovo Post', 'new.sub': 'Scrivi un argomento con un titolo chiaro.', 'new.t': 'Titolo', 'new.cat': 'Categoria', 'new.body': 'Contenuto', 'new.file': 'Allegato (facoltativo)', 'new.filePick': 'Clicca per scegliere i file', 'new.submit': 'Pubblica', 'new.phTitle': 'Riassumi il tema in una frase', 'new.phBody': 'Dettagli… (supporta a capo)', 'post.back': '← Torna alla home', 'post.reply': 'Rispondi', 'post.replies': ' risposte', 'post.confirmDelete': 'Eliminare questo post? Non si può annullare.', 'post.deleted': 'Post eliminato', 'post.confirmDelComment': 'Eliminare questa risposta? Non si può annullare.', 'post.commentDeleted': 'Risposta eliminata', 'settings.theme': 'Aspetto', 'settings.themeHint': 'Scegli lo stile che preferisci', 'settings.official': 'Ufficiale', 'settings.solid': 'Tinta unita', 'settings.gradient': 'Gradiente', 'settings.culture': 'Culturale', 'settings.default': 'Predefinito', 'settings.glass': 'Vetro liquido', 'settings.glassHint': 'Solo per i temi "Tinta unita" e "Gradiente". Effetto vetro + colore e trasparenza opzionali', 'settings.glassOn': 'Attiva modalità vetro liquido', 'settings.glassColor': 'Colore del vetro', 'settings.opacity': 'Trasparenza', 'settings.lang': 'Lingua dell\'interfaccia', 'settings.langHint': 'Cambia la lingua dell\'interfaccia', 'settings.pwd': 'Cambia password', 'settings.save': 'Salva e connetti', 'settings.clear': 'Svuota configurazione', 'settings.themeSaved': 'Tema cambiato', 'settings.saveFail': 'Salvataggio fallito:', 'settings.glassOnDone': 'Vetro liquido attivato', 'settings.glassOffDone': 'Vetro liquido disattivato', 'settings.glassColorDone': 'Colore del vetro aggiornato', 'settings.glassAlphaDone': 'Trasparenza del vetro aggiornata', 'settings.langDone': 'Lingua cambiata', 'welcome': 'Bentornato,', 'signupOk': 'Registrazione completata. Benvenuto nel Forum HanBer', 'pleaseLogin': 'Accedi prima', 'uploadFail': 'Upload fallito', 'netErr': 'Richiesta scaduta', 'footer': 'HanBerOS 6.7.0', 'nav.signin': 'Check-in', 'report.title': 'Segnala', 'report.reason': 'Motivo (obbligatorio)', 'report.detail': 'Dettagli (facoltativi)', 'report.ok': 'Segnalazione inviata, gli admin la esamineranno', 'pin.admin': 'In alto', 'pin.adminOff': 'Togli in alto', 'admin.reports': 'Gestione Segnalazioni', 'admin.handle': 'Gestisci', 'admin.ignore': 'Ignora', 'admin.actionPh': 'Azione (es. elimina / ban 7g)', 'admin.signins': 'Registri Check-in', 'admin.audit': 'Registro Operazioni', 'admin.export': 'Esporta Dati', 'admin.exportPh': 'Inserisci nome o ID', 'export.title': 'Esportazione Dati', 'export.mine': 'Esporta Tutti i Miei Dati', 'export.admin': 'Esporta Questo Utente', 'export.need': 'Esporta tutti i tuoi dati (post, risposte, messaggi, notifiche, check-in) in JSON. Solo tu puoi vederli.', 'nav.notifClear': 'Pulisci lette', 'nav.notifCleared': 'Notifiche lette cancellate', 'apps.login.ok1': '✅ Connesso tramite il Forum:', 'apps.login.ok2': '—— il gioco usa automaticamente il tuo account', 'apps.login.no1': '🔒 Non connesso al Forum,', 'apps.login.no2': 'accedi in un tocco nel gioco (si può provare anche senza)', 'apps.needlogin': 'Questo gioco richiede l\'accesso al Forum. Accedi prima', 'apps.fs.on': '⛶ Esci da schermo intero', 'apps.fs.off': '⛶ Schermo intero', 'apps.name.bread': 'Pane Mortale · Battaglia degli Eroi', 'apps.tag.bread': 'Produzione congiunta · leggi l\'avviso prima di entrare', 'apps.desc.bread': 'Battaglia di carte stile Tre Regni: match/ranked, abilità dei generali, equipaggiamento e strategie. Han Ber & Bread Guard Team.', 'apps.name.gta': 'GTA · Shanghai Pixel City', 'apps.tag.gta': 'Gioco offline', 'apps.desc.gta': 'Mondo aperto 2D pixel: 12 distretti, gestione industriale, missioni cargo/scorta/gara, caccia. Salvato nel browser.', 'apps.name.tank': 'Storia Corazzata 2D', 'apps.tag.tank': 'Accesso in un tocco', 'apps.desc.tank': 'Gioco di guerra con 4 campagne: ondata corazzata, contro delle unità, avanzata su posizione. Guida le tue truppe corazzate.', 'apps.name.century': 'Guerra dei Secoli', 'apps.tag.century': 'Accesso in un tocco', 'apps.desc.century': 'Quattro battaglie su cento anni: dalle trincee alla guerra lampo, duelli a turni.', 'apps.name.game': 'Teoria dei Giochi · Lab dell\'Equilibrio', 'apps.tag.game': 'Accesso in un tocco', 'apps.desc.game': 'Casi classici contro l\'IA: dilemma del prigioniero, equilibrio di Nash, gioco del maiale. Impara giocando.', 'apps.name.potato': 'Patata Pazza', 'apps.tag.potato': 'Accesso in un tocco', 'apps.desc.potato': 'Gioco casuale di schiacciare patate: sfida di riflessi, non smetti più.', 'apps.name.puff': 'Pesce palla Puff!', 'apps.tag.puff': 'Accesso in un tocco', 'apps.desc.puff': 'Gioco casuale del pesce palla: soffia, gonfia, rigira. Non riesci a smettere.', 'apps.name.mist': 'Requiem nella Nebbia', 'apps.tag.mist': 'Offline', 'apps.desc.mist': 'Esplorazione 2D pixel: città nebbiosa, protagonista senza memoria. Scopri la verità nella nebbia.', 'apps.name.hanba': 'Leggenda di Hanba', 'apps.tag.hanba': 'Accesso in un tocco', 'apps.desc.hanba': 'HANBA LEGEND: avventura delle leggende orientali. Sconfiggi la siccità, conquista la pianura.', 'apps.name.croissant': 'Leggenda del Croissant', 'apps.tag.croissant': 'Accesso in un tocco', 'apps.desc.croissant': 'Croissant Legend: avventura nel mondo della pasticceria. Un eroe croccante salva Parigi.', 'apps.name.panglong': 'Dieta del Dragone Ciccione', 'apps.tag.panglong': 'Accesso in un tocco', 'apps.desc.panglong': 'La grande sfida dimagrante di un draghetto goloso. Controlla la dieta e muoviti!', 'apps.name.weiren': 'Wei Ren · Istituto di Simulazione', 'apps.tag.weiren': 'Offline', 'apps.desc.weiren': 'Osserva, distingui, simula. Scegli tra vero e falso.', 'apps.name.star': 'Viaggiatore delle Stelle', 'apps.tag.star': 'Accesso in un tocco', 'apps.desc.star': 'Star Voyager: esplorazione di stelle e spazio. Pilota la tua nave nel mare di stelle.', 'apps.name.lovezone': 'Zona Proibita dell\'Amore', 'apps.tag.lovezone': 'Solo dark web · sblocco', 'apps.desc.lovezone': 'LOVE IN THE FORBIDDEN ZONE: una narrazione proibita nelle profondità del dark web. La tua scelta decide il finale.', 'apps.name.faceless': 'L\'Uomo Senza Volto', 'apps.tag.faceless': 'Pixel contro la guerra', 'apps.desc.faceless': 'THE FACELESS: un gioco pixel contro la guerra. La guerra è l\'inferno.', 'apps.lovezone.locked': '🔒 Da ottenere prima nel dark web (tocca 5 volte il numero di versione nel piè di pagina)', 'settings.sound': 'Suono di sottofondo', 'settings.soundHint': 'Scegli un rumore bianco o un suono ambientale da riprodurre in loop senza interruzioni', 'settings.soundOn': 'Attiva il suono di sottofondo', 'settings.volume': 'Volume', 'sound.balance': 'Rumore bilanciato', 'sound.bright': 'Rumore brillante', 'sound.dark': 'Rumore scuro', 'sound.rain': 'Pioggia', 'sound.ocean': 'Oceano', 'sound.stream': 'Ruscello', 'sound.night': 'Notte', 'sound.fire': 'Fuoco', 'sound.steam': 'Vapore', 'sound.fan': 'Ventilatore', 'sound.white': 'Rumore bianco', 'chat.empty': 'Non ci sono ancora messaggi. Saluta!', 'chat.copy': 'Copia', 'chat.translate': 'Traduci', 'chat.recall': 'Ritira', 'chat.delete': 'Elimina', 'chat.recalled': 'Messaggio ritirato', 'chat.recalledByOther': 'L’altra persona ha ritirato un messaggio', 'chat.copied': 'Copiato', 'chat.recallOk': 'Ritirato', 'chat.deleteOk': 'Eliminato (invisibile solo per te)', 'chat.recallTimeout': 'Dopo 2 minuti puoi solo eliminare', 'chat.translating': 'Traduzione…', 'chat.you': 'Io', 'profile.follow': 'Segui', 'profile.following': 'Seguito', 'profile.followed': 'Seguito', 'profile.unfollowed': 'Non seguito', 'profile.sendMsg': 'Invia messaggio', 'profile.block': 'Blocca', 'profile.unblock': 'Sblocca', 'profile.unblocked': 'Sbloccato', 'profile.confirmBlock': 'Bloccare questo utente? Non vedrai più i suoi contenuti.', 'profile.blocked': 'Bloccato', 'profile.mutual': 'Follow reciproco · puoi scrivere', 'profile.joinedAt': 'Iscritto il', 'profile.noBio': 'Questo utente non ha ancora scritto una bio.', 'admin.confirmRemove': 'Retrocedere questo amministratore a utente normale?', 'admin.removeDone': 'Retrocesso a utente normale', 'admin.confirmDisable': 'Disattivare questo amministratore? I suoi permessi verranno revocati subito.', 'admin.confirmEnable': 'Attivare questo amministratore?', 'admin.disableDone': 'Disattivato', 'expandAll': 'Mostra tutto ({0})', 'admin.enableDone': 'Attivato',      'settings.title': 'Impostazioni',
     'settings.sub': 'Personalizza la tua esperienza Yuntan.',
     'apps.title': 'Mini app',
     'apps.sub': 'Mini-giochi integrati · account collegato.',
@@ -7154,7 +7294,7 @@ var I18N = {
     'settings.themeSaved': 'Thème changé', 'settings.saveFail': 'Échec de l’enregistrement : ', 'settings.glassOnDone': 'Verre liquide activé', 'settings.glassOffDone': 'Verre liquide désactivé',
     'settings.glassColorDone': 'Couleur du verre mise à jour', 'settings.glassAlphaDone': 'Opacité du verre mise à jour', 'settings.langDone': 'Langue changée',
     'welcome': 'Bon retour, ', 'signupOk': 'Inscription réussie. Bienvenue sur le forum HanBer !', 'pleaseLogin': 'Veuillez d’abord vous connecter', 'uploadFail': 'Échec du téléversement', 'netErr': 'Délai de requête dépassé',
-    'footer': 'HanBerOS 6.4.6', 'nav.signin': 'Check-in', 'report.title': 'Signaler', 'report.reason': 'Raison (requise)', 'report.detail': 'Détails (facultatif)', 'report.ok': 'Signalement envoyé, les admins vont examiner', 'pin.admin': 'Épingler', 'pin.adminOff': 'Désépingler', 'admin.reports': 'Gestion des signalements', 'admin.handle': 'Traiter', 'admin.ignore': 'Ignorer', 'admin.actionPh': 'Action (ex. supprimer / ban 7j)', 'admin.signins': 'Historique des check-ins', 'admin.audit': 'Journal des opérations', 'admin.export': 'Exporter les données', 'admin.exportPh': 'Entrez nom ou ID', 'export.title': 'Export de données', 'export.mine': 'Exporter toutes mes données', 'export.admin': 'Exporter cet utilisateur', 'export.need': 'Exportez toutes vos données (posts, réponses, messages, notifications, check-ins) en JSON. Vous seul pouvez les voir.',
+    'footer': 'HanBerOS 6.7.0', 'nav.signin': 'Check-in', 'report.title': 'Signaler', 'report.reason': 'Raison (requise)', 'report.detail': 'Détails (facultatif)', 'report.ok': 'Signalement envoyé, les admins vont examiner', 'pin.admin': 'Épingler', 'pin.adminOff': 'Désépingler', 'admin.reports': 'Gestion des signalements', 'admin.handle': 'Traiter', 'admin.ignore': 'Ignorer', 'admin.actionPh': 'Action (ex. supprimer / ban 7j)', 'admin.signins': 'Historique des check-ins', 'admin.audit': 'Journal des opérations', 'admin.export': 'Exporter les données', 'admin.exportPh': 'Entrez nom ou ID', 'export.title': 'Export de données', 'export.mine': 'Exporter toutes mes données', 'export.admin': 'Exporter cet utilisateur', 'export.need': 'Exportez toutes vos données (posts, réponses, messages, notifications, check-ins) en JSON. Vous seul pouvez les voir.',
     'nav.notifClear': 'Effacer les lues',
     'nav.notifCleared': 'Notifications lues effacées',
 'apps.login.ok1': '✅ Connecté via YunTan : ',
@@ -7509,7 +7649,7 @@ function setLang(id) {
   /* 按当前路由重渲染，保证私聊/帖子/个人页/管理后台/通知页等全部跟随语言切换 */
   var r = parseHash();
   var active = r.path;
-  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback', 'featured', 'reading'];
+  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback', 'featured', 'reading', 'activities', 'bank', 'quiz'];
   if (active === 'circle') { homeState.circle = r.params.get('id') || ''; homeState.topic = ''; active = 'home'; }
   if (active === 'topic') { homeState.topic = r.params.get('id') || ''; homeState.circle = ''; active = 'home'; }
   /* 修复：回到首页且无圈子/话题参数时清空筛选（话题/圈子条"全部"点击生效） */
@@ -9229,7 +9369,7 @@ function parseHash() {
 function router() {
   var r = parseHash();
   var active = r.path;
-  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback', 'featured', 'reading'];
+  var validRoutes = ['home', 'post', 'new', 'login', 'profile', 'user', 'notifications', 'messages', 'chat', 'tasks', 'shop', 'rank', 'settings', 'admin', 'apps', 'feedback', 'featured', 'reading', 'activities', 'bank', 'quiz'];
   /* v6.4.1 修复：点击话题/圈子筛选链接后，正确写入筛选状态再回首页渲染 */
   if (active === 'circle') { homeState.circle = r.params.get('id') || ''; homeState.topic = ''; active = 'home'; }
   if (active === 'topic') { homeState.topic = r.params.get('id') || ''; homeState.circle = ''; active = 'home'; }
@@ -9263,6 +9403,9 @@ function router() {
   if (active === 'apps') renderApps();
   if (active === 'featured') renderFeatured();
   if (active === 'reading') renderReading();
+  if (active === 'activities') renderActivities();
+  if (active === 'bank') renderBank();
+  if (active === 'quiz') renderQuiz();
 
   window.scrollTo(0, 0);
 }
@@ -161421,6 +161564,9 @@ function renderNav() {
     html += '<a class="nav-link" href="#/profile">' + avatarHtml(session.username, '', session.avatar_url) + '</a>';
     html += '<a class="nav-link" href="#/tasks" title="' + t('nav.tasks') + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">' + t('nav.tasks') + '</span></a>';
     html += '<a class="nav-link" href="#/shop" title="' + t('nav.shop') + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span class="nav-label">' + t('nav.shop') + '</span></a>';
+    html += '<a class="nav-link" href="#/activities" title="活动中心"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">活动</span></a>';
+    html += '<a class="nav-link" href="#/bank" title="金币银行"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg><span class="nav-label">银行</span></a>';
+    html += '<a class="nav-link" href="#/quiz" title="默契问卷"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">问卷</span></a>';
     html += '<a class="nav-link" href="#/feedback" title="' + t('nav.feedback') + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg><span class="nav-label">' + t('nav.feedback') + '</span></a>';
     html += '<a class="nav-link" href="#/rank" title="' + t('nav.rank') + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M6 4h12v4a6 6 0 0 1-12 0z"/><rect x="6" y="4" width="12" height="4"/></svg><span class="nav-label">' + t('nav.rank') + '</span></a>';
     html += (window._coins !== undefined ? '<span class="nav-link" style="display:flex;align-items:center;gap:3px;color:#d9a03f;font-weight:600" title="金币">🪙 ' + (window._coins || 0) + '</span>' : '');
@@ -161514,6 +161660,38 @@ var PET_SKINS = [
   { id: 'custom2', img: 'assets/pet/skin-09.png' },
   { id: 'custom3', img: 'assets/pet/skin-10.png' },
   { id: 'custom4', img: 'assets/pet/skin-11.png' },
+  { id: 'ren_mantang', img: 'assets/pet/pet_满糖.png' },
+  { id: 'ren_maoniang', img: 'assets/pet/pet_猫娘.png' },
+  { id: 'ren_wangsichuai', img: 'assets/pet/pet_王死踹.png' },
+  { id: 'ren_mifeng', img: 'assets/pet/pet_蜜蜂.png' },
+  { id: 'ren_yabo', img: 'assets/pet/pet_鸭脖.png' },
+  { id: 'ren_mading', img: 'assets/pet/pet_马ding.png' },
+  { id: 'ren_bachidaren', img: 'assets/pet/pet_八尺大人.png' },
+  { id: 'ren_yiquanchaoren', img: 'assets/pet/pet_一拳超人.png' },
+  { id: 'ren_xiaoxiao', img: 'assets/pet/pet_萧萧.png' },
+  { id: 'ren_baozhatou', img: 'assets/pet/pet_爆炸头.png' },
+  { id: 'ren_zhongyuqing', img: 'assets/pet/pet_钟雨清.png' },
+  { id: 'ren_puffer', img: 'assets/pet/pet_Puffer.png' },
+  { id: 'ren_fenggou', img: 'assets/pet/pet_疯狗.png' },
+  { id: 'ren_xzq', img: 'assets/pet/pet_xzq.png' },
+  { id: 'ren_yangsiyuan', img: 'assets/pet/pet_杨思远.png' },
+  { id: 'ren_lijirou', img: 'assets/pet/pet_里脊肉.png' },
+  { id: 'ren_kly', img: 'assets/pet/pet_kly.png' },
+  { id: 'ren_zidingyi1', img: 'assets/pet/pet_自定义名称1.png' },
+  { id: 'ren_wangyunfeng', img: 'assets/pet/pet_王云峰.png' },
+  { id: 'ren_zhuangyunqi', img: 'assets/pet/pet_庄云起.png' },
+  { id: 'ren_cjw', img: 'assets/pet/pet_cjw.png' },
+  { id: 'ren_hama', img: 'assets/pet/pet_蛤蟆.png' },
+  { id: 'ren_zhongyuqing2', img: 'assets/pet/pet_钟雨晴.png' },
+  { id: 'ren_tudidilei', img: 'assets/pet/pet_土豆地雷.png' },
+  { id: 'ren_ximi', img: 'assets/pet/pet_虾米.png' },
+  { id: 'ren_fenggou_sunglasses', img: 'assets/pet/pet_疯狗（墨镜版）.png' },
+  { id: 'ren_qingshuruwenben', img: 'assets/pet/pet_请输入文本.png' },
+  { id: 'ren_mike', img: 'assets/pet/pet_Mike.png' },
+  { id: 'ren_nanliang', img: 'assets/pet/pet_南梁.png' },
+  { id: 'ren_zhongyuqing_sunglasses', img: 'assets/pet/pet_钟雨清（墨镜版）.png' },
+  { id: 'ren_yangsiyuan_sunglasses', img: 'assets/pet/pet_杨思远（墨镜版）.png' },
+  { id: 'ren_python_shenzuo', img: 'assets/pet/pet_？python爬虫又一神作？.png' },
 ];
 var PET_SKIN_PRICE = 150;
 function skinById(id) { for (var i=0;i<PET_SKINS.length;i++) if (PET_SKINS[i].id===id) return PET_SKINS[i]; return null; }
@@ -162293,6 +162471,9 @@ function renderUserProfile(userId) {
 
     html += '<h2 class="section-title" style="margin-top:30px;font-size:20px">成就徽章</h2>' + badgesWallHtml(p.badges, allBadges);
 
+    /* 匿名留言 */
+    html += hbAnonMsgHtml(userId, isMe);
+
     html += '<h2 class="section-title" style="margin-top:30px;font-size:20px">TA的帖子</h2>';
     if (!userPosts.length) {
       html += '<div class="empty"><p class="empty-title">还没有发过帖子</p></div>';
@@ -162968,13 +163149,16 @@ function renderShop() {
   var grid = PET_SKINS.map(function (sk) {
     var isOwn = owned.indexOf(sk.id) >= 0;
     var isCur = cur === sk.id;
+    var isShardSkin = sk.id.indexOf('ren_') === 0;
     var badge = isCur
       ? '<span class="tag" style="background:rgba(16,185,129,.15);color:#059669">' + t('skin.using') + '</span>'
       : isOwn
         ? '<button class="btn btn-sm btn-primary" data-skin="' + sk.id + '" data-act="use-skin">' + t('skin.use') + '</button>'
-        : '<button class="btn btn-sm btn-primary" data-skin="' + sk.id + '" data-act="buy-skin">🪙 ' + PET_SKIN_PRICE + '</button>';
+        : isShardSkin
+          ? '<span class="tag" style="background:rgba(251,146,60,.15);color:#f59e0b">🔓 宝箱碎片解锁</span>'
+          : '<button class="btn btn-sm btn-primary" data-skin="' + sk.id + '" data-act="buy-skin">🪙 ' + PET_SKIN_PRICE + '</button>';
     return '<div class="card pad" style="padding:10px;text-align:center">'
-      + '<img src="' + sk.img + '" alt="skin" style="width:64px;height:64px;object-fit:contain;border-radius:10px">'
+      + '<img src="' + sk.img + '" alt="skin" style="width:64px;height:64px;object-fit:contain;border-radius:10px" onerror="this.onerror=null;this.src=PET_DEFAULT_IMG">'
       + '<div style="font-size:12px;margin:6px 0 4px;color:var(--ink-1)">' + t('skin.' + sk.id) + '</div>'
       + badge + '</div>';
   }).join('');
@@ -163015,7 +163199,8 @@ function renderShop() {
     + '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><h4 style="font-size:13px;color:var(--ink-3);margin-bottom:8px">🏷 ' + t('shop.tiers') + '</h4>'
     + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">' + tierGrid + '</div></div>'
     + '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><h4 style="font-size:13px;color:var(--ink-3);margin-bottom:8px">🎭 ' + t('shop.actions') + '</h4>'
-    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px">' + actGrid + '</div></div>';
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px">' + actGrid + '</div></div>'
+    + hbChestsHtml() + hbShardGalleryHtml();
   box.innerHTML = '<div class="card pad" style="max-width:720px;margin:0 auto">'
     + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
     + '<h2 class="section-title" style="flex:1;margin:0">🎨 ' + t('pet.shop') + '</h2>'
@@ -163030,7 +163215,6 @@ function applySkin(skId) {
   CloudStore.updatePetImg('skin:' + skId).then(function () {
     session.pet_img = 'skin:' + skId;
     toast(t('skin.used'));
-    openSkinShopModal();
     renderProfile();
   }).catch(function (err) { toast(err.message || t('skin.fail')); });
 }
@@ -163234,6 +163418,13 @@ function renderSettings() {
       + '<div style="margin-top:12px"><div style="font-size:12px;color:var(--ink-3);margin-bottom:6px">' + t('pet.voiceLang') + '</div>'
       + '<select id="pet-voice-lang" style="width:100%;padding:8px 10px;border:1px solid #d6e0f5;border-radius:9px;font-size:14px;background:var(--card);color:var(--ink)">' + langOpts + '</select>'
       + '<p style="font-size:12px;color:var(--ink-3);margin:6px 0 0">' + t('pet.voiceLangHint') + '</p></div>';
+    /* 宠物恋爱模式开关 */
+    var rd = hbRelData();
+    petBox.innerHTML += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">'
+      + '<input type="checkbox" id="pet-rel-toggle"' + (rd.enabled ? ' checked' : '') + ' style="width:18px;height:18px"> '
+      + '💕 宠物恋爱模式</label>'
+      + '<p style="font-size:12px;color:var(--ink-3);margin:8px 0 0">开启后可以和桌宠互动、培养好感度、谈恋爱，像galgame一样。</p>'
+      + (rd.enabled ? '<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="openPetRelPanel()">💕 打开恋爱面板</button>' : '');
   }
 
   /* 主题选择器 */
@@ -163780,25 +163971,32 @@ document.addEventListener('click', function (e) {
       if (isBanned('rename')) { toast(t('banned.rename')); return; }
       var freeNow = false;
       try { freeNow = !localStorage.getItem('rename_free_used'); } catch (e) {}
-      if (!freeNow && (session.coins || 0) < 50) { toast(t('skin.noCoins')); return; }
       var nn2 = prompt(t('settings.renamePh'), session.username || '');
       if (!nn2) return;
       nn2 = nn2.trim();
       if (nn2.length < 2) { toast('昵称至少2个字'); return; }
-      CloudStore.updateProfile(session.id, { username: nn2 })
-        .then(function () { session.username = nn2; return CloudStore.syncRename(nn2); })
-        .then(function () {
-          if (freeNow) {
-            try { localStorage.setItem('rename_free_used', '1'); } catch (e) {}
-            toast(t('shop.renameFree') + ' ✓');
-          } else {
-            session.coins -= 50;
-            refreshCoins();
-            toast(t('skin.bought'));
-          }
-          renderProfile(); renderNav(); renderShop();
-        })
-        .catch(function (err) { toast((err && err.message) || t('skin.fail')); });
+      var doRename = function () {
+        CloudStore.updateProfile(session.id, { username: nn2 })
+          .then(function () { session.username = nn2; return CloudStore.syncRename(nn2); })
+          .then(function () {
+            if (freeNow) {
+              try { localStorage.setItem('rename_free_used', '1'); } catch (e) {}
+              toast(t('shop.renameFree') + ' ✓');
+            } else {
+              refreshCoins();
+              toast(t('skin.bought'));
+            }
+            renderProfile(); renderNav(); renderShop();
+          })
+          .catch(function (err) { toast((err && err.message) || t('skin.fail')); });
+      };
+      if (freeNow) { doRename(); }
+      else {
+        /* 修复：付费改名先服务端扣款，避免只本地扣减被 refreshCoins 覆盖而免费改名 */
+        spendCoins(50).then(doRename).catch(function (err) {
+          if (err && err.message !== 'nocoin' && err.message !== 'login') toast(err.message || t('skin.fail'));
+        });
+      }
       return;
     }
     if (act2 === 'item-pet-rename') {
@@ -163878,7 +164076,7 @@ document.addEventListener('click', function (e) {
     if (el.disabled) return;
     el.disabled = true;
     CloudStore.toggleLike(pid, session.id)
-      .then(function (liked) { toast(liked ? '已点赞' : '已取消点赞'); if (liked) CloudStore.bumpTask('like'); renderPost(pid); })
+      .then(function (liked) { toast(liked ? '已点赞' : '已取消点赞'); if (liked) { CloudStore.bumpTask('like'); hbTaskAdd('like'); } renderPost(pid); })
       .catch(function (err) { toast(err.message); el.disabled = false; })
       .finally(function() { el.disabled = false; });
     return;
@@ -164846,6 +165044,7 @@ document.addEventListener('submit', function (e) {
       });
     })
     .then(function (p) {
+      if (p && p.id) hbTaskAdd('post');
       if (!p || !p.id) {
         console.error('发帖返回异常:', p);
         toast('发布未生效：帖子未被写入（请检查 posts 表 RLS 策略与 v6.3 迁移 SQL 是否已执行）');
@@ -164884,7 +165083,7 @@ document.addEventListener('submit', function (e) {
     var data = { post_id: pid, user_id: session.id, author_name: session.username, content: content };
     if (parentId) data.parent_id = parentId;
     CloudStore.createComment(data)
-      .then(function () { toast(t('xp.gainComment')); CloudStore.bumpTask('comment'); CloudStore.addXp(5).then(function (r) { if (session && r) { session.xp = r.xp; session.level = r.level; } }); grantAchievementsByStats(); CloudStore.notifyReply(pid, content); renderPost(pid); loadUnread(); })
+      .then(function () { toast(t('xp.gainComment')); CloudStore.bumpTask('comment'); hbTaskAdd('reply'); CloudStore.addXp(5).then(function (r) { if (session && r) { session.xp = r.xp; session.level = r.level; } }); grantAchievementsByStats(); CloudStore.notifyReply(pid, content); renderPost(pid); loadUnread(); })
       .catch(function (err) { toast(err.message); btn3.disabled = false; });
   }
 
@@ -165023,6 +165222,14 @@ document.addEventListener('change', function (e) {
     } else {
       stopVoice();
     }
+    return;
+  }
+  if (e.target.id === 'pet-rel-toggle') {
+    var rd = hbRelData();
+    rd.enabled = e.target.checked;
+    hbSaveRel(rd);
+    if (e.target.checked) toast('💕 恋爱模式已开启，点桌宠互动吧！');
+    renderSettings();
     return;
   }
   if (e.target.id === 'pet-voice-lang') {
@@ -165827,7 +166034,1243 @@ setTimeout(tickScheduled, 3000);
     }
   }).catch(function () { router(); });
 })();
-/* 加载页关闭逻辑已上移到 <head> 独立小脚本，见 __fadeSplash */
+
+
+/* ============================================================
+ * v6.5 新功能模块：金币银行 / 活动中心 / 默契问卷 / 匿名留言 / 宝箱碎片图鉴 / 宠物恋爱
+ * ============================================================ */
+var HBER = HBER || {};
+HBER.ver = '6.7.0';
+
+/* ---------- 通用本地存储 ---------- */
+function hbGet(key, def) {
+  try { var v = localStorage.getItem('hb_' + key); return v ? JSON.parse(v) : def; } catch (e) { return def; }
+}
+function hbSet(key, val) {
+  try { localStorage.setItem('hb_' + key, JSON.stringify(val)); } catch (e) {}
+}
+function hbUid() { return (session && session.id) ? session.id : 'guest'; }
+
+/* 加金币（本地乐观 + 远端同步） */
+function hbAddCoins(n) {
+  return CloudStore.getMyCoins().then(function (cur) {
+    return CloudStore.setCoins(cur + n);
+  }).then(function (newv) {
+    window._coins = newv; if (session) session.coins = newv;
+    renderNav();
+    return newv;
+  });
+}
+function hbSpendCoins(n) {
+  return CloudStore.getMyCoins().then(function (cur) {
+    if (cur < n) { toast('金币不足'); return Promise.reject(new Error('nocoin')); }
+    return CloudStore.setCoins(cur - n);
+  }).then(function (newv) {
+    window._coins = newv; if (session) session.coins = newv;
+    renderNav();
+    return newv;
+  });
+}
+
+/* ============================================================
+ * 1. 金币银行
+ * ============================================================ */
+/* 利率：月息 3%（存），月息 6%（借），按自然月结算 */
+HBER.BANK_RATE_DEPOSIT = 0.03;
+HBER.BANK_RATE_LOAN = 0.06;
+HBER.BANK_MAX_LOAN = 5000; /* 最大借款上限 */
+/* 累计存款活动：累计存满档位额外送金币 */
+HBER.BANK_BONUS = [ { at: 500, gift: 50 }, { at: 1000, gift: 120 }, { at: 2000, gift: 300 }, { at: 5000, gift: 800 } ];
+
+function hbBankData() {
+  var d = hbGet('bank_' + hbUid(), { deposited: 0, loan: 0, loanDate: null, depositDate: null, totalDep: 0 });
+  return d;
+}
+function hbSaveBank(d) { hbSet('bank_' + hbUid(), d); }
+
+function renderBank() {
+  var box = $('#bank-panel');
+  if (!requireLogin()) return;
+  var d = hbBankData();
+  var html = '<div class="card pad" style="max-width:640px;margin:0 auto">'
+    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">'
+    + '<h2 class="section-title" style="flex:1;margin:0">🏦 金币银行</h2>'
+    + '<a class="btn btn-ghost btn-sm" href="#/shop">← 返回商店</a></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">'
+    + '<div style="background:rgba(16,185,129,.08);border-radius:12px;padding:14px;text-align:center">'
+    + '<div style="font-size:12px;color:var(--ink-3)">存款</div>'
+    + '<div style="font-size:22px;font-weight:700;color:#059669;margin:4px 0">🪙 ' + d.deposited + '</div>'
+    + '<div style="font-size:11px;color:var(--ink-3)">月息 ' + (HBER.BANK_RATE_DEPOSIT*100) + '%</div></div>'
+    + '<div style="background:rgba(239,68,68,.08);border-radius:12px;padding:14px;text-align:center">'
+    + '<div style="font-size:12px;color:var(--ink-3)">借款</div>'
+    + '<div style="font-size:22px;font-weight:700;color:#dc2626;margin:4px 0">🪙 ' + d.loan + '</div>'
+    + '<div style="font-size:11px;color:var(--ink-3)">月息 ' + (HBER.BANK_RATE_LOAN*100) + '% · 上限 ' + HBER.BANK_MAX_LOAN + '</div></div>'
+    + '</div>';
+
+  /* 存/取 */
+  html += '<div style="border-top:1px solid var(--line);padding-top:12px;margin-top:8px">'
+    + '<h4 style="font-size:13px;color:var(--ink-3);margin-bottom:8px">💰 存款</h4>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + '<input id="hb-dep-amt" type="number" placeholder="金额" style="flex:1;min-width:100px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">'
+    + '<button class="btn btn-primary btn-sm" data-hbact="deposit">存入</button>'
+    + '<button class="btn btn-ghost btn-sm" data-hbact="withdraw">取出</button></div></div>';
+
+  /* 借/还 */
+  html += '<div style="border-top:1px solid var(--line);padding-top:12px;margin-top:12px">'
+    + '<h4 style="font-size:13px;color:var(--ink-3);margin-bottom:8px">💳 借款</h4>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + '<input id="hb-loan-amt" type="number" placeholder="金额" style="flex:1;min-width:100px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">'
+    + '<button class="btn btn-primary btn-sm" data-hbact="borrow">借款</button>'
+    + '<button class="btn btn-ghost btn-sm" data-hbact="repay">还款</button></div>'
+    + '<p style="font-size:11px;color:var(--ink-3);margin-top:8px">借款按月计息，每月自动结算。未还清前不能再次借款。</p></div>';
+
+  /* 结算按钮（手动触发月结算） */
+  html += '<div style="text-align:center;margin-top:16px"><button class="btn btn-ghost btn-sm" data-hbact="settle">📅 结算本月利息</button></div>';
+
+  /* 累计存款活动 */
+  var gotB = [];
+  try { gotB = JSON.parse(localStorage.getItem('bank_bonus_' + hbUid()) || '[]'); } catch (e) {}
+  html += '<div class="card pad" style="margin-top:14px;border:1px solid #f59e0b44">'
+    + '<h3>💰 存款冲刺</h3><p style="font-size:12px;color:var(--ink-3)">累计存款达到档位，额外赠送金币（一次性）</p>'
+    + '<div style="font-size:12px;margin:6px 0">当前累计存款：<b style="color:#059669">' + (d.totalDep || 0) + '</b></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  HBER.BANK_BONUS.forEach(function (bb) {
+    var done = gotB.indexOf(bb.at) >= 0;
+    var ok = (d.totalDep || 0) >= bb.at;
+    html += '<div style="border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center">'
+      + '<div style="font-size:11px;color:var(--ink-2)">累计存满 ' + bb.at + '</div>'
+      + '<div style="font-size:16px;font-weight:700;color:#f59e0b;margin:4px 0">+ ' + bb.gift + ' 金币</div>'
+      + (done ? '<span style="font-size:10px;color:#059669">已领取</span>'
+        : ok ? '<button class="btn btn-sm btn-primary" data-hbact="bank-bonus" data-at="' + bb.at + '">领取</button>'
+        : '<span style="font-size:10px;color:var(--ink-3)">还差 ' + (bb.at - (d.totalDep || 0)) + '</span>')
+      + '</div>';
+  });
+  html += '</div></div>';
+
+  box.innerHTML = html;
+}
+
+/* ============================================================
+ * 2. 活动中心
+ * ============================================================ */
+/* 新用户7天签到奖励 */
+HBER.NEW_USER_REWARDS = [
+  { day: 1, coins: 50, item: null },
+  { day: 2, coins: 80, item: null },
+  { day: 3, coins: 120, item: 'rename_card' },
+  { day: 4, coins: 150, item: null },
+  { day: 5, coins: 200, item: null },
+  { day: 6, coins: 250, item: null },
+  { day: 7, coins: 500, item: 'pet_skin_new' }
+];
+/* 老友回归7天签到（奖励更好） */
+HBER.RETURN_REWARDS = [
+  { day: 1, coins: 100, item: null },
+  { day: 2, coins: 150, item: null },
+  { day: 3, coins: 200, item: 'rename_card' },
+  { day: 4, coins: 300, item: null },
+  { day: 5, coins: 400, item: null },
+  { day: 6, coins: 500, item: 'chest_medium' },
+  { day: 7, coins: 1000, item: 'pet_skin_return' }
+];
+
+function hbNewUser() {
+  /* 新版本后注册的用户：session.created_at 或注册时间 > v6.5上线时间 */
+  var since = hbGet('v65_since', null);
+  if (!since) { hbSet('v65_since', Date.now()); return true; }
+  /* 如果用户注册时间在 v6.5 之后 */
+  if (session && session.created_at) {
+    return new Date(session.created_at).getTime() > since;
+  }
+  return hbGet('new_user_' + hbUid(), true);
+}
+function hbIsReturnUser() {
+  /* 超过3个月没登录 */
+  var last = hbGet('last_login_' + hbUid(), null);
+  if (!last) return false;
+  var diff = Date.now() - last;
+  return diff > 90 * 24 * 3600 * 1000;
+}
+function hbSignData(type) {
+  var d = hbGet('sign_' + type + '_' + hbUid(), { day: 0, claimed: [], lastDate: null });
+  return d;
+}
+function hbSaveSign(type, d) { hbSet('sign_' + type + '_' + hbUid(), d); }
+function hbSignReward(type, day) {
+  var rewards = (type === 'return') ? HBER.RETURN_REWARDS : HBER.NEW_USER_REWARDS;
+  return rewards[day - 1];
+}
+
+function renderActivities() {
+  var box = $('#activities-panel');
+  if (!requireLogin()) return;
+  var isNew = hbNewUser();
+  var isReturn = hbIsReturnUser();
+  var html = '<div style="max-width:640px;margin:0 auto;padding:0 12px 30px">'
+    + '<h2 class="section-title" style="margin:16px 0">🎁 活动中心</h2>';
+
+  /* --- 新用户签到 --- */
+  if (isNew) {
+    var sd = hbSignData('new');
+    html += '<div class="card pad" style="margin-bottom:14px">'
+      + '<h3>🌱 新人七日签到</h3><p style="font-size:12px;color:var(--ink-3)">新版本注册用户专享，每日签到领奖励</p>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:12px 0">';
+    for (var i = 1; i <= 7; i++) {
+      var r = hbSignReward('new', i);
+      var claimed = sd.claimed.indexOf(i) >= 0;
+      var today = (sd.day + 1 === i && !claimed);
+      html += '<div style="flex:1;min-width:60px;text-align:center;padding:8px 4px;border-radius:8px;'
+        + (claimed ? 'background:rgba(16,185,129,.1);' : today ? 'background:var(--accent-soft);border:1px solid var(--accent);' : 'background:var(--card);')
+        + '"><div style="font-size:10px;color:var(--ink-3)">第' + i + '天</div>'
+        + '<div style="font-size:18px;margin:4px 0">' + (claimed ? '✅' : (r.item === 'rename_card' ? '✏️' : r.item === 'pet_skin_new' ? '🐱' : '🪙')) + '</div>'
+        + '<div style="font-size:10px;color:var(--ink-2)">' + (r.item ? (r.item === 'rename_card' ? '改名卡' : '宠物皮肤') : r.coins + '金币') + '</div></div>';
+    }
+    html += '</div>';
+    var canSign = sd.lastDate !== new Date().toDateString();
+    html += '<button class="btn btn-primary" style="width:100%" data-hbact="sign-new" ' + (canSign ? '' : 'disabled') + '>'
+      + (canSign ? '签到第 ' + (sd.day + 1) + ' 天' : '今日已签到') + '</button></div>';
+  }
+
+  /* --- 老友回归 --- */
+  if (isReturn) {
+    var rd = hbSignData('return');
+    html += '<div class="card pad" style="margin-bottom:14px;border:1px solid #f59e0b">'
+      + '<h3>🔙 老友回归七日礼</h3><p style="font-size:12px;color:var(--ink-3)">欢迎回来！连续签到7天领豪华奖励</p>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:12px 0">';
+    for (var j = 1; j <= 7; j++) {
+      var r2 = hbSignReward('return', j);
+      var claimed2 = rd.claimed.indexOf(j) >= 0;
+      html += '<div style="flex:1;min-width:60px;text-align:center;padding:8px 4px;border-radius:8px;'
+        + (claimed2 ? 'background:rgba(16,185,129,.1);' : 'background:var(--card);')
+        + '"><div style="font-size:10px;color:var(--ink-3)">第' + j + '天</div>'
+        + '<div style="font-size:18px;margin:4px 0">' + (claimed2 ? '✅' : (r2.item === 'rename_card' ? '✏️' : r2.item === 'chest_medium' ? '📦' : r2.item === 'pet_skin_return' ? '🐶' : '🪙')) + '</div>'
+        + '<div style="font-size:10px;color:var(--ink-2)">' + (r2.item ? (r2.item === 'rename_card' ? '改名卡' : r2.item === 'chest_medium' ? '中级宝箱' : (r2.item === 'pet_skin_return' ? '疯狗皮肤' : '限定皮肤')) : r2.coins + '金币') + '</div></div>';
+    }
+    html += '</div>';
+    var canSign2 = rd.lastDate !== new Date().toDateString();
+    html += '<button class="btn btn-primary" style="width:100%" data-hbact="sign-return" ' + (canSign2 ? '' : 'disabled') + '>'
+      + (canSign2 ? '签到第 ' + (rd.day + 1) + ' 天' : '今日已签到') + '</button></div>';
+  }
+
+  /* --- 面包杀联动 --- */
+  html += '<div class="card pad" style="margin-bottom:14px;border:1px solid #8b5cf6">'
+    + '<h3>🍞 面包杀联动</h3><p style="font-size:12px;color:var(--ink-3)">输入面包杀 ID 领取联动金币奖励（每个 ID 限用一次）</p>'
+    + '<div style="display:flex;gap:8px;margin:10px 0">'
+    + '<input id="hb-bread-id" type="text" placeholder="输入面包杀 ID" style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)">'
+    + '<button class="btn btn-primary btn-sm" data-hbact="bread-redeem">领取</button></div>'
+    + '<a class="btn btn-ghost btn-sm" href="https://hajifeng1.github.io/mianbaosha/" target="_blank" style="width:100%;text-align:center;display:block">🍞 前往面包杀</a></div>';
+
+  /* --- 充值入口 --- */
+  html += '<div class="card pad" style="margin-bottom:14px">'
+    + '<h3>💎 充值</h3><p style="font-size:12px;color:var(--ink-3)">充值金币支持云坛运营</p>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0">'
+    + '<button class="btn btn-ghost" data-hbact="recharge" data-amt="10">¥10<br><small>100金币</small></button>'
+    + '<button class="btn btn-ghost" data-hbact="recharge" data-amt="30">¥30<br><small>300+30</small></button>'
+    + '<button class="btn btn-ghost" data-hbact="recharge" data-amt="68">¥68<br><small>680+100</small></button></div>'
+    + '<p style="font-size:11px;color:var(--ink-3)">累计充值额外赠送：¥68送宝箱 · ¥128送限定皮肤 · ¥328送典藏皮肤</p></div>';
+
+  html += hbManualHtml();
+  box.innerHTML = html;
+}
+
+/* ============================================================
+ * 3. 默契问卷（嵌入帖子）
+ * ============================================================ */
+/* 问卷数据存 localStorage：questions = {id, title, target, questions:[{q, options:[a,b,c,d], answer}], reward, creator} */
+/* 答题记录：responses = {qid, answers:[], score, time} */
+
+function hbQuizzes() { return hbGet('quizzes', {}); }
+function hbSaveQuizzes(q) { hbSet('quizzes', q); }
+function hbQuizResp(qid) { return hbGet('quizresp_' + qid, []); }
+
+function renderQuiz() {
+  var box = $('#quiz-panel');
+  if (!requireLogin()) return;
+  var qid = (location.hash.split('?')[1] || '');
+  var params = new URLSearchParams(location.hash.split('?')[1] || '');
+  var qid2 = params.get('id');
+  var quizzes = hbQuizzes();
+
+  if (!qid2) {
+    /* 问卷列表 */
+    var list = Object.keys(quizzes).map(function (k) { return quizzes[k]; }).filter(function (q) { return q; });
+    var html = '<div style="max-width:640px;margin:0 auto;padding:0 12px 30px">'
+      + '<div style="display:flex;align-items:center;gap:10px;margin:16px 0"><h2 class="section-title" style="flex:1;margin:0">💘 默契问卷</h2>'
+      + '<button class="btn btn-primary btn-sm" data-hbact="quiz-create">创建问卷</button></div>';
+    if (!list.length) html += '<p style="text-align:center;color:var(--ink-3);padding:40px 0">还没有问卷，创建第一个吧！</p>';
+    html += list.map(function (q) {
+      var myResp = hbGet('quizmy_' + q.id + '_' + hbUid(), null);
+      return '<div class="card pad" style="margin-bottom:10px;cursor:pointer" data-hbgoto="#/quiz?id=' + q.id + '">'
+        + '<div style="font-weight:700">' + esc(q.title) + '</div>'
+        + '<div style="font-size:12px;color:var(--ink-3);margin-top:4px">关于: ' + esc(q.target) + ' · ' + q.questions.length + '题 · 奖励🪙' + q.reward + '</div>'
+        + (myResp ? '<div style="font-size:12px;color:#059669;margin-top:4px">我的成绩: ' + myResp.score + '/100</div>' : '')
+        + '</div>';
+    }).join('');
+    box.innerHTML = html;
+    return;
+  }
+
+  var quiz = quizzes[qid2];
+  if (!quiz) { box.innerHTML = '<p style="text-align:center;padding:40px;color:var(--ink-3)">问卷不存在</p>'; return; }
+
+  var myResp = hbGet('quizmy_' + quiz.id + '_' + hbUid(), null);
+  var html = '<div style="max-width:640px;margin:0 auto;padding:0 12px 30px">'
+    + '<a href="#/quiz" class="btn btn-ghost btn-sm">← 返回问卷列表</a>'
+    + '<div class="card pad" style="margin-top:10px"><h3>' + esc(quiz.title) + '</h3>'
+    + '<p style="font-size:13px;color:var(--ink-3)">关于: ' + esc(quiz.target) + ' · 奖励🪙' + quiz.reward + '</p>';
+
+  if (myResp) {
+    /* 已答完，显示结果 */
+    html += '<div style="text-align:center;padding:20px 0"><div style="font-size:48px">' + (myResp.score >= 80 ? '💖' : myResp.score >= 60 ? '😊' : '😅') + '</div>'
+      + '<div style="font-size:28px;font-weight:700;margin:8px 0">' + myResp.score + '分</div>'
+      + '<button class="btn btn-ghost btn-sm" data-hbact="quiz-reveal" data-qid="' + quiz.id + '">🔓 花5金币看错题解析</button></div>';
+    if (myResp.revealed) {
+      html += '<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">';
+      quiz.questions.forEach(function (q, i) {
+        var myAns = myResp.answers[i];
+        if (myAns !== q.answer) {
+          html += '<div style="margin-bottom:10px;font-size:13px"><b>Q' + (i+1) + ':</b> ' + esc(q.q) + '<br>'
+            + '<span style="color:#dc2626">你的答案: ' + esc(q.options[myAns]) + '</span><br>'
+            + '<span style="color:#059669">正确答案: ' + esc(q.options[q.answer]) + '</span></div>';
+        }
+      });
+      html += '</div>';
+    }
+  } else {
+    /* 答题中 */
+    html += '<form id="quiz-form">' + quiz.questions.map(function (q, i) {
+      return '<div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:6px">Q' + (i+1) + '. ' + esc(q.q) + '</div>'
+        + q.options.map(function (opt, j) {
+          return '<label style="display:block;padding:6px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:4px;cursor:pointer;font-size:13px">'
+            + '<input type="radio" name="q' + i + '" value="' + j + '" style="margin-right:6px"> ' + esc(opt) + '</label>';
+        }).join('') + '</div>';
+    }).join('') + '<button type="submit" class="btn btn-primary" style="width:100%">提交答案</button></form>';
+  }
+  html += '</div>';
+
+  /* 出题人视角：查看答题记录 */
+  if (session && quiz.creator === session.id) {
+    var resps = hbQuizResp(quiz.id);
+    html += '<div class="card pad" style="margin-top:14px"><h4>📊 答题记录 (' + resps.length + '人)</h4>';
+    if (!resps.length) html += '<p style="font-size:12px;color:var(--ink-3)">还没人答题</p>';
+    resps.forEach(function (r, i) {
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">'
+        + '<span style="flex:1;font-size:13px">' + (r.anonymous ? '匿名用户' : esc(r.name)) + ': ' + r.score + '分</span>'
+        + '<button class="btn btn-ghost btn-sm" data-hbact="quiz-who" data-qid="' + quiz.id + '" data-idx="' + i + '">🔓 3金币看是谁</button>'
+        + (r.revealed ? '<span style="font-size:12px;color:var(--ink-3)">(' + esc(r.name) + ')</span>' : '')
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  box.innerHTML = html;
+}
+
+/* ============================================================
+ * 4. 宝箱 / 碎片 / 宠物图鉴
+ * ============================================================ */
+HBER.CHESTS = {
+  normal:   { price: 100, name: '普通宝箱', color: '#94a3b8', shards: [1,3], quality: ['common','common','uncommon'] },
+  medium:   { price: 300, name: '中等宝箱', color: '#3b82f6', shards: [3,6], quality: ['common','uncommon','uncommon','rare'] },
+  advanced: { price: 800, name: '高级宝箱', color: '#8b5cf6', shards: [6,10], quality: ['uncommon','rare','rare','epic'] },
+  season:   { price: 500, name: '赛季限定宝箱', color: '#f59e0b', shards: [5,8], quality: ['rare','rare','epic','legendary'] }
+};
+/* 赛季：大惠民共荣圈 */
+HBER.SEASON = {
+  id: '2026S2',
+  name: '大惠民共荣圈',
+  /* 赛季限定宝箱专属奖池（史诗+传说人头宠物） */
+  upPool: ['ren_bachidaren','ren_yiquanchaoren','ren_fenggou_sunglasses','ren_zhongyuqing_sunglasses','ren_yangsiyuan_sunglasses','ren_python_shenzuo'],
+  upWeight: 4,      /* 定轨目标碎片权重倍率 */
+  guarantee: 40     /* 保底：40 抽内必出定轨目标足量碎片 */
+};
+function hbSeasonUp() { return hbGet('season_up_' + hbUid(), { target: null, count: 0 }); }
+function hbSaveSeasonUp(d) { hbSet('season_up_' + hbUid(), d); }
+function hbSetUp(t) { var d = hbSeasonUp(); d.target = t; d.count = 0; hbSaveSeasonUp(d); }
+
+/* ============================================================
+ * 赛季手册：大惠民共荣圈（金币冲手册 · 任务得经验 · 等级领奖）
+ * 任务分三类：每日（每天刷新）/ 每周（每周一刷新）/ 累计（赛季内不刷新）
+ * ============================================================ */
+HBER.MANUAL = {
+  name: '大惠民共荣圈',
+  openPrice: 2000,
+  maxLv: 20,
+  expPerLv: 100,
+  tasks: {
+    /* 每日任务：每天 0 点刷新 */
+    daily: [
+      { id: 'login', name: '今日登录', exp: 10, max: 1 },
+      { id: 'sign',  name: '签到',     exp: 15, max: 1 },
+      { id: 'post',  name: '发布帖子', exp: 20, max: 3 },
+      { id: 'reply', name: '回帖',     exp: 10, max: 5 },
+      { id: 'like',  name: '点赞',     exp: 10, max: 5 },
+      { id: 'chest', name: '开启宝箱', exp: 15, max: 3 }
+    ],
+    /* 每周任务：每周一刷新 */
+    weekly: [
+      { id: 'login', name: '登录天数', exp: 60, max: 5 },
+      { id: 'sign',  name: '签到天数', exp: 60, max: 7 },
+      { id: 'post',  name: '发布帖子', exp: 60, max: 15 },
+      { id: 'reply', name: '回帖',     exp: 50, max: 40 },
+      { id: 'like',  name: '点赞',     exp: 40, max: 60 },
+      { id: 'chest', name: '开启宝箱', exp: 50, max: 15 }
+    ],
+    /* 累计任务：整个赛季不刷新，达成上限另有里程碑奖励 */
+    cumulative: [
+      { id: 'login', name: '累计登录',     exp: 12, max: 30,  reward: { type: 'coins', v: 500 } },
+      { id: 'sign',  name: '累计签到',     exp: 12, max: 30,  reward: { type: 'rename', v: 1 } },
+      { id: 'post',  name: '累计发布帖子', exp: 8,  max: 50,  reward: { type: 'rename', v: 1 } },
+      { id: 'reply', name: '累计回帖',     exp: 4,  max: 200, reward: { type: 'coins', v: 300 } },
+      { id: 'like',  name: '累计点赞',     exp: 4,  max: 300, reward: { type: 'coins', v: 300 } },
+      { id: 'chest', name: '累计开启宝箱', exp: 12, max: 60,  reward: { type: 'shards', pid: 'ren_bachidaren', v: 10 } }
+    ]
+  },
+  rewards: [
+    { lv: 1,  free: { type: 'coins', v: 100 },                          paid: { type: 'coins', v: 300 } },
+    { lv: 2,  free: { type: 'shards', pid: 'ren_xiaoxiao', v: 5 },      paid: { type: 'coins', v: 400 } },
+    { lv: 3,  free: { type: 'rename', v: 1 },                           paid: { type: 'rename', v: 2 } },
+    { lv: 4,  free: { type: 'coins', v: 200 },                          paid: { type: 'shards', pid: 'ren_mantang', v: 8 } },
+    { lv: 5,  free: { type: 'shards', pid: 'ren_maoniang', v: 10 },     paid: { type: 'pet', pid: 'ren_mantang' } },
+    { lv: 6,  free: { type: 'coins', v: 300 },                          paid: { type: 'coins', v: 600 } },
+    { lv: 7,  free: { type: 'shards', pid: 'ren_baozhatou', v: 10 },    paid: { type: 'pet', pid: 'ren_xiaoxiao' } },
+    { lv: 8,  free: { type: 'coins', v: 400 },                          paid: { type: 'coins', v: 800 } },
+    { lv: 9,  free: { type: 'rename', v: 1 },                           paid: { type: 'rename', v: 2 } },
+    { lv: 10, free: { type: 'shards', pid: 'ren_nanliang', v: 15 },     paid: { type: 'pet', pid: 'ren_maoniang' } },
+    { lv: 11, free: { type: 'coins', v: 500 },                          paid: { type: 'coins', v: 1000 } },
+    { lv: 12, free: { type: 'shards', pid: 'ren_zhongyuqing', v: 15 },  paid: { type: 'pet', pid: 'ren_baozhatou' } },
+    { lv: 13, free: { type: 'coins', v: 600 },                          paid: { type: 'coins', v: 1200 } },
+    { lv: 14, free: { type: 'rename', v: 1 },                           paid: { type: 'rename', v: 3 } },
+    { lv: 15, free: { type: 'shards', pid: 'ren_fenggou', v: 20 },      paid: { type: 'pet', pid: 'ren_nanliang' } },
+    { lv: 16, free: { type: 'coins', v: 800 },                          paid: { type: 'coins', v: 1600 } },
+    { lv: 17, free: { type: 'shards', pid: 'ren_wangyunfeng', v: 20 },  paid: { type: 'pet', pid: 'ren_zhongyuqing' } },
+    { lv: 18, free: { type: 'coins', v: 1000 },                         paid: { type: 'coins', v: 2000 } },
+    { lv: 19, free: { type: 'shards', pid: 'ren_bachidaren', v: 20 },   paid: { type: 'pet', pid: 'ren_wangyunfeng' } },
+    { lv: 20, free: { type: 'shards', pid: 'ren_python_shenzuo', v: 30 }, paid: { type: 'pet', pid: 'ren_python_shenzuo' } }
+  ]
+};
+
+function hbManual() { return hbGet('manual_' + hbUid(), { open: false, lv: 1, exp: 0, claimed: [] }); }
+function hbSaveManual(m) { hbSet('manual_' + hbUid(), m); }
+
+/* 任务进度存储结构：
+ * { d: {k: 日期键, c: {任务id: 次数}},  每日（键变化即刷新）
+ *   w: {k: 周键,   c: {任务id: 次数}},  每周（键变化即刷新，键=本周周一日期）
+ *   c: {c: {任务id: 次数}, g: [已领里程碑的任务id]},  累计（永不刷新）
+ *   ld: [登录日期 'YYYY-MM-DD', ...] }
+ * 兼容旧版扁平结构：不是新结构时重置为默认 */
+function hbManualTasks() {
+  var t = hbGet('manual_tasks_' + hbUid(), null);
+  if (!t || !t.d || !t.w || !t.c) t = { d: { k: '', c: {} }, w: { k: '', c: {} }, c: { c: {}, g: [] }, ld: [] };
+  if (!t.d.c) t.d.c = {};
+  if (!t.w.c) t.w.c = {};
+  if (!t.c.c) t.c.c = {};
+  if (!t.c.g) t.c.g = [];
+  if (!t.ld) t.ld = [];
+  return t;
+}
+function hbSaveManualTasks(t) { hbSet('manual_tasks_' + hbUid(), t); }
+
+/* 日期键：YYYY-MM-DD（每天刷新依据） */
+function hbDayKey() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+/* 周键：本周周一日期 YYYY-MM-DD（每周一刷新依据） */
+function hbWeekKey() {
+  var d = new Date();
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function hbTaskCfg(cat, id) {
+  var arr = HBER.MANUAL.tasks[cat];
+  for (var i = 0; i < arr.length; i++) if (arr[i].id === id) return arr[i];
+  return null;
+}
+/* 加经验（不触发渲染；升级时 toast） */
+function hbAddExp(n) {
+  var m = hbManual();
+  if (m.lv >= HBER.MANUAL.maxLv) return;
+  m.exp += n;
+  while (m.exp >= HBER.MANUAL.expPerLv && m.lv < HBER.MANUAL.maxLv) {
+    m.exp -= HBER.MANUAL.expPerLv; m.lv++;
+    toast('📕 赛季手册升级！Lv.' + m.lv);
+  }
+  hbSaveManual(m);
+}
+/* 某次行为（发帖/回帖/点赞/签到/开箱）同时计入三类任务 */
+function hbTaskAdd(id) {
+  var t = hbManualTasks();
+  var exp = 0;
+  var gained = [];
+  var dk = hbDayKey();
+  if (t.d.k !== dk) { t.d = { k: dk, c: {} }; }
+  t.d.c[id] = (t.d.c[id] || 0) + 1;
+  var dcfg = hbTaskCfg('daily', id);
+  if (dcfg && t.d.c[id] <= dcfg.max) exp += dcfg.exp;
+
+  var wk = hbWeekKey();
+  if (t.w.k !== wk) { t.w = { k: wk, c: {} }; }
+  t.w.c[id] = (t.w.c[id] || 0) + 1;
+  var wcfg = hbTaskCfg('weekly', id);
+  if (wcfg && t.w.c[id] <= wcfg.max) exp += wcfg.exp;
+
+  t.c.c[id] = (t.c.c[id] || 0) + 1;
+  var ccfg = hbTaskCfg('cumulative', id);
+  if (ccfg && t.c.c[id] <= ccfg.max) exp += ccfg.exp;
+  if (ccfg && ccfg.reward && t.c.c[id] >= ccfg.max && t.c.g.indexOf(id) < 0) {
+    t.c.g.push(id); gained.push(ccfg);
+  }
+  hbSaveManualTasks(t);
+  if (exp > 0) hbAddExp(exp);
+  for (var gi = 0; gi < gained.length; gi++) {
+    hbGrantReward(gained[gi].reward);
+    toast('🎌 累计任务达成：「' + gained[gi].name + '」→ ' + hbRewardName(gained[gi].reward));
+  }
+  if ((exp > 0 || gained.length > 0) && typeof renderActivities === 'function') renderActivities();
+}
+/* 记录今日登录：每日登录、每周登录天数、累计登录 各计一次（同日去重） */
+function hbEnsureLogin() {
+  var last = hbGet('last_login_' + hbUid(), null);
+  if (!last || new Date(last).toDateString() !== new Date().toDateString()) return;
+  var t = hbManualTasks();
+  var dk = hbDayKey();
+  if (t.ld.indexOf(dk) >= 0) return; /* 今日已记录过 */
+  t.ld.push(dk);
+  if (t.ld.length > 90) t.ld = t.ld.slice(-90);
+  var exp = 0;
+  var gained = null;
+
+  if (t.d.k !== dk) { t.d = { k: dk, c: {} }; }
+  t.d.c.login = (t.d.c.login || 0) + 1;
+  var dcfg = hbTaskCfg('daily', 'login');
+  if (dcfg && t.d.c.login <= dcfg.max) exp += dcfg.exp;
+
+  var wk = hbWeekKey();
+  if (t.w.k !== wk) { t.w = { k: wk, c: {} }; }
+  var wStart = new Date(wk + 'T00:00:00').getTime();
+  var wCount = 0;
+  for (var i = 0; i < t.ld.length; i++) {
+    if (new Date(t.ld[i] + 'T00:00:00').getTime() >= wStart) wCount++;
+  }
+  t.w.c.login = wCount;
+  var wcfg = hbTaskCfg('weekly', 'login');
+  if (wcfg && t.w.c.login <= wcfg.max) exp += wcfg.exp;
+
+  t.c.c.login = (t.c.c.login || 0) + 1;
+  var ccfg = hbTaskCfg('cumulative', 'login');
+  if (ccfg && t.c.c.login <= ccfg.max) exp += ccfg.exp;
+  if (ccfg && ccfg.reward && t.c.c.login >= ccfg.max && t.c.g.indexOf('login') < 0) {
+    t.c.g.push('login'); gained = ccfg;
+  }
+  hbSaveManualTasks(t);
+  if (exp > 0) hbAddExp(exp);
+  if (gained) {
+    hbGrantReward(gained.reward);
+    toast('🎌 累计任务达成：「' + gained.name + '」→ ' + hbRewardName(gained.reward));
+  }
+}
+function hbGrantReward(rw) {
+  if (!rw) return;
+  if (rw.type === 'coins') { hbAddCoins(rw.v); return; }
+  if (rw.type === 'rename') { var c = hbGet('rename_cards_' + hbUid(), 0) + rw.v; hbSet('rename_cards_' + hbUid(), c); return; }
+  if (rw.type === 'shards') { var sh = hbShards(); sh[rw.pid] = (sh[rw.pid] || 0) + rw.v; hbSaveShards(sh); return; }
+  if (rw.type === 'pet') {
+    var o = ownedSkinIds();
+    if (o.indexOf(rw.pid) < 0) { o.push(rw.pid); saveOwnedSkinIds(o); }
+    var u = hbUnlockedPets();
+    if (u.indexOf(rw.pid) < 0) { u.push(rw.pid); hbSaveUnlocked(u); }
+  }
+}
+/* 昭和日式美术风格：任务状海报 */
+function hbManualHtml() {
+  hbEnsureLogin();
+  var m = hbManual();
+  var t = hbManualTasks();
+  var dk = hbDayKey(), wk = hbWeekKey();
+  if (t.d.k !== dk) { t.d = { k: dk, c: {} }; }
+  if (t.w.k !== wk) { t.w = { k: wk, c: {} }; }
+  var P = '#f0e4c8', INK = '#2b2f3e', RED = '#b3202c', GOLD = '#a8843c', SUB = '#7a5c2e';
+  function taskCard(tk, cur, granted) {
+    var done = cur >= tk.max;
+    var pct = Math.min(100, Math.round(cur / tk.max * 100));
+    return '<div style="position:relative;background:rgba(240,228,200,.62);border:1px solid ' + GOLD + ';border-radius:6px;padding:6px 8px;' + (done ? 'box-shadow:inset 0 0 0 1px rgba(179,32,44,.35)' : '') + '">'
+      + '<div style="display:flex;align-items:center;gap:6px">'
+      + '<span style="font-size:12px;font-weight:700;color:' + INK + ';flex:1">' + tk.name + '</span>'
+      + (granted ? '<span style="border:2px solid ' + RED + ';color:' + RED + ';font-size:10px;font-weight:900;padding:0 4px;border-radius:2px;transform:rotate(-8deg)">済</span>'
+        : done ? '<span style="border:2px solid ' + RED + ';color:' + RED + ';font-size:10px;font-weight:900;padding:0 4px;border-radius:2px;transform:rotate(-8deg)">済</span>'
+        : '<span style="font-size:10px;color:' + SUB + '">' + Math.min(cur, tk.max) + '/' + tk.max + '</span>')
+      + '</div>'
+      + '<div style="height:6px;background:#d9c292;border-radius:4px;margin:5px 0 3px;overflow:hidden"><div style="width:' + pct + '%;height:100%;' + (done ? 'background:' + RED : 'background:linear-gradient(90deg,' + GOLD + ',#e8b04b)') + '"></div></div>'
+      + '<div style="font-size:9px;color:' + RED + ';font-weight:700">+ ' + tk.exp + ' 経験</div>'
+      + (tk.reward ? '<div style="font-size:9px;color:' + SUB + ';margin-top:1px">🏆 ' + (granted ? '已領取' : hbRewardName(tk.reward)) + '</div>' : '')
+      + '</div>';
+  }
+  function taskGroup(title, sub, list, curOf, grantedOf) {
+    var html = '<div style="margin:10px 2px 2px">'
+      + '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:7px">'
+      + '<span style="background:' + RED + ';color:' + P + ';font-size:12px;font-weight:900;letter-spacing:2px;padding:2px 10px;border-radius:2px;box-shadow:2px 2px 0 rgba(43,47,62,.35)">' + title + '</span>'
+      + '<span style="font-size:10px;color:' + SUB + '">' + sub + '</span></div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+    for (var i = 0; i < list.length; i++) {
+      html += taskCard(list[i], curOf(list[i].id), grantedOf ? grantedOf(list[i].id) : false);
+    }
+    html += '</div></div>';
+    return html;
+  }
+  /* 本周日期范围 */
+  var wd = new Date(wk + 'T00:00:00');
+  var wd2 = new Date(wd.getTime() + 6 * 86400000);
+  function md(d) { return (d.getMonth() + 1) + '/' + d.getDate(); }
+  var todayD = new Date();
+  var html = '<div style="position:relative;margin-bottom:14px;border-radius:12px;overflow:hidden;border:3px double ' + INK + ';background:linear-gradient(160deg,#f2e7cd 0%,#ead9b5 55%,#e3cfa6 100%);color:' + INK + ';box-shadow:0 6px 18px rgba(0,0,0,.22)">'
+    /* 旭日光芒 + 红日 */
+    + '<div style="position:absolute;inset:0;background:repeating-conic-gradient(from -10deg at 90% 8%, rgba(179,32,44,.10) 0deg 11deg, rgba(179,32,44,0) 11deg 22deg);pointer-events:none"></div>'
+    + '<div style="position:absolute;top:-52px;right:-52px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,#d64541 0%,#b3202c 62%,#8f1620 100%);opacity:.92;pointer-events:none"></div>'
+    + '<div style="position:relative;padding:14px 16px 10px;border-bottom:2px solid ' + INK + '">'
+    /* 标题 */
+    + '<div style="display:flex;align-items:center;gap:10px">'
+    + '<div style="writing-mode:vertical-rl;background:' + INK + ';color:' + P + ';font-weight:900;font-size:13px;letter-spacing:6px;padding:6px 5px;border-radius:3px">季</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div style="font-size:21px;font-weight:900;letter-spacing:5px;color:' + INK + ';line-height:1.25;text-shadow:1px 1px 0 rgba(240,228,200,.6)">大惠民共栄圏</div>'
+    + '<div style="font-size:10px;color:' + SUB + ';letter-spacing:2px;margin-top:2px">— 昭和四十二年 · 任務表 —</div></div>'
+    + '<div style="text-align:center;border:2px solid ' + INK + ';border-radius:50%;width:54px;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(240,228,200,.8);flex-shrink:0">'
+    + '<div style="font-size:15px;font-weight:900;color:' + RED + ';line-height:1">Lv.' + m.lv + '</div>'
+    + '<div style="font-size:9px;color:' + SUB + '">/ ' + HBER.MANUAL.maxLv + '</div></div>'
+    + '</div>'
+    /* 经验条 */
+    + '<div style="margin-top:10px">'
+    + '<div style="display:flex;justify-content:space-between;font-size:11px;color:' + SUB + '"><span>戦功経験</span><span>' + m.exp + ' / ' + HBER.MANUAL.expPerLv + '</span></div>'
+    + '<div style="height:10px;background:#d9c292;border:1px solid ' + GOLD + ';border-radius:6px;margin-top:3px;overflow:hidden">'
+    + '<div style="width:' + Math.min(100, Math.round(m.exp / HBER.MANUAL.expPerLv * 100)) + '%;height:100%;background:linear-gradient(90deg,' + RED + ',#d64541 55%,#e8b04b);border-radius:6px"></div></div>'
+    + '</div></div>'
+    /* 三类任务 */
+    + '<div style="position:relative;padding:2px 12px 6px">'
+    + taskGroup('毎日任務', '每天 0 点刷新 · ' + (todayD.getMonth() + 1) + '月' + todayD.getDate() + '日', HBER.MANUAL.tasks.daily, function (id) { return t.d.c[id] || 0; })
+    + taskGroup('週間任務', '每周一刷新 · ' + md(wd) + ' — ' + md(wd2), HBER.MANUAL.tasks.weekly, function (id) { return t.w.c[id] || 0; })
+    + taskGroup('累計任務', '赛季内不刷新 · 达成上限领额外奖励', HBER.MANUAL.tasks.cumulative, function (id) { return t.c.c[id] || 0; }, function (id) { return t.c.g.indexOf(id) >= 0; })
+    + '</div>'
+    /* 开通 */
+    + '<div style="position:relative;padding:2px 12px 10px;border-top:1px dashed ' + GOLD + ';margin-top:6px;display:flex;gap:8px;align-items:center">'
+    + (m.open ? '<span style="font-size:11px;color:' + RED + ';border:1px solid ' + RED + ';padding:3px 10px;border-radius:4px;font-weight:700">✅ 手册已开通</span>'
+      : '<button class="btn btn-sm" style="background:' + RED + ';color:' + P + ';border:1px solid #7a1520;padding:5px 18px;border-radius:4px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 rgba(43,47,62,.4)" data-hbact="open-manual">🪙 ' + HBER.MANUAL.openPrice + ' 开通手册</button>')
+    + '<span style="font-size:10px;color:' + SUB + '">开通后每次升级可额外领取 💛 付费奖励</span></div>'
+    /* 等级奖励 */
+    + '<div style="position:relative;padding:4px 12px 12px">'
+    + '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">'
+    + '<span style="background:' + INK + ';color:' + P + ';font-size:12px;font-weight:900;letter-spacing:2px;padding:2px 10px;border-radius:2px;box-shadow:2px 2px 0 rgba(179,32,44,.4)">等級褒賞</span>'
+    + '<span style="font-size:10px;color:' + SUB + '">升级领皮肤 / 金币 / 改名卡</span></div>'
+    + '<div style="max-height:280px;overflow:auto;border:1px solid rgba(176,141,87,.55);border-radius:6px;padding:2px 8px;background:rgba(240,228,200,.4)">';
+  HBER.MANUAL.rewards.forEach(function (rw) {
+    var fk = 'f' + rw.lv, pk = 'p' + rw.lv;
+    var fDone = m.claimed.indexOf(fk) >= 0, pDone = m.claimed.indexOf(pk) >= 0;
+    var fOk = m.lv >= rw.lv, pOk = m.open && m.lv >= rw.lv;
+    function btn(done, ok, lv, line) {
+      if (done) return '<span style="font-size:10px;color:' + RED + ';border:1px solid ' + RED + ';padding:1px 6px;border-radius:3px;font-weight:700">済</span>';
+      if (ok) return '<button class="btn btn-sm" style="background:' + RED + ';color:' + P + ';border:1px solid #7a1520;padding:2px 8px;border-radius:3px;font-weight:700;cursor:pointer" data-hbact="claim-manual" data-lv="' + lv + '" data-line="' + line + '">領取</button>';
+      return '<span style="font-size:10px;color:' + SUB + '">' + (line === 'paid' && !m.open ? '需开通' : 'Lv.' + lv) + '</span>';
+    }
+    html += '<div style="display:flex;align-items:center;gap:6px;padding:5px 2px;border-bottom:1px dashed rgba(176,141,87,.5)">'
+      + '<span style="width:42px;font-size:11px;font-weight:700;color:' + INK + ';border:1px solid ' + GOLD + ';border-radius:3px;text-align:center;flex-shrink:0">Lv.' + rw.lv + '</span>'
+      + '<span style="flex:1;font-size:11px;min-width:0">🆓 ' + hbRewardName(rw.free) + '</span>' + btn(fDone, fOk, rw.lv, 'free')
+      + '<span style="flex:1;font-size:11px;min-width:0">💛 ' + hbRewardName(rw.paid) + '</span>' + btn(pDone, pOk, rw.lv, 'paid')
+      + '</div>';
+  });
+  html += '</div></div>'
+    /* 页脚 */
+    + '<div style="position:relative;padding:6px 12px 10px;text-align:center;font-size:10px;color:' + SUB + ';letter-spacing:3px;border-top:1px solid ' + GOLD + '">大惠民共栄圏 · 昭和四十二年 · 云坛戦時動員</div>'
+    + '</div>';
+  return html;
+}
+
+function hbRewardName(rw) {
+  if (!rw) return '';
+  if (rw.type === 'coins') return rw.v + ' 金币';
+  if (rw.type === 'rename') return '改名卡 ×' + rw.v;
+  if (rw.type === 'shards') return (HBER.PET_SHARDS[rw.pid] ? HBER.PET_SHARDS[rw.pid].name : rw.pid) + '碎片 ×' + rw.v;
+  if (rw.type === 'pet') return '宠物皮肤「' + (HBER.PET_SHARDS[rw.pid] ? HBER.PET_SHARDS[rw.pid].name : rw.pid) + '」';
+  return '';
+}
+HBER.PET_SHARDS = {
+  /* 宠物碎片图鉴：id -> {name, quality, shards_needed, desc} */
+  'cat_orange':  { name: '橘猫', quality: 'common',    need: 10, desc: '黏人精' },
+  'cat_black':   { name: '黑猫', quality: 'common',    need: 10, desc: '夜行者' },
+  'dog_corgi':   { name: '柯基', quality: 'uncommon',  need: 15, desc: '短腿骑士' },
+  'bunny':       { name: '兔子', quality: 'uncommon',  need: 15, desc: '软乎乎' },
+  'fox':         { name: '狐狸', quality: 'rare',      need: 20, desc: '狡猾小可爱' },
+  'panda':       { name: '熊猫', quality: 'rare',      need: 20, desc: '天天睡觉' },
+  'dragon':      { name: '小龙', quality: 'epic',      need: 30, desc: '喷小火苗' },
+  'phoenix':     { name: '凤凰', quality: 'legendary', need: 40, desc: '浴火重生' },
+  'season_ghost':{ name: '赛季幽灵', quality: 'legendary', need: 35, desc: '赛季限定' },
+  'ren_mantang': { name: '满糖', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_maoniang': { name: '猫娘', quality: 'rare', need: 20, desc: '人头宠物' },
+  'ren_wangsichuai': { name: '王死踹', quality: 'uncommon', need: 15, desc: '人头宠物' },
+  'ren_mifeng': { name: '蜜蜂', quality: 'uncommon', need: 15, desc: '人头宠物' },
+  'ren_yabo': { name: '鸭脖', quality: 'uncommon', need: 15, desc: '人头宠物' },
+  'ren_mading': { name: '马ding', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_bachidaren': { name: '八尺大人', quality: 'epic', need: 30, desc: '人头宠物' },
+  'ren_yiquanchaoren': { name: '一拳超人', quality: 'epic', need: 30, desc: '人头宠物' },
+  'ren_xiaoxiao': { name: '萧萧', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_baozhatou': { name: '爆炸头', quality: 'uncommon', need: 15, desc: '人头宠物' },
+  'ren_zhongyuqing': { name: '钟雨清', quality: 'uncommon', need: 15, desc: '人头宠物' },
+  'ren_puffer': { name: 'Puffer', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_fenggou': { name: '疯狗', quality: 'uncommon', need: 15, desc: '人头宠物' },
+  'ren_xzq': { name: 'xzq', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_yangsiyuan': { name: '杨思远', quality: 'uncommon', need: 15, desc: '人头宠物' },
+  'ren_lijirou': { name: '里脊肉', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_kly': { name: 'kly', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_zidingyi1': { name: '自定义名称1', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_wangyunfeng': { name: '王云峰', quality: 'rare', need: 20, desc: '人头宠物' },
+  'ren_zhuangyunqi': { name: '庄云起', quality: 'rare', need: 20, desc: '人头宠物' },
+  'ren_cjw': { name: 'cjw', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_hama': { name: '蛤蟆', quality: 'rare', need: 20, desc: '人头宠物' },
+  'ren_zhongyuqing2': { name: '钟雨晴', quality: 'rare', need: 20, desc: '人头宠物' },
+  'ren_tudidilei': { name: '土豆地雷', quality: 'rare', need: 20, desc: '人头宠物' },
+  'ren_ximi': { name: '虾米', quality: 'rare', need: 20, desc: '人头宠物' },
+  'ren_fenggou_sunglasses': { name: '疯狗（墨镜版）', quality: 'epic', need: 30, desc: '人头宠物' },
+  'ren_qingshuruwenben': { name: '请输入文本', quality: 'common', need: 10, desc: '人头宠物' },
+  'ren_mike': { name: 'Mike', quality: 'uncommon', need: 15, desc: '人头宠物' },
+  'ren_nanliang': { name: '南梁', quality: 'rare', need: 20, desc: '人头宠物' },
+  'ren_zhongyuqing_sunglasses': { name: '钟雨清（墨镜版）', quality: 'epic', need: 30, desc: '人头宠物' },
+  'ren_yangsiyuan_sunglasses': { name: '杨思远（墨镜版）', quality: 'epic', need: 30, desc: '人头宠物' },
+  'ren_python_shenzuo': { name: '？python爬虫又一神作？', quality: 'legendary', need: 40, desc: '人头宠物' },
+};
+HBER.QUALITY_COLORS = { common:'#94a3b8', uncommon:'#22c55e', rare:'#3b82f6', epic:'#8b5cf6', legendary:'#f59e0b' };
+
+function hbShards() { return hbGet('shards_' + hbUid(), {}); }
+function hbSaveShards(s) { hbSet('shards_' + hbUid(), s); }
+function hbUnlockedPets() { return hbGet('pets_unlocked_' + hbUid(), []); }
+function hbSaveUnlocked(list) { hbSet('pets_unlocked_' + hbUid(), list); }
+
+/* ============================================================
+ * 5. 宠物好感度 / 恋爱系统
+ * ============================================================ */
+HBER.PET_REL = {
+  levels: [
+    { min: 0,   name: '陌生',   emoji: '😐' },
+    { min: 100, name: '熟人',   emoji: '🙂' },
+    { min: 300, name: '朋友',   emoji: '😊' },
+    { min: 600, name: '好友',   emoji: '😄' },
+    { min: 1000,name: '暧昧',   emoji: '🥰' },
+    { min: 1500,name: '恋人',   emoji: '💕' },
+    { min: 2500,name: '灵魂伴侣', emoji: '💞' }
+  ]
+};
+
+function hbRelData() { return hbGet('petrel_' + hbUid(), { affinity: 0, enabled: false, gifts: 0 }); }
+function hbSaveRel(d) { hbSet('petrel_' + hbUid(), d); }
+function hbRelLevel(aff) {
+  var lv = HBER.PET_REL.levels[0];
+  for (var i = 0; i < HBER.PET_REL.levels.length; i++) {
+    if (aff >= HBER.PET_REL.levels[i].min) lv = HBER.PET_REL.levels[i];
+  }
+  return lv;
+}
+
+/* ============================================================
+ * 事件委托：所有 hbact 按钮
+ * ============================================================ */
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-hbact]');
+  if (!el) return;
+  var act = el.getAttribute('data-hbact');
+
+  /* 银行 */
+  if (act === 'deposit') {
+    var amt = parseInt($('#hb-dep-amt').value, 10) || 0;
+    if (amt <= 0) return;
+    hbSpendCoins(amt).then(function () {
+      var d = hbBankData(); d.deposited += amt; d.depositDate = Date.now(); d.totalDep = (d.totalDep || 0) + amt; hbSaveBank(d);
+      toast('存入成功'); renderBank();
+    }).catch(function(){});
+  }
+  if (act === 'withdraw') {
+    var amt2 = parseInt($('#hb-dep-amt').value, 10) || 0;
+    var d2 = hbBankData();
+    if (amt2 <= 0 || amt2 > d2.deposited) { toast('金额无效'); return; }
+    d2.deposited -= amt2;
+    hbSaveBank(d2);
+    hbAddCoins(amt2).then(function(){ toast('取出成功'); renderBank(); });
+  }
+  if (act === 'borrow') {
+    var amt3 = parseInt($('#hb-loan-amt').value, 10) || 0;
+    var d3 = hbBankData();
+    if (amt3 <= 0) return;
+    if (d3.loan > 0) { toast('还有未还清的借款'); return; }
+    if (amt3 > HBER.BANK_MAX_LOAN) { toast('超过借款上限 ' + HBER.BANK_MAX_LOAN); return; }
+    d3.loan = amt3; d3.loanDate = Date.now(); hbSaveBank(d3);
+    hbAddCoins(amt3).then(function(){ toast('借款成功'); renderBank(); });
+  }
+  if (act === 'repay') {
+    var amt4 = parseInt($('#hb-loan-amt').value, 10) || 0;
+    var d4 = hbBankData();
+    if (amt4 <= 0 || amt4 > d4.loan) { toast('金额无效'); return; }
+    hbSpendCoins(amt4).then(function () {
+      d4.loan -= amt4; hbSaveBank(d4);
+      toast('还款成功'); renderBank();
+    }).catch(function(){});
+  }
+  if (act === 'settle') {
+    var d5 = hbBankData();
+    var interest = Math.floor(d5.deposited * HBER.BANK_RATE_DEPOSIT);
+    if (interest > 0) { d5.deposited += interest; hbAddCoins(interest); }
+    if (d5.loan > 0) {
+      var loanInt = Math.floor(d5.loan * HBER.BANK_RATE_LOAN);
+      /* 借款利息从金币扣 */
+      hbSpendCoins(loanInt).then(function(){ toast('借款利息扣除 ' + loanInt); }).catch(function(){ toast('金币不足，借款利息挂账'); });
+    }
+    hbSaveBank(d5);
+    toast('结算完成'); renderBank();
+  }
+
+  /* 签到 */
+  if (act === 'sign-new' || act === 'sign-return') {
+    var type = act === 'sign-new' ? 'new' : 'return';
+    var sd = hbSignData(type);
+    var today = new Date().toDateString();
+    if (sd.lastDate === today) { toast('今日已签到'); return; }
+    var nextDay = sd.day + 1;
+    if (nextDay > 7) { toast('7天签到已完成'); return; }
+    var reward = hbSignReward(type, nextDay);
+    sd.day = nextDay; sd.claimed.push(nextDay); sd.lastDate = today;
+    hbSaveSign(type, sd);
+    hbAddCoins(reward.coins);
+    if (reward.item === 'rename_card') {
+      var cards = hbGet('rename_cards_' + hbUid(), 0) + 1;
+      hbSet('rename_cards_' + hbUid(), cards);
+    }
+    if (reward.item === 'pet_skin_new') {
+      var oN = ownedSkinIds();
+      if (oN.indexOf('ren_maoniang') < 0) { oN.push('ren_maoniang'); saveOwnedSkinIds(oN); }
+      toast('已获得皮肤「猫娘」！');
+    }
+    if (reward.item === 'pet_skin_return') {
+      var oR = ownedSkinIds();
+      if (oR.indexOf('ren_fenggou') < 0) { oR.push('ren_fenggou'); saveOwnedSkinIds(oR); }
+      toast('已获得皮肤「疯狗」！');
+    }
+    hbTaskAdd('sign');
+    toast('签到成功！+' + reward.coins + '金币' + (reward.item ? ' + 奖励' : ''));
+    renderActivities();
+  }
+
+  /* 面包杀联动 */
+  if (act === 'bread-redeem') {
+    var bid = ($('#hb-bread-id').value || '').trim();
+    if (!bid) { toast('请输入面包杀 ID'); return; }
+    var used = hbGet('bread_used', []);
+    if (used.indexOf(bid) >= 0) { toast('该 ID 已使用过'); return; }
+    used.push(bid); hbSet('bread_used', used);
+    hbAddCoins(200);
+    toast('联动成功！+200金币');
+  }
+
+  /* 充值 */
+  if (act === 'recharge') {
+    var amt = parseInt(el.getAttribute('data-amt'), 10);
+    toast('充值功能开发中，暂不开放');
+  }
+
+  /* 问卷 */
+  if (act === 'quiz-from-post') {
+    if (!requireLogin()) return;
+    var title = prompt('问卷标题（例：你有多了解我？）');
+    if (!title) return;
+    var target = prompt('关于谁？（名字）');
+    if (!target) return;
+    var qid = 'q' + Date.now();
+    var qs = [];
+    for (var i = 0; i < 10; i++) {
+      var qtext = prompt('第' + (i+1) + '题题目：');
+      if (!qtext) break;
+      var opts = [];
+      for (var j = 0; j < 4; j++) {
+        var opt = prompt('选项' + (j+1) + '：');
+        if (!opt) break;
+        opts.push(opt);
+      }
+      var ans = parseInt(prompt('正确答案是第几题？（1-4）'), 10) - 1;
+      qs.push({ q: qtext, options: opts, answer: ans });
+    }
+    if (!qs.length) { toast('问卷至少需要1题'); return; }
+    var reward = parseInt(prompt('答对奖励金币数（出题人承担）：'), 10) || 50;
+    var quizzes = hbQuizzes();
+    quizzes[qid] = { id: qid, title: title, target: target, questions: qs, reward: reward, creator: session.id, creatorName: session.username };
+    hbSaveQuizzes(quizzes);
+    toast('问卷已创建，发布帖子即可分享');
+    return;
+  }
+  if (act === 'quiz-create') {
+    var title = prompt('问卷标题（例：你有多了解我？）');
+    if (!title) return;
+    var target = prompt('关于谁？（名字）');
+    if (!target) return;
+    var qid = 'q' + Date.now();
+    var qs = [];
+    for (var i = 0; i < 10; i++) {
+      var qtext = prompt('第' + (i+1) + '题题目：');
+      if (!qtext) break;
+      var opts = [];
+      for (var j = 0; j < 4; j++) {
+        var opt = prompt('选项' + (j+1) + '：');
+        if (!opt) break;
+        opts.push(opt);
+      }
+      var ans = parseInt(prompt('正确答案是第几题？（1-4）'), 10) - 1;
+      qs.push({ q: qtext, options: opts, answer: ans });
+    }
+    var reward = parseInt(prompt('答对奖励金币数（出题人承担）：'), 10) || 50;
+    var quizzes = hbQuizzes();
+    quizzes[qid] = { id: qid, title: title, target: target, questions: qs, reward: reward, creator: session.id, creatorName: session.username };
+    hbSaveQuizzes(quizzes);
+    toast('问卷已创建');
+    location.hash = '#/quiz';
+  }
+  if (act === 'quiz-reveal') {
+    var qid = el.getAttribute('data-qid');
+    hbSpendCoins(5).then(function () {
+      var my = hbGet('quizmy_' + qid + '_' + hbUid(), null);
+      if (my) { my.revealed = true; hbSet('quizmy_' + qid + '_' + hbUid(), my); }
+      renderQuiz();
+    }).catch(function(){});
+  }
+  if (act === 'quiz-who') {
+    var qid2 = el.getAttribute('data-qid');
+    var idx = parseInt(el.getAttribute('data-idx'), 10);
+    hbSpendCoins(3).then(function () {
+      var resps = hbQuizResp(qid2);
+      if (resps[idx]) { resps[idx].revealed = true; hbSet('quizresp_' + qid2, resps); }
+      renderQuiz();
+    }).catch(function(){});
+  }
+
+  /* 通用跳转 */
+  var goto = el.getAttribute('data-hbgoto');
+  if (goto) location.hash = goto;
+});
+
+/* 问卷提交 */
+document.addEventListener('submit', function (e) {
+  if (e.target.id !== 'quiz-form') return;
+  e.preventDefault();
+  var params = new URLSearchParams(location.hash.split('?')[1] || '');
+  var qid = params.get('id');
+  var quizzes = hbQuizzes();
+  var quiz = quizzes[qid];
+  if (!quiz) return;
+  var answers = [];
+  var correct = 0;
+  quiz.questions.forEach(function (q, i) {
+    var v = document.querySelector('input[name="q' + i + '"]:checked');
+    var ans = v ? parseInt(v.value, 10) : -1;
+    answers.push(ans);
+    if (ans === q.answer) correct++;
+  });
+  var score = Math.round(correct / quiz.questions.length * 100);
+  hbSet('quizmy_' + qid + '_' + hbUid(), { score: score, answers: answers, revealed: false });
+  /* 记录到答题人列表 */
+  var resps = hbQuizResp(qid);
+  resps.push({ name: session.username, score: score, anonymous: false, revealed: false });
+  hbSet('quizresp_' + qid, resps);
+  /* 出题人发奖励 */
+  hbAddCoins(quiz.reward);
+  toast('完成！得分 ' + score + '，获得 ' + quiz.reward + ' 金币');
+  renderQuiz();
+});
+
+/* 记录最后登录时间（老友回归判断） */
+if (typeof session !== 'undefined' && session) {
+  (function() {
+    var last = hbGet('last_login_' + hbUid(), null);
+    if (last) hbSet('prev_login_' + hbUid(), last);
+    hbSet('last_login_' + hbUid(), Date.now());
+  })();
+}
+
+/* 宝箱渲染 */
+function hbChestsHtml() {
+  var up = hbSeasonUp();
+  var upName = up.target ? HBER.PET_SHARDS[up.target].name : '未定轨';
+  var html = '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><h4 style="font-size:13px;color:var(--ink-3);margin-bottom:8px">🎁 宠物宝箱（只出碎片，集齐碎片在图鉴解锁宠物）</h4>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">';
+  for (var k in HBER.CHESTS) {
+    var c = HBER.CHESTS[k];
+    html += '<div style="border:1px solid ' + c.color + '33;border-radius:10px;padding:10px;text-align:center;background:' + c.color + '0d">'
+      + '<div style="font-size:28px">📦</div>'
+      + '<div style="font-size:12px;font-weight:600;margin:4px 0">' + c.name + '</div>'
+      + '<div style="font-size:11px;color:var(--ink-3)">' + c.shards[0] + '-' + c.shards[1] + '碎片</div>';
+    if (k === 'season') {
+      html += '<div style="font-size:10px;color:#f59e0b;margin:4px 0">🎯 定轨: ' + upName + '</div>'
+        + '<div style="font-size:10px;color:var(--ink-3)">保底 ' + (up.count||0) + '/' + HBER.SEASON.guarantee + ' 抽</div>'
+        + '<button class="btn btn-sm btn-ghost" style="margin-top:4px" data-hbact="set-up" data-chest="season">🎯 定轨</button>';
+    }
+    html += '<button class="btn btn-sm btn-primary" style="margin-top:6px" data-hbact="open-chest" data-chest="' + k + '">🪙 ' + c.price + '</button>'
+      + '</div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+function hbShardGalleryHtml() {
+  var shards = hbShards();
+  var unlocked = hbUnlockedPets();
+  var html = '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><h4 style="font-size:13px;color:var(--ink-3);margin-bottom:8px">🐾 宠物图鉴</h4>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">';
+  for (var pid in HBER.PET_SHARDS) {
+    var p = HBER.PET_SHARDS[pid];
+    var have = shards[pid] || 0;
+    var isUnlocked = unlocked.indexOf(pid) >= 0;
+    var qc = HBER.QUALITY_COLORS[p.quality];
+    html += '<div style="border:1px solid ' + qc + '44;border-radius:10px;padding:8px;text-align:center;' + (isUnlocked ? 'background:' + qc + '14' : 'opacity:.6') + '">'
+      + '<div style="font-size:24px">' + (isUnlocked ? '🐾' : '❓') + '</div>'
+      + '<div style="font-size:11px;font-weight:600;margin:2px 0;color:' + qc + '">' + (isUnlocked ? p.name : '???') + '</div>'
+      + '<div style="font-size:10px;color:var(--ink-3)">' + p.quality + ' · ' + have + '/' + p.need + '</div>'
+      + (isUnlocked ? '<div style="font-size:10px;color:#059669">已解锁</div>' + (skinById(pid) ? '<button class="btn btn-sm btn-ghost" style="margin-top:4px" data-hbact="use-pet" data-pid="' + pid + '">设为桌宠</button>' : '')
+        : have >= p.need
+          ? '<button class="btn btn-sm btn-primary" style="margin-top:4px" data-hbact="unlock-pet" data-pid="' + pid + '">解锁</button>'
+          : '<div style="font-size:10px;color:var(--ink-3)">还差' + (p.need-have) + '</div>')
+      + '</div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-hbact]');
+  if (!el) return;
+  var act = el.getAttribute('data-hbact');
+  if (act === 'open-chest') {
+    var ck = el.getAttribute('data-chest');
+    var chest = HBER.CHESTS[ck];
+    if (!chest) return;
+    hbSpendCoins(chest.price).then(function () {
+      var shards = hbShards();
+      var got = [];
+      var seasonHit = false;
+      var up = (ck === 'season') ? hbSeasonUp() : null;
+      /* 保底：已累计 guarantee-1 次未命中，本次必出定轨目标足量碎片（40抽内保底） */
+      if (up && up.target && up.count >= HBER.SEASON.guarantee - 1) {
+        var tp = HBER.PET_SHARDS[up.target];
+        if (tp) { shards[up.target] = (shards[up.target] || 0) + tp.need; got.push(up.target); seasonHit = true; }
+        up.count = 0; hbSaveSeasonUp(up);
+      } else {
+        var n = chest.shards[0] + Math.floor(Math.random() * (chest.shards[1] - chest.shards[0] + 1));
+        var qpool = chest.quality.slice();
+        /* 赛季定轨：目标品质权重提升 */
+        if (up && up.target) {
+          var tq = HBER.PET_SHARDS[up.target].quality;
+          for (var w = 0; w < HBER.SEASON.upWeight - 1; w++) qpool.push(tq);
+        }
+        var q = qpool[Math.floor(Math.random() * qpool.length)];
+        var pool = Object.keys(HBER.PET_SHARDS).filter(function (pid) { return HBER.PET_SHARDS[pid].quality === q; });
+        if (!pool.length) pool = Object.keys(HBER.PET_SHARDS);
+        /* 目标权重提升 */
+        var weighted = [];
+        for (var i2 = 0; i2 < pool.length; i2++) {
+          weighted.push(pool[i2]);
+          if (up && up.target && pool[i2] === up.target) {
+            for (var w2 = 0; w2 < HBER.SEASON.upWeight - 1; w2++) weighted.push(pool[i2]);
+          }
+        }
+        for (var i = 0; i < n; i++) {
+          var pid = weighted[Math.floor(Math.random() * weighted.length)];
+          shards[pid] = (shards[pid] || 0) + 1;
+          got.push(pid);
+          if (up && up.target && pid === up.target) seasonHit = true;
+        }
+        /* 赛季保底计数 */
+        if (up && up.target) {
+          if (seasonHit) { up.count = 0; }
+          else { up.count = (up.count || 0) + 1; if (up.count >= HBER.SEASON.guarantee) up.count = HBER.SEASON.guarantee - 1; }
+          hbSaveSeasonUp(up);
+        }
+      }
+      hbSaveShards(shards);
+      hbTaskAdd('chest');
+      var names = got.map(function (p) { return HBER.PET_SHARDS[p].name; });
+      toast('开出: ' + names.join(', '));
+      if (seasonHit && up && up.target) toast('🎯 定轨命中！保底重置');
+      renderShop();
+    }).catch(function(){});
+  }
+  if (act === 'bank-bonus') {
+    var at = parseInt(el.getAttribute('data-at'), 10);
+    var gb = [];
+    try { gb = JSON.parse(localStorage.getItem('bank_bonus_' + hbUid()) || '[]'); } catch (e) {}
+    if (gb.indexOf(at) >= 0) { toast('已领取过'); return; }
+    var dbb = hbBankData();
+    if ((dbb.totalDep || 0) < at) { toast('累计存款不足'); return; }
+    var gift = 0;
+    for (var bi = 0; bi < HBER.BANK_BONUS.length; bi++) if (HBER.BANK_BONUS[bi].at === at) gift = HBER.BANK_BONUS[bi].gift;
+    gb.push(at);
+    try { localStorage.setItem('bank_bonus_' + hbUid(), JSON.stringify(gb)); } catch (e) {}
+    hbAddCoins(gift);
+    toast('🎉 存款冲刺奖励 +' + gift + ' 金币');
+    renderBank();
+    return;
+  }
+  if (act === 'open-manual') {
+    if (!requireLogin()) return;
+    var m0 = hbManual();
+    if (m0.open) { toast('手册已开通'); return; }
+    hbSpendCoins(HBER.MANUAL.openPrice).then(function () {
+      m0.open = true; hbSaveManual(m0);
+      toast('📕 手册已开通！可领取付费奖励');
+      renderActivities();
+    }).catch(function () {});
+    return;
+  }
+  if (act === 'claim-manual') {
+    var lv = parseInt(el.getAttribute('data-lv'), 10);
+    var line = el.getAttribute('data-line');
+    var m = hbManual();
+    if (m.lv < lv) { toast('等级不足'); return; }
+    if (line === 'paid' && !m.open) { toast('请先开通手册'); return; }
+    var key = (line === 'paid' ? 'p' : 'f') + lv;
+    if (m.claimed.indexOf(key) >= 0) { toast('已领取过'); return; }
+    var rw = null;
+    for (var ri = 0; ri < HBER.MANUAL.rewards.length; ri++) if (HBER.MANUAL.rewards[ri].lv === lv) rw = HBER.MANUAL.rewards[ri];
+    if (!rw) return;
+    hbGrantReward(line === 'paid' ? rw.paid : rw.free);
+    m.claimed.push(key);
+    hbSaveManual(m);
+    toast('🎁 领取成功：' + hbRewardName(line === 'paid' ? rw.paid : rw.free));
+    renderActivities();
+    return;
+  }
+  if (act === 'set-up') {
+    var names2 = HBER.SEASON.upPool.map(function (pid) { return HBER.PET_SHARDS[pid].name; }).join(' / ');
+    var inp = prompt('赛季限定宝箱定轨：输入目标宠物名字（40抽必出足量碎片）\n可选：' + names2);
+    if (!inp) return;
+    var hit = null;
+    for (var iu = 0; iu < HBER.SEASON.upPool.length; iu++) {
+      var pdu = HBER.SEASON.upPool[iu];
+      if (HBER.PET_SHARDS[pdu].name === inp.trim() || pdu === inp.trim()) { hit = pdu; break; }
+    }
+    if (!hit) { toast('未找到该宠物'); return; }
+    hbSetUp(hit);
+    toast('🎯 定轨成功：' + HBER.PET_SHARDS[hit].name);
+    renderShop();
+  }
+  if (act === 'unlock-pet') {
+    var pid = el.getAttribute('data-pid');
+    var p = HBER.PET_SHARDS[pid];
+    var shards = hbShards();
+    if ((shards[pid] || 0) < p.need) { toast('碎片不够'); return; }
+    shards[pid] -= p.need;
+    hbSaveShards(shards);
+    var unlocked = hbUnlockedPets();
+    unlocked.push(pid);
+    hbSaveUnlocked(unlocked);
+    /* 若该宠物同时是皮肤（人头系），同步加入已拥有皮肤 */
+    var skE = skinById(pid);
+    if (skE) { var o5 = ownedSkinIds(); if (o5.indexOf(pid) < 0) { o5.push(pid); saveOwnedSkinIds(o5); } }
+    toast('🎉 解锁宠物: ' + p.name);
+    renderShop();
+  }
+  if (act === 'use-pet') {
+    var pidx = el.getAttribute('data-pid');
+    if (skinById(pidx)) { applySkin(pidx); renderShop(); }
+    else toast('该宠物暂不能设为桌宠');
+  }
+  /* 宠物恋爱互动 */
+  if (act === 'pet-pat' || act === 'pet-feed' || act === 'pet-talk' || act === 'pet-date') {
+    var rd = hbRelData();
+    if (!rd.enabled) { toast('在设置里开启宠物恋爱模式'); return; }
+    var gain = { 'pet-pat': 5, 'pet-feed': 10, 'pet-talk': 8, 'pet-date': 30 }[act] || 5;
+    rd.affinity += gain;
+    hbSaveRel(rd);
+    var lv = hbRelLevel(rd.affinity);
+    var msgs = {
+      'pet-pat': ['舒服~', '再摸摸嘛~', '开心尾巴摇~'],
+      'pet-feed': ['好好吃！', '谢谢主人~', '还想要~'],
+      'pet-talk': ['今天也想陪你~', '你知道吗，我最喜欢你了', '和你在一起好开心~'],
+      'pet-date': ['约会好浪漫~', '最喜欢和你出来玩了！', '永远在一起吧~']
+    };
+    var arr = msgs[act];
+    toast(lv.emoji + ' ' + arr[Math.floor(Math.random()*arr.length)] + ' (好感+' + gain + ')');
+  }
+});
+
+/* 宠物关系面板 */
+function openPetRelPanel() {
+  var old = document.getElementById('petrel-modal');
+  if (old) old.remove();
+  var rd = hbRelData();
+  var lv = hbRelLevel(rd.affinity);
+  var nextLv = null;
+  for (var i = 0; i < HBER.PET_REL.levels.length; i++) {
+    if (HBER.PET_REL.levels[i].min > rd.affinity) { nextLv = HBER.PET_REL.levels[i]; break; }
+  }
+  var pct = nextLv ? Math.round((rd.affinity / nextLv.min) * 100) : 100;
+  var mask = document.createElement('div');
+  mask.className = 'modal-mask show';
+  mask.id = 'petrel-modal';
+  mask.innerHTML = '<div class="modal" style="max-width:400px">'
+    + '<h3 class="modal-title">' + lv.emoji + ' 宠物恋爱' + '</h3>'
+    + '<div style="text-align:center;padding:10px 0">'
+    + '<div style="font-size:48px">' + lv.emoji + '</div>'
+    + '<div style="font-size:18px;font-weight:700;margin:8px 0">' + lv.name + '</div>'
+    + '<div style="font-size:13px;color:var(--ink-3)">好感度: ' + rd.affinity + '</div>'
+    + (nextLv ? '<div style="margin:10px 0"><div style="background:var(--line);border-radius:10px;height:8px;overflow:hidden"><div style="width:' + pct + '%;background:linear-gradient(90deg,#f472b6,#ec4899);height:100%"></div></div>'
+      + '<div style="font-size:11px;color:var(--ink-3);margin-top:4px">下一级: ' + nextLv.name + ' (' + nextLv.min + ')</div></div>' : '')
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">'
+    + '<button class="btn btn-ghost" data-hbact="pet-pat">🤚 摸摸</button>'
+    + '<button class="btn btn-ghost" data-hbact="pet-feed">🍖 喂食</button>'
+    + '<button class="btn btn-ghost" data-hbact="pet-talk">💬 聊天</button>'
+    + '<button class="btn btn-ghost" data-hbact="pet-date">💕 约会</button>'
+    + '</div>'
+    + '<div style="text-align:center"><button class="btn btn-ghost btn-sm" id="petrel-close">关闭</button></div>'
+    + '</div>';
+  document.body.appendChild(mask);
+  mask.addEventListener('click', function (e) { if (e.target === mask) mask.remove(); });
+  mask.querySelector('#petrel-close').addEventListener('click', function () { mask.remove(); });
+}
+
+/* 匿名留言 */
+function hbAnonMsgHtml(uid, isMe) {
+  var msgs = hbGet('anonmsg_' + uid, []);
+  var html = '<div style="margin-top:24px"><h2 class="section-title" style="font-size:20px">💌 匿名留言</h2>';
+  if (isMe) {
+    /* 自己看：显示收到的留言，可花金币看是谁 */
+    if (!msgs.length) html += '<p style="font-size:13px;color:var(--ink-3)">还没有匿名留言</p>';
+    msgs.forEach(function (m, i) {
+      html += '<div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px">'
+        + '<div style="font-size:13px">' + esc(m.text) + '</div>'
+        + '<div style="font-size:11px;color:var(--ink-3);margin-top:6px">'
+        + (m.revealed ? '来自: ' + esc(m.fromName) : '<button class="btn btn-ghost btn-sm" data-hbact="anon-reveal" data-uid="' + uid + '" data-idx="' + i + '">🔓 3金币看是谁</button>')
+        + '</div></div>';
+    });
+  } else {
+    /* 别人：写留言 */
+    html += '<div class="card pad"><textarea id="anon-msg-input" placeholder="匿名写下你想说的话..." style="width:100%;min-height:60px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical"></textarea>'
+      + '<button class="btn btn-primary btn-sm" style="margin-top:8px" data-hbact="anon-send" data-uid="' + uid + '">发送匿名留言</button></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-hbact]');
+  if (!el) return;
+  var act = el.getAttribute('data-hbact');
+  if (act === 'anon-send') {
+    var uid = el.getAttribute('data-uid');
+    var txt = ($('#anon-msg-input') || {}).value || '';
+    txt = txt.trim();
+    if (!txt) { toast('写点什么吧'); return; }
+    var msgs = hbGet('anonmsg_' + uid, []);
+    msgs.push({ text: txt, fromId: session.id, fromName: session.username, revealed: false, time: Date.now() });
+    hbSet('anonmsg_' + uid, msgs);
+    toast('匿名留言已发送');
+    location.hash = '#/user?id=' + uid;
+  }
+  if (act === 'anon-reveal') {
+    var uid2 = el.getAttribute('data-uid');
+    var idx = parseInt(el.getAttribute('data-idx'), 10);
+    hbSpendCoins(3).then(function () {
+      var msgs = hbGet('anonmsg_' + uid2, []);
+      if (msgs[idx]) { msgs[idx].revealed = true; hbSet('anonmsg_' + uid2, msgs); }
+      location.hash = '#/user?id=' + uid2;
+    }).catch(function(){});
+  }
+});
 
 </script>
 
@@ -167466,6 +168909,15 @@ var TITLE_TIERS = [
               ev2.stopPropagation();
               buildPetChat();
             });
+            /* 恋爱模式：加一个恋爱按钮 */
+            var _rd = hbRelData();
+            if (_rd.enabled) {
+              var relBtn = document.createElement('button');
+              relBtn.textContent = '💕 恋爱';
+              relBtn.style.marginLeft = '6px';
+              relBtn.onclick = function(ev3) { ev3.stopPropagation(); openPetRelPanel(); };
+              b.querySelector('span').appendChild(relBtn);
+            }
           }
         }, 260);
       } else {
