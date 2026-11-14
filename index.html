@@ -3551,6 +3551,32 @@ mark.hl-hit {
 .hb-notif-chips::-webkit-scrollbar{display:none}
 .hb-fold-more{display:block;width:100%;border:none;background:transparent;color:var(--ink-3,#8a7a63);font-size:12px;padding:8px;cursor:pointer}
 #hb-pull{position:fixed;left:50%;top:8px;transform:translate(-50%,0);z-index:9000;background:var(--surface,var(--card,#fff));color:var(--ink-2,#6b5a45);border-radius:999px;padding:7px 14px;font-size:12px;opacity:0;transition:opacity .18s,transform .18s;box-shadow:0 4px 14px rgba(0,0,0,.12);pointer-events:none}
+
+/* v8.5 圈子加入条 */
+.circle-join-card{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:12px 14px;border-radius:14px;background:var(--surface-2,rgba(138,107,63,.08));border:1px solid var(--line,rgba(0,0,0,.08))}
+.cjc-left{display:flex;align-items:baseline;gap:6px;min-width:0}
+.cjc-left b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cjc-count{font-size:12px;color:var(--ink-3,#8a7a63)}
+
+/* ==== v8.6 ==== */
+.hb86-mask{z-index:9300}
+.hb86-modal{max-width:420px;width:92vw;padding:16px}
+.hb86-sheet{width:min(560px,94vw);max-height:82vh;overflow:auto;background:var(--card,#fff);border-radius:18px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.22)}
+.hb86-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hb86-head h3{margin:0;font-size:16px}
+.hb86-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:640px){.hb86-grid{grid-template-columns:repeat(3,1fr)}}
+.hb86-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:14px;border:1px solid var(--line,rgba(0,0,0,.08));background:var(--surface-2,rgba(0,0,0,.02));color:var(--ink-1,#2b2118);font-size:12px;text-decoration:none;cursor:pointer}
+.hb86-tile:active{transform:scale(.98)}
+.hb86-activity{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:11px 14px;border-radius:14px;background:linear-gradient(100deg,rgba(240,180,80,.16),rgba(240,120,80,.10));color:var(--ink-1,#2b2118);text-decoration:none;font-size:13px}
+.hb86-activity b{font-size:14px}
+.hb86-activity span{margin-left:auto;color:#b4762a;font-weight:600}
+.hb86-skin{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line,rgba(0,0,0,.08))}
+.hb86-skin:last-child{border-bottom:none}
+.hb86-perk{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line,rgba(0,0,0,.08));font-size:13px;opacity:.55}
+.hb86-perk.on{opacity:1}
+.hb86-perk .lv{width:52px;color:#b4762a;font-weight:700}
+.hb86-perk .st{margin-left:auto;font-size:12px;color:var(--ink-3,#8a7a63)}
 </style>
 </head>
 <body>
@@ -9270,6 +9296,30 @@ var CloudStore = {
     return this._fetch(c.url + '/rest/v1/rpc/featured_posts', { method: 'POST', headers: this._h(), body: '{}' })
       .then(this._check).then(function (res) { return res.json(); });
   },
+  /* v8.5 服务端搜索（pg_trgm + hb_search_posts） */
+  searchPostsRpc: function (q, lim) {
+    var c = this._cfg();
+    return this._fetch(c.url + '/rest/v1/rpc/hb_search_posts', {
+      method: 'POST', headers: this._h(),
+      body: JSON.stringify({ q: q, lim: lim || 30 })
+    }).then(this._check).then(function (res) { return res.json(); });
+  },
+  /* v8.5 加入圈子（服务端判定 open/approve） */
+  joinCircle: function (circleId, uid) {
+    var c = this._cfg();
+    return this._fetch(c.url + '/rest/v1/rpc/hb_join_circle', {
+      method: 'POST', headers: this._h(),
+      body: JSON.stringify({ p_circle: circleId, p_user: uid })
+    }).then(this._check).then(function (res) { return res.json(); });
+  },
+  /* v8.5 圈子成员数 */
+  circleMemberCount: function (circleId) {
+    var c = this._cfg();
+    return this._fetch(c.url + '/rest/v1/circle_members?select=user_id&circle_id=eq.'
+      + encodeURIComponent(circleId) + '&status=eq.active', { headers: this._h() })
+      .then(this._check).then(function (res) { return res.json(); })
+      .then(function (rows) { return (rows || []).length; });
+  },
   deletePost: function (id) {
     var c = this._cfg();
     return this._fetch(c.url + '/rest/v1/posts?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: this._h() }).then(this._check);
@@ -12131,10 +12181,58 @@ function renderAnns() {
   }).catch(function () { box.style.display = 'none'; });
 }
 
+/* v8.5 首页取数：有搜索词且在线时走服务端搜索，失败自动回落 */
+function loadHomePosts() {
+  var kw = (homeState.keyword || '').trim();
+  if (!kw || !isCloud()) return CloudStore.listPosts();
+  return CloudStore.searchPostsRpc(kw, 60).catch(function () { return CloudStore.listPosts(); });
+}
+
+/* v8.5 圈子加入条 */
+function renderCircleBar() {
+  var host = document.getElementById('circle-join-bar');
+  if (!host) {
+    var list0 = document.getElementById('post-list');
+    if (!list0 || !list0.parentNode) return;
+    host = document.createElement('div');
+    host.id = 'circle-join-bar';
+    list0.parentNode.insertBefore(host, list0);
+  }
+  if (!homeState.circle || !session) { host.innerHTML = ''; host.style.display = 'none'; return; }
+  host.style.display = '';
+  var circles = (_ctxCache && _ctxCache.circles) || [];
+  var cName = '该圈子';
+  for (var i = 0; i < circles.length; i++) if (circles[i].id === homeState.circle) cName = circles[i].name || cName;
+  var key = 'forum_circle_joined_' + homeState.circle + '_' + session.id;
+  var joined = false;
+  try { joined = localStorage.getItem(key) === '1'; } catch (e) {}
+  host.innerHTML = '<div class="circle-join-card"><div class="cjc-left"><b>' + esc(cName) + '</b>'
+    + '<span id="circle-member-count" class="cjc-count"></span></div>'
+    + '<button class="btn btn-sm ' + (joined ? 'btn-ghost' : 'btn-primary') + '" id="circle-join-btn"'
+    + (joined ? ' disabled' : '') + '>' + (joined ? '已加入' : '加入圈子') + '</button></div>';
+  if (!joined) {
+    document.getElementById('circle-join-btn').onclick = function () {
+      var btn = this;
+      btn.disabled = true; btn.textContent = '加入中…';
+      CloudStore.joinCircle(homeState.circle, session.id).then(function (r) {
+        if (r && r.ok) {
+          if (r.status === 'pending') { toast('已提交申请，等待圈主审批'); btn.textContent = '已申请'; }
+          else { try { localStorage.setItem(key, '1'); } catch (e) {} toast('已加入「' + cName + '」'); renderCircleBar(); }
+        } else { btn.disabled = false; btn.textContent = '加入圈子'; toast('加入失败：' + ((r && r.err) || '未知')); }
+      }).catch(function () { btn.disabled = false; btn.textContent = '加入圈子'; toast('加入失败，稍后再试'); });
+    };
+  }
+  CloudStore.circleMemberCount(homeState.circle).then(function (n) {
+    var el = document.getElementById('circle-member-count');
+    if (el && n != null) el.textContent = ' · ' + n + ' 人';
+  }).catch(function () {});
+}
+
 function renderHome() {
   renderChips();
   renderCtx();
   renderAnns();
+  renderCircleBar();
   /* v6.2 签到：首页签到=管理员专属（管理员签到，后台私有不进公开榜）；普通用户签到在任务页转盘 */
   var sbtn0 = document.getElementById('signin-btn');
   if (sbtn0) sbtn0.style.display = (session && isAdminUser()) ? '' : 'none';
@@ -12157,7 +12255,7 @@ function renderHome() {
   }
 
   var tasks = [
-    CloudStore.listPosts(),
+    loadHomePosts(),
     CloudStore.commentCounts(),
     CloudStore.likeStats(session ? session.id : null)
   ];
@@ -20918,6 +21016,375 @@ initDeskPet();
     schedule();
     syncShareFab();
   });
+})();
+
+/* v8.6 模块 */
+/* v8.6：顶栏收敛+发现宫格 / 关注流 / 粘贴上传 / 活动条 / 邀请码 / 皮肤市场 / 等级权益 / 定时帖 / 新号冷却 */
+(function () {
+  if (window.__HB86) return;
+  window.__HB86 = true;
+  var BUILD = 'v8.6';
+  function S() { return (typeof session !== 'undefined' && session) || window.session || null; }
+  function T(m) { try { if (typeof toast === 'function') toast(m); } catch (e) {} }
+  function cfg() {
+    return { url: (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '').replace(/\/$/, ''),
+             key: (typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '') };
+  }
+  function api(path, opts) {
+    var c = cfg();
+    opts = opts || {};
+    opts.headers = Object.assign({ apikey: c.key, Authorization: 'Bearer ' + c.key, 'Content-Type': 'application/json' }, opts.headers || {});
+    return fetch(c.url + path, opts).then(function (r) {
+      return r.text().then(function (txt) {
+        var data = null; try { data = txt ? JSON.parse(txt) : null; } catch (e) {}
+        if (!r.ok) { var err = new Error((data && (data.message || data.hint)) || ('HTTP ' + r.status)); err.status = r.status; throw err; }
+        return data;
+      });
+    });
+  }
+  function modal(title, bodyHtml, opts) {
+    var mask = document.createElement('div');
+    mask.className = 'modal-mask show hb86-mask';
+    mask.innerHTML = '<div class="modal hb86-modal"><div class="hb86-head"><h3>' + title + '</h3>'
+      + '<button class="btn btn-sm btn-ghost" data-hb86-close="1">关闭</button></div>'
+      + '<div class="hb86-body">' + bodyHtml + '</div></div>';
+    document.body.appendChild(mask);
+    mask.addEventListener('click', function (e) {
+      if (e.target === mask || e.target.getAttribute('data-hb86-close')) mask.remove();
+    });
+    return mask;
+  }
+
+  /* ---------- 1) 顶栏收敛为 5 入口 + 发现宫格 ---------- */
+  var stash = [];
+  function applyNav() {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var links = [].slice.call(nav.querySelectorAll('a.nav-link'));
+    if (!links.length) return;
+    var keep = ['#/', '#/featured', '#/new', '#/messages'];
+    var hasMore = nav.querySelector('.hb86-more');
+    if (hasMore && links.length <= 6) return;  /* 已处理过 */
+    stash = [];
+    links.forEach(function (a) {
+      var href = a.getAttribute('href') || '';
+      if (keep.indexOf(href) > -1) return;
+      stash.push({ href: href, html: a.outerHTML });
+      a.remove();
+    });
+    /* 头像链接（不是 nav-link）也收进更多 */
+    [].slice.call(nav.querySelectorAll('a[href="#/profile"]')).forEach(function (a) {
+      if (a.classList.contains('nav-link')) return;
+      stash.push({ href: '#/profile', html: a.outerHTML });
+      a.remove();
+    });
+    if (!nav.querySelector('.hb86-more')) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'nav-link hb86-more';
+      btn.title = '更多功能';
+      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span class="nav-label">更多</span>';
+      btn.addEventListener('click', openDiscover);
+      nav.appendChild(btn);
+    }
+  }
+  var EXTRA = [
+    { key: 'invite', icon: '🎟', name: '邀请码' },
+    { key: 'skins', icon: '🎨', name: '皮肤市场' },
+    { key: 'perks', icon: '🏅', name: '等级权益' },
+    { key: 'schedule', icon: '🕒', name: '定时发布' },
+    { key: 'activity', icon: '🎉', name: '活动中心' }
+  ];
+  function openDiscover() {
+    if (document.getElementById('hb-discover')) return;
+    var mask = document.createElement('div');
+    mask.className = 'modal-mask show hb86-mask';
+    mask.id = 'hb-discover';
+    var items = '';
+    stash.forEach(function (s) {
+      var tmp = document.createElement('div'); tmp.innerHTML = s.html;
+      var node = tmp.firstChild;
+      var label = (node.querySelector('.nav-label') && node.querySelector('.nav-label').textContent)
+        || node.getAttribute('title') || (node.textContent || '').trim() || '功能';
+      var icon = node.querySelector('svg') ? node.querySelector('svg').outerHTML : '<span style="font-size:18px">•</span>';
+      items += '<a class="hb86-tile" href="' + s.href + '">' + icon + '<span>' + label + '</span></a>';
+    });
+    EXTRA.forEach(function (x) {
+      items += '<button type="button" class="hb86-tile" data-hb86="' + x.key + '"><span style="font-size:18px">' + x.icon + '</span><span>' + x.name + '</span></button>';
+    });
+    mask.innerHTML = '<div class="hb86-sheet"><div class="hb86-head"><h3>发现</h3>'
+      + '<button class="btn btn-sm btn-ghost" data-hb86-close="1">关闭</button></div>'
+      + '<div class="hb86-grid">' + (items || '<p style="padding:12px;color:var(--ink-3)">暂无更多入口</p>') + '</div></div>';
+    document.body.appendChild(mask);
+    mask.addEventListener('click', function (e) {
+      if (e.target === mask || e.target.getAttribute('data-hb86-close')) { mask.remove(); return; }
+      var b = e.target.closest && e.target.closest('[data-hb86]');
+      if (b) { mask.remove(); routeExtra(b.getAttribute('data-hb86')); }
+    });
+  }
+  function routeExtra(k) {
+    if (k === 'invite') return inviteModal();
+    if (k === 'skins') return skinsModal();
+    if (k === 'perks') return perksModal();
+    if (k === 'schedule') return scheduleModal();
+    if (k === 'activity') { location.hash = '#/activities'; return; }
+  }
+  var _rn = window.renderNav;
+  if (typeof _rn === 'function') {
+    window.renderNav = function () {
+      var r = _rn.apply(this, arguments);
+      setTimeout(applyNav, 0);
+      return r;
+    };
+  }
+  if (window.MutationObserver) {
+    var navMo = new MutationObserver(function () { setTimeout(applyNav, 0); });
+    window.addEventListener('load', function () {
+      var nav = document.getElementById('nav');
+      if (nav) navMo.observe(nav, { childList: true });
+      applyNav();
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+      var nav = document.getElementById('nav');
+      if (nav) { navMo.observe(nav, { childList: true }); applyNav(); }
+    });
+  }
+  window.addEventListener('hashchange', function () {
+    var d = document.getElementById('hb-discover');
+    if (d) d.remove();
+  });
+
+  /* ---------- 2) 关注信息流 ---------- */
+  window.hbMyFollowing = [];
+  function loadFollowing() {
+    var sess = S(); var sid = sess && sess.id;
+    if (!sid) return Promise.resolve([]);
+    return api('/rest/v1/follows?select=following_id&follower_id=eq.' + encodeURIComponent(sid) + '&limit=500')
+      .then(function (rows) {
+        window.hbMyFollowing = (rows || []).map(function (r) { return r.following_id; });
+        return window.hbMyFollowing;
+      }).catch(function () { return []; });
+  }
+  var _rc = window.renderChips;
+  if (typeof _rc === 'function') {
+    window.renderChips = function () {
+      var r = _rc.apply(this, arguments);
+      try {
+        var box = document.getElementById('cat-chips');
+        if (box && S() && !box.querySelector('[data-hb-follow]')) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'chip';
+          b.setAttribute('data-hb-follow', '1');
+          b.textContent = '关注';
+          b.onclick = function () {
+            window.homeState.followOnly = !window.homeState.followOnly;
+            b.classList.toggle('active', !!window.homeState.followOnly);
+            loadFollowing().then(function () { window.renderHome(); });
+          };
+          box.insertBefore(b, box.firstChild);
+          if (window.homeState.followOnly) b.classList.add('active');
+        }
+      } catch (e) {}
+      return r;
+    };
+  }
+  var _rhd = window.renderHomeData;
+  if (typeof _rhd === 'function') {
+    window.renderHomeData = function (posts, counts, likes, commented, list, levels) {
+      if (window.homeState && window.homeState.followOnly) {
+        var ids = window.hbMyFollowing || [];
+        posts = (posts || []).filter(function (p) { return ids.indexOf(p.user_id) > -1; });
+        if (!ids.length && list) {
+          list.innerHTML = '<div class="empty"><p class="empty-title">关注流是空的</p><p>先去关注几个作者，这里只显示他们的帖子。</p></div>';
+          return;
+        }
+      }
+      return _rhd.call(this, posts, counts, likes, commented, list, levels);
+    };
+  }
+
+  /* ---------- 3) 粘贴即上传 ---------- */
+  document.addEventListener('paste', function (e) {
+    var ta = e.target;
+    if (!ta || ta.id !== 'np-content' || !e.clipboardData) return;
+    var files = e.clipboardData.files || [];
+    var img = null;
+    for (var i = 0; i < files.length; i++) if (/^image\//.test(files[i].type)) { img = files[i]; break; }
+    if (!img) return;
+    e.preventDefault();
+    T('图片上传中…');
+    CloudStore.uploadFile('posts', img).then(function (url) {
+      var pos = ta.selectionStart || ta.value.length;
+      var insert = '![' + (img.name || '图片') + '](' + url + ')\n';
+      ta.value = ta.value.slice(0, pos) + insert + ta.value.slice(pos);
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      T('图片已插入');
+    }).catch(function () { T('上传失败，请重试'); });
+  });
+
+  /* ---------- 4) 活动条 ---------- */
+  function renderActivityBar() {
+    var host = document.getElementById('hb-activity-bar');
+    if (!host) {
+      var list = document.getElementById('post-list');
+      if (!list || !list.parentNode) return;
+      host = document.createElement('div');
+      host.id = 'hb-activity-bar';
+      list.parentNode.insertBefore(host, list);
+    }
+    api('/rest/v1/activity_configs?select=title,summary,starts_at,ends_at&enabled=eq.true&order=starts_at.desc&limit=3')
+      .then(function (rows) {
+        rows = rows || [];
+        var now = Date.now(), cur = null;
+        rows.forEach(function (r) {
+          var s = r.starts_at ? Date.parse(r.starts_at) : 0;
+          var e = r.ends_at ? Date.parse(r.ends_at) : Infinity;
+          if (now >= s && now <= e) cur = r;
+        });
+        if (!cur) { host.style.display = 'none'; host.innerHTML = ''; return; }
+        var left = cur.ends_at ? Math.max(0, Date.parse(cur.ends_at) - now) : null;
+        var txt = left == null ? '进行中' : ('剩 ' + Math.floor(left / 86400000) + ' 天 ' + Math.floor((left % 86400000) / 3600000) + ' 小时');
+        host.style.display = '';
+        host.innerHTML = '<a class="hb86-activity" href="#/activities">🎉 <b>' + (cur.title || '活动进行中')
+          + '</b><span>' + txt + '</span></a>';
+      }).catch(function () { host.style.display = 'none'; });
+  }
+  var _home = window.renderHome;
+  if (typeof _home === 'function') {
+    window.renderHome = function () { var r = _home.apply(this, arguments); setTimeout(renderActivityBar, 60); return r; };
+  }
+
+  /* ---------- 5) 邀请码 ---------- */
+  function inviteModal() {
+    var m = modal('🎟 邀请码', '<p style="font-size:13px;color:var(--ink-3);margin:0 0 10px">输入朋友给你的邀请码兑换奖励</p>'
+      + '<input class="input" id="hb86-invite-code" placeholder="8 位邀请码" maxlength="16" style="width:100%;margin-bottom:10px">'
+      + '<button class="btn btn-primary" id="hb86-invite-go" style="width:100%">兑换</button>'
+      + '<p id="hb86-invite-msg" style="font-size:12px;color:var(--ink-3);margin-top:10px;min-height:16px"></p>');
+    m.querySelector('#hb86-invite-go').onclick = function () {
+      var code = (m.querySelector('#hb86-invite-code').value || '').trim().toUpperCase();
+      var msg = m.querySelector('#hb86-invite-msg');
+      if (!code) { msg.textContent = '先填邀请码'; return; }
+      if (!S()) { msg.textContent = '登录后才能兑换'; return; }
+      msg.textContent = '兑换中…';
+      api('/rest/v1/rpc/hb_redeem_invite', { method: 'POST', body: JSON.stringify({ p_code: code, p_user: S().id }) })
+        .then(function (r) {
+          if (r && r.ok) { msg.textContent = '兑换成功 🎉'; T('邀请码兑换成功'); }
+          else {
+            var map = { not_found: '邀请码不存在', inactive: '该邀请码已停用', expired: '邀请码已过期', used_up: '邀请码已用完', already: '你已经用过了' };
+            msg.textContent = map[(r && r.err)] || '兑换失败';
+          }
+        }).catch(function (e) { msg.textContent = '兑换失败：' + (e.message || '稍后再试'); });
+    };
+  }
+
+  /* ---------- 6) 皮肤市场 ---------- */
+  function skinsModal() {
+    var m = modal('🎨 皮肤市场', '<div id="hb86-skins" style="min-height:80px">加载中…</div>');
+    api('/rest/v1/skins?select=id,name,price,owner_id&status=eq.on&order=price.asc&limit=50')
+      .then(function (rows) {
+        var box = m.querySelector('#hb86-skins');
+        rows = rows || [];
+        if (!rows.length) { box.innerHTML = '<p style="color:var(--ink-3);font-size:13px">还没有上架的皮肤，等作者投稿。</p>'; return; }
+        box.innerHTML = rows.map(function (s) {
+          return '<div class="hb86-skin"><div><b>' + (s.name || '未命名') + '</b>'
+            + '<span style="font-size:12px;color:var(--ink-3);margin-left:8px">' + (s.price ? ('🪙 ' + s.price) : '免费') + '</span></div>'
+            + '<button class="btn btn-sm btn-primary" data-buy="' + s.id + '" data-price="' + (s.price || 0) + '">购买</button></div>';
+        }).join('');
+      }).catch(function (e) {
+        m.querySelector('#hb86-skins').innerHTML = '<p style="font-size:13px;color:var(--ink-3)">读取失败：' + (e.message || '') + '</p>';
+      });
+    m.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-buy]');
+      if (!b) return;
+      if (!S()) { T('登录后才能购买'); return; }
+      b.disabled = true;
+      api('/rest/v1/rpc/hb_buy_skin', { method: 'POST', body: JSON.stringify({ p_skin: b.getAttribute('data-buy'), p_buyer: S().id }) })
+        .then(function (r) {
+          if (r && r.ok) { T('购买成功'); b.textContent = '已拥有'; }
+          else {
+            var map = { insufficient: '金币不够', already_owned: '已经拥有了', skin_not_found: '皮肤不存在' };
+            T(map[(r && r.err)] || '购买失败'); b.disabled = false;
+          }
+        }).catch(function (e) { T('购买失败：' + (e.message || '')); b.disabled = false; });
+    });
+  }
+
+  /* ---------- 7) 等级权益 ---------- */
+  var PERKS = [
+    { lv: 3, t: '可发投票帖' }, { lv: 5, t: '解锁自定义签名' }, { lv: 8, t: '可创建圈子' },
+    { lv: 12, t: '评论免审核' }, { lv: 16, t: '可上传 20MB 附件' }, { lv: 20, t: '专属等级徽章' },
+    { lv: 25, t: '可申请圈主' }, { lv: 30, t: '年度荣誉墙' }
+  ];
+  function perksModal() {
+    var lv = (S() && (S().level || 0)) || 0;
+    var rows = PERKS.map(function (p) {
+      var on = lv >= p.lv;
+      return '<div class="hb86-perk ' + (on ? 'on' : '') + '"><span class="lv">Lv.' + p.lv + '</span><span>' + p.t + '</span>'
+        + '<span class="st">' + (on ? '已解锁' : '未解锁') + '</span></div>';
+    }).join('');
+    modal('🏅 等级权益', '<p style="font-size:13px;color:var(--ink-3);margin:0 0 10px">当前等级：Lv.' + lv + '</p>' + rows);
+  }
+
+  /* ---------- 8) 定时发布 ---------- */
+  function scheduleModal() {
+    if (!S()) { T('登录后才能定时发布'); return; }
+    var now = new Date(Date.now() + 3600000);
+    var def = now.toISOString().slice(0, 16);
+    var m = modal('🕒 定时发布', '<input class="input" id="hb86-sc-title" placeholder="标题（60 字内）" maxlength="60" style="width:100%;margin-bottom:8px">'
+      + '<textarea class="textarea" id="hb86-sc-body" placeholder="正文，支持 Markdown" style="width:100%;height:120px;margin-bottom:8px"></textarea>'
+      + '<input class="input" id="hb86-sc-at" type="datetime-local" value="' + def + '" style="width:100%;margin-bottom:10px">'
+      + '<button class="btn btn-primary" id="hb86-sc-go" style="width:100%">排入队列</button>'
+      + '<p id="hb86-sc-msg" style="font-size:12px;color:var(--ink-3);margin-top:8px;min-height:16px">到点由服务端自动发出，关掉页面也会发。</p>');
+    m.querySelector('#hb86-sc-go').onclick = function () {
+      var ti = (m.querySelector('#hb86-sc-title').value || '').trim();
+      var bo = (m.querySelector('#hb86-sc-body').value || '').trim();
+      var at = m.querySelector('#hb86-sc-at').value;
+      var msg = m.querySelector('#hb86-sc-msg');
+      if (!ti || !bo) { msg.textContent = '标题和正文都要填'; return; }
+      if (!at) { msg.textContent = '选个时间'; return; }
+      msg.textContent = '提交中…';
+      api('/rest/v1/rpc/hb_schedule_post', {
+        method: 'POST',
+        body: JSON.stringify({ p_title: ti, p_content: bo, p_author: S().id, p_run_at: new Date(at).toISOString(), p_author_name: S().username || '' })
+      }).then(function (r) {
+        if (r && r.ok) { msg.textContent = '已排入，到点自动发出 ✅'; T('定时发布已排入'); }
+        else { msg.textContent = '失败：' + ((r && r.err) || '未知'); }
+      }).catch(function (e) { msg.textContent = '失败：' + (e.message || ''); });
+    };
+  }
+
+  /* ---------- 9) 新号冷却（服务端闸门） ---------- */
+  var _cp = window.CloudStore && CloudStore.createPost;
+  if (_cp && !CloudStore.__hb86guard) {
+    CloudStore.createPost = function (data) {
+      var host = this, args = arguments;
+      var sess = S();
+      var uid = (data && data.user_id) || (sess && sess.id);
+      if (!uid || !isCloud()) return _cp.apply(host, args);
+      return api('/rest/v1/rpc/hb_post_guard', { method: 'POST', body: JSON.stringify({ p_user: uid }) })
+        .then(function (r) {
+          if (r && r.ok === false && r.err === 'newbie_limit') {
+            T('新账号 24 小时内最多发 3 帖，先逛逛再发吧');
+            return Promise.reject(new Error('NEWBIE_LIMIT'));
+          }
+          return _cp.apply(host, args);
+        })
+        .catch(function (e) {
+          if (e && e.message === 'NEWBIE_LIMIT') throw e;
+          return _cp.apply(host, args);  /* 闸门不可用时不阻塞发布 */
+        });
+    };
+    CloudStore.__hb86guard = true;
+  }
+
+  window.hb86 = {
+    applyNav: applyNav, openDiscover: openDiscover, routeExtra: routeExtra,
+    renderActivityBar: renderActivityBar, inviteModal: inviteModal, skinsModal: skinsModal,
+    perksModal: perksModal, scheduleModal: scheduleModal, loadFollowing: loadFollowing
+  };
+
+  try { localStorage.setItem('forum_ver', BUILD); } catch (e) {}
 })();
 
 </script>
