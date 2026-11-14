@@ -150,6 +150,12 @@ if (window.top !== window.self) { window.top.location = window.self.location; }
   --radius: 20px;
   --radius-sm: 14px;
   --shadow: 0 1px 2px rgba(36,40,47,.05), 0 6px 20px rgba(36,40,47,.06);
+  /* 兼容别名：旧代码里大量使用这几个变量，之前未定义会导致背景/文字失效 */
+  --card: var(--surface);
+  --card-hover: var(--surface-2);
+  --bg-2: var(--surface-2);
+  --ink-1: var(--ink);
+  --brand-1: var(--accent);
   --cat-chat: #3B82F6;
   --cat-study: #16A34A;
   --cat-game: #7C3AED;
@@ -2467,6 +2473,1084 @@ body[data-glass] .modal-mask {
 .crop-box::after { content:''; position:absolute; inset:0; border:2px dashed rgba(255,255,255,.75); border-radius:14px; pointer-events:none; }
 .crop-row { display:flex; align-items:center; gap:8px; margin-top:12px; }
 .crop-row input[type=range] { flex:1; }
+
+
+/* ============================================================
+ * v8.0 视觉体系升级（Design Layer）
+ * 统一全站美术语言 · 重做默认主题 · 强化层次与可读性
+ * ============================================================ */
+
+/* ---------- 0. 设计令牌 ---------- */
+:root {
+  --font-sans: "Noto Sans SC", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", -apple-system, "Helvetica Neue", sans-serif;
+  --font-serif: "Noto Serif SC", "Songti SC", "STSong", "Noto Serif", serif;
+  --ease: cubic-bezier(.22, .61, .36, 1);
+  --shadow-sm: 0 1px 2px rgba(28, 34, 42, .05);
+  --shadow-md: 0 1px 2px rgba(28, 34, 42, .05), 0 14px 32px -18px rgba(28, 34, 42, .26);
+  --shadow-lg: 0 24px 60px -24px rgba(28, 34, 42, .34);
+  --ring: 0 0 0 3px rgba(192, 64, 44, .16);
+
+  /* 默认主题重做：宣纸暖白 + 朱砂 + 青瓷 */
+  --bg: #F7F5EF;
+  --surface: #FFFFFF;
+  --surface-2: #FAF8F2;
+  --ink: #1B2129;
+  --ink-2: #525B68;
+  --ink-3: #8B93A0;
+  --line: #E5E0D3;
+  --accent: #C0402C;
+  --accent-dark: #9C3020;
+  --accent-soft: #FBEBE6;
+  --brand-1: #C0402C;
+  --brand-2: #2E6B79;
+  --cat-announce: #C0402C;
+  --shadow: var(--shadow-md);
+}
+body { font-family: var(--font-sans); }
+
+/* ---------- 1. 默认主题背景：柔光纸面 ---------- */
+body:not([data-theme]) {
+  background-color: #F7F5EF;
+  background-image:
+    radial-gradient(900px 560px at 4% -12%, rgba(255, 206, 154, .42), rgba(255, 206, 154, 0) 62%),
+    radial-gradient(780px 520px at 102% -6%, rgba(174, 212, 232, .42), rgba(174, 212, 232, 0) 60%),
+    radial-gradient(1100px 700px at 50% 114%, rgba(222, 214, 194, .40), rgba(222, 214, 194, 0) 72%),
+    linear-gradient(168deg, #FCFBF6 0%, #F5F2EA 46%, #EDF1F4 100%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* ---------- 2. 官方主题：缺图兜底 + 统一压暗 ---------- */
+body[data-theme="official"]::before {
+  background-image: url('themes/official-night.jpg'), radial-gradient(135% 118% at 50% 0%, #17334c 0%, #08101c 50%, #05080f 100%);
+}
+body[data-theme="official-forest"]::before {
+  background-image: url('themes/official-forest.jpg'), radial-gradient(135% 118% at 50% 0%, #2b5c45 0%, #0d2019 50%, #050c09 100%);
+}
+body[data-theme="official-maple"]::before {
+  background-image: url('themes/official-maple.jpg'), radial-gradient(135% 118% at 50% 0%, #7a3a12 0%, #25120a 50%, #0d0705 100%);
+}
+body[data-theme="official-city"]::before {
+  background-image: url('themes/official-city.jpg'), radial-gradient(135% 118% at 50% 0%, #6b4432 0%, #23160f 50%, #0b0705 100%);
+}
+body[data-theme="official-sakura"]::before {
+  background-image: url('themes/official-sakura.jpg'), radial-gradient(135% 118% at 50% 0%, #c98a9e 0%, #3a2630 50%, #120b0e 100%);
+}
+body[data-theme="official-bridge"]::before {
+  background-image: url('themes/official-bridge.jpg'), radial-gradient(135% 118% at 50% 0%, #5a4432 0%, #211811 50%, #0a0806 100%);
+}
+body[data-theme="official-sunset"]::before {
+  background-image: url('themes/official-sunset.jpg'), radial-gradient(135% 118% at 50% 0%, #93331a 0%, #2a0f08 50%, #0e0503 100%);
+}
+body[data-theme="official-grassland"]::before {
+  background-image: url('themes/official-grassland.jpg'), radial-gradient(135% 118% at 50% 0%, #2f6b3a 0%, #0f2213 50%, #060d07 100%);
+}
+body[data-theme="official-shanghai"]::before {
+  background-image: url('themes/official-shanghai.jpg'), radial-gradient(135% 118% at 50% 0%, #2a4257 0%, #0d1620 50%, #050a0f 100%);
+}
+body[data-theme="official-mars"]::before {
+  background-image: url('themes/official-mars.jpg'), radial-gradient(135% 118% at 50% 0%, #7a4a2a 0%, #2a160c 50%, #0e0704 100%);
+}
+body[data-theme^="official"].dark-theme::before {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #06090f;
+  filter: brightness(.96) saturate(1.06);
+}
+body[data-theme^="official"].dark-theme::after {
+  background:
+    radial-gradient(120% 55% at 50% -8%, rgba(255, 255, 255, .12), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, rgba(4, 8, 14, .10) 0%, rgba(4, 8, 14, .32) 45%, rgba(4, 8, 14, .58) 100%);
+}
+
+/* 兼容别名必须按主题重新声明：写在 :root 会被提前求值，深色主题下 --card 仍是白色 */
+body[data-theme] {
+  --brand-1: var(--accent);
+}
+body[data-theme].dark-theme {
+  --card: rgba(255, 255, 255, .10);
+  --card-hover: rgba(255, 255, 255, .16);
+  --bg-2: rgba(255, 255, 255, .05);
+  --ink-1: #F0F4FF;
+}
+body[data-theme].light-theme {
+  --card: rgba(255, 255, 255, .82);
+  --card-hover: #FFFFFF;
+  --bg-2: rgba(255, 255, 255, .55);
+  --ink-1: #33302A;
+}
+
+/* ---------- 3. 深色主题：改成"看得清"的玻璃面 ---------- */
+body[data-theme].dark-theme .card,
+body[data-theme].dark-theme .post-item,
+body[data-theme].dark-theme .comment-item,
+body[data-theme].dark-theme .settings-sidebar,
+body[data-theme].dark-theme .settings-nav,
+body[data-theme].dark-theme .admin-section,
+body[data-theme].dark-theme .notif-item,
+body[data-theme].dark-theme .auth-tabs,
+body[data-theme].dark-theme .profile-stats > div,
+body[data-theme].dark-theme .chat-msg,
+body[data-theme].dark-theme .task-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .045)) !important;
+  border-color: rgba(255, 255, 255, .15) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 18px 40px -26px rgba(0, 0, 0, .8) !important;
+}
+body[data-theme].dark-theme .post-item,
+body[data-theme].dark-theme .card {
+  backdrop-filter: saturate(1.05) blur(3px);
+  -webkit-backdrop-filter: saturate(1.05) blur(3px);
+}
+body[data-theme].dark-theme .chips {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+body[data-theme].dark-theme .theme-item {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .18);
+  color: var(--ink-2);
+}
+body[data-theme].dark-theme .theme-item.active {
+  background: rgba(255, 255, 255, .16);
+  border-color: var(--accent);
+  color: #fff;
+}
+body[data-theme].dark-theme .theme-item .theme-swatch {
+  border-color: rgba(255, 255, 255, .22);
+  box-shadow: none;
+}
+body[data-theme].dark-theme .topbar {
+  background: rgba(9, 13, 23, .62) !important;
+  border-bottom-color: rgba(255, 255, 255, .10) !important;
+  backdrop-filter: saturate(1.2) blur(16px);
+  -webkit-backdrop-filter: saturate(1.2) blur(16px);
+}
+
+/* ---------- 4. 浅色文化主题：纸面质感 ---------- */
+body[data-theme].light-theme .card,
+body[data-theme].light-theme .post-item,
+body[data-theme].light-theme .task-card,
+body[data-theme].light-theme .notif-item {
+  background: rgba(255, 255, 255, .80);
+  border: 1px solid rgba(255, 255, 255, .70);
+  box-shadow: 0 1px 2px rgba(60, 50, 35, .06), 0 16px 36px -22px rgba(60, 50, 35, .28);
+}
+
+/* ---------- 5. 纯色 / 渐变主题：降饱和、提气质 ---------- */
+body[data-theme="red"] { --bg:#6D1A1A; --accent:#FFB3A7; --accent-dark:#FF9788; --accent-soft:rgba(255,179,167,.18); --theme-bg:radial-gradient(120% 90% at 50% 0%, #8A2323 0%, #561212 68%, #3A0C0C 100%); }
+body[data-theme="orange"] { --bg:#6A3A12; --accent:#FFC08A; --accent-dark:#FFA766; --accent-soft:rgba(255,192,138,.18); --theme-bg:radial-gradient(120% 90% at 50% 0%, #854C1B 0%, #4F2A0D 68%, #331A08 100%); }
+body[data-theme="yellow"] { --bg:#66530F; --accent:#FFE08A; --accent-dark:#FFD166; --accent-soft:rgba(255,224,138,.18); --theme-bg:radial-gradient(120% 90% at 50% 0%, #7E6816 0%, #4C3D0B 68%, #302707 100%); }
+body[data-theme="green"] { --bg:#1C4A2A; --accent:#9BE8B4; --accent-dark:#6EDD95; --accent-soft:rgba(155,232,180,.18); --theme-bg:radial-gradient(120% 90% at 50% 0%, #245C35 0%, #153520 68%, #0C2014 100%); }
+body[data-theme="cyan"] { --bg:#0F4A4E; --accent:#8FE6DA; --accent-dark:#5FD9CB; --accent-soft:rgba(143,230,218,.18); --theme-bg:radial-gradient(120% 90% at 50% 0%, #135A5F 0%, #0A3639 68%, #062224 100%); }
+body[data-theme="blue"] { --bg:#16304F; --accent:#A9C8FF; --accent-dark:#7FAEFF; --accent-soft:rgba(169,200,255,.18); --theme-bg:radial-gradient(120% 90% at 50% 0%, #1B3C63 0%, #10243C 68%, #0A1727 100%); }
+body[data-theme="purple"] { --bg:#3A2352; --accent:#D8B4FE; --accent-dark:#BE8DF7; --accent-soft:rgba(216,180,254,.18); --theme-bg:radial-gradient(120% 90% at 50% 0%, #472C64 0%, #2B193D 68%, #1B1026 100%); }
+body[data-theme="red-orange"] { --bg:#5E1A12; --accent:#FFB59A; --accent-dark:#FF9673; --accent-soft:rgba(255,181,154,.18); --theme-bg:linear-gradient(170deg, #5E1A12 0%, #7A2A12 55%, #8A3E10 100%); }
+body[data-theme="orange-yellow"] { --bg:#6B3510; --accent:#FFD08A; --accent-dark:#FFBE66; --accent-soft:rgba(255,208,138,.18); --theme-bg:linear-gradient(170deg, #6B3510 0%, #82510F 55%, #8F6A12 100%); }
+body[data-theme="yellow-green"] { --bg:#66540F; --accent:#D6E89A; --accent-dark:#C5DE7A; --accent-soft:rgba(214,232,154,.18); --theme-bg:linear-gradient(170deg, #6B5A12 0%, #455A16 55%, #2C5A2E 100%); }
+body[data-theme="green-cyan"] { --bg:#1C4A32; --accent:#8FE8CE; --accent-dark:#63D9B7; --accent-soft:rgba(143,232,206,.18); --theme-bg:linear-gradient(170deg, #1C4A32 0%, #145043 55%, #0D4A48 100%); }
+body[data-theme="cyan-blue"] { --bg:#0E4646; --accent:#8BD8F2; --accent-dark:#5FC5E8; --accent-soft:rgba(139,216,242,.18); --theme-bg:linear-gradient(170deg, #0D4A48 0%, #123C58 55%, #173A63 100%); }
+body[data-theme="blue-purple"] { --bg:#20305C; --accent:#BCC4FF; --accent-dark:#9AA6FF; --accent-soft:rgba(188,196,255,.18); --theme-bg:linear-gradient(170deg, #173A63 0%, #2A2A66 55%, #3A2260 100%); }
+body[data-theme="purple-pink"] { --bg:#412056; --accent:#F2AFD0; --accent-dark:#EA92BC; --accent-soft:rgba(242,175,208,.18); --theme-bg:linear-gradient(170deg, #3A2260 0%, #54204E 55%, #6B2050 100%); }
+
+/* ---------- 6. 启动页：无图也好看 ---------- */
+#splash-screen {
+  background-color: #05080f;
+  background-image:
+    linear-gradient(180deg, rgba(8, 12, 22, .28) 0%, rgba(8, 12, 22, .55) 42%, rgba(8, 12, 22, .84) 100%),
+    url('themes/official-shanghai.jpg'),
+    radial-gradient(120% 80% at 50% 0%, #16304a 0%, #08111d 55%, #05080f 100%);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.splash-name { font-family: var(--font-serif); font-weight: 900; letter-spacing: 3px; }
+.splash-sub { letter-spacing: 2px; }
+.splash-bar { height: 2px; background: rgba(255, 255, 255, .16); }
+.splash-bar i {
+  background: linear-gradient(90deg, #fbbf24, #ffd977);
+  box-shadow: 0 0 12px rgba(251, 191, 36, .55);
+}
+
+/* ---------- 7. 卡片层次 ---------- */
+.card {
+  border-radius: 20px;
+  box-shadow: var(--shadow-md);
+  border-color: var(--line);
+}
+.card.pad { padding: 22px 24px; }
+.card.post-item {
+  transition: transform .2s var(--ease), box-shadow .2s var(--ease), background-color .2s;
+}
+.card.post-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(28, 34, 42, .06), 0 26px 48px -28px rgba(28, 34, 42, .30);
+}
+body[data-theme].dark-theme .card.post-item:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .35), 0 26px 52px -28px rgba(0, 0, 0, .85) !important;
+}
+.post-ribbon {
+  width: 5px;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 18px -2px currentColor;
+  opacity: .95;
+}
+.post-title {
+  font-size: 17.5px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: var(--ink);
+}
+.post-title:hover { color: var(--accent); }
+.post-excerpt { color: var(--ink-2); font-size: 13.5px; line-height: 1.65; }
+.post-meta { gap: 9px; }
+
+/* 分节标题 */
+.section-title {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  font-size: 25px;
+  letter-spacing: .5px;
+}
+.section-sub { color: var(--ink-2); line-height: 1.7; }
+
+/* ---------- 8. 按钮 ---------- */
+.btn {
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+.btn-primary {
+  background-image: linear-gradient(180deg, #CE4A34 0%, #B4371F 100%);
+  border-color: rgba(0, 0, 0, .08);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .22) inset, 0 8px 18px -10px rgba(180, 55, 31, .7);
+}
+.btn-primary:hover {
+  background-image: linear-gradient(180deg, #D8563E 0%, #BC3B22 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .26) inset, 0 12px 22px -10px rgba(180, 55, 31, .78);
+}
+.btn-ghost {
+  background: rgba(255, 255, 255, .55);
+  border-color: var(--line);
+  color: var(--ink-2);
+}
+.btn-ghost:hover { background: #fff; color: var(--ink); border-color: var(--ink-3); }
+body[data-theme].dark-theme .btn-ghost {
+  background: rgba(255, 255, 255, .07);
+  border-color: rgba(255, 255, 255, .16);
+  color: var(--ink-2);
+}
+.btn-danger-ghost { border-radius: 12px; }
+.theme-item .btn, .theme-item { border-radius: 12px; }
+
+/* ---------- 9. 表单 ---------- */
+.input, .textarea, .select {
+  border-radius: 12px;
+  background: #fff;
+  border-color: #E2DCCE;
+  box-shadow: 0 1px 2px rgba(28, 34, 42, .04) inset;
+}
+.input:hover, .textarea:hover, .select:hover { border-color: #D4CCB9; }
+.input:focus, .textarea:focus, .select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(192, 64, 44, .14), 0 1px 2px rgba(28, 34, 42, .04) inset;
+}
+body[data-theme].dark-theme .input,
+body[data-theme].dark-theme .textarea,
+body[data-theme].dark-theme .select {
+  border-color: rgba(255, 255, 255, .16) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset;
+}
+.form-label { font-size: 12.5px; letter-spacing: .3px; }
+
+/* ---------- 10. 分类胶囊 ---------- */
+.chip {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .86);
+  border-color: var(--line);
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.chip:hover { background: #fff; border-color: var(--ink-3); color: var(--ink); }
+.chip.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  box-shadow: 0 6px 16px -10px rgba(0, 0, 0, .6);
+  transform: translateY(-1px);
+}
+body[data-theme].dark-theme .chip { background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .16); color: var(--ink-2); }
+body[data-theme].dark-theme .chip.active { background: rgba(255, 255, 255, .92); color: #11151c; border-color: transparent; }
+/* 文化主题原本各画一套彩色胶囊，统一收敛为中性样式，避免页面花 */
+body[data-theme] .chip {
+  background: rgba(255, 255, 255, .74);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+}
+body[data-theme] .chip:hover { border-color: var(--ink-3); color: var(--ink); }
+body[data-theme] .chip.active { background: var(--ink); border-color: var(--ink); color: var(--bg); box-shadow: 0 6px 16px -10px rgba(0, 0, 0, .6); }
+
+/* ---------- 11. 顶栏与导航 ---------- */
+.topbar {
+  background: rgba(250, 248, 242, .82);
+  border-bottom-color: rgba(28, 34, 42, .10);
+  backdrop-filter: saturate(1.15) blur(14px);
+  -webkit-backdrop-filter: saturate(1.15) blur(14px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .5) inset;
+}
+.brand { letter-spacing: 2px; }
+.nav-link {
+  border-radius: 10px;
+  padding: 6px 9px;
+  transition: background .15s, color .15s;
+}
+.nav-link:hover { background: rgba(192, 64, 44, .09); color: var(--accent); }
+body[data-theme].dark-theme .nav-link:hover { background: rgba(255, 255, 255, .10); color: #fff; }
+
+/* ---------- 12. 帖子详情与评论 ---------- */
+.post-full h1 {
+  font-family: var(--font-serif);
+  font-size: 27px;
+  line-height: 1.42;
+  letter-spacing: .4px;
+}
+.post-content {
+  font-size: 15.5px;
+  line-height: 1.85;
+  color: var(--ink);
+}
+.comment-item { padding: 14px 0; }
+.comment-body { color: var(--ink); line-height: 1.7; }
+.like-btn {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .7);
+}
+body[data-theme].dark-theme .like-btn { background: rgba(255, 255, 255, .08); }
+
+/* ---------- 13. 空状态 / 加载 / 提示 ---------- */
+.empty { padding: 56px 20px; color: var(--ink-3); }
+.empty-title { font-family: var(--font-serif); font-size: 17px; }
+.toast-item {
+  border-radius: 12px;
+  background: rgba(28, 34, 42, .94);
+  color: #fff;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, .5);
+  letter-spacing: .2px;
+}
+.modal {
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---------- 14. 主题选择卡 ---------- */
+.theme-grid { gap: 10px; }
+.theme-item {
+  border-width: 1px;
+  border-radius: 14px;
+  background: var(--card);
+  padding: 9px 8px 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+  box-shadow: var(--shadow-sm);
+  transition: transform .16s var(--ease), border-color .16s, box-shadow .16s;
+}
+.theme-item:hover { transform: translateY(-2px); border-color: var(--ink-3); }
+.theme-item.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(192, 64, 44, .12);
+}
+.theme-swatch {
+  height: 46px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, .08);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .6) inset;
+}
+.theme-item[data-theme-id="default"] .theme-swatch {
+  background-image:
+    radial-gradient(140% 120% at 0% 0%, #FFD3A1 0%, rgba(255, 211, 161, 0) 58%),
+    radial-gradient(140% 120% at 100% 0%, #A9D2E6 0%, rgba(169, 210, 230, 0) 58%),
+    radial-gradient(120% 120% at 50% 120%, #D9D0BC 0%, rgba(217, 208, 188, 0) 62%),
+    linear-gradient(165deg, #FDFCF7 0%, #F4F1E8 55%, #ECF1F4 100%) !important;
+}
+
+/* ---------- 15. 细节：滚动条 / 焦点 / 动效 ---------- */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(120, 126, 138, .34);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(120, 126, 138, .55); background-clip: content-box; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.footer { color: var(--ink-3); letter-spacing: .3px; }
+
+@media (max-width: 640px) {
+  .section-title { font-size: 21px; }
+  .post-full h1 { font-size: 23px; }
+  .card.pad { padding: 18px; }
+  .container { padding: 20px 16px 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+
+/* ============================================================
+ * v8.2 · 文化主题美术升级（16 套）
+ * 一套语言：纸/石/金属底 + 专属纹样 + 双道内框 + 衬线标题 + 材质控件
+ * 全部 CSS 渐变生成纹理，不依赖外部图片
+ * ============================================================ */
+
+/* ---------- 1. 通用底座 ---------- */
+body[data-culture].light-theme {
+  --ink: #3A332A; --ink-2: #6B6355; --ink-3: #A39A88;
+  --line: rgba(92, 74, 46, .22);
+  --cul-topbar: rgba(253, 249, 240, .86);
+  --cul-field: rgba(255, 255, 255, .95);
+  --cul-chip: rgba(255, 253, 246, .94);
+  --cul-shadow: 0 1px 1px rgba(84, 66, 38, .06), 0 18px 38px -26px rgba(84, 66, 38, .45);
+  --cul-inner: rgba(255, 255, 255, .85);
+  --cul-cardtex: radial-gradient(rgba(120, 95, 55, .045) 1px, transparent 1.4px);
+  --cul-inputline: var(--cul-line);
+  --cul-cardtex-size: 14px 14px;
+  --cul-cardtex-pos: 0 0;
+}
+body[data-culture].dark-theme {
+  --ink: #F1E9DA; --ink-2: #C7BDAA; --ink-3: #8C8474;
+  --line: rgba(255, 238, 208, .22);
+  --cul-topbar: rgba(22, 16, 12, .66);
+  --cul-field: rgba(255, 255, 255, .09);
+  --cul-chip: rgba(255, 255, 255, .09);
+  --cul-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 26px 54px -28px rgba(0, 0, 0, .9);
+  --cul-inner: rgba(255, 255, 255, .09);
+  --cul-cardtex: radial-gradient(rgba(255, 240, 215, .055) 1px, transparent 1.4px);
+  --cul-inputline: rgba(255, 245, 220, .24);
+  --cul-cardtex-size: 14px 14px;
+  --cul-cardtex-pos: 0 0;
+}
+body[data-culture] {
+  --cul-btn: var(--cul-chip);
+  --cul-serif: "Noto Serif SC", "Songti SC", "Source Han Serif SC", Georgia, serif;
+}
+body[data-culture] h1, body[data-culture] h2, body[data-culture] h3,
+body[data-culture] .brand, body[data-culture] .section-title,
+body[data-culture] .post-title, body[data-culture] .modal-title,
+body[data-culture] .post-full h1, body[data-culture] .empty-title {
+  font-family: var(--cul-serif);
+  letter-spacing: .025em;
+}
+body[data-culture] .brand { letter-spacing: .15em; font-weight: 800; }
+body[data-culture] .section-title {
+  padding-bottom: 7px;
+  background-repeat: no-repeat;
+  background-size: 56px 2px;
+  background-position: 0 calc(100% - 1px);
+  background-image: linear-gradient(90deg, var(--cul-orn), transparent);
+}
+
+/* ---------- 全站纹样底（每套自己的纹理 + 主题底色） ---------- */
+body[data-culture][data-theme]::before {
+  background-image: var(--cul-tex), var(--theme-bg);
+  background-size: var(--cul-tex-size), cover;
+  background-position: var(--cul-tex-pos), center;
+  background-repeat: repeat, no-repeat;
+}
+
+/* ---------- 2. 卡片：纸面 + 内嵌双框 ---------- */
+body[data-culture][data-theme] .card,
+body[data-culture][data-theme] .post-item,
+body[data-culture][data-theme] .admin-section,
+body[data-culture][data-theme] .modal,
+body[data-culture][data-theme] .task-card,
+body[data-culture][data-theme] .notif-item {
+  background-color: var(--cul-paper) !important;
+  background-image: var(--cul-cardtex) !important;
+  background-size: var(--cul-cardtex-size) !important;
+  background-position: var(--cul-cardtex-pos) !important;
+  background-repeat: repeat !important;
+  border: 1px solid var(--cul-line) !important;
+  border-radius: 16px;
+  box-shadow:
+    inset 0 0 0 1px var(--cul-inner),
+    inset 0 0 0 5px var(--cul-paper),
+    inset 0 0 0 6px var(--cul-frame),
+    var(--cul-shadow) !important;
+}
+body[data-culture][data-theme] .card.post-item {
+  border-left: 3px solid var(--cul-orn-strong) !important;
+  border-radius: 4px 16px 16px 4px;
+}
+body[data-culture] .card.post-item { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+body[data-culture] .card.post-item:hover { transform: translateY(-2px); }
+body[data-culture] .card.post-item:hover .post-title { color: var(--accent); }
+
+body[data-culture][data-theme] .card,
+body[data-culture][data-theme] .post-item,
+body[data-culture][data-theme] .modal,
+body[data-culture][data-theme] .admin-section,
+body[data-culture][data-theme] .task-card,
+body[data-culture][data-theme] .notif-item { color: var(--cul-cardink); }
+body[data-culture][data-theme] .post-title { color: var(--cul-cardink) !important; }
+body[data-culture][data-theme] .post-title:hover { color: var(--cul-orn-strong) !important; }
+body[data-culture][data-theme] .post-excerpt { color: var(--cul-cardink2) !important; }
+body[data-culture][data-theme] .post-meta { color: var(--cul-cardink3) !important; }
+body[data-culture][data-theme] .post-meta a { color: var(--cul-cardink2) !important; }
+body[data-culture][data-theme] .form-label,
+body[data-culture][data-theme] .section-sub { color: var(--cul-cardink2); }
+body[data-culture][data-theme] .comment-item { color: var(--cul-cardink); }
+body[data-culture][data-theme] .input,
+body[data-culture][data-theme] .textarea,
+body[data-culture][data-theme] .select { color: var(--cul-cardink) !important; }
+body[data-culture][data-theme] .input::placeholder,
+body[data-culture][data-theme] .textarea::placeholder { color: var(--cul-cardink3) !important; }
+
+/* ---------- 3. 顶栏 ---------- */
+body[data-culture][data-theme] .topbar {
+  background: var(--cul-topbar) !important;
+  border-bottom: 1px solid var(--cul-line) !important;
+  box-shadow: 0 2px 0 -1px var(--cul-orn), 0 12px 26px -24px rgba(0, 0, 0, .55) !important;
+  backdrop-filter: blur(18px) saturate(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+}
+body[data-culture] .brand-dot {
+  box-shadow: 0 0 0 3px var(--cul-orn-soft), 0 2px 6px rgba(0, 0, 0, .28);
+}
+
+/* ---------- 4. 控件：标签纸 / 印章按钮 / 内凹输入框 ---------- */
+body[data-culture][data-theme] .chip {
+  background: var(--cul-chip) !important;
+  border: 1px solid var(--cul-line) !important;
+  color: var(--ink-2);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 1px 2px rgba(0, 0, 0, .05);
+  letter-spacing: .04em;
+}
+body[data-culture][data-theme] .chip.active {
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark)) !important;
+  border-color: var(--accent-dark) !important;
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 3px 12px -4px var(--accent);
+}
+body[data-culture] .btn { border-radius: 8px; letter-spacing: .06em; }
+body[data-culture] .btn-primary {
+  background-image: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+  border: 1px solid var(--accent-dark);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .30), inset 0 -1px 0 rgba(0, 0, 0, .20), 0 6px 16px -8px var(--accent);
+}
+body[data-culture] .btn-primary:hover {
+  background-image: linear-gradient(180deg, var(--accent-dark) 0%, var(--accent) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .34), 0 10px 22px -8px var(--accent);
+}
+body[data-culture][data-theme] .btn-primary { color: var(--cul-btnink) !important; }
+body[data-culture][data-theme] .btn-ghost {
+  background: var(--cul-btn) !important;
+  border: 1px solid var(--cul-line) !important;
+  color: var(--cul-cardink2) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32);
+}
+body[data-culture][data-theme] .reply-badge {
+  background: rgba(255, 255, 255, .14) !important;
+  border: 1px solid var(--cul-line);
+  color: var(--cul-cardink2) !important;
+}
+body[data-culture][data-theme] .input,
+body[data-culture][data-theme] .textarea,
+body[data-culture][data-theme] .select {
+  background: var(--cul-field) !important;
+  border: 1px solid var(--cul-inputline) !important;
+  border-radius: 9px;
+  box-shadow: inset 0 1px 3px rgba(60, 45, 20, .10);
+}
+body[data-culture][data-theme] .input:focus,
+body[data-culture][data-theme] .textarea:focus,
+body[data-culture][data-theme] .select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: inset 0 1px 3px rgba(60, 45, 20, .08), 0 0 0 3px var(--accent-soft);
+}
+body[data-culture] .searchbox input { border-radius: 999px; }
+body[data-culture][data-theme] .comment-item {
+  background: var(--cul-chip) !important;
+  border: 1px solid var(--cul-line) !important;
+  border-left: 2px solid var(--cul-orn-2) !important;
+  border-radius: 10px;
+}
+
+/* ---------- 5. 主题色卡：材质化 ---------- */
+.theme-swatch.swatch-cul {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, .16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -8px 14px -10px rgba(0, 0, 0, .55);
+}
+.theme-swatch.swatch-cul::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, .16) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, .10) 0 1px, transparent 1px 6px);
+  opacity: .55;
+}
+.theme-swatch.swatch-cul::before {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0; height: 52%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .32), transparent);
+}
+
+/* ============================================================
+ * 6. 十六套：材质色 + 专属纹样
+ * ============================================================ */
+
+/* —— 中式 · 宣纸纤维 / 朱砂 / 青花 —— */
+body[data-culture="chinese"][data-theme] {
+  --cul-paper: #FFFCF4; --cul-line: #D6C5A4; --cul-frame: rgba(195, 39, 43, .26);
+  --cul-orn: rgba(195, 39, 43, .58); --cul-orn-2: rgba(46, 107, 121, .40);
+  --cul-orn-strong: #C3272B; --cul-orn-soft: rgba(195, 39, 43, .16);
+  --cul-tex:
+    radial-gradient(rgba(122, 92, 42, .060) 1px, transparent 1.4px),
+    radial-gradient(rgba(122, 92, 42, .045) 1px, transparent 1.4px),
+    repeating-linear-gradient(92deg, rgba(150, 120, 70, .050) 0 1px, transparent 1px 7px);
+  --cul-tex-size: 13px 13px, 13px 13px, auto;
+  --cul-tex-pos: 0 0, 6px 6px, 0 0;
+  --cul-btnink: #FFF8F0;
+  --cul-cardink: #34302A; --cul-cardink2: #6B6355; --cul-cardink3: #9A917E;
+  --cul-cardink: #34302A; --cul-cardink2: #6B6355; --cul-cardink3: #9A917E;
+}
+
+
+/* —— 日式 · 和纸 / 青海波 / 朱印 —— */
+body[data-culture="japanese"][data-theme] {
+  --cul-paper: #FFFAF2; --cul-line: #D8C3AF; --cul-frame: rgba(193, 74, 63, .24);
+  --cul-orn: rgba(193, 74, 63, .55); --cul-orn-2: rgba(107, 127, 110, .38);
+  --cul-orn-strong: #C24A3F; --cul-orn-soft: rgba(193, 74, 63, .14);
+  --cul-tex:
+    radial-gradient(circle at 50% 100%, rgba(193, 74, 63, .045) 10px, transparent 10.5px),
+    radial-gradient(circle at 50% 100%, rgba(107, 127, 110, .038) 6px, transparent 6.5px),
+    repeating-linear-gradient(0deg, rgba(120, 100, 70, .035) 0 1px, transparent 1px 5px);
+  --cul-tex-size: 26px 13px, 26px 13px, auto;
+  --cul-tex-pos: 0 0, 13px 0, 0 0;
+  --cul-btnink: #FFF8F2;
+  --cul-cardink: #34302C; --cul-cardink2: #6E6558; --cul-cardink3: #9C9382;
+  --cul-cardink: #34302C; --cul-cardink2: #6E6558; --cul-cardink3: #9C9382;
+}
+
+
+/* —— 韩式 · 韩纸 / 云纹 —— */
+body[data-culture="korean"][data-theme] {
+  --cul-paper: #FFFCF6; --cul-line: #D8CCB4; --cul-frame: rgba(47, 93, 138, .24);
+  --cul-orn: rgba(47, 93, 138, .52); --cul-orn-2: rgba(201, 162, 39, .38);
+  --cul-orn-strong: #2F5D8A; --cul-orn-soft: rgba(47, 93, 138, .14);
+  --cul-tex:
+    radial-gradient(circle at 22px 14px, rgba(47, 93, 138, .055) 5px, transparent 5.6px),
+    repeating-linear-gradient(86deg, rgba(120, 100, 70, .045) 0 1px, transparent 1px 6px);
+  --cul-tex-size: 44px 28px, auto;
+  --cul-tex-pos: 0 0, 0 0;
+  --cul-btnink: #F3F8FF;
+  --cul-cardink: #33322C; --cul-cardink2: #66645A; --cul-cardink3: #98937F;
+  --cul-cardink: #33322C; --cul-cardink2: #66645A; --cul-cardink3: #98937F;
+}
+
+
+/* —— 法式 · 奶油珠光 / 玫瑰金 —— */
+body[data-culture="french"][data-theme] {
+  --cul-paper: #FFFDFB; --cul-line: #E3CDB0; --cul-frame: rgba(201, 143, 160, .26);
+  --cul-orn: rgba(201, 143, 160, .52); --cul-orn-2: rgba(201, 169, 106, .42);
+  --cul-orn-strong: #C98FA0; --cul-orn-soft: rgba(201, 143, 160, .16);
+  --cul-tex:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, .55), transparent 46%),
+    repeating-linear-gradient(45deg, rgba(201, 169, 106, .055) 0 1px, transparent 1px 9px);
+  --cul-tex-size: auto, 18px 18px;
+  --cul-tex-pos: 0 0, 0 0;
+  --cul-btnink: #3A2026;
+  --cul-cardink: #4A3A3C; --cul-cardink2: #7B6468; --cul-cardink3: #A8969A;
+  --cul-cardink: #4A3A3C; --cul-cardink2: #7B6468; --cul-cardink3: #A8969A;
+}
+
+
+/* —— 希腊 · 大理石 / 回纹 —— */
+body[data-culture="greek"][data-theme] {
+  --cul-paper: #FFFCF5; --cul-line: #D6CAB2; --cul-frame: rgba(29, 79, 143, .22);
+  --cul-orn: rgba(29, 79, 143, .52); --cul-orn-2: rgba(201, 162, 39, .40);
+  --cul-orn-strong: #1D4F8F; --cul-orn-soft: rgba(29, 79, 143, .14);
+  --cul-tex:
+    repeating-linear-gradient(112deg, rgba(120, 100, 80, .060) 0 2px, transparent 2px 16px),
+    repeating-linear-gradient(0deg, rgba(29, 79, 143, .050) 0 1.5px, transparent 1.5px 20px),
+    repeating-linear-gradient(90deg, rgba(29, 79, 143, .050) 0 1.5px, transparent 1.5px 20px);
+  --cul-tex-size: auto, 20px 20px, 20px 20px;
+  --cul-tex-pos: 0 0, 0 0, 0 0;
+  --cul-btnink: #F3F8FF;
+  --cul-cardink: #2E3340; --cul-cardink2: #5F6472; --cul-cardink3: #8F94A0;
+  --cul-cardink: #2E3340; --cul-cardink2: #5F6472; --cul-cardink3: #8F94A0;
+}
+
+
+/* —— 英式 · 胡桃木 / 人字呢 / 黄铜 —— */
+body[data-culture="british"][data-theme] {
+  --cul-paper: #F0E2BE; --cul-line: #C8A24A; --cul-frame: rgba(200, 162, 74, .30);
+  --cul-orn: rgba(201, 162, 74, .58); --cul-orn-2: rgba(201, 162, 74, .28);
+  --cul-orn-strong: #C9A24A; --cul-orn-soft: rgba(201, 162, 74, .18);
+  --cul-tex:
+    repeating-linear-gradient(45deg, rgba(90, 60, 25, .10) 0 2px, transparent 2px 10px),
+    repeating-linear-gradient(-45deg, rgba(30, 16, 6, .10) 0 2px, transparent 2px 10px);
+  --cul-tex-size: auto, auto;
+  --cul-tex-pos: 0 0, 0 0;
+  --cul-inputline: rgba(110, 78, 26, .50);
+  --cul-btnink: #2A1C08;
+  --cul-cardink: #3B2A1E; --cul-cardink2: #5E4A30; --cul-cardink3: #8A6E44;
+  --cul-field: rgba(255, 253, 247, .72);
+  --cul-btn: rgba(255, 252, 242, .80);
+}
+
+/* —— 德式 · 石砖 / 黑铁 —— */
+body[data-culture="german"][data-theme] {
+  --cul-paper: rgba(46, 46, 51, .94); --cul-line: rgba(178, 58, 48, .38); --cul-frame: rgba(178, 58, 48, .22);
+  --cul-orn: rgba(178, 58, 48, .52); --cul-orn-2: rgba(190, 190, 200, .26);
+  --cul-orn-strong: #B23A30; --cul-orn-soft: rgba(178, 58, 48, .18);
+  --cul-tex:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .055) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .045) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(0deg, transparent 0 20px, rgba(0, 0, 0, .22) 20px 22px);
+  --cul-tex-size: auto, auto, auto;
+  --cul-tex-pos: 0 0, 0 0, 0 0;
+  --cul-btnink: #FFF3E6;
+  --cul-cardink: #F1E3CB; --cul-cardink2: #CBB99C; --cul-cardink3: #9C8D73;
+  --cul-cardink: #F1E3CB; --cul-cardink2: #CBB99C; --cul-cardink3: #9C8D73;
+}
+
+
+/* —— 埃及 · 莎草纸 / 尼罗蓝 / 金 —— */
+body[data-culture="egyptian"][data-theme] {
+  --cul-paper: #E9D7A5; --cul-line: #A8802E; --cul-frame: rgba(168, 128, 46, .30);
+  --cul-orn: rgba(30, 111, 196, .55); --cul-orn-2: rgba(201, 162, 39, .45);
+  --cul-orn-strong: #C9A227; --cul-orn-soft: rgba(201, 162, 39, .20);
+  --cul-tex:
+    repeating-linear-gradient(0deg, rgba(120, 80, 30, .13) 0 1px, transparent 1px 7px),
+    radial-gradient(ellipse 7px 3px at 50% 50%, rgba(30, 111, 196, .11), transparent 62%);
+  --cul-tex-size: auto, 30px 30px;
+  --cul-tex-pos: 0 0, 0 0;
+  --cul-inputline: rgba(110, 78, 26, .50);
+  --cul-btnink: #F2FAFF;
+  --cul-cardink: #3A2A10; --cul-cardink2: #5E4720; --cul-cardink3: #8A6C2C;
+  --cul-field: rgba(255, 253, 247, .72);
+  --cul-btn: rgba(255, 252, 242, .80);
+}
+
+/* —— 玛雅 · 墨绿石 / 阶梯纹 —— */
+body[data-culture="mayan"][data-theme] {
+  --cul-paper: rgba(18, 70, 50, .94); --cul-line: rgba(35, 181, 168, .40); --cul-frame: rgba(35, 181, 168, .22);
+  --cul-orn: rgba(35, 181, 168, .55); --cul-orn-2: rgba(201, 162, 39, .40);
+  --cul-orn-strong: #23B5A8; --cul-orn-soft: rgba(35, 181, 168, .18);
+  --cul-tex:
+    repeating-linear-gradient(90deg, rgba(35, 181, 168, .09) 0 2px, transparent 2px 16px),
+    repeating-linear-gradient(0deg, rgba(35, 181, 168, .09) 0 2px, transparent 2px 16px);
+  --cul-tex-size: 16px 16px, 16px 16px;
+  --cul-tex-pos: 0 0, 8px 8px;
+  --cul-btnink: #03241F;
+  --cul-cardink: #EAF3DC; --cul-cardink2: #C3D3B4; --cul-cardink3: #93A585;
+  --cul-cardink: #EAF3DC; --cul-cardink2: #C3D3B4; --cul-cardink3: #93A585;
+}
+
+
+/* —— 维京 · 木 / 铁 / 麻布 —— */
+body[data-culture="viking"][data-theme] {
+  --cul-paper: rgba(44, 36, 28, .94); --cul-line: rgba(143, 168, 189, .36); --cul-frame: rgba(143, 168, 189, .20);
+  --cul-orn: rgba(143, 168, 189, .55); --cul-orn-2: rgba(201, 162, 39, .30);
+  --cul-orn-strong: #8FA8BD; --cul-orn-soft: rgba(143, 168, 189, .16);
+  --cul-tex:
+    repeating-linear-gradient(60deg, rgba(143, 168, 189, .09) 0 2px, transparent 2px 10px),
+    repeating-linear-gradient(-60deg, rgba(143, 168, 189, .07) 0 2px, transparent 2px 10px);
+  --cul-tex-size: auto, auto;
+  --cul-tex-pos: 0 0, 0 0;
+  --cul-btnink: #0E1A24;
+  --cul-cardink: #EEE3CC; --cul-cardink2: #C8BCA1; --cul-cardink3: #9A8F78;
+  --cul-cardink: #EEE3CC; --cul-cardink2: #C8BCA1; --cul-cardink3: #9A8F78;
+}
+
+
+/* —— 阿拉伯 · 八角格 / 金 —— */
+body[data-culture="arab"][data-theme] {
+  --cul-paper: #EDDFB6; --cul-line: #C9A052; --cul-frame: rgba(201, 160, 82, .30);
+  --cul-orn: rgba(217, 164, 65, .58); --cul-orn-2: rgba(30, 111, 168, .34);
+  --cul-orn-strong: #D9A441; --cul-orn-soft: rgba(217, 164, 65, .18);
+  --cul-tex:
+    repeating-linear-gradient(45deg, rgba(217, 164, 65, .085) 0 1.5px, transparent 1.5px 13px),
+    repeating-linear-gradient(-45deg, rgba(217, 164, 65, .075) 0 1.5px, transparent 1.5px 13px),
+    radial-gradient(circle at 50% 50%, rgba(30, 111, 168, .10), transparent 44%);
+  --cul-tex-size: 13px 13px, 13px 13px, 26px 26px;
+  --cul-tex-pos: 0 0, 6.5px 6.5px, 0 0;
+  --cul-inputline: rgba(110, 78, 26, .50);
+  --cul-btnink: #2A1A06;
+  --cul-cardink: #4A3418; --cul-cardink2: #6B4E24; --cul-cardink3: #9A7A38;
+  --cul-field: rgba(255, 253, 247, .72);
+  --cul-btn: rgba(255, 252, 242, .80);
+}
+
+/* —— 奥斯曼 · 酒红锦缎 / 金线 —— */
+body[data-culture="ottoman"][data-theme] {
+  --cul-paper: rgba(58, 13, 19, .94); --cul-line: rgba(224, 179, 74, .40); --cul-frame: rgba(224, 179, 74, .22);
+  --cul-orn: rgba(224, 179, 74, .58); --cul-orn-2: rgba(31, 111, 106, .34);
+  --cul-orn-strong: #E0B34A; --cul-orn-soft: rgba(224, 179, 74, .18);
+  --cul-tex:
+    repeating-linear-gradient(45deg, rgba(224, 179, 74, .09) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(-45deg, rgba(224, 179, 74, .06) 0 1px, transparent 1px 9px);
+  --cul-tex-size: 9px 9px, 9px 9px;
+  --cul-tex-pos: 0 0, 4.5px 4.5px;
+  --cul-btnink: #2A1408;
+  --cul-cardink: #F6E0AE; --cul-cardink2: #D6BC86; --cul-cardink3: #A8905F;
+  --cul-cardink: #F6E0AE; --cul-cardink2: #D6BC86; --cul-cardink3: #A8905F;
+}
+
+
+/* —— 罗马 · 大理石 / 月桂 —— */
+body[data-culture="roman"][data-theme] {
+  --cul-paper: #E5DCC3; --cul-line: #A39A7A; --cul-frame: rgba(163, 154, 122, .32);
+  --cul-orn: rgba(179, 58, 44, .55); --cul-orn-2: rgba(201, 162, 39, .32);
+  --cul-orn-strong: #B33A2C; --cul-orn-soft: rgba(179, 58, 44, .16);
+  --cul-tex:
+    repeating-linear-gradient(115deg, rgba(200, 180, 150, .075) 0 1px, transparent 1px 11px),
+    repeating-linear-gradient(65deg, rgba(200, 180, 150, .055) 0 2px, transparent 2px 19px);
+  --cul-tex-size: auto, auto;
+  --cul-tex-pos: 0 0, 0 0;
+  --cul-inputline: rgba(110, 78, 26, .50);
+  --cul-btnink: #FFF4EA;
+  --cul-cardink: #3A3025; --cul-cardink2: #5C5344; --cul-cardink3: #8C8372;
+  --cul-field: rgba(255, 253, 247, .72);
+  --cul-btn: rgba(255, 252, 242, .80);
+}
+
+/* —— 拜占庭 · 金箔马赛克 —— */
+body[data-culture="byzantine"][data-theme] {
+  --cul-paper: rgba(36, 24, 64, .94); --cul-line: rgba(240, 199, 94, .36); --cul-frame: rgba(240, 199, 94, .22);
+  --cul-orn: rgba(240, 199, 94, .58); --cul-orn-2: rgba(13, 107, 92, .38);
+  --cul-orn-strong: #F0C75E; --cul-orn-soft: rgba(240, 199, 94, .18);
+  --cul-tex:
+    repeating-linear-gradient(0deg, rgba(240, 199, 94, .10) 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(90deg, rgba(240, 199, 94, .10) 0 1px, transparent 1px 10px);
+  --cul-tex-size: 10px 10px, 10px 10px;
+  --cul-tex-pos: 0 0, 0 0;
+  --cul-btnink: #2A1A03;
+  --cul-cardink: #F7EDD2; --cul-cardink2: #D8C9A0; --cul-cardink3: #A99C74;
+  --cul-cardink: #F7EDD2; --cul-cardink2: #D8C9A0; --cul-cardink3: #A99C74;
+}
+
+
+/* —— 高迪 · 碎瓷马赛克 —— */
+body[data-culture="gaudi"][data-theme] {
+  --cul-paper: rgba(18, 48, 62, .92); --cul-line: rgba(58, 160, 200, .38); --cul-frame: rgba(58, 160, 200, .22);
+  --cul-orn: rgba(58, 160, 200, .58); --cul-orn-2: rgba(224, 163, 63, .40);
+  --cul-orn-strong: #3AA0C8; --cul-orn-soft: rgba(58, 160, 200, .18);
+  --cul-tex:
+    conic-gradient(from 45deg at 50% 50%, rgba(58, 160, 200, .10) 0 25%, rgba(224, 163, 63, .09) 0 50%, rgba(46, 134, 120, .09) 0 75%, rgba(58, 160, 200, .10) 0),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 18px);
+  --cul-tex-size: 22px 22px, 18px 18px;
+  --cul-tex-pos: 0 0, 9px 9px;
+  --cul-btnink: #04222E;
+  --cul-cardink: #E6F2F7; --cul-cardink2: #BACDD8; --cul-cardink3: #8AA0AE;
+  --cul-cardink: #E6F2F7; --cul-cardink2: #BACDD8; --cul-cardink3: #8AA0AE;
+}
+
+
+/* —— TNO · 工业暗金（仅材质层） —— */
+body[data-culture="tno"][data-theme] {
+  --cul-paper: rgba(38, 15, 13, .95); --cul-line: rgba(201, 163, 63, .34); --cul-frame: rgba(201, 163, 63, .20);
+  --cul-orn: rgba(201, 163, 63, .52); --cul-orn-2: rgba(138, 42, 34, .40);
+  --cul-orn-strong: #C9A33F; --cul-orn-soft: rgba(201, 163, 63, .16);
+  --cul-tex:
+    repeating-linear-gradient(0deg, rgba(201, 163, 63, .06) 0 1px, transparent 1px 18px),
+    repeating-linear-gradient(90deg, rgba(201, 163, 63, .06) 0 1px, transparent 1px 18px);
+  --cul-tex-size: 18px 18px, 18px 18px;
+  --cul-tex-pos: 0 0, 9px 9px;
+  --cul-btnink: #1F1205;
+  --cul-cardink: #F0C75E; --cul-cardink2: #C9A85F; --cul-cardink3: #9A8447;
+  --cul-cardink: #F0C75E; --cul-cardink2: #C9A85F; --cul-cardink3: #9A8447;
+}
+
+
+/* ---------- 7. 移动端 ---------- */
+@media (max-width: 640px) {
+  body[data-culture][data-theme] .card,
+  body[data-culture][data-theme] .post-item,
+  body[data-culture][data-theme] .modal { border-radius: 13px; }
+  body[data-culture][data-theme] .card.pad { padding: 16px; }
+  body[data-culture] .section-title { font-size: 21px; }
+}
+
+
+/* ===== v8.3 · U01 首页分页 ===== */
+.home-more { display: flex; justify-content: center; padding: 18px 0 8px; }
+.home-more .btn { padding: 9px 20px; border-radius: 999px; }
+.home-end { font-size: 12px; color: var(--ink-3); letter-spacing: .1em; }
+
+/* ===== v8.3 · U02 回到顶部 / U10 安全区 ===== */
+.to-top {
+  position: fixed; right: 22px; bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .16);
+  cursor: pointer; z-index: 60;
+  opacity: 0; transform: translateY(8px) scale(.92); pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease, background .2s ease;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+.to-top:hover { background: var(--accent-soft); color: var(--accent); }
+.to-top:active { transform: scale(.96); }
+@media (max-width: 640px) {
+  .to-top { right: 14px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: 40px; height: 40px; }
+}
+
+/* ===== v8.3 · U03 详情页阅读进度 ===== */
+.read-progress {
+  position: fixed; left: 0; top: 0; height: 3px; width: 100%;
+  transform: scaleX(0); transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  z-index: 70; opacity: 0; transition: opacity .25s ease;
+  pointer-events: none;
+}
+.read-progress.on { opacity: 1; }
+
+/* ===== v8.3 · U04 键盘导航焦点 ===== */
+.post-item.kb-focus { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
+
+/* ===== v8.3 · U05 图片灯箱 ===== */
+.lightbox {
+  position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 12, 16, .88); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  opacity: 0; pointer-events: none; transition: opacity .22s ease; padding: 24px;
+}
+.lightbox.show { opacity: 1; pointer-events: auto; }
+.lightbox img {
+  max-width: 92vw; max-height: 86vh; border-radius: 8px; object-fit: contain;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .5); cursor: zoom-in; transition: transform .2s ease;
+}
+.lightbox img.zoomed { transform: scale(1.8); cursor: zoom-out; }
+.lightbox .lb-count {
+  position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  color: #fff; font-size: 12px; letter-spacing: .1em; opacity: .8;
+}
+.lightbox .lb-close {
+  position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 14px;
+  width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255, 255, 255, .14); color: #fff; font-size: 20px; line-height: 1;
+}
+.lightbox .lb-close:hover { background: rgba(255, 255, 255, .26); }
+.lightbox .lb-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 42px; height: 42px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255, 255, 255, .14); color: #fff; font-size: 18px; line-height: 1;
+}
+.lightbox .lb-nav:hover { background: rgba(255, 255, 255, .28); }
+.lightbox .lb-prev { left: 16px; }
+.lightbox .lb-next { right: 16px; }
+
+/* ===== v8.3 · U06 楼层定位高亮 ===== */
+.comment-item.anchor-hit { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); border-radius: 0 10px 10px 0; animation: cmtPulse 2.2s ease; }
+@keyframes cmtPulse { 0% { background: var(--accent-soft); } 100% { background: transparent; } }
+.cmt-link:hover { opacity: 1 !important; }
+
+/* ===== v8.3 · U07 草稿提示条 ===== */
+.draft-banner {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  max-width: 680px; margin: 0 0 12px; padding: 10px 14px;
+  border: 1px dashed var(--accent); border-radius: 12px;
+  background: var(--accent-soft); color: var(--ink-1); font-size: 13px;
+}
+.draft-banner .draft-ico { font-size: 15px; }
+.draft-banner .draft-txt { flex: 1; min-width: 160px; }
+.draft-banner .draft-txt em { font-style: normal; color: var(--ink-3); margin-left: 4px; }
+.draft-banner .draft-acts { display: flex; gap: 8px; }
+
+/* ===== v8.3 · U08 搜索历史 + 命中高亮 ===== */
+.searchbox { position: relative; }
+.search-hist {
+  position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 75;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .14); padding: 6px; min-width: 240px;
+  opacity: 0; transform: translateY(-4px); pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+}
+.search-hist.show { opacity: 1; transform: none; pointer-events: auto; }
+.search-hist .hist-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--ink-3); letter-spacing: .08em; padding: 4px 8px 6px;
+}
+.search-hist .hist-clear { background: none; border: none; color: var(--ink-3); font-size: 11px; cursor: pointer; }
+.search-hist .hist-clear:hover { color: var(--accent); }
+.search-hist .hist-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 9px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--ink-1);
+}
+.search-hist .hist-item:hover { background: var(--accent-soft); }
+.search-hist .hist-arrow { font-size: 11px; color: var(--ink-3); opacity: 0; }
+.search-hist .hist-item:hover .hist-arrow { opacity: 1; }
+mark.hl-hit {
+  background: linear-gradient(transparent 58%, var(--accent-soft) 58%);
+  color: inherit; padding: 0 1px; border-radius: 2px; font-weight: inherit;
+}
+
+/* ===== v8.4 · Markdown 排版 / 预览 / 举报小按钮 ===== */
+.md-body { white-space: normal; line-height: 1.8; color: var(--ink-1); word-break: break-word; }
+.md-body .md-p { margin: 0 0 12px; }
+.md-body .md-h1 { font-size: 20px; margin: 18px 0 8px; font-weight: 800; }
+.md-body .md-h2 { font-size: 17px; margin: 16px 0 8px; font-weight: 750; }
+.md-body .md-h3 { font-size: 15px; margin: 14px 0 6px; font-weight: 700; }
+.md-body .md-list { margin: 0 0 12px; padding-left: 22px; }
+.md-body .md-list li { margin: 3px 0; }
+.md-body .md-quote {
+  margin: 0 0 12px; padding: 8px 14px; border-left: 3px solid var(--accent);
+  background: var(--accent-soft); border-radius: 0 8px 8px 0; color: var(--ink-2);
+}
+.md-body .md-code {
+  margin: 0 0 12px; padding: 12px 14px; border-radius: 10px; overflow-x: auto;
+  background: var(--card-hover); border: 1px solid var(--line);
+  font-size: 12.5px; line-height: 1.65;
+}
+.md-body .md-code code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.md-body .md-hr { border: none; border-top: 1px dashed var(--line); margin: 16px 0; }
+.md-body code { background: var(--card-hover); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+.md-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: -4px 0 10px; }
+.md-hint { font-size: 11.5px; color: var(--ink-3); line-height: 1.6; }
+.post-preview { padding: 12px 14px; border: 1px dashed var(--line); border-radius: 12px; background: var(--card); margin-bottom: 12px; }
+.cmt-flag:hover { opacity: 1 !important; color: #ef4444; }
+
+/* ===== v8.4 · 移动端细节（触控尺寸 / chips 横滑渐隐 / 安全区） ===== */
+@media (max-width: 640px) {
+  .btn { min-height: 42px; }
+  .btn-sm { min-height: 38px; }
+  .chip { min-height: 36px; }
+  #cat-chips, #ctx-chips {
+    flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 86%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 86%, transparent 100%);
+  }
+  #cat-chips::-webkit-scrollbar, #ctx-chips::-webkit-scrollbar { display: none; }
+  .nav-link { min-height: 40px; }
+  .md-hint { display: none; }
+}
+
+/* ==== v8.5 前端增强包 ==== */
+#hb-update-bar{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:9000;background:var(--ink-1,#2b2118);color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.hb-share-mask{z-index:9200}
+.hb-share-modal{max-width:420px;width:92vw;padding:16px}
+.hb-share-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.hb-share-canvas-wrap{background:var(--surface-2,#f6f1e6);border-radius:12px;overflow:hidden}
+.hb-share-canvas-wrap canvas{display:block;width:100%;height:auto}
+.hb-share-actions{margin-top:12px;display:flex;justify-content:flex-end}
+#hb-share-fab{position:fixed;right:18px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:8000;border:none;border-radius:999px;padding:11px 16px;font-size:13px;cursor:pointer;background:var(--accent,#8a6b3f);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.2)}
+#hb-share-fab:active{transform:scale(.97)}
+.hb-lowq{position:relative;max-height:74px;overflow:hidden}
+.hb-lowq::after{content:"";position:absolute;left:0;right:0;bottom:0;height:52px;background:linear-gradient(transparent,var(--surface,var(--card,#fff)));pointer-events:none}
+.hb-lowq-btn{position:relative;z-index:3;display:block;margin:2px auto 8px;border:1px dashed var(--line,rgba(0,0,0,.18));background:transparent;color:var(--ink-2,#6b5a45);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer}
+.hb-notif-chips{margin-bottom:10px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.hb-notif-chips::-webkit-scrollbar{display:none}
+.hb-fold-more{display:block;width:100%;border:none;background:transparent;color:var(--ink-3,#8a7a63);font-size:12px;padding:8px;cursor:pointer}
+#hb-pull{position:fixed;left:50%;top:8px;transform:translate(-50%,0);z-index:9000;background:var(--surface,var(--card,#fff));color:var(--ink-2,#6b5a45);border-radius:999px;padding:7px 14px;font-size:12px;opacity:0;transition:opacity .18s,transform .18s;box-shadow:0 4px 14px rgba(0,0,0,.12);pointer-events:none}
 </style>
 </head>
 <body>
@@ -2485,8 +3569,6 @@ body[data-glass] .modal-mask {
 </div>
 <!-- 顶部细进度条：安卓/桌面先进场后，剩余加载在这里继续 -->
 <div id="splash-progress-top"><i></i></div>
-
-</div>
 
 <!-- 顶栏 -->
 <header class="topbar">
@@ -2554,6 +3636,11 @@ body[data-glass] .modal-mask {
         <label class="form-label" data-i18n="new.body">内容</label>
         <textarea class="textarea" id="np-content" maxlength="4000" placeholder="展开说说…（支持换行）" data-i18n-ph="new.phBody" required></textarea>
       </div>
+      <div class="md-tools">
+        <button type="button" class="btn btn-ghost btn-sm" id="np-md-preview">👁 预览</button>
+        <span class="md-hint">支持 # 标题 · **加粗** · &gt; 引用 · - 列表 · `代码` · [文字](链接)</span>
+      </div>
+      <div id="np-md-out" class="md-body post-preview" style="display:none"></div>
       <div class="form-row">
         <label class="form-label" data-i18n="new.file">附件（可选）</label>
         <input type="file" id="np-files" multiple style="display:none">
@@ -2593,7 +3680,7 @@ body[data-glass] .modal-mask {
         <select class="input" id="np-topic"><option value="">—</option></select>
       </div>
       <div class="form-row" id="np-lottery-row" style="display:none">
-        <label class="form-label">🎁 <span data-i18n="lottery.title">盖楼抽奖</span> <small style="color:var(--ink-3);font-weight:400" data-i18n="lottery.hint">仅管理员可发起</small></label>
+        <label class="form-label">🎁 <span data-i18n="lottery.floorTitle">盖楼抽奖</span> <small style="color:var(--ink-3);font-weight:400" data-i18n="lottery.hint">仅管理员可发起</small></label>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input class="input" id="np-lottery-floor" type="number" min="2" max="9999" placeholder="中奖楼层" style="max-width:130px">
           <input class="input" id="np-lottery-prize" maxlength="40" placeholder="奖品（如：100 金币）" style="flex:1;min-width:140px">
@@ -3203,6 +4290,15 @@ var I18N = {
     'admin.exportDesc': '导出任意用户的全部帖子、回帖、私信、签到与通知记录（JSON）。',
     'nav.feedback': '反馈',
     'pet.shop': '皮肤商店',
+    'pet.myPets': '我的宠物',
+    'admin.comments': '回帖数',
+    'admin.statUsers': '用户数',
+    'admin.statPosts': '帖子数',
+    'admin.statComments': '回帖数',
+    'admin.statReports': '举报数',
+    'admin.statSignins': '签到数',
+    'admin.statBlocks': '拉黑数',
+    'admin.retry': '重新加载',
     'pet.bubble1': '主人好呀~',
     'pet.bubble2': '今天也要加油哦！',
     'pet.bubble3': '我去溜达一圈~',
@@ -3274,6 +4370,8 @@ var I18N = {
     'block.noneFound': '暂无屏蔽',
     'block.removed': '已解除屏蔽',
     'lottery.done': '抽奖完成！',
+    'lottery.floorTitle': '盖楼抽奖',
+    'lottery.post': '本帖第 {0} 楼的回复将获得：{1}',
     'lottery.hint': '每日首次发帖可抽奖',
     'lottery.notReached': '未达抽奖条件',
     'lottery.open': '打开转盘',
@@ -3391,246 +4489,6 @@ var I18N = {
     'pet.aiColdGo': '给你讲个冷知识：',
     'pet.aiRank': '本周发帖榜第一是「{0}」，发了 {1} 篇！',
     'pet.aiRankEmpty': '本周还没有人发帖，快抢第一！',
-    'pet.postNeedLogin': 'Primero inicia sesión, y te escribo el post~',
-    'pet.postAskTopic': '¡Claro! ¿Cuál es el tema para un {0}? Ej: {1}~ Di \"300 palabras\" para la longitud, añade \"y publícalo\" para publicarlo directo~',
-    'pet.postStyleDiscuss': 'post de discusión',
-    'pet.postStyleShare': 'post de experiencias',
-    'pet.postStyleGuide': 'post de tutorial/guía',
-    'pet.postStyleReview': 'post de reseña',
-    'pet.postStyleStory': 'post de historia',
-    'pet.postStyleRecommend': 'post de recomendación',
-    'pet.postStyleHelp': 'post de ayuda',
-    'pet.postStyleRant': 'post de queja',
-    'pet.postStyleNotice': 'anuncio',
-    'pet.postHintDiscuss': '\"nieve\" o \"a dónde ir el fin de semana\"',
-    'pet.postHintShare': '\"mi experiencia en el gimnasio\"',
-    'pet.postHintGuide': '\"cómo hacer cerdo estofado\"',
-    'pet.postHintReview': '\"el teléfono nuevo\"',
-    'pet.postHintStory': '\"un gato callejero\"',
-    'pet.postHintRecommend': '\"unos auriculares buenos\"',
-    'pet.postHintHelp': '\"mi computadora no enciende\"',
-    'pet.postHintRant': '\"algo ridículo de hoy\"',
-    'pet.postHintNotice': '\"planes para el feriado\"',
-    'pet.postPubOk': '¡Publicado! Título \"{0}\", mira la página principal~',
-    'pet.postPubFail': 'No se publicó, ¿intentas de nuevo?',
-    'pet.postPubErr': 'Falló la publicación, quizá un problema de red, ¿intentas de nuevo?',
-    'pet.postAutoGo': '¡Recibido! Escribí y publico ahora mismo~',
-    'pet.postCancel': 'OK, lo guardo. Llámame cuando quieras~',
-    'pet.postDraftReady': 'Te preparé un post sobre \"{0}\" — mira la vista previa, dale a \"Publicar\" y listo!',
-    'pet.postPreviewHint': 'Puedes editar título y texto, luego dale a \"Publicar\". Añade \"y publícalo\" para publicar directo~',
-    'pet.postPublishBtn': '✅ Publicar',
-    'pet.postCancelBtn': 'Cancelar',
-    'pet.postCount': 'Ahora {0} palabras · Objetivo {1}',
-    'pet.postNeedLogin': 'Сначала войдите, и я напишу пост~',
-    'pet.postAskTopic': 'Конечно! Какая тема для {0}? Напр: {1}~ Скажите \"300 слов\" для длины, добавьте \"и опубликуй\" чтобы опубликовать сразу~',
-    'pet.postStyleDiscuss': 'пост для обсуждения',
-    'pet.postStyleShare': 'пост об опыте',
-    'pet.postStyleGuide': 'пост-гайд/туториал',
-    'pet.postStyleReview': 'обзорный пост',
-    'pet.postStyleStory': 'пост-история',
-    'pet.postStyleRecommend': 'пост-рекомендация',
-    'pet.postStyleHelp': 'пост о помощи',
-    'pet.postStyleRant': 'пост-жалоба',
-    'pet.postStyleNotice': 'объявление',
-    'pet.postHintDiscuss': '\"снег\" или \"куда поехать на выходные\"',
-    'pet.postHintShare': '\"мой опыт в зале\"',
-    'pet.postHintGuide': '\"как приготовить тушёную свинину\"',
-    'pet.postHintReview': '\"новый телефон\"',
-    'pet.postHintStory': '\"бездомный кот\"',
-    'pet.postHintRecommend': '\"хорошие наушники\"',
-    'pet.postHintHelp': '\"компьютер не включается\"',
-    'pet.postHintRant': '\"нелепая ситуация сегодня\"',
-    'pet.postHintNotice': '\"планы на праздники\"',
-    'pet.postPubOk': 'Опубликовано! Заголовок \"{0}\", загляните на главную~',
-    'pet.postPubFail': 'Публикация не вышла, попробуем ещё?',
-    'pet.postPubErr': 'Не удалось опубликовать, возможно, сеть. Ещё раз?',
-    'pet.postAutoGo': 'Принято! Пишу и публикую сразу~',
-    'pet.postCancel': 'ОК, отложу. Зовите когда захотите~',
-    'pet.postDraftReady': 'Я подготовил пост про \"{0}\" — посмотрите предпросмотр, жмите \"Опубликовать\"!',
-    'pet.postPreviewHint': 'Можно править заголовок и текст, затем \"Опубликовать\". Добавьте \"и опубликуй\" чтобы опубликовать сразу~',
-    'pet.postPublishBtn': '✅ Опубликовать',
-    'pet.postCancelBtn': 'Отмена',
-    'pet.postCount': 'Сейчас {0} слов · Цель {1}',
-    'pet.postNeedLogin': 'Connecte-toi d\'abord, et je t\'écris le post~',
-    'pet.postAskTopic': 'Bien sûr ! Quel est le sujet pour un {0} ? Ex : {1}~ Dis \"300 mots\" pour la longueur, ajoute \"et publie-le\" pour publier direct~',
-    'pet.postStyleDiscuss': 'post de discussion',
-    'pet.postStyleShare': 'post de partage d\'expérience',
-    'pet.postStyleGuide': 'post de tutoriel/guide',
-    'pet.postStyleReview': 'post de test',
-    'pet.postStyleStory': 'post d\'histoire',
-    'pet.postStyleRecommend': 'post de recommandation',
-    'pet.postStyleHelp': 'post d\'aide',
-    'pet.postStyleRant': 'post de coup de gueule',
-    'pet.postStyleNotice': 'annonce',
-    'pet.postHintDiscuss': '\"neige\" ou \"où aller ce week-end\"',
-    'pet.postHintShare': '\"mon parcours sportif\"',
-    'pet.postHintGuide': '\"comment cuisiner du porc braisé\"',
-    'pet.postHintReview': '\"le nouveau téléphone\"',
-    'pet.postHintStory': '\"un chat errant\"',
-    'pet.postHintRecommend': '\"une bonne paire d\'écouteurs\"',
-    'pet.postHintHelp': '\"mon ordinateur ne démarre plus\"',
-    'pet.postHintRant': '\"quelque chose d\'absurde aujourd\'hui\"',
-    'pet.postHintNotice': '\"les plans des vacances\"',
-    'pet.postPubOk': 'Publié ! Titre \"{0}\", regarde la page d\'accueil~',
-    'pet.postPubFail': 'La publication n\'a pas marché, on réessaie ?',
-    'pet.postPubErr': 'Échec de la publication, peut-être un souci de réseau, on réessaie ?',
-    'pet.postAutoGo': 'Reçu ! J\'écris et je publie tout de suite~',
-    'pet.postCancel': 'OK, je le garde. Appelle-moi quand tu veux~',
-    'pet.postDraftReady': 'J\'ai préparé un post sur \"{0}\" — regarde l\'aperçu, clique \"Publier\" et c\'est parti !',
-    'pet.postPreviewHint': 'Tu peux modifier le titre et le texte, puis \"Publier\". Ajoute \"et publie-le\" pour publier sans aperçu~',
-    'pet.postPublishBtn': '✅ Publier',
-    'pet.postCancelBtn': 'Annuler',
-    'pet.postCount': 'Actuellement {0} mots · Objectif {1}',
-    'pet.postNeedLogin': '投稿にはログインが必要だよ。右上からログインしてね~',
-    'pet.postAskTopic': 'いいよ！{0}のテーマは何？例：{1}~ 長さを指定したければ「300字」、そのまま投稿したければ「そのまま出して」を付け足してね~',
-    'pet.postStyleDiscuss': '討論スレ',
-    'pet.postStyleShare': '経験共有スレ',
-    'pet.postStyleGuide': 'チュートリアル/攻略スレ',
-    'pet.postStyleReview': 'レビュースレ',
-    'pet.postStyleStory': '物語スレ',
-    'pet.postStyleRecommend': 'おすすめスレ',
-    'pet.postStyleHelp': '助けを求めるスレ',
-    'pet.postStyleRant': '愚痴スレ',
-    'pet.postStyleNotice': 'お知らせ',
-    'pet.postHintDiscuss': '「雪」や「週末どこ行く？」',
-    'pet.postHintShare': '「私の筋トレ体験」',
-    'pet.postHintGuide': '「豚の角煮の作り方」',
-    'pet.postHintReview': '「新発売のスマホ」',
-    'pet.postHintStory': '「野良猫」',
-    'pet.postHintRecommend': '「いいイヤホン」',
-    'pet.postHintHelp': '「パソコンが起動しない」',
-    'pet.postHintRant': '「今日あったありえないこと」',
-    'pet.postHintNotice': '「ゴールデンウィークの予定」',
-    'pet.postPubOk': '投稿したよ！タイトル「{0}」、ホームを見てみて~',
-    'pet.postPubFail': '投稿できなかったみたい。もう一度試す？',
-    'pet.postPubErr': '投稿に失敗。ネットの問題かも。もう一度試す？',
-    'pet.postAutoGo': '了解！書いたからすぐ出すね~',
-    'pet.postCancel': 'OK、しまっておくね。気が変わったら呼んで~',
-    'pet.postDraftReady': '「{0}」についての投稿を下書きしたよ。プレビューを見て「投稿」を押せば出せる！',
-    'pet.postPreviewHint': 'タイトルも本文もそのまま直せるよ。「投稿」を押したら完了。直接出すなら「そのまま出して」と付けてね~',
-    'pet.postPublishBtn': '✅ 投稿する',
-    'pet.postCancelBtn': 'キャンセル',
-    'pet.postCount': '現在 {0} 字 · 目標 {1} 字',
-    'pet.postNeedLogin': '글을 쓰려면 먼저 로그인이 필요해. 오른쪽 위에서 로그인해~',
-    'pet.postAskTopic': '좋아! {0}의 주제가 뭐야? 예: {1}~ 길이를 정하려면 \"300자\", 바로 올리려면 \"바로 올려줘\"를 덧붙여~',
-    'pet.postStyleDiscuss': '토론 글',
-    'pet.postStyleShare': '경험 공유 글',
-    'pet.postStyleGuide': '튜토리얼/공략 글',
-    'pet.postStyleReview': '리뷰 글',
-    'pet.postStyleStory': '이야기 글',
-    'pet.postStyleRecommend': '추천 글',
-    'pet.postStyleHelp': '도움 요청 글',
-    'pet.postStyleRant': '푸념 글',
-    'pet.postStyleNotice': '공지',
-    'pet.postHintDiscuss': '\"눈\"이나 \"주말에 어디 갈까\"',
-    'pet.postHintShare': '\"내 헬스 경험\"',
-    'pet.postHintGuide': '\"돼지고기 조림 만드는 법\"',
-    'pet.postHintReview': '\"새로 나온 폰\"',
-    'pet.postHintStory': '\"길고양이\"',
-    'pet.postHintRecommend': '\"좋은 이어폰\"',
-    'pet.postHintHelp': '\"컴퓨터가 안 켜져요\"',
-    'pet.postHintRant': '\"오늘 있었던 황당한 일\"',
-    'pet.postHintNotice': '\"연휴 일정\"',
-    'pet.postPubOk': '게시 완료! 제목 \"{0}\", 홈에서 확인해봐~',
-    'pet.postPubFail': '게시가 안 된 것 같아. 다시 해볼래?',
-    'pet.postPubErr': '게시 실패. 네트워크 문제일 수도 있어. 다시 해볼래?',
-    'pet.postAutoGo': '알겠어! 써서 바로 올릴게~',
-    'pet.postCancel': 'OK, 보관해 둘게. 생각 바뀌면 불러~',
-    'pet.postDraftReady': '\"{0}\"에 대한 글을 초안으로 만들었어. 미리보기 보고 \"게시\"를 누르면 돼!',
-    'pet.postPreviewHint': '제목이랑 본문은 바로 고칠 수 있어. \"게시\"를 누르면 완료. 바로 올리려면 \"바로 올려줘\"를 붙여~',
-    'pet.postPublishBtn': '✅ 게시하기',
-    'pet.postCancelBtn': '취소',
-    'pet.postCount': '현재 {0}자 · 목표 {1}자',
-    'pet.postNeedLogin': 'Faça login primeiro, aí eu escrevo o post~',
-    'pet.postAskTopic': 'Claro! Qual é o tema para um {0}? Ex: {1}~ Diga \"300 palavras\" para o tamanho, acrescente \"e publique\" para publicar direto~',
-    'pet.postStyleDiscuss': 'post de discussão',
-    'pet.postStyleShare': 'post de compartilhamento de experiência',
-    'pet.postStyleGuide': 'post de tutorial/guia',
-    'pet.postStyleReview': 'post de review',
-    'pet.postStyleStory': 'post de história',
-    'pet.postStyleRecommend': 'post de recomendação',
-    'pet.postStyleHelp': 'post de ajuda',
-    'pet.postStyleRant': 'post de desabafo',
-    'pet.postStyleNotice': 'aviso',
-    'pet.postHintDiscuss': '\"neve\" ou \"onde ir no fim de semana\"',
-    'pet.postHintShare': '\"minha jornada na academia\"',
-    'pet.postHintGuide': '\"como fazer porco assado\"',
-    'pet.postHintReview': '\"o celular novo\"',
-    'pet.postHintStory': '\"um gato de rua\"',
-    'pet.postHintRecommend': '\"um bom fone de ouvido\"',
-    'pet.postHintHelp': '\"meu computador não liga\"',
-    'pet.postHintRant': '\"algo absurdo hoje\"',
-    'pet.postHintNotice': '\"planos para o feriado\"',
-    'pet.postPubOk': 'Publicado! Título \"{0}\", dá uma olhada na página inicial~',
-    'pet.postPubFail': 'A publicação não funcionou, tenta de novo?',
-    'pet.postPubErr': 'Falha ao publicar, talvez problema de rede, tenta de novo?',
-    'pet.postAutoGo': 'Recebido! Escrevi e vou publicar agora~',
-    'pet.postCancel': 'OK, guardo aqui. Me chama quando quiser~',
-    'pet.postDraftReady': 'Preparei um post sobre \"{0}\" — veja a prévia e clique \"Publicar\"!',
-    'pet.postPreviewHint': 'Dá pra editar título e texto, depois \"Publicar\". Adicione \"e publique\" para publicar direto~',
-    'pet.postPublishBtn': '✅ Publicar',
-    'pet.postCancelBtn': 'Cancelar',
-    'pet.postCount': 'Agora {0} palavras · Meta {1}',
-    'pet.postNeedLogin': 'Bitte erst einloggen, dann schreibe ich den Post~',
-    'pet.postAskTopic': 'Klar! Was ist das Thema für einen {0}? Z. B. {1}~ Sag \"300 Wörter\" für die Länge, füge \"und veröffentliche\" hinzu, um direkt zu posten~',
-    'pet.postStyleDiscuss': 'Diskussionsbeitrag',
-    'pet.postStyleShare': 'Erfahrungsbeitrag',
-    'pet.postStyleGuide': 'Tutorial/Guide-Beitrag',
-    'pet.postStyleReview': 'Review-Beitrag',
-    'pet.postStyleStory': 'Geschichten-Beitrag',
-    'pet.postStyleRecommend': 'Empfehlungs-Beitrag',
-    'pet.postStyleHelp': 'Hilfe-Beitrag',
-    'pet.postStyleRant': 'Rant-Beitrag',
-    'pet.postStyleNotice': 'Ankündigung',
-    'pet.postHintDiscuss': '\"Schnee\" oder \"wohin am Wochenende\"',
-    'pet.postHintShare': '\"meine Fitness-Reise\"',
-    'pet.postHintGuide': '\"wie man Schmorbraten kocht\"',
-    'pet.postHintReview': '\"das neue Handy\"',
-    'pet.postHintStory': '\"eine streunende Katze\"',
-    'pet.postHintRecommend': '\"ein gutes Paar Ohrhörer\"',
-    'pet.postHintHelp': '\"mein Computer startet nicht\"',
-    'pet.postHintRant': '\"etwas Absurdes heute\"',
-    'pet.postHintNotice': '\"Pläne für den Feiertag\"',
-    'pet.postPubOk': 'Veröffentlicht! Titel \"{0}\", schau auf die Startseite~',
-    'pet.postPubFail': 'Das Posten hat nicht geklappt, nochmal versuchen?',
-    'pet.postPubErr': 'Veröffentlichung fehlgeschlagen, vielleicht Netzwerkproblem, nochmal?',
-    'pet.postAutoGo': 'Verstanden! Ich schreibe und veröffentliche sofort~',
-    'pet.postCancel': 'OK, ich hebe es auf. Ruf mich jederzeit~',
-    'pet.postDraftReady': 'Ich habe einen Beitrag über \"{0}\" vorbereitet — schau dir die Vorschau an und klick \"Veröffentlichen\"!',
-    'pet.postPreviewHint': 'Titel und Text sind editierbar, dann \"Veröffentlichen\". Füge \"und veröffentliche\" hinzu, um direkt zu posten~',
-    'pet.postPublishBtn': '✅ Veröffentlichen',
-    'pet.postCancelBtn': 'Abbrechen',
-    'pet.postCount': 'Aktuell {0} Wörter · Ziel {1}',
-    'pet.postNeedLogin': 'Prima accedi, poi ti scrivo il post~',
-    'pet.postAskTopic': 'Certo! Qual è il tema per un {0}? Es: {1}~ Di \"300 parole\" per la lunghezza, aggiungi \"e pubblicalo\" per pubblicare subito~',
-    'pet.postStyleDiscuss': 'post di discussione',
-    'pet.postStyleShare': 'post di esperienze',
-    'pet.postStyleGuide': 'post di tutorial/guida',
-    'pet.postStyleReview': 'post di recensione',
-    'pet.postStyleStory': 'post di storia',
-    'pet.postStyleRecommend': 'post di raccomandazione',
-    'pet.postStyleHelp': 'post di aiuto',
-    'pet.postStyleRant': 'post di sfogo',
-    'pet.postStyleNotice': 'annuncio',
-    'pet.postHintDiscuss': '\"neve\" o \"dove andare nel weekend\"',
-    'pet.postHintShare': '\"il mio percorso in palestra\"',
-    'pet.postHintGuide': '\"come cucinare il maiale brasato\"',
-    'pet.postHintReview': '\"il nuovo telefono\"',
-    'pet.postHintStory': '\"un gatto randagio\"',
-    'pet.postHintRecommend': '\"un buon paio di auricolari\"',
-    'pet.postHintHelp': '\"il mio computer non si accende\"',
-    'pet.postHintRant': '\"qualcosa di assurdo oggi\"',
-    'pet.postHintNotice': '\"i piani per la vacanza\"',
-    'pet.postPubOk': 'Pubblicato! Titolo \"{0}\", guarda la home~',
-    'pet.postPubFail': 'La pubblicazione non è riuscita, riprovo?',
-    'pet.postPubErr': 'Pubblicazione fallita, forse un problema di rete, riprovo?',
-    'pet.postAutoGo': 'Ricevuto! Scrivo e pubblico subito~',
-    'pet.postCancel': 'OK, lo tengo da parte. Chiamami quando vuoi~',
-    'pet.postDraftReady': 'Ho preparato un post su \"{0}\" — guarda l\'anteprima e clicca \"Pubblica\"!',
-    'pet.postPreviewHint': 'Puoi modificare titolo e testo, poi \"Pubblica\". Aggiungi \"e pubblicalo\" per pubblicare senza anteprima~',
-    'pet.postPublishBtn': '✅ Pubblica',
-    'pet.postCancelBtn': 'Annulla',
-    'pet.postCount': 'Ora {0} parole · Obiettivo {1}',
     'block.postHint': '不希望看到本帖的用户名或ID，逗号分隔'},
   en: {
     'skin.netErr': 'Network error, please retry',
@@ -3859,6 +4717,13 @@ var I18N = {
     'apps.sub': 'Built-in mini games · auto-links your Yuntan account.',
     'admin.title': 'Admin Console',
     'admin.sub': 'User management, content review, feature bans.',
+    'admin.statUsers': 'Users',
+    'admin.statPosts': 'Posts',
+    'admin.statComments': 'Replies',
+    'admin.statReports': 'Reports',
+    'admin.statSignins': 'Check-ins',
+    'admin.statBlocks': 'Blocks',
+    'admin.retry': 'Reload',
     'theme.official-mars': 'Mars Expedition',
     'expandAll': 'Show all ({0})',
     'admin.poolTitle': 'Review Pool (Unhandled {0} · Handled {1})',
@@ -7648,8 +8513,15 @@ function setLang(id) {
   if (active === 'home' && !r.params.get('id')) { homeState.circle = ''; homeState.topic = ''; }
   if (validRoutes.indexOf(active) < 0) active = 'home';
   if (active === 'home') renderHome();
-  if (active === 'post') renderPost(r.params.get('id'));
-  if (active === 'new') renderNew();
+  if (active === 'post') renderPost(r.params.get('id'), r.params.get('c'));
+  if (active === 'new') {
+    /* 切语言不该吞掉正在写的草稿 */
+    var _dt = $('#np-title') ? $('#np-title').value : '';
+    var _dc = $('#np-content') ? $('#np-content').value : '';
+    renderNew();
+    if (_dt && $('#np-title')) $('#np-title').value = _dt;
+    if (_dc && $('#np-content')) $('#np-content').value = _dc;
+  }
   if (active === 'login') renderLogin();
   if (active === 'profile') renderProfile();
   if (active === 'user') renderUserProfile(r.params.get('id'));
@@ -7665,6 +8537,9 @@ function setLang(id) {
   if (active === 'apps') renderApps();
   if (active === 'featured') renderFeatured();
   if (active === 'reading') renderReading();
+  if (active === 'activities') renderActivities();
+  if (active === 'bank') renderBank();
+  if (active === 'quiz') renderQuiz();
 }
 
 /* ============================================================
@@ -7672,7 +8547,12 @@ function setLang(id) {
  * ============================================================ */
 function $(sel) { return document.querySelector(sel); }
 function $$(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
-function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+/* HTML 转义：不再用临时 div（每次调用都建节点，且 0/false 会被吞成空串） */
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
 
 /* ============================================================
  * v6.1 敏感词过滤（发帖 / 评论 / 私信统一拦截）
@@ -7795,7 +8675,18 @@ function uid() {
 }
 function fmtTime(iso) {
   if (!iso) return '—';
-  var d = new Date(iso), now = new Date(), diff = (now - d) / 1000;
+  /* 纯日期（如话题截止日期 2026-12-31）按本地日历日处理，避免被当成 UTC 零点显示成"08:00" */
+  var dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(String(iso));
+  var d = new Date(dateOnly ? iso + 'T00:00:00' : iso), now = new Date(), diff = (now - d) / 1000;
+  if (isNaN(d.getTime())) return '—';
+  var sameYear = d.getFullYear() === now.getFullYear();
+  if (dateOnly) return (sameYear ? '' : d.getFullYear() + '年') + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+  /* 修复：未来时间（如话题截止日期）曾被当成"刚刚"，这里直接按日期显示 */
+  if (diff < 0) {
+    var pd = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return (sameYear ? '' : d.getFullYear() + '年') + (d.getMonth() + 1) + '月' + d.getDate() + '日'
+      + (d.getHours() || d.getMinutes() ? ' ' + pd(d.getHours()) + ':' + pd(d.getMinutes()) : '');
+  }
   if (diff < 60) return t('time.justNow');
   if (diff < 3600) return t('time.minAgo', Math.floor(diff / 60));
   if (diff < 86400) return t('time.hrAgo', Math.floor(diff / 3600));
@@ -8580,7 +9471,7 @@ var CloudStore = {
     var c = this._cfg();
     return this._fetch(c.url + '/rest/v1/rpc/clear_handled_reports', {
       method: 'POST', headers: this._h(), body: '{}'
-    }).then(this._check).then(function (res) { return res.json(); }).catch(function () { return 0; });
+    }).then(this._check).then(function (res) { return res.json(); });
   },
 
   /* ============ v7.0 信誉分 + 银行服务端 ============ */
@@ -9006,7 +9897,9 @@ var CloudStore = {
   },
   getBugReports: function () {
     var c = this._cfg();
-    return this._fetch(c.url + '/rest/v1/bug_reports?select=id,user_id,content,attachment_path,status,handled_by,handled_at,created_at,profiles(username)&profiles=user_id&order=created_at.desc&limit=200', { headers: this._h() }).then(function (r) { return r.json(); }).catch(function () { return []; });
+    return this._fetch(c.url + '/rest/v1/bug_reports?select=id,user_id,content,attachment_path,status,handled_by,handled_at,created_at,profiles(username)&profiles=user_id&order=created_at.desc&limit=200', { headers: this._h() })
+      .then(this._check)
+      .then(function (r) { return r.json(); });
   },
   submitBugReport: function (content, path) {
     var c = this._cfg();
@@ -9268,6 +10161,7 @@ var CloudStore = {
     /* 走RPC函数（SECURITY DEFINER，数据库层校验管理员身份并绕过RLS），
        否则直接查profiles表会被RLS拦截，只能看到自己的手机号/邮箱 */
     return this._fetch(c.url + '/rest/v1/rpc/admin_list_all_users', { headers: this._h() })
+      .then(this._check)
       .then(function (res) { return res.json(); });
   },
   adminListPosts: function () {
@@ -9445,13 +10339,15 @@ function isBanned(type) {
 }
 
 /* 封禁选择弹窗：普通用户功能（可多选/全部）+ 管理员权限（仅超管可见）+ 时长 + 原因 */
-function openBanModal(uid, account) {
+function openBanModal(uid, account, role) {
   var old = document.getElementById('ban-modal');
   if (old) old.remove();
   var mask = document.createElement('div');
   mask.className = 'modal-mask';
   mask.id = 'ban-modal';
-  var isSuper = !!(session && session.role === 'super');
+  /* 修复：普通用户也会看到"停用/降级管理员"选项，选了必然失败 */
+  var isAdminTarget = (role === 'admin' || role === 'super' || role == null);
+  var isSuper = !!(session && session.role === 'super' && isAdminTarget);
   var types = [
     { k: 'post', label: '发帖' }, { k: 'comment', label: '回帖' },
     { k: 'like', label: '点赞' }, { k: 'rename', label: '改名' },
@@ -9490,15 +10386,26 @@ function openBanModal(uid, account) {
   document.getElementById('ban-ok').addEventListener('click', function () {
     var sel = Array.prototype.slice.call(mask.querySelectorAll('input[type=checkbox]:checked')).map(function (i) { return i.value; });
     if (!sel.length) { toast(t('ban.needSelect')); return; }
-    var hours = document.getElementById('ban-hours').value;
+    var hours = (document.getElementById('ban-hours').value || '').trim();
     var reason = document.getElementById('ban-reason').value;
-    var hoursNum = hours ? parseInt(hours, 10) : null;
+    /* 修复：原来 parseInt('abc') = NaN，会被当作"永久封禁"静默提交；负数和超长也没拦 */
+    var hoursNum = null;
+    if (hours) {
+      var hv = Number(hours);
+      if (!isFinite(hv) || Math.floor(hv) !== hv || hv <= 0 || hv > 8760) {
+        toast('封禁时长需为 1–8760 之间的整数小时；留空表示永久封禁');
+        return;
+      }
+      hoursNum = hv;
+    }
     var toBan = sel.indexOf('all') >= 0 ? ['all'] : sel;
     var typesLabel = toBan.join(',');
     var adm = '';
     var admRad = mask.querySelector('input[name=ban-admin]:checked');
     if (admRad && admRad.value) adm = admRad.value;
     var chain = Promise.resolve();
+    var okBtn = this;
+    okBtn.disabled = true; /* 防连点：重复提交会写入多条封禁记录 */
     if (adm === 'disable') {
       chain = chain.then(function () { return CloudStore.superToggleAdmin(uid, false); });
     } else if (adm === 'remove') {
@@ -9516,7 +10423,7 @@ function openBanModal(uid, account) {
       CloudStore.logAdmin('ban', uid, detail);
       renderAdmin();
       doClose();
-    }).catch(function (err) { toast(err.message || '操作失败，请确认已执行 v5.6.1/v5.6.3 迁移 SQL'); });
+    }).catch(function (err) { okBtn.disabled = false; toast(err.message || '操作失败，请确认已执行 v5.6.1/v5.6.3 迁移 SQL'); });
   });
 }
 
@@ -9547,6 +10454,9 @@ function router() {
   renderNav();
   loadUnread();
   loadCoins();
+
+  /* v8.3 U04：标签页标题随路由变化（此前永远是同一个） */
+  try { syncDocTitle(active); } catch (e) {}
 
   if (active === 'home') renderHome();
   if (active === 'post') renderPost(r.params.get('id'));
@@ -11005,6 +11915,9 @@ function loadUnread() {
  * 首页
  * ============================================================ */
 var homeState = { category: 'all', keyword: '', circle: '', topic: '' };
+/* v8.3 U01：首页分页（客户端切片，避免一次渲染上百条） */
+var PAGE_SIZE = 12;
+var homePager = { key: '', page: 1, args: null, total: 0, obs: null };
 var _myBlocksCache = null;
 function myBlockedIds() {
   if (_myBlocksCache) return Promise.resolve(_myBlocksCache);
@@ -11112,6 +12025,14 @@ function renderChips() {
   box.innerHTML = html;
 }
 
+/* v8.3 U08：把搜索命中词包成 <mark>；输入先 esc 再转义正则元字符，避免破坏已转义文本 */
+function hlEscaped(str, kw) {
+  var out = esc(str == null ? '' : String(str));
+  if (!kw) return out;
+  var k = esc(String(kw)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (!k) return out;
+  try { return out.replace(new RegExp('(' + k + ')', 'gi'), '<mark class="hl-hit">$1</mark>'); } catch (e) { return out; }
+}
 function postCardHtml(p, counts, likes, commentedPosts, levels) {
   var cat = CATEGORIES[p.category] || { label: p.category, color: '#98A0AC' };
   var excerpt = (p.content || '').replace(/\s+/g, ' ').slice(0, 80);
@@ -11126,13 +12047,13 @@ function postCardHtml(p, counts, likes, commentedPosts, levels) {
     + (replyCount > 0 ? '<span class="reply-badge">' + replyCount + t('post.replies') + '</span>' : '')
     + '<div class="post-body">'
     + (isGloballyPinned ? '<span class="pin-mark" title="全局置顶">📌</span>' : '') + (isMyPinned ? '<span class="pin-mark" title="个人置顶">🔖</span>' : '')
-    + '<a class="post-title" href="#/post?id=' + encodeURIComponent(p.id) + '">' + esc(p.title) + '</a>'
-    + '<p class="post-excerpt">' + esc(excerpt) + '</p>'
+    + '<a class="post-title" href="#/post?id=' + encodeURIComponent(p.id) + '">' + hlEscaped(p.title, homeState.keyword) + '</a>'
+    + '<p class="post-excerpt">' + hlEscaped(excerpt, homeState.keyword) + '</p>'
     + '<div class="post-meta">'
     + '<span class="tag" style="background:' + cat.color + '1A;color:' + cat.color + '"><span class="dot" style="width:6px;height:6px;background:' + cat.color + '"></span>' + t('cat.' + p.category) + '</span>'
     + (p.circle_id ? '<a class="tag" style="background:rgba(16,185,129,.12);color:#10b981;text-decoration:none;font-size:11px" href="#/circle?id=' + encodeURIComponent(p.circle_id) + '">' + esc(circleNameOf(p.circle_id)) + '</a>' : '')
     + (p.topic_id ? '<a class="tag" style="background:rgba(245,158,11,.12);color:#b45309;text-decoration:none;font-size:11px" href="#/topic?id=' + encodeURIComponent(p.topic_id) + '">' + esc(topicNameOf(p.topic_id)) + '</a>' : '')
-    + (p.lottery_prize ? '<span class="tag" style="background:rgba(245,158,11,.15);color:#d97706;font-size:11px" title="' + t('lottery.title') + '">🎁</span>' : '')
+    + (p.lottery_prize ? '<span class="tag" style="background:rgba(245,158,11,.15);color:#d97706;font-size:11px" title="' + t('lottery.floorTitle') + '">🎁</span>' : '')
     + '<a href="#/user?id=' + encodeURIComponent(p.user_id) + '" style="color:var(--ink-2)">' + esc(p.author_name) + lvHtml + '</a>'
     + '<span>' + fmtTime(p.last_reply_at || p.created_at) + '</span>'
     + (session ? '<button class="pin-btn" data-action="my-pin" data-post="' + p.id + '" title="' + (isMyPinned ? '取消个人置顶' : '个人置顶（仅自己可见）') + '" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0 4px;color:' + (isMyPinned ? '#d9a03f' : 'var(--ink-3)') + '">' + (isMyPinned ? '🔖' : '📌') + '</button>' : '')
@@ -11274,7 +12195,7 @@ function renderHomeData(posts, counts, likes, commentedPosts, list, levels) {
     if (homeState.category !== 'all' && p.category !== homeState.category) return false;
     if (homeState.circle && p.circle_id !== homeState.circle) return false;
     if (homeState.topic && p.topic_id !== homeState.topic) return false;
-    if (kw && p.title.toLowerCase().indexOf(kw) < 0 && p.content.toLowerCase().indexOf(kw) < 0) return false;
+    if (kw && String(p.title || '').toLowerCase().indexOf(kw) < 0 && String(p.content || '').toLowerCase().indexOf(kw) < 0) return false;
     return true;
   });
   /* 排序：个人置顶 > 全局置顶 > 时间倒序 */
@@ -11290,7 +12211,77 @@ function renderHomeData(posts, counts, likes, commentedPosts, list, levels) {
     list.innerHTML = '<div class="empty"><p class="empty-title">' + t('empty.posts') + '</p></div>';
     return;
   }
-  list.innerHTML = extraHtml + (filtered.length ? filtered.map(function (p) { return postCardHtml(p, counts, likes, commentedPosts, levels); }).join('') : (extraHtml ? '' : '<div class="empty"><p class="empty-title">' + t('search.empty') + '</p></div>'));
+  /* v8.3 U01：只渲染当前页，底部给出"还有 N 条" */
+  var pkey = [homeState.category, homeState.circle, homeState.topic, (homeState.keyword || '').trim()].join('|');
+  if (homePager.key !== pkey) { homePager.key = pkey; homePager.page = 1; }
+  homePager.args = { posts: posts, counts: counts, likes: likes, commented: commentedPosts, list: list, levels: levels };
+  homePager.total = filtered.length;
+  var shown = filtered.slice(0, homePager.page * PAGE_SIZE);
+  var footer = '';
+  if (shown.length < filtered.length) {
+    footer = '<div class="home-more" id="home-more"><button class="btn btn-ghost" data-action="home-more">加载更多（还有 ' + (filtered.length - shown.length) + ' 条）</button></div>';
+  } else if (filtered.length > PAGE_SIZE) {
+    footer = '<div class="home-more home-end">已经到底了 · 共 ' + filtered.length + ' 条</div>';
+  }
+  list.innerHTML = extraHtml + (shown.length ? shown.map(function (p) { return postCardHtml(p, counts, likes, commentedPosts, levels); }).join('') : (extraHtml ? '' : '<div class="empty"><p class="empty-title">' + t('search.empty') + '</p></div>')) + footer;
+  bindHomeAutoMore();
+}
+
+/* v8.3 U01：加载更多 + 滚动到底自动补 */
+function homeMore() {
+  if (!homePager.args) return;
+  if (homePager.page * PAGE_SIZE >= (homePager.total || 0)) return;
+  homePager.page += 1;
+  var a = homePager.args;
+  renderHomeData(a.posts, a.counts, a.likes, a.commented, document.getElementById('post-list') || a.list, a.levels);
+}
+function bindHomeAutoMore() {
+  if (homePager.obs && homePager.obs.disconnect) { try { homePager.obs.disconnect(); } catch (e) {} }
+  homePager.obs = null;
+  var anchorEl = document.getElementById('home-more');
+  if (!anchorEl || homePager.page * PAGE_SIZE >= (homePager.total || 0)) return;
+  if (typeof IntersectionObserver !== 'function') return;
+  try {
+    homePager.obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) homeMore(); });
+    }, { rootMargin: '240px 0px' });
+    homePager.obs.observe(anchorEl);
+  } catch (e) { homePager.obs = null; }
+}
+
+
+/* v8.3 U04：标签页标题 */
+var ROUTE_CN = {
+  home: '首页', post: '帖子', new: '发帖', login: '登录', profile: '我的', user: '用户主页',
+  notifications: '通知', messages: '私信', chat: '聊天', tasks: '任务', shop: '商店', rank: '排行榜',
+  settings: '设置', admin: '管理后台', apps: '应用', feedback: '反馈', featured: '精选',
+  reading: '阅读', activities: '活动', bank: '银行', quiz: '问卷'
+};
+/* v8.3 U06：复制文本（返回是否成功；与已有的 fallbackCopy 同名冲突，故独立命名） */
+function copyLinkText(text) {
+  try {
+    if (document.execCommand) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      ta.remove();
+      return !!ok;
+    }
+  } catch (e) {}
+  return false;
+}
+function syncDocTitle(active) {
+  var base = 'HanBer 云坛';
+  if (active === 'post') return; /* 详情标题由 renderPost 填充 */
+  var href = active === 'home' ? '#/' : '#/' + active;
+  var extra = '';
+  try {
+    var lab = document.querySelector('#nav a[href="' + href + '"] .nav-label');
+    extra = lab && lab.textContent ? lab.textContent.trim() : (ROUTE_CN[active] || '');
+  } catch (e) { extra = ROUTE_CN[active] || ''; }
+  document.title = extra ? (extra + ' · ' + base) : base;
 }
 
 /* ============================================================
@@ -11337,7 +12328,7 @@ function translatePost(tl) {
     .catch(function (e) { st.textContent = '翻译失败：' + e.message; });
 }
 
-function renderPost(id) {
+function renderPost(id, cid) {
   var box = $('#post-detail');
   if (!id) { box.innerHTML = '<div class="empty">帖子不存在</div>'; return; }
   box.innerHTML = loadingHtml();
@@ -11350,7 +12341,12 @@ function renderPost(id) {
   .then(function (res) {
     var p = res[0], comments = res[1] || [], likes = res[2] || {};
     window._postData = p;
-    if (!p) { box.innerHTML = '<div class="empty"><p class="empty-title">' + t('post.notFound') + '</p></div>'; return; }
+    if (!p) { document.title = ROUTE_CN.post + ' · HanBer 云坛'; box.innerHTML = '<div class="empty"><p class="empty-title">' + t('post.notFound') + '</p></div>'; return; }
+    /* v8.3 U04：详情页标题取帖子标题，多标签时一眼可辨 */
+    try {
+      var _pt = (p.title || '').replace(/\s+/g, ' ').trim();
+      document.title = (_pt ? (_pt.length > 42 ? _pt.slice(0, 42) + '…' : _pt) : ROUTE_CN.post) + ' · HanBer 云坛';
+    } catch (e) {}
     if (session && p.blocked_uids && p.blocked_uids.indexOf(session.id) >= 0) {
       box.innerHTML = '<div class="empty"><p class="empty-title">🚫 ' + t('block.blockedPost') + '</p></div>';
       return;
@@ -11368,7 +12364,7 @@ function renderPost(id) {
         profiles.forEach(function (pr) { if (pr) avatarMap[pr.id] = pr.avatar_url; });
         levelRows.forEach(function (pr) { if (pr) levels[pr.id] = Math.max(pr.level || 0, xpLevel(pr.xp || 0)); });
         renderPost._avatarMap = avatarMap;
-        renderPostBody(p, comments, likes, box, avatarMap, levels);
+        renderPostBody(p, comments, likes, box, avatarMap, levels, cid);
       });
   })
   .catch(function (e) {
@@ -11395,6 +12391,14 @@ function topicNameOf(id) {
   ensureCtxFresh();
   return '🏆 ' + ((t && t('circle.unknown')) || '话题');
 }
+/* 分类名（含多语言回退）：帖子没有话题时用它显示在 meta 行 */
+function categoryLabel(cat) {
+  if (!cat) return t('cat.all');
+  var name = (CATEGORIES[cat] && CATEGORIES[cat].label) || cat;
+  var key = 'cat.' + cat;
+  var label = (t && t(key)) || name;
+  return label === key ? name : label;
+}
 function lotteryCardHtml(p, isAdmin) {
   if (!p.lottery_prize && p.lottery_floor == null) return '';
   var floor = p.lottery_floor || 0;
@@ -11402,7 +12406,7 @@ function lotteryCardHtml(p, isAdmin) {
   var done = !!p.lottery_done;
   var html = '<div style="margin-bottom:14px;padding:12px 14px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.07);border-radius:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
     + '<span style="font-size:20px">🎁</span>'
-    + '<div style="flex:1;min-width:140px"><b style="font-size:14px">' + t('lottery.title') + '</b>'
+    + '<div style="flex:1;min-width:140px"><b style="font-size:14px">' + t('lottery.floorTitle') + '</b>'
     + '<div style="font-size:12px;color:var(--ink-2);margin-top:2px">' + t('lottery.post', floor, esc(prize)) + '</div></div>';
   if (done) {
     html += '<span style="font-size:12px;color:#16A34A">✅ ' + t('lottery.done') + '：' + esc(p.lottery_winner_name || '') + '</span>';
@@ -11411,7 +12415,113 @@ function lotteryCardHtml(p, isAdmin) {
   }
   return html + '</div>';
 }
-function renderPostBody(p, comments, likes, box, avatarMap, levels) {
+
+/* ===== v8.4 C：发帖防刷 + 重复标题拦截（纯客户端，服务端限流仍建议加） ===== */
+function rateWait(key, gapMs) {
+  try {
+    var k = 'forum_rl_' + key;
+    var last = parseInt(localStorage.getItem(k) || '0', 10) || 0;
+    var left = gapMs - (Date.now() - last);
+    if (left > 0) return Math.ceil(left / 1000);
+    localStorage.setItem(k, String(Date.now()));
+    return 0;
+  } catch (e) { return 0; }
+}
+function recentPostTitles() {
+  try {
+    var a = JSON.parse(localStorage.getItem('forum_recent_titles') || '[]');
+    var now = Date.now();
+    return (Array.isArray(a) ? a : []).filter(function (x) { return x && now - (x.at || 0) < 24 * 3600 * 1000; });
+  } catch (e) { return []; }
+}
+function normTitle(t) { return String(t || '').toLowerCase().replace(/[\s\p{P}\p{S}]/gu, ''); }
+function similarScore(a, b) {
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (a.length < 4 || b.length < 4) return 0;
+  var ga = {}, gb = {}, i, n;
+  for (i = 0; i < a.length - 1; i++) { var ka = a.substr(i, 2); ga[ka] = (ga[ka] || 0) + 1; }
+  for (i = 0; i < b.length - 1; i++) { var kb = b.substr(i, 2); gb[kb] = (gb[kb] || 0) + 1; }
+  var inter = 0;
+  for (var k in ga) { if (gb[k]) inter += Math.min(ga[k], gb[k]); }
+  n = Math.min(a.length, b.length) - 1 + Math.max(a.length, b.length) - 1;
+  return n > 0 ? (2 * inter) / n : 0;
+}
+function findSimilarRecentTitle(title) {
+  var nt = normTitle(title);
+  var arr = recentPostTitles();
+  for (var i = 0; i < arr.length; i++) {
+    if (similarScore(nt, normTitle(arr[i].t)) >= 0.9) return arr[i].t;
+  }
+  return null;
+}
+function recordPostTitle(title) {
+  try {
+    var arr = recentPostTitles();
+    arr.unshift({ t: String(title || '').slice(0, 80), at: Date.now() });
+    localStorage.setItem('forum_recent_titles', JSON.stringify(arr.slice(0, 20)));
+  } catch (e) {}
+}
+/* ===== v8.4 A1：Markdown 子集（标题/列表/引用/代码/加粗/斜体/链接/分隔线） =====
+   安全前提：先 esc() 整个源文本，再做结构替换；链接只允许 http(s) 与站内 #/ 路由。 */
+function mdInline(t) {
+  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)"']+|#\/[^\s)"']*)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/(^|[^*\w])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+  return t;
+}
+function mdRender(raw) {
+  var src = esc(String(raw == null ? '' : raw)).replace(/\r\n?/g, '\n');
+  var lines = src.split('\n');
+  var out = [], i = 0, listType = null, listItems = [];
+  function flushList() {
+    if (!listItems.length) { listType = null; return; }
+    out.push('<' + listType + ' class="md-list">' + listItems.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</' + listType + '>');
+    listItems = []; listType = null;
+  }
+  while (i < lines.length) {
+    var ln = lines[i];
+    if (/^```/.test(ln)) {
+      flushList(); i++;
+      var code = [];
+      while (i < lines.length && !/^```/.test(lines[i])) { code.push(lines[i]); i++; }
+      i++;
+      out.push('<pre class="md-code"><code>' + code.join('\n') + '</code></pre>');
+      continue;
+    }
+    if (!ln.trim()) { flushList(); i++; continue; }
+    if (/^(-{3,}|\*{3,})$/.test(ln.trim())) { flushList(); out.push('<hr class="md-hr">'); i++; continue; }
+    var h = ln.match(/^(#{1,3})\s+(.*)$/);
+    if (h) { flushList(); var lv = h[1].length; out.push('<h' + lv + ' class="md-h' + lv + '">' + mdInline(h[2]) + '</h' + lv + '>'); i++; continue; }
+    var q = ln.match(/^(&gt;|>)\s?(.*)$/);
+    if (q) {
+      flushList();
+      var quote = [];
+      while (i < lines.length) {
+        var m2 = lines[i].match(/^(&gt;|>)\s?(.*)$/);
+        if (!m2) break;
+        quote.push(m2[2]); i++;
+      }
+      out.push('<blockquote class="md-quote">' + quote.map(function (x) { return mdInline(x); }).join('<br>') + '</blockquote>');
+      continue;
+    }
+    var ul = ln.match(/^\s*[-*+]\s+(.*)$/), ol = ln.match(/^\s*\d+\.\s+(.*)$/);
+    if (ul || ol) {
+      var want = ul ? 'ul' : 'ol';
+      if (listType && listType !== want) flushList();
+      listType = want; listItems.push(mdInline((ul || ol)[1])); i++; continue;
+    }
+    var para = [ln]; i++;
+    while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|(&gt;|>)\s?|[-*+]\s+\d*|\d+\.\s|```|-{3,})/.test(lines[i])) { para.push(lines[i]); i++; }
+    flushList();
+    out.push('<p class="md-p">' + mdInline(para.join('<br>')) + '</p>');
+  }
+  flushList();
+  return out.join('');
+}
+function renderPostBody(p, comments, likes, box, avatarMap, levels, focusCid) {
     avatarMap = avatarMap || {};
     levels = levels || {};
     /* 点进帖子后，更新已读时间点（看完回复了，新回复标签消失） */
@@ -11434,7 +12544,7 @@ function renderPostBody(p, comments, likes, box, avatarMap, levels) {
       + '<span>' + fmtTime(p.created_at) + '</span>'
       + '</div>'
       + lotteryCardHtml(p, isAdmin)
-      + '<div class="post-content">' + esc(p.content) + '</div>'
+      + '<div class="post-content md-body">' + mdRender(p.content) + '</div>'
       + pollHtml(p)
       + '<div class="post-translate" style="margin-bottom:16px">'
       + '<button class="btn btn-ghost btn-sm" data-action="translate-toggle" style="padding:4px 12px">🌐 快捷翻译</button>'
@@ -11471,17 +12581,21 @@ function renderPostBody(p, comments, likes, box, avatarMap, levels) {
     /* 建立评论ID映射，用于显示回复关系 */
     var commentMap = {};
     comments.forEach(function (c) { commentMap[c.id] = c; });
+    var commentNo = 0;
     comments.forEach(function (c) {
+      commentNo += 1;
       var isReply = c.parent_id && commentMap[c.parent_id];
       var indent = isReply ? 'padding-left:24px;border-left:2px solid var(--line);margin-left:8px' : '';
       var replyTo = isReply ? '<span style="font-size:12px;color:var(--ink-3);margin-left:6px">回复 <a href="#/user?id=' + encodeURIComponent(commentMap[c.parent_id].user_id) + '" style="color:var(--accent)">' + esc(commentMap[c.parent_id].author_name) + '</a>：</span>' : '';
       var isMyComment = session && session.id === c.user_id;
       var isAdminDel = isAdminUser();
       var canDelete = isMyComment || isAdminDel;
-      html += '<div class="comment-item' + (p.accepted_comment_id === c.id ? ' accepted-answer' : '') + '" style="' + indent + '"><div class="comment-head">' + avatarHtml(c.author_name, '', avatarMap[c.user_id])
+      html += '<div class="comment-item' + (p.accepted_comment_id === c.id ? ' accepted-answer' : '') + '" id="comment-' + esc(String(c.id)) + '" style="' + indent + '"><div class="comment-head">' + avatarHtml(c.author_name, '', avatarMap[c.user_id])
         + '<a href="#/user?id=' + encodeURIComponent(c.user_id) + '" class="comment-author">' + esc(c.author_name) + (levels && levels[c.user_id] ? lvBadge(levels[c.user_id]) : '') + '</a>'
         + replyTo
         + '<span class="comment-time">' + fmtTime(c.created_at) + '</span>'
+        + '<button class="btn btn-ghost btn-sm cmt-link" style="padding:1px 7px;font-size:11px;margin-left:6px;opacity:.72" data-action="copy-comment-link" data-cid="' + esc(String(c.id)) + '" title="复制这层的链接">#' + commentNo + '</button>'
+        + (session ? '<button class="btn btn-ghost btn-sm cmt-flag" style="padding:1px 6px;font-size:11px;margin-left:2px;opacity:.6" data-action="report-comment" data-cid="' + esc(String(c.id)) + '" title="举报这一层">⚑</button>' : '')
         + (session && !isBanned('comment') ? '<button class="btn btn-ghost btn-sm" style="margin-left:auto;padding:2px 8px;font-size:11px" data-action="reply-comment" data-cid="' + c.id + '" data-cname="' + esc(c.author_name) + '">' + t('post.reply') + '</button>' : '')
         + (canDelete ? '<button class="btn btn-danger-ghost btn-sm" style="padding:2px 8px;font-size:11px;margin-left:4px" data-action="del-comment" data-cid="' + c.id + '">删除</button>' : '')
         + '</div>'
@@ -11504,6 +12618,20 @@ function renderPostBody(p, comments, likes, box, avatarMap, levels) {
     }
     html += '</div></div>';
     box.innerHTML = html;
+
+    /* v8.3 U06：带 ?c= 时定位到该楼并高亮 */
+    if (focusCid) {
+      try {
+        var target = box.querySelector('[id="comment-' + String(focusCid).replace(/"/g, '') + '"]');
+        if (target) {
+          target.classList.add('anchor-hit');
+          setTimeout(function () { try { target.classList.remove('anchor-hit'); } catch (e) {} }, 2200);
+          setTimeout(function () {
+            try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+          }, 60);
+        }
+      } catch (e) {}
+    }
 }
 
 /* ============================================================
@@ -11619,11 +12747,72 @@ function tickScheduled() {
     if (location.hash.indexOf('#/new') === 0) renderSchedList();
   }
 }
+
+/* ===== v8.3 U07：发帖草稿自动保存 / 恢复 ===== */
+function draftKey() { return 'forum_draft_' + ((session && session.id) ? session.id : 'anon'); }
+function draftGet() {
+  try {
+    var d = JSON.parse(localStorage.getItem(draftKey()) || 'null');
+    if (!d || (!d.title && !d.content)) return null;
+    if (Date.now() - (d.at || 0) > 7 * 24 * 3600 * 1000) return null; /* 超过 7 天不再提示 */
+    return d;
+  } catch (e) { return null; }
+}
+var draftTimer = null;
+function draftSaveNow() {
+  try {
+    var ti = document.getElementById('np-title'), ci = document.getElementById('np-content');
+    if (!ti || !ci) return;
+    var t = ti.value, c = ci.value;
+    if (!t.trim() && !c.trim()) { localStorage.removeItem(draftKey()); return; }
+    localStorage.setItem(draftKey(), JSON.stringify({ title: t, content: c, cat: selectedCat, at: Date.now() }));
+  } catch (e) {}
+}
+function draftClear() { try { localStorage.removeItem(draftKey()); var b = document.getElementById('np-draft-banner'); if (b) b.remove(); } catch (e) {} }
+function draftAgo(ts) {
+  var m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 1) return '刚刚';
+  if (m < 60) return m + ' 分钟前';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + ' 小时前';
+  return Math.floor(h / 24) + ' 天前';
+}
+function renderDraftBanner() {
+  var formEl = document.getElementById('new-post-form');
+  if (!formEl || !formEl.parentNode) return;
+  var old = document.getElementById('np-draft-banner');
+  if (old) old.remove();
+  var d = draftGet();
+  if (!d) return;
+  var bar = document.createElement('div');
+  bar.id = 'np-draft-banner';
+  bar.className = 'draft-banner';
+  bar.innerHTML = '<span class="draft-ico">📝</span>'
+    + '<span class="draft-txt">发现未发布的草稿<em>' + esc(draftAgo(d.at || Date.now())) + '</em>'
+    + (d.title ? '：' + esc(String(d.title).slice(0, 24)) : '') + '</span>'
+    + '<span class="draft-acts"><button type="button" class="btn btn-primary btn-sm" data-action="draft-restore">继续写</button>'
+    + '<button type="button" class="btn btn-ghost btn-sm" data-action="draft-discard">丢弃</button></span>';
+  formEl.parentNode.insertBefore(bar, formEl);
+}
 function renderNew() {
   if (!requireLogin()) return;
+  /* 被禁言：只做"隐藏表单 + 顶部提示"，绝不 innerHTML 覆盖整个 section，否则表单会被永久删除 */
+  var formEl = $('#new-post-form');
   if (isBanned('post')) {
-    $('#route-new .container, #route-new').innerHTML = '<div class="empty"><p class="empty-title">' + t('banned.post') + '</p><p>请联系管理员解封。</p></div>';
+    if (formEl) formEl.style.display = 'none';
+    if (formEl && formEl.parentNode && !document.getElementById('np-ban-note')) {
+      var bnote = document.createElement('div');
+      bnote.id = 'np-ban-note';
+      bnote.className = 'empty';
+      bnote.innerHTML = '<p class="empty-title">' + t('banned.post') + '</p><p>请联系管理员解封。</p>';
+      formEl.parentNode.insertBefore(bnote, formEl);
+    }
     return;
+  }
+  if (formEl) {
+    formEl.style.display = '';
+    var oldNote = document.getElementById('np-ban-note');
+    if (oldNote) oldNote.remove();
   }
   /* 重置表单状态，防止发帖成功后按钮卡在disabled */
   var btn = $('#np-submit');
@@ -11635,6 +12824,8 @@ function renderNew() {
   if (titleInput) titleInput.value = '';
   var contentInput = $('#np-content');
   if (contentInput) contentInput.value = '';
+  /* v8.3 U07：进入发帖页先检查草稿 */
+  setTimeout(renderDraftBanner, 0);
   var filesInput = $('#np-files');
   if (filesInput) filesInput.value = '';
   
@@ -12060,7 +13251,7 @@ function renderThemePicker() {
       html += '<div class="theme-item' + (currentTheme === 'default' ? ' active' : '') + '" data-theme-id="default"><div class="theme-swatch" style="background:#F6F4EE"></div>' + t('settings.default') + '</div>';
       shown.forEach(function (th) {
         html += '<div class="theme-item' + (currentTheme === th.id ? ' active' : '') + '" data-theme-id="' + th.id + '"' + (th.adminOnly ? ' data-admin-only="1"' : '') + '>'
-          + '<div class="theme-swatch" style="background:' + th.swatch + '"></div>' + themeLabel(th) + (th.adminOnly ? ' <span style="font-size:10px;color:#d9a03f">👑</span>' : '') + themeCredit(th) + '</div>';
+          + '<div class="theme-swatch' + (group.key === 'settings.culture' ? ' swatch-cul' : '') + '" style="background:' + th.swatch + '"></div>' + themeLabel(th) + (th.adminOnly ? ' <span style="font-size:10px;color:#d9a03f">👑</span>' : '') + themeCredit(th) + '</div>';
       });
       if (!showAll && list.length > 4) {
         html += '<button class="btn btn-ghost btn-sm" data-action="theme-expand" data-key="' + gkey + '" style="grid-column:1/-1;justify-self:center">' + t('expandAll', list.length) + '</button>';
@@ -12094,11 +13285,12 @@ function renderThemePicker() {
       dhtml += '</div></div>';
       picker.innerHTML += dhtml;
     }
+    /* 先落地基础分组，再追加 GitHub 动态主题（否则动态主题会被下一次 innerHTML 覆盖掉） */
+    picker.innerHTML = html;
     renderDynThemes();
     if (!GH_CACHE.themes) {
       ghListDir('themes').then(function (l) { GH_CACHE.themes = l; renderThemePicker(); });
     }
-    picker.innerHTML = html;
   }).catch(function () { picker.innerHTML = '<div class="empty">加载失败</div>'; });
 }
 
@@ -12286,6 +13478,9 @@ var DARK_THEMES = ['official', 'official-forest', 'official-maple', 'official-ci
   'arab', 'ottoman', 'roman', 'gaudi', 'tno'];
 /* 浅色文化主题（法式/中式/日式/希腊） */
 var LIGHT_THEMES = ['french', 'chinese', 'japanese', 'greek', 'korean'];
+/* v8.2 文化主题清单：用于挂 data-culture，激活整套材质/纹样 CSS */
+var CULTURE_THEMES = ['british', 'french', 'german', 'chinese', 'japanese', 'egyptian', 'mayan', 'viking',
+  'greek', 'arab', 'ottoman', 'roman', 'korean', 'gaudi', 'byzantine', 'tno'];
 /* 液态玻璃可用主题（纯色+渐变） */
 var GLASS_THEMES = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple',
   'red-orange', 'orange-yellow', 'yellow-green', 'green-cyan', 'cyan-blue', 'blue-purple', 'purple-pink'];
@@ -12312,11 +13507,14 @@ function setTheme(themeId) {
   document.body.removeAttribute('data-theme');
   document.body.classList.remove('dark-theme');
   document.body.classList.remove('light-theme');
+  document.body.removeAttribute('data-culture');
   document.body.classList.toggle('glassable', !!(themeId && GLASS_THEMES.indexOf(themeId) >= 0));
   if (themeId && themeId !== 'default') {
     /* GitHub 动态主题：注入背景 CSS */
     if (DYN_THEMES[themeId]) { ensureDynThemeCss(themeId); }
     document.body.setAttribute('data-theme', themeId);
+    /* v8.2 文化主题：额外挂 data-culture，激活材质/纹样升级层 */
+    if (CULTURE_THEMES.indexOf(themeId) >= 0) document.body.setAttribute('data-culture', themeId);
     if (DYN_THEMES[themeId] || DARK_THEMES.indexOf(themeId) >= 0) {
       document.body.classList.add('dark-theme');
     } else if (LIGHT_THEMES.indexOf(themeId) >= 0) {
@@ -12765,7 +13963,7 @@ function renderFeatured() {
       var body = '<article class="post-item" style="cursor:pointer" data-goto="post?id=' + encodeURIComponent(p.id) + '">'
         + '<div class="post-head"><span class="avatar" style="background:' + avatarColor(p.author_name || '') + '">' + esc((p.author_name || '?').charAt(0)) + '</span>'
         + '<div style="flex:1;min-width:0"><div style="font-weight:600">' + esc(p.author_name || '匿名') + '</div>'
-        + '<div style="font-size:12px;color:var(--ink-3)">' + fmtTime(p.created_at) + ' · ' + (topicNameOf(p.topic_id) || categoryLabel(p.category)) + '</div></div>'
+        + '<div style="font-size:12px;color:var(--ink-3)">' + fmtTime(p.created_at) + ' · ' + (p.topic_id ? topicNameOf(p.topic_id) : categoryLabel(p.category)) + '</div></div>'
         + '<span class="chip" style="background:var(--accent-soft);color:var(--accent)">⭐ 精选</span></div>'
         + '<h3 style="margin:8px 0 4px">' + esc(p.title) + '</h3>'
         + '<p style="font-size:13px;color:var(--ink-3);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + esc((p.content || '').slice(0, 160)) + '</p>'
@@ -12912,6 +14110,9 @@ function isAdminUser() {
  * 后台
  * ============================================================ */
 var adminFold = { admins: true, users: true, posts: true, reports: true };
+var _admRenderSeq = 0;      /* 后台渲染序号：丢弃过期结果 */
+var _admUserCache = [];     /* 后台最近一次加载的用户列表（导出按手机号/邮箱查找时兜底） */
+var _admFilter = { users: '', posts: '' };  /* 后台列表筛选关键字 */
 /* ===== v6.4.3 管理面板图表（Canvas 自绘，适配当前主题色） ===== */
 function _cssVar(name, fallback) { try { return getComputedStyle(document.body).getPropertyValue(name).trim() || fallback; } catch (e) { return fallback; } }
 function catShort(k) { return (CATEGORIES && CATEGORIES[k] && CATEGORIES[k].label) ? CATEGORIES[k].label : String(k); }
@@ -12953,31 +14154,6 @@ function hbarChart(cid, labels, vals, color, ink, line) {
     ctx.fillText(v, 96 + bw, y + 4);
   });
 }
-function lineChart(cid, labels, vals, color, ink, line) {
-  var cv = document.getElementById(cid); if (!cv || !vals.length) return;
-  var ctx; try { ctx = cv.getContext('2d'); } catch (e) { return; }
-  if (!ctx) return;
-  var w = cv.width = cv.clientWidth || 300, h = cv.height = cv.clientHeight || 150;
-  ctx.clearRect(0, 0, w, h);
-  var pad = 26, max = Math.max.apply(null, vals.concat([1]));
-  ctx.strokeStyle = line; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(pad, h / 2); ctx.lineTo(w - pad, h / 2); ctx.stroke();
-  var pts = vals.map(function (v, i) {
-    return { x: pad + i * (w - pad * 2) / (vals.length - 1 || 1), y: h - pad - (h - pad * 2) * v / max };
-  });
-  ctx.strokeStyle = color; ctx.lineWidth = 2;
-  ctx.beginPath();
-  pts.forEach(function (p, i) { i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
-  ctx.stroke();
-  ctx.fillStyle = color;
-  pts.forEach(function (p, i) {
-    ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = ink; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(labels[i], p.x, h - 8);
-    ctx.fillText(vals[i], p.x, p.y - 6);
-    ctx.fillStyle = color;
-  });
-}
 function drawAdminCharts(stats) {
   try {
     if (!stats) return;
@@ -13005,28 +14181,58 @@ function renderAdmin() {
   var box = $('#admin-panel');
   box.innerHTML = loadingHtml();
 
+  /* 修复：任一接口失败曾导致整个后台只剩一行报错（"circles 500"/"users.filter is not a function"）。
+     现在每个数据源独立降级，失败项汇总成顶部提示条，其余模块照常可用。 */
+  var loadErrors = [];
+  var token = ++_admRenderSeq;
+  var isArr = function (v) { return Object.prototype.toString.call(v) === '[object Array]'; };
+  var safeLoad = function (label, fn, emptyVal) {
+    return Promise.resolve()
+      .then(fn)
+      .then(function (r) {
+        if (r && !isArr(r) && r.code && r.message) throw new Error(r.message);
+        return r;
+      })
+      .catch(function (err) {
+        loadErrors.push(label + (err && err.message ? '：' + err.message : ''));
+        return emptyVal;
+      });
+  };
   Promise.all([
-    CloudStore.adminListUsers(),
-    CloudStore.adminListPosts(),
-    CloudStore.listReports().catch(function () { return []; }),
-    CloudStore.listSignins().catch(function () { return []; }),
-    (isSuper ? CloudStore.adminGetAuditLogs().catch(function () { return []; }) : Promise.resolve([])),
-    CloudStore.adminStats().catch(function () { return null; }),
-    CloudStore.getCircles(),
-    CloudStore.getTopics(),
-    CloudStore.getAnnouncements().catch(function () { return []; }),
-    CloudStore.getBugReports()
+    safeLoad('用户列表', function () { return CloudStore.adminListUsers(); }, []),
+    safeLoad('帖子列表', function () { return CloudStore.adminListPosts(); }, []),
+    safeLoad('举报列表', function () { return CloudStore.listReports(); }, []),
+    safeLoad('签到记录', function () { return CloudStore.listSignins(); }, []),
+    (isSuper ? safeLoad('操作日志', function () { return CloudStore.adminGetAuditLogs(); }, []) : Promise.resolve([])),
+    safeLoad('数据看板', function () { return CloudStore.adminStats(); }, null),
+    safeLoad('圈子', function () { return CloudStore.getCircles(); }, []),
+    safeLoad('话题', function () { return CloudStore.getTopics(); }, []),
+    safeLoad('公告', function () { return CloudStore.getAnnouncements(); }, []),
+    safeLoad('BUG 反馈', function () { return CloudStore.getBugReports(); }, [])
   ])
     .then(function (res) {
-      var users = res[0] || [], posts = res[1] || [], reports = res[2] || [], signins = res[3] || [], audit = res[4] || [], stats = res[5] || null, circles = res[6] || [], topics = res[7] || [], anns = res[8] || [], bugReports = res[9] || [];
-      /* 批量查询举报处理人昵称 */
+      if (token !== _admRenderSeq) return; /* 丢弃过期渲染结果，避免快速切换路由时内容错乱 */
+      var need = function (v) { return isArr(v) ? v : []; };
+      var users = need(res[0]), posts = need(res[1]), reports = need(res[2]), signins = need(res[3]), audit = need(res[4]), stats = res[5] || null, circles = need(res[6]), topics = need(res[7]), anns = need(res[8]), bugReports = need(res[9]);
+      _admUserCache = users;
+      /* 批量查询处理人昵称；同时用用户列表给 BUG 反馈补用户名（原来只显示 UUID） */
       var hids = [];
-      reports.forEach(function (r) { if (r.handled_by && hids.indexOf(r.handled_by) < 0) hids.push(r.handled_by); });
-      return Promise.all(hids.map(function (uid) { return CloudStore.profile(uid); }))
+      var pushHid = function (uid) { if (uid && hids.indexOf(uid) < 0) hids.push(uid); };
+      reports.forEach(function (r) { pushHid(r.handled_by); });
+      bugReports.forEach(function (b) { pushHid(b.handled_by); });
+      var unameMap = {};
+      users.forEach(function (u) { if (u && u.id) unameMap[u.id] = u.username; });
+      return Promise.all(hids.map(function (uid) {
+          return CloudStore.profile(uid).catch(function () { return null; });
+        }))
         .then(function (ps) {
           var hmap = {};
           ps.forEach(function (pr) { if (pr) hmap[pr.id] = pr.username; });
           reports.forEach(function (r) { if (!r.handler_name) r.handler_name = hmap[r.handled_by] || ''; });
+          bugReports.forEach(function (b) {
+            if (!b.username) b.username = (b.profiles && b.profiles.username) || unameMap[b.user_id] || '';
+            if (!b.handler_name) b.handler_name = hmap[b.handled_by] || '';
+          });
           /* v6.1 审核池排序：未处理优先，其次按时间倒序 */
           reports.sort(function (a, b) {
             if ((a.status === 'open') !== (b.status === 'open')) return a.status === 'open' ? -1 : 1;
@@ -13034,15 +14240,25 @@ function renderAdmin() {
           });
           var html = '';
 
+          /* 局部降级提示：某个模块加载失败时不再整页白屏 */
+          if (loadErrors.length) {
+            html += '<div class="card pad" style="margin-bottom:14px;border-left:4px solid #D9402E;background:rgba(217,64,46,.06)">'
+              + '<div style="font-weight:700;margin-bottom:6px">⚠️ 有 ' + loadErrors.length + ' 个数据模块加载失败，其余模块不受影响</div>'
+              + '<div style="font-size:12px;color:var(--ink-3);line-height:1.7">' + esc(loadErrors.join('；')) + '</div>'
+              + '<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" data-action="admin-refresh">重新加载</button></div></div>';
+          }
+
       /* ===== 数据看板（仅管理员） ===== */
       if (stats) {
+        /* 修复：原来用 t('admin.users','') 取标签，会渲染成"用户管理（）" */
+        var nv = function (v) { return v == null ? '—' : v; };
         var cards = [
-          { k: t('admin.users', ''), v: stats.total_users, icon: '👥' },
-          { k: t('admin.posts', ''), v: stats.total_posts, icon: '📝' },
-          { k: t('admin.comments', ''), v: stats.total_comments, icon: '💬' },
-          { k: t('admin.reports', ''), v: stats.total_reports, icon: '🚩' },
-          { k: t('admin.signins', ''), v: stats.total_signins, icon: '📅' },
-          { k: t('block.title', ''), v: stats.total_blocks, icon: '🚫' }
+          { k: t('admin.statUsers'), v: nv(stats.total_users), icon: '👥' },
+          { k: t('admin.statPosts'), v: nv(stats.total_posts), icon: '📝' },
+          { k: t('admin.statComments'), v: nv(stats.total_comments), icon: '💬' },
+          { k: t('admin.statReports'), v: nv(stats.total_reports), icon: '🚩' },
+          { k: t('admin.statSignins'), v: nv(stats.total_signins), icon: '📅' },
+          { k: t('admin.statBlocks'), v: nv(stats.total_blocks), icon: '🚫' }
         ];
         html += '<div class="admin-section card pad"><h3>📊 ' + t('admin.stats') + '</h3>'
           + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">'
@@ -13064,12 +14280,17 @@ function renderAdmin() {
         html += '<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>' + t('bug.user') + '</th><th>' + t('bug.content') + '</th><th>' + t('bug.attach') + '</th><th>' + t('admin.time') + '</th><th>' + t('admin.status') + '</th><th>' + t('admin.action') + '</th></tr></thead><tbody>';
         bugReports.forEach(function (b) {
           var handled = b.status === 'received';
-          html += '<tr><td>' + esc(b.username || b.user_id) + '</td>'
+          var bname = b.username || (b.profiles && b.profiles.username) || '';
+          html += '<tr><td>' + (bname
+              ? '<a href="#/user?id=' + esc(b.user_id || '') + '">' + esc(bname) + '</a>'
+              : '<span style="color:var(--ink-3)">用户 ' + esc((b.user_id || '').slice(0, 8)) + '</span>') + '</td>'
             + '<td style="max-width:280px">' + esc(b.content) + '</td>'
-            + '<td>' + (b.attachment_path ? '<button class="btn btn-ghost btn-sm" data-action="bug-download" data-path="' + esc(b.attachment_path) + '">' + t('bug.dl') + '</button>' : '—') + '</td>'
+            /* 已接收的反馈附件由 RPC 删除，此时不再给出必然失败的下载按钮 */
+            + '<td>' + (b.attachment_path && !handled ? '<button class="btn btn-ghost btn-sm" data-action="bug-download" data-path="' + esc(b.attachment_path) + '">' + t('bug.dl') + '</button>' : (handled ? '<span style="color:var(--ink-3);font-size:12px">已清理</span>' : '—')) + '</td>'
             + '<td>' + fmtTime(b.created_at) + '</td>'
             + '<td>' + (handled ? '<span class="tag" style="background:rgba(16,185,129,.15);color:#059669">' + t('bug.received') + '</span>' : '<span class="tag" style="background:rgba(245,158,11,.15);color:#b45309">' + t('bug.open') + '</span>') + '</td>'
-            + '<td>' + (isSuper && !handled ? '<button class="btn btn-primary btn-sm" data-action="bug-receive" data-id="' + b.id + '">' + t('bug.receive') + '</button>' : (handled ? (b.handler_name ? esc(b.handler_name) : t('bug.doneBy')) : '')) + '</td></tr>';
+            + '<td>' + (isSuper && !handled ? '<button class="btn btn-primary btn-sm" data-action="bug-receive" data-id="' + b.id + '">' + t('bug.receive') + '</button>'
+                : (handled ? ((b.handler_name ? esc(b.handler_name) : t('bug.doneBy')) + (b.handled_at ? '<div style="font-size:11px;color:var(--ink-3)">' + fmtTime(b.handled_at) + '</div>' : '')) : '')) + '</td></tr>';
         });
         html += '</tbody></table></div>';
       } else {
@@ -13136,6 +14357,11 @@ function renderAdmin() {
       /* ===== 超级管理员专属：管理员管理 ===== */
       if (isSuper) {
         var admins = users.filter(function (u) { return u.role === 'admin' || u.role === 'super'; });
+        /* 排序：超级管理员置顶，折叠态下也能一眼看到自己 */
+        admins.sort(function (a, b) {
+          if ((a.role === 'super') !== (b.role === 'super')) return a.role === 'super' ? -1 : 1;
+          return (a.username || '').localeCompare(b.username || '');
+        });
         html += '<div class="admin-section card pad"><h3>' + t('admin.admins', admins.length) + '</h3>';
         html += '<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
           + '<input class="input" id="admin-promote-acc" placeholder="' + t('admin.promotePh') + '" style="flex:1;min-width:220px">'
@@ -13152,7 +14378,7 @@ function renderAdmin() {
             + '<td style="white-space:nowrap">';
           if (u.role !== 'super') {
             html += '<button class="btn btn-ghost btn-sm" data-action="admin-toggle" data-uid="' + u.id + '" data-active="' + (u.admin_active ? '1' : '0') + '">' + (u.admin_active ? t('admin.toggleOff') : t('admin.toggleOn')) + '</button> ';
-            html += '<button class="btn btn-danger-ghost btn-sm" data-action="admin-ban" data-uid="' + u.id + '" data-account="' + esc(u.phone || displayAccount(u.email || '') || u.username) + '">' + t('admin.ban') + '</button> ';
+            html += '<button class="btn btn-danger-ghost btn-sm" data-action="admin-ban" data-uid="' + u.id + '" data-role="' + (u.role || 'user') + '" data-account="' + esc(u.phone || displayAccount(u.email || '') || u.username) + '">' + t('admin.ban') + '</button> ';
             html += '<button class="btn btn-danger-ghost btn-sm" data-action="admin-remove" data-uid="' + u.id + '">' + t('admin.remove') + '</button>';
             /* v7.0 银行管理员（仅超级管理员可设置） */
             if (isSuper) {
@@ -13169,7 +14395,17 @@ function renderAdmin() {
 
       /* ===== 用户管理（普通用户） v7.0 含信誉分 ===== */
       var normalUsers = users.filter(function (u) { return u.role === 'user' || !u.role; });
+      /* 筛选：用户多时逐个折叠翻页找不到人，后台补一个即时搜索 */
+      var uq = (_admFilter.users || '').toLowerCase();
+      if (uq) {
+        normalUsers = normalUsers.filter(function (u) {
+          return [u.username, u.phone, u.email, u.id].some(function (v) {
+            return v && String(v).toLowerCase().indexOf(uq) >= 0;
+          });
+        });
+      }
       html += '<div class="admin-section card pad"><h3>' + t('admin.users', normalUsers.length) + ' · v7.0 信誉分管理</h3>';
+      html += '<div style="margin-bottom:10px"><input class="input" id="adm-user-q" value="' + esc(_admFilter.users) + '" placeholder="搜索用户名 / 手机号 / 邮箱 / ID，回车生效" style="width:100%;max-width:360px"></div>';
       html += '<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>' + t('admin.user') + '</th><th>' + t('admin.account') + '</th><th>信誉分</th><th>' + t('admin.time') + '</th><th>' + t('admin.action') + '</th></tr></thead><tbody>';
       var usersShown = adminFold.users ? normalUsers.slice(0, 6) : normalUsers;
       usersShown.forEach(function (u) {
@@ -13182,15 +14418,15 @@ function renderAdmin() {
           + '<td>' + '<span style="color:' + (ucs <= 20 ? '#dc2626' : ucs <= 60 ? '#d97706' : '#059669') + ';font-weight:700">' + ucs + '</span>' + (frozen ? ' <span class="tag" style="background:rgba(217,64,46,.15);color:#dc2626">已冻结</span>' : '') + '</td>'
           + '<td>' + fmtTime(u.created_at) + '</td>'
           + '<td style="white-space:nowrap">'
-          + '<button class="btn btn-ghost btn-sm" data-action="admin-view-msgs" data-uid="' + u.id + '">' + t('admin.msg') + '</button> '
+          + '<button class="btn btn-ghost btn-sm" data-action="admin-view-msgs" data-uid="' + u.id + '" data-name="' + esc(u.username || '') + '">' + t('admin.msg') + '</button> '
           + '<button class="btn btn-ghost btn-sm" data-action="admin-reset-pwd" data-uid="' + u.id + '">' + t('admin.resetPwd') + '</button> '
           + '<button class="btn btn-ghost btn-sm" data-action="admin-edit-user" data-uid="' + u.id + '">✏️ ' + t('admin.editUser') + '</button> '
           + '<button class="btn btn-danger-ghost btn-sm" data-action="admin-credit-cut" data-uid="' + u.id + '" data-name="' + esc(u.username) + '">信誉-10</button> '
           + '<button class="btn btn-primary btn-sm" data-action="admin-credit-add" data-uid="' + u.id + '" data-name="' + esc(u.username) + '">信誉+</button> '
           + (frozen ? '<button class="btn btn-primary btn-sm" data-action="admin-unfreeze" data-uid="' + u.id + '" data-name="' + esc(u.username) + '">解冻</button> ' : '')
-          + '<button class="btn btn-danger-ghost btn-sm" data-action="admin-ban" data-uid="' + u.id + '" data-account="' + esc(account || '') + '">' + t('admin.ban') + '</button> '
+          + '<button class="btn btn-danger-ghost btn-sm" data-action="admin-ban" data-uid="' + u.id + '" data-role="' + (u.role || 'user') + '" data-account="' + esc(account || u.username || '') + '">' + t('admin.ban') + '</button> '
           + '<button class="btn btn-ghost btn-sm" data-action="admin-unban" data-uid="' + u.id + '" data-account="' + esc(account || '') + '">' + t('admin.unban') + '</button> '
-          + '<button class="btn btn-danger-ghost btn-sm" data-action="admin-del-user" data-uid="' + u.id + '" data-account="' + esc(account || '') + '">' + t('admin.delUser') + '</button>'
+          + '<button class="btn btn-danger-ghost btn-sm" data-action="admin-del-user" data-uid="' + u.id + '" data-account="' + esc(account || '') + '" data-name="' + esc(u.username || '') + '">' + t('admin.delUser') + '</button>'
           + '</td></tr>';
       });
       if (normalUsers.length > 6) {
@@ -13199,20 +14435,29 @@ function renderAdmin() {
       html += '</tbody></table></div></div>';
 
       /* ===== 帖子管理 ===== */
-      html += '<div class="admin-section card pad"><h3>' + t('admin.posts', posts.length) + '</h3>';
+      var pq = (_admFilter.posts || '').toLowerCase();
+      var postsView = pq ? posts.filter(function (p) {
+        return [p.title, p.author_name, p.id].some(function (v) {
+          return v && String(v).toLowerCase().indexOf(pq) >= 0;
+        });
+      }) : posts;
+      html += '<div class="admin-section card pad"><h3>' + t('admin.posts', postsView.length) + '</h3>';
+      html += '<p style="font-size:12px;color:var(--ink-3);margin:-6px 0 10px">按发布时间倒序，最多展示最近 200 条；要处理更早的帖子请直接在站内搜索。</p>';
+      html += '<div style="margin-bottom:10px"><input class="input" id="adm-post-q" value="' + esc(_admFilter.posts) + '" placeholder="搜索标题 / 作者，回车生效" style="width:100%;max-width:360px"></div>';
       html += '<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>' + t('admin.titleCol') + '</th><th>' + t('admin.author') + '</th><th>' + t('admin.time') + '</th><th>' + t('admin.action') + '</th></tr></thead><tbody>';
-      var postsShown = adminFold.posts ? posts.slice(0, 6) : posts;
+      var postsShown = adminFold.posts ? postsView.slice(0, 6) : postsView;
       postsShown.forEach(function (p) {
         html += '<tr>'
-          + '<td><a href="#/post?id=' + p.id + '">' + esc(p.title) + '</a></td>'
-          + '<td>' + esc(p.author_name) + '</td>'
+          + '<td><a href="#/post?id=' + p.id + '">' + esc(p.title || '（无标题）') + '</a></td>'
+          + '<td>' + esc(p.author_name || '—') + '</td>'
           + '<td>' + fmtTime(p.created_at) + '</td>'
           + '<td><button class="btn btn-danger-ghost btn-sm" data-action="admin-del-post" data-post="' + p.id + '">' + t('admin.remove') + '</button></td>'
           + '</tr>';
       });
-      if (posts.length > 6) {
-        html += (adminFold.posts            ? '<tr><td colspan="4" style="text-align:center;padding:10px"><button class="btn btn-ghost btn-sm" data-action="admin-fold-expand" data-key="posts">' + t('expandAll', posts.length) + '</button></td></tr>'            : '<tr><td colspan="4" style="text-align:center;padding:10px"><button class="btn btn-ghost btn-sm" data-action="admin-fold-collapse" data-key="posts">' + t('collapseAll') + '</button></td></tr>');
+      if (postsView.length > 6) {
+        html += (adminFold.posts            ? '<tr><td colspan="4" style="text-align:center;padding:10px"><button class="btn btn-ghost btn-sm" data-action="admin-fold-expand" data-key="posts">' + t('expandAll', postsView.length) + '</button></td></tr>'            : '<tr><td colspan="4" style="text-align:center;padding:10px"><button class="btn btn-ghost btn-sm" data-action="admin-fold-collapse" data-key="posts">' + t('collapseAll') + '</button></td></tr>');
       }
+      if (!postsView.length) html += '<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--ink-3)">没有匹配的帖子</td></tr>';
       html += '</tbody></table></div></div>';
 
       /* ===== 举报管理（审核池） ===== */
@@ -13225,7 +14470,10 @@ function renderAdmin() {
         html += '<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>' + t('admin.reporter') + '</th><th>' + t('admin.obj') + '</th><th>' + t('admin.reason') + '</th><th>' + t('admin.time') + '</th><th>' + t('admin.status') + '</th><th>' + t('admin.action') + '</th></tr></thead><tbody>';
         var reportsShown = adminFold.reports ? reports.slice(0, 8) : reports;
         reportsShown.forEach(function (r) {
-          var tgt = r.target_type === 'post' ? t('admin.targetPost', (r.target_id || '').slice(0, 8)) : t('admin.targetUser', (r.target_id || '').slice(0, 8));
+          var tid8 = (r.target_id || '').slice(0, 8);
+          var tgt = r.target_type === 'post'
+            ? '<a href="#/post?id=' + esc(r.target_id || '') + '" title="' + esc(r.target_id || '') + '">' + t('admin.targetPost', tid8) + '</a>'
+            : '<a href="#/user?id=' + esc(r.target_id || '') + '" title="' + esc(r.target_id || '') + '">' + t('admin.targetUser', tid8) + '</a>';
           var st = r.status === 'open' ? '<span style="color:#d9a03f">' + t('admin.open') + '</span>'
             : (r.status === 'handled' ? '<span style="color:#16A34A">' + t('admin.handled') + '</span>' : '<span style="color:var(--ink-3)">' + t('admin.ignored') + '</span>');
           var handledInfo = (r.status !== 'open') ? '<div style="font-size:11px;color:var(--ink-3)">' + t('admin.handledBy', esc(r.handler_name || '?')) + ' · ' + fmtTime(r.handled_at) + '</div>' : '';
@@ -13288,7 +14536,7 @@ function renderAdmin() {
       /* ===== 导出用户数据（管理员） ===== */
       html += '<div class="admin-section card pad"><h3>导出用户数据</h3>'
         + '<p style="font-size:13px;color:var(--ink-3);margin:0 0 10px">导出任意用户的全部帖子、回帖、私信、签到与通知记录（JSON）。</p>'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap"><input class="input" id="admin-export-uid" placeholder="输入用户名或用户ID" style="flex:1;min-width:200px">'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap"><input class="input" id="admin-export-uid" placeholder="输入用户名 / 用户ID / 手机号 / 邮箱" style="flex:1;min-width:200px">'
         + '<button class="btn btn-primary btn-sm" data-action="admin-export">导出</button></div></div>';
 
           box.innerHTML = html;
@@ -13338,6 +14586,21 @@ $('#brand-logo').addEventListener('click', function (e) {
 /* ============================================================
  * 全局事件
  * ============================================================ */
+/* 后台列表搜索：回车/失焦才生效，避免每次按键都重新拉全量数据 */
+document.addEventListener('change', function (e) {
+  var id = e.target && e.target.id;
+  if (id !== 'adm-user-q' && id !== 'adm-post-q') return;
+  _admFilter[id === 'adm-user-q' ? 'users' : 'posts'] = (e.target.value || '').trim();
+  renderAdmin();
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter' || !e.target) return;
+  var id = e.target.id;
+  if (id !== 'adm-user-q' && id !== 'adm-post-q') return;
+  e.preventDefault();
+  _admFilter[id === 'adm-user-q' ? 'users' : 'posts'] = (e.target.value || '').trim();
+  renderAdmin();
+});
 document.addEventListener('click', function (e) {
   /* 商店页面（独立页面版）按钮处理 */
   var sbtn = e.target.closest && e.target.closest('#shop-panel [data-act]');
@@ -13480,6 +14743,63 @@ document.addEventListener('click', function (e) {
   if (!el || !t) return;
   var act = el.getAttribute('data-action');
 
+  /* v8.3 U01：加载更多 */
+  if (act === 'home-more') { e.preventDefault(); homeMore(); return; }
+
+  /* v8.3 U07：恢复 / 丢弃草稿 */
+  if (act === 'draft-restore') {
+    e.preventDefault();
+    var d0 = draftGet();
+    if (d0) {
+      var ti = document.getElementById('np-title'), ci = document.getElementById('np-content');
+      if (ti) ti.value = d0.title || '';
+      if (ci) ci.value = d0.content || '';
+      if (d0.cat && CATEGORIES[d0.cat]) {
+        selectedCat = d0.cat;
+        var chips = document.querySelectorAll('#np-cats .chip');
+        chips.forEach(function (ch) { ch.classList.toggle('active', ch.getAttribute('data-npcat') === d0.cat); });
+      }
+      toast('草稿已恢复');
+      if (ci) { try { ci.focus(); } catch (err) {} }
+    }
+    var b0 = document.getElementById('np-draft-banner');
+    if (b0) b0.remove();
+    return;
+  }
+  if (act === 'draft-discard') {
+    e.preventDefault();
+    draftClear();
+    var b1 = document.getElementById('np-draft-banner');
+    if (b1) b1.remove();
+    toast('草稿已丢弃');
+    return;
+  }
+
+  /* v8.3 U06：复制某一楼的链接 */
+  if (act === 'copy-comment-link') {
+    e.preventDefault();
+    var cid = el.getAttribute('data-cid');
+    var pid = (window._postData && window._postData.id) || '';
+    var link = location.href.split('#')[0] + '#/post?id=' + encodeURIComponent(pid) + '&c=' + encodeURIComponent(cid);
+    var no = (el.textContent || '').replace('#', '');
+    var done = function () { toast('第 ' + no + ' 楼链接已复制'); };
+    var manual = function () { toast('复制受限，链接已就绪：' + link, 5200); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(done).catch(function () {
+        if (copyLinkText(link)) done(); else manual();
+      });
+    } else if (copyLinkText(link)) { done(); } else { manual(); }
+    return;
+  }
+
+  /* 后台操作统一权限闸门：非管理员或已被停用的管理员一律拦截
+     （此前各分支校验不一致，admin-del-post、admin-unban、admin-reset-pwd 等完全没有校验） */
+  if ((act.indexOf('admin-') === 0 || act.indexOf('adm-') === 0) && !isAdminUser()) {
+    e.preventDefault();
+    toast(t('admin.noPerm'));
+    return;
+  }
+
   /* 快捷翻译：显示/隐藏语言列表 */
   if (act === 'translate-toggle') {
     e.preventDefault();
@@ -13584,6 +14904,22 @@ document.addEventListener('click', function (e) {
     return;
   }
 
+  /* v8.4：评论 / 私信举报（帖子举报已有，补上另外两处入口） */
+  if (act === 'report-comment' || act === 'report-msg') {
+    e.preventDefault();
+    if (!requireLogin()) return;
+    var rType = act === 'report-comment' ? 'comment' : 'msg';
+    var rId = el.getAttribute('data-cid') || el.getAttribute('data-mid') || '';
+    if (!rId) return;
+    var rReason = prompt(t('report.reasonPh'));
+    if (!rReason || !rReason.trim()) { toast(t('report.reasonEmpty')); return; }
+    var rDetail = prompt(t('report.detailPh')) || '';
+    CloudStore.submitReport(rType, rId, rReason.trim(), rDetail.trim())
+      .then(function () { toast(t('report.ok')); })
+      .catch(function (err) { toast(err.message || '提交失败，请确认已执行 v5.5 迁移 SQL'); });
+    return;
+  }
+
   /* 举报帖子 */
   if (act === 'report-post') {
     e.preventDefault();
@@ -13642,6 +14978,13 @@ document.addEventListener('click', function (e) {
     return;
   }
 
+  /* 重新加载后台数据 */
+  if (act === 'admin-refresh') {
+    e.preventDefault();
+    renderAdmin();
+    return;
+  }
+
   /* 管理员处理举报 */
   if (act === 'admin-handle-report' || act === 'admin-ignore-report') {
     e.preventDefault();
@@ -13675,12 +15018,19 @@ document.addEventListener('click', function (e) {
     if (!isAdminUser()) return;
     var euidInput = $('#admin-export-uid');
     var q = (euidInput && euidInput.value.trim()) || '';
-    if (!q) { toast('请输入用户名或ID'); return; }
+    if (!q) { toast('请输入用户名 / 用户ID / 手机号 / 邮箱'); return; }
     CloudStore.findUserByQuery(q)
       .then(function (u) {
-        if (!u) throw new Error('未找到该用户');
-        return CloudStore.adminExportUser(u.id);
+        if (u) return u;
+        /* 兜底：profiles_public 只暴露 username/id，管理员输手机号或邮箱时查不到 */
+        var hit = (_admUserCache || []).filter(function (x) {
+          if (!x) return false;
+          return x.phone === q || (x.email || '').toLowerCase() === q.toLowerCase() || x.username === q || x.id === q;
+        })[0];
+        if (!hit) throw new Error('未找到该用户（支持用户名 / 用户ID / 手机号 / 邮箱）');
+        return { id: hit.id, username: hit.username };
       })
+      .then(function (u) { return CloudStore.adminExportUser(u.id); })
       .then(function (data) {
         downloadJson(data, 'yuntan_user_export.json');
         toast('导出成功');
@@ -13858,7 +15208,7 @@ document.addEventListener('click', function (e) {
     e.preventDefault();
     var cn = $('#adm-circle-name') ? $('#adm-circle-name').value.trim() : '';
     var cd = $('#adm-circle-desc') ? $('#adm-circle-desc').value.trim() : '';
-    var ci = $('#adm-circle-icon') ? $('#adm-circle-icon').value.trim() : '⭕';
+    var ci = ($('#adm-circle-icon') ? $('#adm-circle-icon').value.trim() : '') || '⭕';
     if (!cn) { toast(t('circles.name') + ' 不能为空'); return; }
     CloudStore.createCircle(cn, cd, ci).then(function () { toast(t('circles.create') + ' ✓'); _ctxCache.circles = null; renderAdmin(); }).catch(function (err) { toast(err.message); });
     return;
@@ -13885,7 +15235,7 @@ document.addEventListener('click', function (e) {
     e.preventDefault();
     var tn = $('#adm-topic-name') ? $('#adm-topic-name').value.trim() : '';
     var td = $('#adm-topic-desc') ? $('#adm-topic-desc').value.trim() : '';
-    var te = $('#adm-topic-emoji') ? $('#adm-topic-emoji').value.trim() : '🏆';
+    var te = ($('#adm-topic-emoji') ? $('#adm-topic-emoji').value.trim() : '') || '🏆';
     var tend = $('#adm-topic-end') ? $('#adm-topic-end').value : '';
     if (!tn) { toast(t('topics.name') + ' 不能为空'); return; }
     CloudStore.createTopic(tn, td, te, tend || null).then(function () { toast(t('topics.create') + ' ✓'); _ctxCache.topics = null; renderAdmin(); }).catch(function (err) { toast(err.message); });
@@ -13898,7 +15248,12 @@ document.addEventListener('click', function (e) {
     if (!tn2) return;
     var td2 = prompt(t('topics.desc'), el.getAttribute('data-desc')) || '';
     var te2 = prompt(t('topics.emoji'), el.getAttribute('data-emoji')) || '🏆';
-    CloudStore.updateTopic(tid, { name: tn2.trim(), desc: td2, emoji: te2 }).then(function () { toast(t('topics.edit') + ' ✓'); _ctxCache.topics = null; renderAdmin(); }).catch(function (err) { toast(err.message); });
+    /* 修复：编辑时无法修改截止日期（列表里能看到、却改不了） */
+    var tend2 = prompt(t('topics.end') + '（YYYY-MM-DD，留空=长期有效）', el.getAttribute('data-end') || '');
+    if (tend2 === null) return;
+    tend2 = (tend2 || '').trim();
+    if (tend2 && !/^\d{4}-\d{2}-\d{2}$/.test(tend2)) { toast('日期格式应为 YYYY-MM-DD'); return; }
+    CloudStore.updateTopic(tid, { name: tn2.trim(), desc: td2, emoji: te2, end_date: tend2 || null }).then(function () { toast(t('topics.edit') + ' ✓'); _ctxCache.topics = null; renderAdmin(); }).catch(function (err) { toast(err.message); });
     return;
   }
   if (act === 'adm-topic-del') {
@@ -13972,11 +15327,18 @@ document.addEventListener('click', function (e) {
     var suid = el.getAttribute('data-uid');
     var badgesRaw = $('#eu-badges') ? $('#eu-badges').value : '';
     var badgesArr = badgesRaw.split(/[,，]+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    var numOrUndef = function (sel, min, max) {
+      var n = $(sel) ? parseInt($(sel).value, 10) : NaN;
+      if (!isFinite(n)) return undefined;
+      return Math.min(max, Math.max(min, n));
+    };
     var payload = {
       p_user_id: suid,
-      p_username: $('#eu-name') ? $('#eu-name').value.trim() : undefined,
-      p_coins: $('#eu-coins') ? parseInt($('#eu-coins').value, 10) : undefined,
-      p_level: $('#eu-level') ? parseInt($('#eu-level').value, 10) : undefined,
+      p_username: ($('#eu-name') && $('#eu-name').value.trim()) || undefined,
+      /* 修复：清空金币输入框时 parseInt('') = NaN，JSON 序列化变成 null，
+         RPC 若按"直接赋值"处理就会把用户金币清零。这里改为空值=不修改 */
+      p_coins: numOrUndef('#eu-coins', 0, 999999999),
+      p_level: numOrUndef('#eu-level', 1, 30),
       p_title: $('#eu-title') ? $('#eu-title').value.trim() : undefined,
       p_badges: badgesArr.length ? badgesArr : undefined,
       p_pet: $('#eu-pet') ? $('#eu-pet').value.trim() : undefined,
@@ -14004,20 +15366,23 @@ document.addEventListener('click', function (e) {
   /* BUG 反馈：超管接收 */
   if (act === 'bug-receive') {
     e.preventDefault();
-    if (!isAdminUser()) return;
-    var bid = btn.getAttribute('data-id');
+    /* 修复：原来取的是未定义的 btn，点击必抛 ReferenceError（后台"接收"完全失效） */
+    if (!session || session.role !== 'super') { toast(t('admin.noPerm')); return; }
+    var bid = el.getAttribute('data-id');
     if (!bid) return;
     if (!confirm(t('bug.confirm'))) return;
+    el.disabled = true;
     CloudStore.receiveBugReport(bid).then(function () {
       toast(t('bug.received'));
       renderAdmin();
-    }).catch(function (err) { toast(err.message || t('bug.fail')); });
+    }).catch(function (err) { el.disabled = false; toast(err.message || t('bug.fail')); });
     return;
   }
   /* BUG 反馈：下载附件 */
   if (act === 'bug-download') {
     e.preventDefault();
-    var path = btn.getAttribute('data-path');
+    if (!isAdminUser()) { toast(t('admin.noPerm')); return; }
+    var path = el.getAttribute('data-path');
     if (!path) return;
     CloudStore.downloadBugAttachment(path).then(function (blob) {
       var url = URL.createObjectURL(blob);
@@ -14087,11 +15452,28 @@ document.addEventListener('click', function (e) {
   if (act === 'admin-view-msgs') {
     e.preventDefault();
     var uid3 = el.getAttribute('data-uid');
+    var uname = el.getAttribute('data-name') || '';
+    /* 修复：原来用 alert 弹纯文本，长会话直接截断；且"我→"把管理员的身份套进了用户对话 */
     CloudStore.adminViewMessages(uid3).then(function (msgs) {
-      var txt = msgs.map(function (m) {
-        return (m.sender_id === session.id ? '我→' : 'TA→') + m.content + ' [' + fmtTime(m.created_at) + ']';
-      }).join('\n');
-      alert(msgs.length ? '私信记录（' + msgs.length + '条）：\n\n' + txt : '该用户暂无私信记录');
+      var list = msgs || [];
+      var oldM = document.getElementById('admin-msgs-modal');
+      if (oldM) oldM.remove();
+      var mask = document.createElement('div');
+      mask.className = 'modal-mask show';
+      mask.id = 'admin-msgs-modal';
+      mask.innerHTML = '<div class="modal" style="max-width:640px;width:92vw">'
+        + '<h3 class="modal-title">私信记录' + (uname ? '：' + esc(uname) : '') + '（' + list.length + ' 条）</h3>'
+        + '<div style="max-height:60vh;overflow-y:auto;display:grid;gap:6px;padding-right:4px">'
+        + (list.length ? list.map(function (m) {
+            var fromUser = m.sender_id === uid3;
+            return '<div style="font-size:13px;line-height:1.6;padding:8px 10px;border-radius:10px;background:' + (fromUser ? 'rgba(46,107,121,.09)' : 'rgba(192,64,44,.08)') + '">'
+              + '<div style="font-size:11px;color:var(--ink-3);margin-bottom:3px">' + (fromUser ? '用户 →' : '← 对方') + ' · ' + fmtTime(m.created_at) + '</div>'
+              + '<div style="white-space:pre-wrap;word-break:break-word">' + esc(m.content || '') + '</div></div>';
+          }).join('') : '<div class="empty" style="padding:18px 0"><p class="empty-title">该用户暂无私信记录</p></div>')
+        + '</div>'
+        + '<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-ghost" data-action="admin-msgs-close">关闭</button></div></div>';
+      document.body.appendChild(mask);
+      mask.addEventListener('click', function (ev) { if (ev.target === mask || (ev.target.closest && ev.target.closest('[data-action="admin-msgs-close"]'))) mask.remove(); });
     }).catch(function (err) { toast(err.message); });
     return;
   }
@@ -14185,9 +15567,12 @@ document.addEventListener('click', function (e) {
   }
   if (act === 'admin-promote') {
     e.preventDefault();
+    if (!(session && session.role === 'super')) { toast('仅超级管理员可操作'); return; }
     var accInput = document.getElementById('admin-promote-acc');
     var acc = accInput ? accInput.value.trim() : '';
     if (!acc) { toast('请输入手机号或邮箱'); return; }
+    /* 修复：此前不校验格式，随便输入一串字符也会发起 RPC */
+    if (!isPhone(acc) && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(acc)) { toast('请输入有效的手机号或邮箱'); return; }
     if (!confirm('确认将用户「' + acc + '」提升为管理员？')) return;
     CloudStore.promoteAdmin(acc)
       .then(function (r) {
@@ -14213,6 +15598,7 @@ document.addEventListener('click', function (e) {
   /* 超级管理员：删除管理员 */
   if (act === 'admin-remove') {
     e.preventDefault();
+    if (!(session && session.role === 'super')) { toast('仅超级管理员可操作'); return; }
     var uidR = el.getAttribute('data-uid');
     if (!confirm(t('admin.confirmRemove'))) return;
     CloudStore.superRemoveAdmin(uidR)
@@ -14224,6 +15610,7 @@ document.addEventListener('click', function (e) {
   /* 超级管理员：启用/禁用管理员 */
   if (act === 'admin-toggle') {
     e.preventDefault();
+    if (!(session && session.role === 'super')) { toast('仅超级管理员可操作'); return; }
     var uidT = el.getAttribute('data-uid');
     var nowActive = el.getAttribute('data-active') === '1';
     if (!confirm(nowActive ? t('admin.confirmDisable') : t('admin.confirmEnable'))) return;
@@ -14302,7 +15689,7 @@ document.addEventListener('click', function (e) {
   if (act === 'admin-ban') {
     e.preventDefault();
     var uid4 = el.getAttribute('data-uid');
-    openBanModal(uid4, el.getAttribute('data-account') || uid4);
+    openBanModal(uid4, el.getAttribute('data-account') || uid4, el.getAttribute('data-role') || 'user');
     return;
   }
 
@@ -14329,7 +15716,9 @@ document.addEventListener('click', function (e) {
   if (act === 'admin-del-user') {
     e.preventDefault();
     var duid = el.getAttribute('data-uid');
-    var dacc = el.getAttribute('data-account') || '';
+    /* 修复：没填手机号/邮箱的用户 dacc 为空，任何输入都对不上，导致永远"已取消注销" */
+    var dacc = el.getAttribute('data-account') || el.getAttribute('data-name') || '';
+    if (!dacc) { toast('该用户没有可校验的账号，已取消'); return; }
     if (!confirm('⚠️ 注销账号不可恢复！\n该用户的账号、帖子、回帖、私信、通知等全部数据将被永久删除。\n确定要继续吗？')) return;
     var verify = prompt('请输入该用户账号（' + dacc + '）以确认注销：');
     if (!verify || verify.trim() !== dacc) { toast('已取消注销'); return; }
@@ -14498,6 +15887,11 @@ document.addEventListener('submit', function (e) {
     var title = $('#np-title').value.trim();
     var content = $('#np-content').value.trim();
     if (!title || !content) { toast('标题和内容都要填写'); return; }
+    /* v8.4：30 秒一条 + 24 小时内相似标题拦截 */
+    var rlWait = rateWait('post', 30000);
+    if (rlWait) { toast('发帖太频繁，' + rlWait + ' 秒后再试'); return; }
+    var dupTitle = findSimilarRecentTitle(title);
+    if (dupTitle) { toast('刚发过很像的标题「' + dupTitle.slice(0, 14) + '」，换个说法再发'); return; }
     /* v6.4.3 定时发布：设置了时间则入队不立即发布（附件不支持定时） */
     var schedEl = $('#np-sched-at');
     if (schedEl && schedEl.value) {
@@ -14611,10 +16005,12 @@ document.addEventListener('submit', function (e) {
         btn2.disabled = false; btn2.textContent = '发布';
         return;
       }
+      recordPostTitle(title);
       toast(t('xp.gainPost'));
       CloudStore.bumpTask('post');
       CloudStore.addXp(20).then(function (r) { if (session && r) { session.xp = r.xp; session.level = Math.max(r.level || 0, xpLevel(r.xp || 0)); } });
       grantAchievementsByStats();
+      draftClear();
       location.hash = '#/post?id=' + encodeURIComponent(p.id);
     })
     .catch(function (err) {
@@ -14732,6 +16128,8 @@ document.addEventListener('click', function (e) {
   var themeId = item.getAttribute('data-theme-id');
   if (item.hasAttribute('data-admin-only') && !isAdminUser()) { toast(t('admin.topicAdminOnly')); return; }
   setTheme(themeId);
+  /* 游客也记住主题，刷新后不再恢复默认 */
+  try { localStorage.setItem('forum_theme', themeId || 'default'); } catch (e) {}
   if (session && isCloud()) {
     CloudStore.saveSettings({ theme: themeId })
       .then(function () { toast(t('settings.themeSaved')); renderSettings(); })
@@ -14759,6 +16157,12 @@ document.addEventListener('click', function (e) {
   if (!item) return;
   userGlass.color = item.getAttribute('data-glass-id');
   setTheme((document.body.getAttribute('data-theme')) || 'default');
+  /* 未登录时不请求云端，避免"保存失败"误报 */
+  if (!session || !isCloud()) {
+    toast(t('settings.glassColorDone'));
+    renderSettings();
+    return;
+  }
   CloudStore.saveSettings({ glass_color: userGlass.color, glass_enabled: userGlass.enabled, glass_alpha: userGlass.alpha })
     .then(function () { toast(t('settings.glassColorDone')); renderSettings(); })
     .catch(function (err) { toast(t('settings.saveFail') + err.message); });
@@ -15584,6 +16988,11 @@ setTimeout(tickScheduled, 3000);
         router();
       }).catch(function () { router(); });
     } else {
+      /* 游客：恢复上次选择的主题（之前只在登录态下生效，刷新就丢） */
+      try {
+        var guestTheme = localStorage.getItem('forum_theme');
+        if (guestTheme) setTheme(guestTheme);
+      } catch (e) {}
       router();
     }
     /* 铃铛红点自动刷新：每30秒轮询一次未读数，不刷新页面也能看到新通知 */
@@ -15810,13 +17219,20 @@ function renderBankAdmin() {
 }
 
 /* v7.0 简易折线图（Canvas 自绘） */
-function lineChart(cid, labels, vals, color, ink) {
+function lineChart(cid, labels, vals, color, ink, line) {
   var cv = document.getElementById(cid); if (!cv || !vals.length) return;
   var ctx; try { ctx = cv.getContext('2d'); } catch (e) { return; }
   if (!ctx) return;
   var w = cv.width = cv.clientWidth || 300, h = cv.height = cv.clientHeight || 180;
   ctx.clearRect(0, 0, w, h);
   var pad = 30, max = Math.max.apply(null, vals.concat([1]));
+  /* 基线：为了兼容旧调用保留（无则跳过） */
+  if (line) {
+    ctx.save();
+    ctx.strokeStyle = line; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(pad, h - pad); ctx.lineTo(w - pad, h - pad); ctx.stroke();
+    ctx.restore();
+  }
   ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
   var n = vals.length, step = (w - pad * 2) / Math.max(1, n - 1);
   vals.forEach(function (v, i) {
@@ -15837,6 +17253,14 @@ function lineChart(cid, labels, vals, color, ink) {
     var x = pad + i * step;
     ctx.fillText(labels[i], x, h - 8);
   });
+  /* 点数不多时补上数值标签，读图不用猜 */
+  if (n <= 14) {
+    ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    vals.forEach(function (v, i) {
+      ctx.fillStyle = color;
+      ctx.fillText(v, pad + i * step, h - pad - (h - pad * 2) * v / max - 6);
+    });
+  }
 }
 
 /* ============================================================
@@ -18810,6 +20234,692 @@ function initDeskPet() {
   window._deskPetInit = true;
   setInterval(ensureDeskPet, 2000);
 }
-initDeskPet();</script>
+initDeskPet();
+/* ===== v8.3 U02：回到顶部 ===== */
+(function () {
+  if (document.getElementById('to-top')) return;
+  var btn = document.createElement('button');
+  btn.id = 'to-top';
+  btn.type = 'button';
+  btn.className = 'to-top';
+  btn.title = '回到顶部';
+  btn.setAttribute('aria-label', '回到顶部');
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="6"/><polyline points="6 13 12 6 18 13"/></svg>';
+  document.body.appendChild(btn);
+  var ticking = false;
+  function update() {
+    var y = window.scrollY || window.pageYOffset || 0;
+    btn.classList.toggle('show', y > 600);
+    ticking = false;
+  }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  btn.addEventListener('click', function () {
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+  });
+  update();
+})();
+
+/* ===== v8.3 U03：详情页阅读进度 ===== */
+(function () {
+  if (document.getElementById('read-progress')) return;
+  var bar = document.createElement('div');
+  bar.id = 'read-progress';
+  bar.className = 'read-progress';
+  document.body.appendChild(bar);
+  var ticking = false;
+  function compute() {
+    ticking = false;
+    var route = document.getElementById('route-post');
+    var onPost = !!(route && route.classList.contains('active'));
+    if (!onPost) { bar.classList.remove('on'); bar.style.transform = 'scaleX(0)'; return; }
+    var doc = document.documentElement;
+    var max = (doc.scrollHeight || 0) - (window.innerHeight || doc.clientHeight || 0);
+    var y = window.scrollY || window.pageYOffset || 0;
+    if (max <= 0) { bar.classList.remove('on'); bar.style.transform = 'scaleX(0)'; return; }
+    var ratio = Math.max(0, Math.min(1, y / max));
+    bar.style.transform = 'scaleX(' + ratio.toFixed(4) + ')';
+    bar.classList.toggle('on', ratio > 0.01);
+  }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; requestAnimationFrame(compute); }
+  }, { passive: true });
+  window.addEventListener('resize', compute);
+  /* 路由切换后重算（router 内部会 scrollTo(0,0)） */
+  window.addEventListener('hashchange', function () { setTimeout(compute, 60); });
+  setTimeout(compute, 200);
+})();
+
+/* ===== v8.3 U04：全局快捷键 ===== */
+(function () {
+  if (window.__kbBound) return;
+  window.__kbBound = true;
+  function typing(el) {
+    if (!el) return false;
+    var tag = (el.tagName || '').toUpperCase();
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+  }
+  function cards() {
+    return Array.prototype.slice.call(document.querySelectorAll('#post-list .post-item'));
+  }
+  function openCard(el) {
+    var a = el.querySelector('.post-title[href]');
+    if (a) { location.hash = a.getAttribute('href'); return; }
+    el.click();
+  }
+  var focusIdx = -1;
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var inField = typing(document.activeElement);
+
+    /* Esc：先关灯箱，再关弹窗，最后退出输入框 */
+    if (e.key === 'Escape') {
+      if (window.__lightboxClose && window.__lightboxClose()) { e.preventDefault(); return; }
+      var masks = document.querySelectorAll('.modal-mask.show');
+      if (masks.length) {
+        var last = masks[masks.length - 1];
+        try { last.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); } catch (err) {}
+        e.preventDefault();
+        return;
+      }
+      if (inField && document.activeElement.blur) document.activeElement.blur();
+      return;
+    }
+
+    /* "/" 聚焦搜索 */
+    if (e.key === '/' && !inField) {
+      var si = document.getElementById('search-input');
+      if (si) { e.preventDefault(); si.focus(); if (si.select) si.select(); }
+      return;
+    }
+
+    /* j / k / Enter：在列表里上下移动 */
+    if (!inField && (e.key === 'j' || e.key === 'k' || e.key === 'Enter')) {
+      var list = cards();
+      if (e.key === 'Enter') {
+        var marked = document.querySelector('#post-list .post-item.kb-focus');
+        if (marked) { e.preventDefault(); openCard(marked); }
+        return;
+      }
+      if (!list.length) return;
+      if (e.key === 'j') focusIdx = Math.min(list.length - 1, focusIdx + 1);
+      else focusIdx = Math.max(0, focusIdx - 1);
+      list.forEach(function (el) { el.classList.remove('kb-focus'); });
+      var el = list[focusIdx];
+      if (!el) return;
+      el.classList.add('kb-focus');
+      el.setAttribute('tabindex', '-1');
+      try { el.focus({ preventScroll: true }); } catch (err) {}
+      try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (err) {}
+      e.preventDefault();
+    }
+  });
+})();
+
+/* ===== v8.3 U05：图片灯箱（点击附件图放大，←/→ 切换，双击缩放） ===== */
+(function () {
+  if (window.__lbBound) return;
+  window.__lbBound = true;
+  var lb = null, lbImg = null, lbCount = null, group = [], idx = 0, lastFocus = null;
+
+  function scopes() {
+    return [
+      '#post-detail .attachments img',
+      '#post-detail .post-content img',
+      '.attachments img',
+      '.reader-body img'
+    ].join(',');
+  }
+
+  function ensure() {
+    if (lb) return;
+    lb = document.createElement('div');
+    lb.className = 'lightbox';
+    lb.id = 'lightbox';
+    lb.innerHTML = '<span class="lb-count"></span>'
+      + '<button class="lb-close" type="button" aria-label="关闭">×</button>'
+      + '<button class="lb-nav lb-prev" type="button" aria-label="上一张">‹</button>'
+      + '<button class="lb-nav lb-next" type="button" aria-label="下一张">›</button>'
+      + '<img alt="">';
+    document.body.appendChild(lb);
+    lbImg = lb.querySelector('img');
+    lbCount = lb.querySelector('.lb-count');
+    lb.addEventListener('click', function (e) {
+      if (e.target === lb) { close(); return; }
+      if (e.target.classList.contains('lb-close')) { close(); return; }
+      if (e.target.classList.contains('lb-prev')) { step(-1); return; }
+      if (e.target.classList.contains('lb-next')) { step(1); return; }
+    });
+    lbImg.addEventListener('dblclick', function () { lbImg.classList.toggle('zoomed'); });
+  }
+
+  function paint() {
+    if (!group.length) return;
+    var src = group[idx];
+    lbImg.src = src;
+    lbCount.textContent = (idx + 1) + ' / ' + group.length;
+    var nav = lb.querySelectorAll('.lb-nav');
+    nav.forEach(function (b) { b.style.display = group.length > 1 ? 'block' : 'none'; });
+  }
+
+  function step(d) {
+    if (!group.length) return;
+    idx = (idx + d + group.length) % group.length;
+    lbImg.classList.remove('zoomed');
+    paint();
+  }
+
+  function open(srcs, start) {
+    ensure();
+    group = srcs.slice();
+    idx = start;
+    lastFocus = document.activeElement;
+    lb.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    paint();
+  }
+
+  function close() {
+    if (!lb) return false;
+    if (!lb.classList.contains('show')) return false;
+    lb.classList.remove('show');
+    lbImg.classList.remove('zoomed');
+    document.body.style.overflow = '';
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+    return true;
+  }
+
+  window.__lightboxClose = close;
+
+  document.addEventListener('click', function (e) {
+    var img = e.target && e.target.closest ? e.target.closest('img') : null;
+    if (!img || !img.src) return;
+    if (!img.matches(scopes())) return;
+    var wrap = img.closest('.attachments') || img.parentElement;
+    var peers = Array.prototype.slice.call((wrap || document).querySelectorAll('img')).filter(function (x) {
+      return x.matches(scopes()) && x.src;
+    });
+    var srcs = peers.map(function (x) { return x.src; });
+    var start = Math.max(0, srcs.indexOf(img.src));
+    e.preventDefault();
+    open(srcs, start);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (!lb || !lb.classList.contains('show')) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+  });
+})();
+
+/* ===== v8.3 U07：发帖草稿输入节流保存 ===== */
+(function () {
+  if (window.__draftBound) return;
+  window.__draftBound = true;
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t || !t.id) return;
+    if (t.id !== 'np-title' && t.id !== 'np-content') return;
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(draftSaveNow, 1200);
+  });
+  document.addEventListener('click', function (e) {
+    var chip = e.target && e.target.closest ? e.target.closest('#np-cats .chip') : null;
+    if (chip) { clearTimeout(draftTimer); setTimeout(draftSaveNow, 60); }
+  });
+})();
+
+/* ===== v8.3 U08：搜索历史 + 回车即搜 ===== */
+(function () {
+  if (window.__histBound) return;
+  window.__histBound = true;
+  var KEY = 'forum_search_hist';
+  function getHist() {
+    try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function setHist(a) { try { localStorage.setItem(KEY, JSON.stringify(a.slice(0, 8))); } catch (e) {} }
+  function pushHist(kw) {
+    kw = String(kw || '').trim();
+    if (kw.length < 2) return;
+    var a = getHist().filter(function (x) { return x !== kw; });
+    a.unshift(kw); setHist(a);
+  }
+  function panel() {
+    var p = document.getElementById('search-hist');
+    if (p) return p;
+    var box = document.querySelector('.searchbox');
+    if (!box) return null;
+    p = document.createElement('div');
+    p.id = 'search-hist';
+    p.className = 'search-hist';
+    box.appendChild(p);
+    p.addEventListener('mousedown', function (e) { e.preventDefault(); }); /* 防止点选时 blur 先触发 */
+    p.addEventListener('click', function (e) {
+      var it = e.target.closest('[data-kw]');
+      if (it) {
+        var kw = it.getAttribute('data-kw');
+        var inp = document.getElementById('search-input');
+        if (inp) inp.value = kw;
+        homeState.keyword = kw;
+        pushHist(kw);
+        renderHome();
+        hide();
+        return;
+      }
+      if (e.target.closest('[data-hist-clear]')) {
+        setHist([]); hide();
+        toast('搜索历史已清空');
+      }
+    });
+    return p;
+  }
+  function show() {
+    var p = panel();
+    if (!p) return;
+    var a = getHist();
+    if (!a.length) { hide(); return; }
+    p.innerHTML = '<div class="hist-head">最近搜索<button type="button" class="hist-clear" data-hist-clear>清空</button></div>'
+      + a.map(function (k) { return '<div class="hist-item" data-kw="' + esc(k) + '"><span class="hist-k">' + esc(k) + '</span><span class="hist-arrow">↵</span></div>'; }).join('');
+    p.classList.add('show');
+  }
+  function hide() {
+    var p = document.getElementById('search-hist');
+    if (p) p.classList.remove('show');
+  }
+  function apply(kw) {
+    homeState.keyword = kw;
+    renderHome();
+  }
+  document.addEventListener('focusin', function (e) {
+    if (e.target && e.target.id === 'search-input' && !e.target.value.trim()) show();
+  });
+  document.addEventListener('focusout', function (e) {
+    if (e.target && e.target.id === 'search-input') setTimeout(hide, 160);
+  });
+  document.addEventListener('input', function (e) {
+    if (e.target && e.target.id === 'search-input' && e.target.value.trim()) hide();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!e.target || e.target.id !== 'search-input') return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var kw = e.target.value.trim();
+      apply(kw); pushHist(kw); hide();
+    } else if (e.key === 'Escape') {
+      hide();
+    }
+  });
+  window.__searchHistPush = pushHist;
+})();
+
+/* ===== v8.4：发帖预览 + 键盘弹起不遮挡输入 ===== */
+(function () {
+  if (window.__mdPrevBound) return;
+  window.__mdPrevBound = true;
+  var btn = document.getElementById('np-md-preview');
+  var out = document.getElementById('np-md-out');
+  var ta = document.getElementById('np-content');
+  if (btn && out && ta) {
+    var showing = false;
+    function paint() {
+      var v = ta.value || '';
+      out.innerHTML = v.trim() ? mdRender(v) : '<p class="md-p" style="color:var(--ink-3)">还没有内容，写点东西再预览。</p>';
+    }
+    btn.addEventListener('click', function () {
+      showing = !showing;
+      out.style.display = showing ? '' : 'none';
+      btn.textContent = showing ? '✏️ 继续写' : '👁 预览';
+      if (showing) paint();
+    });
+    ta.addEventListener('input', function () { if (showing) paint(); });
+  }
+
+  /* 移动端键盘弹起：把正在输入的控件滚到可视区中间 */
+  if (window.visualViewport) {
+    var vv = window.visualViewport;
+    var timer = null;
+    vv.addEventListener('resize', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        var kb = Math.max(0, (window.innerHeight || 0) - vv.height);
+        if (kb < 120) return;
+        var ae = document.activeElement;
+        if (!ae) return;
+        var tag = (ae.tagName || '').toUpperCase();
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA') return;
+        try { ae.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+      }, 120);
+    });
+  }
+})();
+/* v8.5 前端增强包 */
+/* v8.5 前端增强包：分享卡片 / PWA更新提示 / 敏感词进审 / 低质折叠 / 通知分组 / 下拉刷新 / 工具层 */
+(function () {
+  if (window.__HB85) return;
+  window.__HB85 = true;
+  var BUILD = 'v8.5';
+  function toastSafe(msg) { try { if (typeof toast === 'function') toast(msg); } catch (e) {} }
+
+  /* ---------- 1) 工具层：hexToRgba ---------- */
+  if (!window.hexToRgba) {
+    window.hexToRgba = function (hex, a) {
+      hex = String(hex || '').replace('#', '');
+      if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      var n = parseInt(hex, 16);
+      if (isNaN(n)) return 'rgba(0,0,0,' + (a == null ? 1 : a) + ')';
+      return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + (a == null ? 1 : a) + ')';
+    };
+  }
+
+  /* ---------- 2) localStorage 版本号 + 迁移钩子 ---------- */
+  try {
+    var oldVer = localStorage.getItem('forum_ver');
+    if (oldVer !== BUILD) {
+      if (oldVer) { /* 预留：按版本号做键名/结构迁移 */ }
+      localStorage.setItem('forum_ver', BUILD);
+    }
+  } catch (e) {}
+
+  /* ---------- 3) i18n 缺键扫描（只告警，不改行为） ---------- */
+  window.hbScanI18n = function () {
+    var miss = [], seen = {};
+    var nodes = document.querySelectorAll('[data-i18n],[data-i18n-ph]');
+    for (var i = 0; i < nodes.length; i++) {
+      var k = nodes[i].getAttribute('data-i18n') || nodes[i].getAttribute('data-i18n-ph');
+      if (!k || seen[k]) continue;
+      seen[k] = 1;
+      var v = '';
+      try { v = t(k); } catch (e) { v = k; }
+      if (v === k) miss.push(k);
+    }
+    window.__missingI18n = miss;
+    if (miss.length) console.warn('[i18n] 缺键 ' + miss.length + ' 个：', miss.join(', '));
+    return miss;
+  };
+
+  /* ---------- 4) PWA 新版本就绪提示 ---------- */
+  try {
+    var lastBuild = localStorage.getItem('forum_build');
+    if (lastBuild && lastBuild !== BUILD) {
+      var bar = document.createElement('div');
+      bar.id = 'hb-update-bar';
+      bar.textContent = '🔄 有新版本就绪，点此刷新';
+      bar.onclick = function () { localStorage.setItem('forum_build', BUILD); location.reload(); };
+      document.body.appendChild(bar);
+    }
+    localStorage.setItem('forum_build', BUILD);
+  } catch (e) {}
+
+  /* ---------- 5) 竖版分享卡片（Canvas 720×1080 → PNG） ---------- */
+  function shareCardModal() {
+    var title = '';
+    try {
+      var h = document.querySelector('.post-title, h1.post-h1, .detail-title');
+      title = (h && h.textContent.trim()) || document.title.replace(' · HanBer 云坛', '');
+      var body = document.querySelector('.post-body, .md-body, #post-detail');
+      var excerpt = body ? body.textContent.replace(/\s+/g, ' ').trim().slice(0, 90) : '';
+    } catch (e) {}
+    if (!title) title = 'HanBer 云坛';
+
+    var mask = document.createElement('div');
+    mask.className = 'modal-mask show hb-share-mask';
+    mask.innerHTML = '<div class="modal hb-share-modal">' +
+      '<div class="hb-share-head"><h3>分享卡片</h3><button class="btn btn-sm btn-ghost" data-share-close="1">关闭</button></div>' +
+      '<div class="hb-share-canvas-wrap"><canvas id="hb-share-cv" width="720" height="1080"></canvas></div>' +
+      '<div class="hb-share-actions"><button class="btn btn-primary" id="hb-share-dl">下载 PNG</button></div>' +
+      '</div>';
+    document.body.appendChild(mask);
+    mask.addEventListener('click', function (e) {
+      if (e.target === mask || e.target.getAttribute('data-share-close')) mask.remove();
+    });
+
+    var cv = document.getElementById('hb-share-cv');
+    var g = cv.getContext('2d');
+    var grad = g.createLinearGradient(0, 0, 720, 1080);
+    grad.addColorStop(0, '#f6f1e6'); grad.addColorStop(1, '#efe3cf');
+    g.fillStyle = grad; g.fillRect(0, 0, 720, 1080);
+    g.strokeStyle = 'rgba(120,90,50,.18)'; g.lineWidth = 8; g.strokeRect(24, 24, 672, 1032);
+    g.fillStyle = '#8a6b3f';
+    g.font = '500 26px "PingFang SC", system-ui, sans-serif';
+    g.fillText('HanBer 云坛', 64, 110);
+    g.fillStyle = '#2b2118';
+    g.font = '700 46px "PingFang SC", system-ui, sans-serif';
+    var t1 = title.slice(0, 16), t2 = title.slice(16, 32);
+    g.fillText(t1, 64, 235);
+    if (t2) g.fillText(t2, 64, 300);
+    g.fillStyle = '#6b5a45';
+    g.font = '400 26px "PingFang SC", system-ui, sans-serif';
+    var words = (excerpt || '来这里，和一群认真写字的人聊聊。').split('');
+    var line = '', y = 400;
+    for (var i = 0; i < words.length; i++) {
+      line += words[i];
+      if (line.length >= 15) { g.fillText(line, 64, y); y += 44; line = ''; if (y > 900) break; }
+    }
+    if (line) g.fillText(line, 64, y);
+    g.fillStyle = 'rgba(120,90,50,.5)';
+    g.font = '400 20px "PingFang SC", system-ui, sans-serif';
+    g.fillText('扫码或访问站点阅读全文', 64, 990);
+    g.fillText(location.host || '', 64, 1022);
+
+    document.getElementById('hb-share-dl').onclick = function () {
+      try {
+        var a = document.createElement('a');
+        a.download = 'hanber-card-' + Date.now() + '.png';
+        a.href = cv.toDataURL('image/png');
+        a.click();
+        toastSafe('已下载分享卡片');
+      } catch (e) { toastSafe('导出失败，请长按图片保存'); }
+    };
+  }
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest && e.target.closest('[data-action="share-card"], #np-share-card');
+    if (el) { e.preventDefault(); shareCardModal(); }
+  }, true);
+
+  /* ---------- 6) 敏感词命中进审 ---------- */
+  var SENSITIVE = ['裸聊', '博彩', '赌球', '代开发票', '办证', '加微信转账', '刷单', '色情', '约炮', '枪支'];
+  function hitWord(text) {
+    for (var i = 0; i < SENSITIVE.length; i++) if (text.indexOf(SENSITIVE[i]) > -1) return SENSITIVE[i];
+    return null;
+  }
+  window.hbReviewQueue = [];
+  try {
+    window.hbReviewQueue = JSON.parse(localStorage.getItem('forum_review_queue') || '[]') || [];
+  } catch (e) { window.hbReviewQueue = []; }
+
+  function installReviewGuard() {
+    if (!window.CloudStore || !CloudStore.createPost || CloudStore.__hbGuard) return;
+    var raw = CloudStore.createPost;
+    CloudStore.createPost = function (data) {
+      var txt = String((data && data.title) || '') + ' ' + String((data && data.content) || '');
+      var w = hitWord(txt);
+      if (w) {
+        window.hbReviewQueue.push({ at: Date.now(), word: w, title: (data.title || '').slice(0, 60) });
+        try { localStorage.setItem('forum_review_queue', JSON.stringify(window.hbReviewQueue.slice(-50))); } catch (e) {}
+        toastSafe('内容含敏感词「' + w + '」，已转入人工审核');
+        return Promise.reject(new Error('SENSITIVE_WORD'));
+      }
+      return raw.apply(this, arguments);
+    };
+    CloudStore.__hbGuard = true;
+  }
+  installReviewGuard();
+
+  /* ---------- 7) 低质内容折叠 ---------- */
+  function foldLowQuality() {
+    var list = document.getElementById('post-list');
+    if (!list) return;
+    var items = list.querySelectorAll('.post-item');
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (it.getAttribute('data-hb-lowq')) continue;
+      var txt = (it.textContent || '').replace(/\s+/g, '');
+      var liked = /赞\s*[1-9]|likes?\s*[1-9]/i.test(it.textContent || '');
+      if (txt.length > 0 && txt.length < 26 && !liked) {
+        it.setAttribute('data-hb-lowq', '1');
+        it.classList.add('hb-lowq');
+        var btn = document.createElement('button');
+        btn.className = 'hb-lowq-btn';
+        btn.type = 'button';
+        btn.textContent = '内容较少，展开查看';
+        btn.onclick = function (ev) {
+          ev.stopPropagation(); ev.preventDefault();
+          this.parentNode.classList.remove('hb-lowq');
+          this.remove();
+        };
+        it.appendChild(btn);
+      }
+    }
+  }
+
+  /* ---------- 8) 通知按类型分组折叠 + 筛选 ---------- */
+  function groupNotifs() {
+    var box = document.getElementById('notif-list');
+    if (!box || box.getAttribute('data-hb-grouped')) return;
+    var items = box.querySelectorAll('.notif-item');
+    if (!items.length) return;
+    box.setAttribute('data-hb-grouped', '1');
+
+    var chips = document.createElement('div');
+    chips.className = 'chips hb-notif-chips';
+    chips.innerHTML = ['全部', '未读', '回复', '点赞', '系统'].map(function (n, i) {
+      return '<button type="button" class="chip' + (i === 0 ? ' active' : '') + '" data-notif-filter="' + n + '">' + n + '</button>';
+    }).join('');
+    box.parentNode.insertBefore(chips, box);
+    chips.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-notif-filter]');
+      if (!b) return;
+      var f = b.getAttribute('data-notif-filter');
+      [].forEach.call(chips.querySelectorAll('.chip'), function (c) { c.classList.toggle('active', c === b); });
+      [].forEach.call(box.querySelectorAll('.notif-item'), function (n) {
+        var txt = n.textContent || '';
+        var show = f === '全部' || (f === '未读' && n.classList.contains('unread')) ||
+          (f === '回复' && /评论|回复/.test(txt)) || (f === '点赞' && /赞/.test(txt)) ||
+          (f === '系统' && /系统|公告|审核/.test(txt));
+        n.style.display = show ? '' : 'none';
+      });
+    });
+
+    var groups = { 回复: [], 点赞: [], 系统: [], 其他: [] };
+    [].forEach.call(items, function (n) {
+      var txt = n.textContent || '';
+      if (/评论|回复/.test(txt)) groups.回复.push(n);
+      else if (/赞/.test(txt)) groups.点赞.push(n);
+      else if (/系统|公告|审核/.test(txt)) groups.系统.push(n);
+      else groups.其他.push(n);
+    });
+    Object.keys(groups).forEach(function (k) {
+      var arr = groups[k];
+      if (arr.length > 3) {
+        arr.slice(3).forEach(function (n) { n.style.display = 'none'; n.setAttribute('data-hb-folded', '1'); });
+        var more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'hb-fold-more';
+        more.textContent = '展开 ' + k + ' 的其它 ' + (arr.length - 3) + ' 条';
+        more.onclick = function () {
+          arr.slice(3).forEach(function (n) { n.style.display = ''; });
+          more.remove();
+        };
+        arr[2].parentNode.insertBefore(more, arr[2].nextSibling);
+      }
+    });
+  }
+
+  /* ---------- 9) 下拉刷新 ---------- */
+  (function pullRefresh() {
+    var startY = null, pulling = false, pill = null;
+    function ensurePill() {
+      if (pill) return pill;
+      pill = document.createElement('div');
+      pill.id = 'hb-pull';
+      pill.textContent = '下拉刷新';
+      document.body.appendChild(pill);
+      return pill;
+    }
+    window.addEventListener('touchstart', function (e) {
+      if (window.scrollY <= 0 && e.touches.length === 1) { startY = e.touches[0].clientY; pulling = false; }
+      else startY = null;
+    }, { passive: true });
+    window.addEventListener('touchmove', function (e) {
+      if (startY == null || window.scrollY > 0) return;
+      var dy = e.touches[0].clientY - startY;
+      if (dy > 12) {
+        pulling = true;
+        var p = ensurePill();
+        p.style.opacity = Math.min(1, dy / 90);
+        p.style.transform = 'translate(-50%,' + Math.min(56, dy / 2) + 'px)';
+        p.textContent = dy > 70 ? '松开刷新' : '下拉刷新';
+      }
+    }, { passive: true });
+    window.addEventListener('touchend', function () {
+      if (pulling) {
+        var p = ensurePill();
+        p.style.opacity = 0;
+        p.style.transform = 'translate(-50%,0)';
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      }
+      startY = null; pulling = false;
+    }, { passive: true });
+  })();
+
+
+  /* ---------- 11) 详情页分享卡片入口 ---------- */
+  function syncShareFab() {
+    var isPost = /^#\/post/.test(location.hash || '');
+    var fab = document.getElementById('hb-share-fab');
+    if (isPost && !fab) {
+      fab = document.createElement('button');
+      fab.id = 'hb-share-fab';
+      fab.type = 'button';
+      fab.textContent = '🖼 分享卡片';
+      fab.onclick = function () { document.dispatchEvent(new MouseEvent('click')); };
+      fab.onclick = function () {
+        var ev = new MouseEvent('click', { bubbles: true });
+        var tmp = document.createElement('button');
+        tmp.setAttribute('data-action', 'share-card');
+        document.body.appendChild(tmp);
+        tmp.click();
+        tmp.remove();
+      };
+      document.body.appendChild(fab);
+    } else if (!isPost && fab) {
+      fab.remove();
+    }
+  }
+  window.addEventListener('hashchange', function () { setTimeout(syncShareFab, 120); });
+  window.addEventListener('load', function () { setTimeout(syncShareFab, 200); });
+
+  /* 测试/调试入口 */
+  window.hbFoldLowQuality = foldLowQuality;
+  window.hbGroupNotifs = groupNotifs;
+
+  /* ---------- 10) DOM 后处理：列表/通知变化时重跑 ---------- */
+  var t1 = null;
+  function schedule() {
+    clearTimeout(t1);
+    t1 = setTimeout(function () { foldLowQuality(); groupNotifs(); }, 120);
+  }
+  document.addEventListener('DOMContentLoaded', function () { setTimeout(schedule, 300); });
+  var mo = new MutationObserver(function (mut) {
+    for (var i = 0; i < mut.length; i++) {
+      var tgt = mut[i].target;
+      if (tgt && tgt.id === 'post-list') { schedule(); return; }
+      if (tgt && tgt.id === 'notif-list') { schedule(); return; }
+    }
+  });
+  window.addEventListener('load', function () {
+    try {
+      var list = document.getElementById('post-list');
+      var nl = document.getElementById('notif-list');
+      if (list) mo.observe(list, { childList: true });
+      if (nl) mo.observe(nl, { childList: true });
+    } catch (e) {}
+    schedule();
+    syncShareFab();
+  });
+})();
+
+</script>
 </body>
 </html>
