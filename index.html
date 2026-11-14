@@ -383,6 +383,9 @@ body[data-glass] .input, body[data-glass] .textarea, body[data-glass] .select {
   border-color: rgba(255,255,255,0.18);
 }
 
+/* v8.14 清透玻璃：白色薄雾，照片背景上不染色 */
+body[data-glass="clear"] { --glass-c: rgba(255,255,255,calc(var(--glass-a) * .55)); }
+
 /* 液态玻璃颜色（7纯色）- alpha控制透明度，值越低越透明 */
 body[data-glass="red"]    { --glass-c: rgba(139,0,0,var(--glass-a,.72)); }
 body[data-glass="orange"] { --glass-c: rgba(204,85,0,var(--glass-a,.72)); }
@@ -3712,22 +3715,23 @@ body[data-theme].dark-theme .post-content.hb811-collapsed::after{background:line
 
 /* ===== v8.12 Liquid Glass 2.0：苹果式动态折射 ===== */
 /* 基础玻璃面：真透明（只受 --glass-a 控制）+ 真实背景模糊 + 饱和提亮 */
-body[data-glass] .card,
-body[data-glass] .post-item,
-body[data-glass] .comment-item,
-body[data-glass] .modal,
-body[data-glass] .chip,
-body[data-glass] .btn,
-body[data-glass] .auth-tabs,
-body[data-glass] .toast-item,
-body[data-glass] .nav-link,
-body[data-glass] .form-group,
-body[data-glass] .profile-stats > div,
-body[data-glass] .comments-head,
-body[data-glass] .searchbox input,
-body[data-glass] .input,
-body[data-glass] .textarea,
-body[data-glass] .select {
+/* 双写属性选择器：把特异性抬到 0,3,1，和深色主题的 transparent !important 打平，靠后位胜出 */
+body[data-glass][data-glass] .card,
+body[data-glass][data-glass] .post-item,
+body[data-glass][data-glass] .comment-item,
+body[data-glass][data-glass] .modal,
+body[data-glass][data-glass] .chip,
+body[data-glass][data-glass] .btn,
+body[data-glass][data-glass] .auth-tabs,
+body[data-glass][data-glass] .toast-item,
+body[data-glass][data-glass] .nav-link,
+body[data-glass][data-glass] .form-group,
+body[data-glass][data-glass] .profile-stats > div,
+body[data-glass][data-glass] .comments-head,
+body[data-glass][data-glass] .searchbox input,
+body[data-glass][data-glass] .input,
+body[data-glass][data-glass] .textarea,
+body[data-glass][data-glass] .select {
   background: var(--glass-c) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.6) brightness(1.04);
   backdrop-filter: blur(16px) saturate(1.6) brightness(1.04);
@@ -3738,7 +3742,7 @@ body[data-glass] .select {
     0 18px 42px -24px rgba(0,0,0,.55);
 }
 /* 顶栏更厚：吸住整屏色 */
-body[data-glass] .topbar {
+body[data-glass][data-glass] .topbar {
   background: var(--glass-c) !important;
   -webkit-backdrop-filter: blur(26px) saturate(1.75) brightness(1.06);
   backdrop-filter: blur(26px) saturate(1.75) brightness(1.06);
@@ -3759,31 +3763,69 @@ body[data-glass] .toast-item,
 body[data-glass] .topbar,
 body[data-glass] .modal { position: relative; isolation: isolate; }
 
-/* 边缘折射：上下缘亮边 + 内侧光晕，模拟玻璃把光「折」进来 */
-body[data-glass] .card::before,
-body[data-glass] .post-item::before,
-body[data-glass] .comment-item::before,
-body[data-glass] .topbar::before,
-body[data-glass] .modal::before,
-body[data-glass] .toast-item::before {
+/* v8.16 圆角：纯色/渐变可调，官方固定苹果式大 R 角 */
+body[data-glass] .card,
+body[data-glass] .post-item,
+body[data-glass] .comment-item,
+body[data-glass] .modal,
+body[data-glass] .auth-tabs,
+body[data-glass] .toast-item,
+body[data-glass] .form-group,
+body[data-glass] .profile-stats > div,
+body[data-glass] .comments-head,
+body[data-glass] .searchbox input,
+body[data-glass] .input,
+body[data-glass] .textarea,
+body[data-glass] .select {
+  border-radius: var(--hb-glass-radius, 18px) !important;
+}
+/* 官方主题：纯透明玻璃（不染色），大圆角 + 连续曲率（支持的浏览器自动生效） */
+body[data-glass].hb815-official { --glass-c: transparent; --hb-glass-radius: 26px; }
+body[data-glass].hb815-official .card,
+body[data-glass].hb815-official .post-item,
+body[data-glass].hb815-official .comment-item,
+body[data-glass].hb815-official .modal,
+body[data-glass].hb815-official .auth-tabs,
+body[data-glass].hb815-official .toast-item,
+body[data-glass].hb815-official .form-group {
+  border-radius: var(--hb-glass-radius) !important;
+  corner-shape: squircle;              /* Chrome 139+ / Safari 支持时生效，不支持则退化圆角 */
+}
+
+/* 官方主题：中心少糊一点，把糊度集中到边缘，才有「边角卷起背景」的对比 */
+body[data-glass].hb815-official .card,
+body[data-glass].hb815-official .post-item,
+body[data-glass].hb815-official .comment-item,
+body[data-glass].hb815-official .modal {
+  -webkit-backdrop-filter: blur(6px) saturate(1.5) brightness(1.04);
+  backdrop-filter: blur(6px) saturate(1.5) brightness(1.04);
+}
+/* 边缘折射：只糊边、不糊中心（官方主题专属）
+ * 一层完全透明的伪元素，用 backdrop-filter 把「边缘那一圈背景」再次模糊，
+ * 再用 radial mask 把中间挖空 —— 视觉上就是玻璃边角把背景卷起来。 */
+body[data-glass].hb815-official .card::before,
+body[data-glass].hb815-official .post-item::before,
+body[data-glass].hb815-official .comment-item::before,
+body[data-glass].hb815-official .topbar::before,
+body[data-glass].hb815-official .modal::before,
+body[data-glass].hb815-official .toast-item::before {
   content: '';
   position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.30) 0%, rgba(255,255,255,.06) 12%, rgba(255,255,255,0) 38%, rgba(255,255,255,0) 72%, rgba(255,255,255,.12) 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.14),
-    inset 0 0 30px rgba(255,255,255,.10);
-  mix-blend-mode: screen;
-  opacity: .9;
+  -webkit-backdrop-filter: blur(14px) saturate(1.35) brightness(1.05);
+  backdrop-filter: blur(14px) saturate(1.35) brightness(1.05);
+  -webkit-mask-image: radial-gradient(105% 105% at 50% 50%, transparent 44%, rgba(0,0,0,.5) 60%, #000 84%);
+  mask-image: radial-gradient(105% 105% at 50% 50%, transparent 44%, rgba(0,0,0,.5) 60%, #000 84%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.16), inset 0 0 26px rgba(255,255,255,.10);
+  opacity: 1;
 }
 
 /* 动态高光：跟着指针走的镜面反射（Apple 玻璃的核心手感） */
-body[data-glass] .card::after,
-body[data-glass] .post-item::after,
-body[data-glass] .comment-item::after,
-body[data-glass] .topbar::after,
-body[data-glass] .modal::after,
-body[data-glass] .toast-item::after {
+body[data-glass].hb815-official .card::after,
+body[data-glass].hb815-official .post-item::after,
+body[data-glass].hb815-official .comment-item::after,
+body[data-glass].hb815-official .topbar::after,
+body[data-glass].hb815-official .modal::after,
+body[data-glass].hb815-official .toast-item::after {
   content: '';
   position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
   background: radial-gradient(140px circle at var(--mx, 50%) var(--my, 0%),
@@ -3793,21 +3835,21 @@ body[data-glass] .toast-item::after {
   transition: opacity .22s ease;
 }
 /* 悬停/按压时高光更亮，像玻璃被指尖压了一下 */
-body[data-glass] .card:hover::after,
-body[data-glass] .post-item:hover::after,
-body[data-glass] .comment-item:hover::after { --hb812-spec: .95; }
-body[data-glass] .card:active,
-body[data-glass] .post-item:active,
-body[data-glass] .btn:active, body[data-glass] .chip:active {
+body[data-glass].hb815-official .card:hover::after,
+body[data-glass].hb815-official .post-item:hover::after,
+body[data-glass].hb815-official .comment-item:hover::after { --hb812-spec: .95; }
+body[data-glass].hb815-official .card:active,
+body[data-glass].hb815-official .post-item:active,
+body[data-glass].hb815-official .btn:active, body[data-glass].hb815-official .chip:active {
   transform: scale(.985);
   filter: brightness(1.06);
   transition: transform .16s cubic-bezier(.2,.9,.3,1), filter .16s;
 }
 
 /* 折射条：被 feDisplacementMap 扭曲的一束光，只在桌面端出现 */
-body[data-glass] .card .hb812-refract,
-body[data-glass] .post-item .hb812-refract,
-body[data-glass] .topbar .hb812-refract {
+body[data-glass].hb815-official .card .hb812-refract,
+body[data-glass].hb815-official .post-item .hb812-refract,
+body[data-glass].hb815-official .topbar .hb812-refract {
   position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
   background: linear-gradient(115deg,
       rgba(255,255,255,0) 30%, rgba(255,255,255,.26) 46%,
@@ -3820,8 +3862,8 @@ body[data-glass] .topbar .hb812-refract {
   mix-blend-mode: screen;
   transition: background-position .28s ease-out, opacity .2s;
 }
-body[data-glass] .card:hover .hb812-refract,
-body[data-glass] .post-item:hover .hb812-refract { opacity: .9; }
+body[data-glass].hb815-official .card:hover .hb812-refract,
+body[data-glass].hb815-official .post-item:hover .hb812-refract { opacity: .9; }
 @media (pointer: coarse) { body[data-glass] .hb812-refract { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   body[data-glass] .hb812-refract { display: none; }
@@ -13833,6 +13875,14 @@ var CULTURE_THEMES = ['british', 'french', 'german', 'chinese', 'japanese', 'egy
 /* 液态玻璃可用主题（纯色+渐变） */
 var GLASS_THEMES = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple',
   'red-orange', 'orange-yellow', 'yellow-green', 'green-cyan', 'cyan-blue', 'blue-purple', 'purple-pink'];
+/* v8.14：官方主题（照片背景）与 GitHub 动态主题同样支持液态玻璃 */
+function glassEligible(id) {
+  if (!id) return false;
+  if (GLASS_THEMES.indexOf(id) >= 0) return true;
+  if (id.indexOf('official') === 0) return true;
+  if (DYN_THEMES && DYN_THEMES[id]) return true;
+  return false;
+}
 /* 液态玻璃颜色选项（纯色+渐变） */
 var GLASS_COLORS = [
   { id: 'red', label: '红', swatch: '#8B0000' },
@@ -13848,9 +13898,16 @@ var GLASS_COLORS = [
   { id: 'green-cyan', label: '绿青', swatch: 'linear-gradient(135deg, #2e7d32, #00695c)' },
   { id: 'cyan-blue', label: '青蓝', swatch: 'linear-gradient(135deg, #00695c, #1565c0)' },
   { id: 'blue-purple', label: '蓝紫', swatch: 'linear-gradient(135deg, #1565c0, #6a1b9a)' },
-  { id: 'purple-pink', label: '紫粉', swatch: 'linear-gradient(135deg, #6a1b9a, #ad1457)' }
+  { id: 'purple-pink', label: '紫粉', swatch: 'linear-gradient(135deg, #6a1b9a, #ad1457)' },
+  { id: 'clear', label: '清透', swatch: 'linear-gradient(135deg, rgba(255,255,255,.75), rgba(255,255,255,.18))' }
 ];
-var userGlass = { enabled: false, color: 'red', alpha: 0.42 };
+var userGlass = { enabled: false, color: 'clear', alpha: 0.42 };
+/* v8.16 玻璃圆角：只存本地（不写 settings 表，避免缺列报错） */
+window.hbGlassRadius = 18;
+try {
+  var _gr = parseInt(localStorage.getItem('hb_glass_radius') || '18', 10);
+  if (!isNaN(_gr) && _gr >= 0 && _gr <= 34) window.hbGlassRadius = _gr;
+} catch (e) {}
 
 function setTheme(themeId) {
   document.body.removeAttribute('data-theme');
@@ -13871,12 +13928,19 @@ function setTheme(themeId) {
     }
   }
   /* 液态玻璃：仅纯色/渐变可用 */
-  if (themeId && GLASS_THEMES.indexOf(themeId) >= 0 && userGlass.enabled) {
-    document.body.setAttribute('data-glass', userGlass.color || 'red');
+  if (themeId && glassEligible(themeId) && userGlass.enabled) {
+    document.body.setAttribute('data-glass', userGlass.color || 'clear');
     var ga = (typeof userGlass.alpha === 'number' && !isNaN(userGlass.alpha)) ? userGlass.alpha : 0.42;
     document.body.style.setProperty('--glass-a', ga);
+      /* v8.15：折射（边缘糊边）只对官方照片主题生效 */
+    var _isOff = /^official/.test(themeId);
+    document.body.classList.toggle('hb815-official', _isOff);
+    /* v8.16：官方固定 26px（CSS 给），其余主题用用户调的值 */
+    if (_isOff) document.body.style.removeProperty('--hb-glass-radius');
+    else document.body.style.setProperty('--hb-glass-radius', (window.hbGlassRadius || 18) + 'px');
   } else {
     document.body.removeAttribute('data-glass');
+    document.body.classList.remove('hb815-official');
   }
 }
 
@@ -14426,21 +14490,32 @@ function renderSettings() {
     };
     var glassBox = $('#glass-panel');
     if (glassBox) {
-      var canGlass = GLASS_THEMES.indexOf(currentTheme) >= 0;
+      var canGlass = glassEligible(currentTheme);
       if (!canGlass) {
         glassBox.innerHTML = '<p style="font-size:13px;color:var(--ink-3);margin:0">' + t('settings.glassHint') + '</p>';
       } else {
+        var isOfficial = /^official/.test(currentTheme);
         var ghtml = '<div style="margin-bottom:12px"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600"><input type="checkbox" id="glass-toggle"' + (userGlass.enabled ? ' checked' : '') + ' style="width:18px;height:18px"> ' + t('settings.glassOn') + '</label></div>';
-        ghtml += '<div id="glass-options"' + (userGlass.enabled ? '' : ' style="display:none"') + '>'
-          + '<div style="font-size:12px;color:var(--ink-3);margin-bottom:8px">' + t('settings.glassColor') + '</div><div class="theme-grid">';
-        GLASS_COLORS.forEach(function (g) {
-          ghtml += '<div class="theme-item' + (userGlass.color === g.id ? ' active' : '') + '" data-glass-id="' + g.id + '">'
-            + '<div class="theme-swatch" style="background:' + g.swatch + '"></div>' + g.label + '</div>';
-        });
-        ghtml += '</div>'
-          + '<div style="margin-top:14px;font-size:12px;color:var(--ink-3)">' + t('settings.opacity') + '：<span id="glass-alpha-val">' + Math.round((1 - userGlass.alpha) * 100) + '%</span></div>'
-          + '<input type="range" id="glass-alpha" min="0" max="95" step="1" value="' + Math.round((1 - userGlass.alpha) * 100) + '" style="width:100%;margin-top:4px">'
-          + '</div>';
+        if (isOfficial) {
+          /* 官方主题：纯透明 + 苹果式边缘折射 + 26px 连续圆角，不给调参 */
+          ghtml += '<div id="glass-options"' + (userGlass.enabled ? '' : ' style="display:none"') + '>'
+            + '<p style="font-size:12px;color:var(--ink-3);line-height:1.7;margin:0">'
+            + '官方照片主题使用纯透明玻璃：不染色、只在边缘把背景折糊，圆角固定 26px 连续曲率。'
+            + '</p></div>';
+        } else {
+          ghtml += '<div id="glass-options"' + (userGlass.enabled ? '' : ' style="display:none"') + '>'
+            + '<div style="font-size:12px;color:var(--ink-3);margin-bottom:8px">' + t('settings.glassColor') + '</div><div class="theme-grid">';
+          GLASS_COLORS.forEach(function (g) {
+            ghtml += '<div class="theme-item' + (userGlass.color === g.id ? ' active' : '') + '" data-glass-id="' + g.id + '">'
+              + '<div class="theme-swatch" style="background:' + g.swatch + '"></div>' + g.label + '</div>';
+          });
+          ghtml += '</div>'
+            + '<div style="margin-top:14px;font-size:12px;color:var(--ink-3)">' + t('settings.opacity') + '：<span id="glass-alpha-val">' + Math.round((1 - userGlass.alpha) * 100) + '%</span></div>'
+            + '<input type="range" id="glass-alpha" min="0" max="95" step="1" value="' + Math.round((1 - userGlass.alpha) * 100) + '" style="width:100%;margin-top:4px">'
+            + '<div style="margin-top:14px;font-size:12px;color:var(--ink-3)">圆角：<span id="glass-radius-val">' + (window.hbGlassRadius || 18) + 'px</span></div>'
+            + '<input type="range" id="glass-radius" min="0" max="34" step="1" value="' + (window.hbGlassRadius || 18) + '" style="width:100%;margin-top:4px">'
+            + '</div>';
+        }
         glassBox.innerHTML = ghtml;
       }
     }
@@ -16560,6 +16635,18 @@ document.addEventListener('change', function (e) {
       .then(function () { toast(userGlass.enabled ? t('settings.glassOnDone') : t('settings.glassOffDone')); })
       .catch(function (err) { toast(t('settings.saveFail') + err.message); });
   }
+  if (e.target.id === 'glass-radius') {
+    var r = parseInt(e.target.value, 10);
+    if (isNaN(r)) r = 18;
+    window.hbGlassRadius = Math.max(0, Math.min(34, r));
+    try { localStorage.setItem('hb_glass_radius', String(window.hbGlassRadius)); } catch (err) {}
+    var rv = $('#glass-radius-val');
+    if (rv) rv.textContent = window.hbGlassRadius + 'px';
+    if (!/^official/.test(document.body.getAttribute('data-theme') || '')) {
+      document.body.style.setProperty('--hb-glass-radius', window.hbGlassRadius + 'px');
+    }
+    return;
+  }
   if (e.target.id === 'glass-alpha') {
     /* 滑块值 = 透明度百分比（0~95），值越大越透明 */
     var transparency = parseFloat(e.target.value);
@@ -16570,6 +16657,20 @@ document.addEventListener('change', function (e) {
     CloudStore.saveSettings({ glass_alpha: userGlass.alpha, glass_color: userGlass.color, glass_enabled: userGlass.enabled })
       .catch(function (err) { toast(t('settings.saveFail') + err.message); });
   }
+});
+
+/* v8.16 圆角滑块：input 事件实时跟随，不等 change */
+document.addEventListener('input', function (e) {
+  if (e.target.id !== 'glass-radius') return;
+  var r = parseInt(e.target.value, 10);
+  if (isNaN(r)) r = 18;
+  window.hbGlassRadius = Math.max(0, Math.min(34, r));
+  var rv = $('#glass-radius-val');
+  if (rv) rv.textContent = window.hbGlassRadius + 'px';
+  if (!/^official/.test(document.body.getAttribute('data-theme') || '')) {
+    document.body.style.setProperty('--hb-glass-radius', window.hbGlassRadius + 'px');
+  }
+  try { localStorage.setItem('hb_glass_radius', String(window.hbGlassRadius)); } catch (err) {}
 });
 
 /* 头像上传 */
@@ -22526,6 +22627,7 @@ initDeskPet();
   /* 给容器补一层折射条 */
   function ensureStrip(el) {
     if (coarse || reduced) return;
+    if (!document.body.classList.contains('hb815-official')) return;   /* 折射仅官方主题 */
     if (el.querySelector(':scope > .hb812-refract')) return;
     if (!/^(card|post-item|comment-item|topbar)$/.test((el.className || '').split(' ')[0]) &&
         !el.classList.contains('card') && !el.classList.contains('post-item') &&
@@ -22575,6 +22677,7 @@ initDeskPet();
   /* 主题切换/重渲染后补条 + 补滤镜 */
   function sweep() {
     if (!glassOn()) return;
+    if (!document.body.classList.contains('hb815-official')) return;
     ensureFilter();
     if (coarse || reduced) return;
     var list = document.querySelectorAll('.card, .post-item, .comment-item, .topbar');
@@ -22584,7 +22687,7 @@ initDeskPet();
   new MutationObserver(function () {
     if (t) clearTimeout(t);
     t = setTimeout(sweep, 260);
-  }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-glass', 'data-theme'] });
+  }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-glass', 'data-theme', 'class'] });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sweep); else sweep();
   window.hb812 = { sweep: sweep, glassOn: glassOn };
 })();
