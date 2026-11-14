@@ -2344,29 +2344,11 @@ body[data-theme].light-theme .admin-section {
   border-color: rgba(0,0,0,0.08) !important;
 }
 body[data-theme].light-theme .topbar { background: rgba(255,255,255,0.30) !important; }
-/* 液态玻璃模式：去掉模糊，保留玻璃色（透明度由设置滑块控制，默认72%） */
-body[data-glass] .card,
-body[data-glass] .topbar,
-body[data-glass] .post-item,
-body[data-glass] .modal,
-body[data-glass] .btn,
-body[data-glass] .chip,
-body[data-glass] .auth-tabs,
-body[data-glass] .searchbox input,
-body[data-glass] .toast-item,
-body[data-glass] .comment-item,
-body[data-glass] .nav-link,
-body[data-glass] .form-group,
-body[data-glass] .profile-stats > div,
-body[data-glass] .comments-head,
-body[data-glass] .input,
-body[data-glass] .textarea,
-body[data-glass] .select,
-body[data-glass] .modal {
-  background: rgba(17, 24, 39, 0.97);
-}
+/* v8.12 修复：删掉写死的近不透明底 rgba(17,24,39,.97)
+ * 它把 --glass-a 滑块彻底盖住，导致「全透明」消失。
+ * 现在统一回到 --glass-c，透明度只由滑块控制。 */
 body[data-glass] .modal-mask {
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.42);
 }
 
 /* v6.1 互动玩法：投票 / 任务 / 排行 / 转盘 / 打赏 */
@@ -3588,6 +3570,264 @@ mark.hl-hit {
 #post-list .post-item,#featured-list .post-item{content-visibility:auto;contain-intrinsic-size:auto 240px}
 .hb88-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line,rgba(0,0,0,.08))}
 .hb88-row:last-child{border-bottom:none}
+/* ==== v8.9 手感层 ==== */
+:root{
+  --hb-ease:cubic-bezier(.22,.61,.36,1);
+  --hb-ease-out:cubic-bezier(.16,1,.3,1);
+  --hb-dur-1:120ms; --hb-dur-2:180ms; --hb-dur-3:260ms;
+}
+html{-webkit-tap-highlight-color:transparent;scroll-behavior:smooth}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* 按钮 / chip / 卡片：按压与悬停的即时反馈 */
+.btn{transition:transform var(--hb-dur-1) var(--hb-ease),box-shadow var(--hb-dur-2) var(--hb-ease),background-color var(--hb-dur-2) var(--hb-ease),opacity var(--hb-dur-2) var(--hb-ease),border-color var(--hb-dur-2) var(--hb-ease)}
+.btn:not(:disabled):active{transform:scale(.97)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.chip{transition:transform var(--hb-dur-1) var(--hb-ease),background-color var(--hb-dur-2) var(--hb-ease),color var(--hb-dur-2) var(--hb-ease),border-color var(--hb-dur-2) var(--hb-ease)}
+.chip:active{transform:scale(.96)}
+.post-item{transition:transform var(--hb-dur-2) var(--hb-ease-out),box-shadow var(--hb-dur-3) var(--hb-ease-out),border-color var(--hb-dur-3) var(--hb-ease-out)}
+@media (hover:hover){
+  .post-item:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+  .card:hover{box-shadow:0 6px 20px rgba(0,0,0,.06)}
+}
+.card{transition:box-shadow var(--hb-dur-3) var(--hb-ease-out),transform var(--hb-dur-2) var(--hb-ease-out)}
+
+/* 导航：滚动后收阴影 + 毛玻璃，避免内容"贴脸" */
+#nav.hb89-scrolled{box-shadow:0 6px 22px rgba(0,0,0,.10);backdrop-filter:saturate(1.2) blur(8px)}
+#nav{transition:box-shadow var(--hb-dur-3) var(--hb-ease-out),background-color var(--hb-dur-3) var(--hb-ease-out)}
+.nav-link{position:relative;transition:color var(--hb-dur-2) var(--hb-ease)}
+.nav-link::after{content:'';position:absolute;left:12%;right:12%;bottom:2px;height:2px;border-radius:2px;background:var(--accent,#b4762a);transform:scaleX(0);transform-origin:center;transition:transform var(--hb-dur-2) var(--hb-ease-out);opacity:.85}
+.nav-link:hover::after,.nav-link.active::after{transform:scaleX(1)}
+
+/* 列表入场：错峰上浮（只给首屏前 12 条，滚动不抖） */
+@keyframes hb89In{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hb89-in{animation:hb89In var(--hb-dur-3) var(--hb-ease-out) both;animation-delay:calc(var(--hb-i,0) * 36ms)}
+
+/* 路由切换：整页淡入 + 顶部细进度条 */
+@keyframes hb89Fade{from{opacity:.55;transform:translateY(4px)}to{opacity:1;transform:none}}
+main.container.hb89-fade{animation:hb89Fade var(--hb-dur-3) var(--hb-ease-out)}
+@keyframes hb89Bar{0%{transform:scaleX(0)}45%{transform:scaleX(.7)}100%{transform:scaleX(1)}}
+#hb89-progress{position:fixed;top:0;left:0;height:2px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--accent,#b4762a),rgba(240,180,80,.65));z-index:9000;pointer-events:none;opacity:0;transition:opacity .2s}
+#hb89-progress.on{opacity:1;animation:hb89Bar .5s var(--hb-ease-out) forwards}
+
+/* 弹窗 / 抽屉 */
+@keyframes hb89Mask{from{opacity:0}to{opacity:1}}
+@keyframes hb89Pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.modal-mask{animation:hb89Mask var(--hb-dur-2) var(--hb-ease)}
+.modal-mask .modal,.modal-mask .hb86-sheet{animation:hb89Pop var(--hb-dur-3) var(--hb-ease-out)}
+
+/* Toast：从底部弹入，带一点回弹 */
+@keyframes hb89Toast{from{opacity:0;transform:translateY(14px) scale(.96)}60%{opacity:1;transform:translateY(-2px) scale(1.01)}to{opacity:1;transform:none}}
+.toast-item{animation:hb89Toast var(--hb-dur-3) var(--hb-ease-out);will-change:transform,opacity}
+
+/* 加载占位：把静态进度条变成流动微光 */
+@keyframes hb89Shimmer{0%{background-position:-120% 0}100%{background-position:220% 0}}
+.lp-bar i,.loading-panel .lp-bar{background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);background-size:60% 100%;background-repeat:no-repeat;animation:hb89Shimmer 1.4s linear infinite}
+
+/* 输入：聚焦光晕 + 字数临界提示色 */
+.input,textarea.input,input.input{transition:border-color var(--hb-dur-2) var(--hb-ease),box-shadow var(--hb-dur-3) var(--hb-ease),background-color var(--hb-dur-2)}
+.input:focus{box-shadow:0 0 0 3px rgba(180,118,42,.14)}
+.hb89-near-limit{border-color:#d98a2b !important}
+.hb89-over-limit{border-color:#c4552e !important;box-shadow:0 0 0 3px rgba(196,85,46,.14) !important}
+
+/* 键盘可达性 */
+:focus-visible{outline:2px solid var(--accent,#b4762a);outline-offset:2px}
+:focus:not(:focus-visible){outline:none}
+
+/* 尊重系统"减弱动态效果" */
+@media (prefers-reduced-motion:reduce){
+  .hb89-in{animation:none}
+  main.container.hb89-fade{animation:none}
+  .modal-mask,.modal-mask .modal,.modal-mask .hb86-sheet,.toast-item{animation:none}
+  .lp-bar i,.loading-panel .lp-bar{animation:none}
+  .post-item:hover{transform:none}
+  html{scroll-behavior:auto}
+}
+
+/* ==== v8.10 极致细节 ==== */
+/* 点赞：心跳 + 数字上浮 */
+@keyframes hb810Pop{0%{transform:scale(1)}35%{transform:scale(1.18)}65%{transform:scale(.94)}100%{transform:scale(1)}}
+.like-btn.hb810-pop{animation:hb810Pop .42s cubic-bezier(.3,1.4,.5,1)}
+@keyframes hb810Num{0%{transform:translateY(0);opacity:1}45%{transform:translateY(-6px);opacity:0}46%{transform:translateY(6px);opacity:0}100%{transform:translateY(0);opacity:1}}
+.like-btn span.hb810-num{display:inline-block;animation:hb810Num .38s ease-out}
+
+/* 图片：先占位再淡入，加载失败显示纹理底 */
+img.hb810-img{opacity:0;filter:saturate(.9);transition:opacity .35s ease,filter .35s ease}
+img.hb810-img.hb810-loaded{opacity:1;filter:none}
+img.hb810-img.hb810-broken{opacity:1;min-height:80px;background:repeating-linear-gradient(45deg,rgba(0,0,0,.05) 0 6px transparent 6px 12px)}
+
+/* 表单错误：横向抖动 */
+@keyframes hb810Shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-3px)}40%,60%{transform:translateX(3px)}100%{transform:none}}
+.hb810-shake{animation:hb810Shake .42s cubic-bezier(.36,.07,.19,.97)}
+
+/* 空状态：轻微呼吸浮动，避免死图 */
+@keyframes hb810Float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.empty.hb810-float>*:first-child{animation:hb810Float 3.4s ease-in-out infinite}
+
+/* 回到顶部：外圈显示阅读进度 */
+#to-top{position:fixed;overflow:hidden}
+#to-top::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:2px;background:conic-gradient(var(--accent,#b4762a) calc(var(--hb-p,0) * 1turn),transparent 0);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.9;pointer-events:none}
+#to-top.hb810-ring{box-shadow:0 6px 18px rgba(0,0,0,.10)}
+
+/* 复制按钮：短暂变 ✓ */
+.hb810-copied{color:#2f8f5b !important}
+
+/* 离线状态条 */
+#hb810-net{position:fixed;left:50%;bottom:16px;transform:translate(-50%,110%);z-index:8800;padding:8px 14px;border-radius:999px;font-size:12px;background:rgba(196,85,46,.94);color:#fff;box-shadow:0 8px 26px rgba(0,0,0,.18);transition:transform .28s cubic-bezier(.2,.9,.3,1.2),opacity .28s;opacity:0;pointer-events:none}
+#hb810-net.show{transform:translate(-50%,0);opacity:1}
+#hb810-net.ok{background:rgba(47,143,91,.94)}
+
+/* 切主题：全站颜色渐变 320ms（只在切换瞬间挂类，平时不拖性能） */
+body.hb810-theming,body.hb810-theming *{transition:background-color .32s ease,color .32s ease,border-color .32s ease,fill .32s ease !important}
+
+/* ==== v8.11 滚动/骨架/长文/手势/音效 ==== */
+/* 顶栏：下滑收起、上滑露出 */
+.topbar{transition:transform .28s cubic-bezier(.2,.9,.3,1),box-shadow .24s ease,background-color .3s}
+.topbar.hb811-hide{transform:translateY(-100%)}
+
+/* 骨架屏：三张占位卡，比转圈更接近最终画面 */
+@keyframes hb811Shimmer{0%{background-position:-160% 0}100%{background-position:260% 0}}
+.hb811-skel{display:flex;flex-direction:column;gap:10px}
+.hb811-skel-card{background:var(--card,#fff);border:1px solid var(--line,rgba(0,0,0,.08));border-radius:14px;padding:16px;overflow:hidden}
+.hb811-skel-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hb811-skel-ava{width:34px;height:34px;border-radius:50%;flex:none;background:linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,.11),rgba(0,0,0,.05));background-size:200% 100%;animation:hb811Shimmer 1.5s linear infinite}
+.hb811-skel-line{height:12px;border-radius:6px;background:linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,.11),rgba(0,0,0,.05));background-size:200% 100%;animation:hb811Shimmer 1.5s linear infinite}
+.hb811-skel-line.w70{width:70%}.hb811-skel-line.w45{width:45%}.hb811-skel-line.w90{width:90%;height:10px}
+
+/* 长文：折叠遮罩 + 展开按钮 */
+.post-content{position:relative}
+.post-content.hb811-collapsed{max-height:520px;overflow:hidden}
+.post-content.hb811-collapsed::after{content:'';position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(to bottom,rgba(255,255,255,0),var(--card,#fff) 78%);pointer-events:none}
+body[data-theme].dark-theme .post-content.hb811-collapsed::after{background:linear-gradient(to bottom,rgba(0,0,0,0),var(--card,#141a26) 78%)}
+.hb811-expand{display:block;width:100%;margin:6px 0 2px;padding:9px;border:1px dashed var(--line,rgba(0,0,0,.14));border-radius:12px;background:transparent;color:var(--accent,#b4762a);font-size:13px;cursor:pointer}
+.hb811-expand:active{transform:scale(.98)}
+
+/* 视差：卡片里的图随滚动轻微上移，幅度极小 */
+.post-item img.hb811-px{will-change:transform;transition:transform .08s linear}
+
+/* 手势提示（首次使用一闪而过） */
+#hb811-swipe-hint{position:fixed;left:12px;top:50%;transform:translateY(-50%) translateX(-120%);z-index:8700;padding:8px 12px;border-radius:12px;background:rgba(0,0,0,.72);color:#fff;font-size:12px;transition:transform .3s ease,opacity .3s;opacity:0;pointer-events:none}
+#hb811-swipe-hint.show{transform:translateY(-50%) translateX(0);opacity:1}
+
+
+/* ===== v8.12 Liquid Glass 2.0：苹果式动态折射 ===== */
+/* 基础玻璃面：真透明（只受 --glass-a 控制）+ 真实背景模糊 + 饱和提亮 */
+body[data-glass] .card,
+body[data-glass] .post-item,
+body[data-glass] .comment-item,
+body[data-glass] .modal,
+body[data-glass] .chip,
+body[data-glass] .btn,
+body[data-glass] .auth-tabs,
+body[data-glass] .toast-item,
+body[data-glass] .nav-link,
+body[data-glass] .form-group,
+body[data-glass] .profile-stats > div,
+body[data-glass] .comments-head,
+body[data-glass] .searchbox input,
+body[data-glass] .input,
+body[data-glass] .textarea,
+body[data-glass] .select {
+  background: var(--glass-c) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.6) brightness(1.04);
+  backdrop-filter: blur(16px) saturate(1.6) brightness(1.04);
+  border-color: rgba(255,255,255,.24) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.40),
+    inset 0 -1px 0 rgba(255,255,255,.10),
+    0 18px 42px -24px rgba(0,0,0,.55);
+}
+/* 顶栏更厚：吸住整屏色 */
+body[data-glass] .topbar {
+  background: var(--glass-c) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(1.75) brightness(1.06);
+  backdrop-filter: blur(26px) saturate(1.75) brightness(1.06);
+  border-bottom-color: rgba(255,255,255,.20) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 10px 30px -18px rgba(0,0,0,.55);
+}
+/* 弹窗玻璃更清透，遮罩变浅 */
+body[data-glass] .modal {
+  -webkit-backdrop-filter: blur(30px) saturate(1.7) brightness(1.05);
+  backdrop-filter: blur(30px) saturate(1.7) brightness(1.05);
+}
+
+/* 可承载折射层的容器（topbar/modal 自带定位，其余补 relative） */
+body[data-glass] .card,
+body[data-glass] .post-item,
+body[data-glass] .comment-item,
+body[data-glass] .toast-item,
+body[data-glass] .topbar,
+body[data-glass] .modal { position: relative; isolation: isolate; }
+
+/* 边缘折射：上下缘亮边 + 内侧光晕，模拟玻璃把光「折」进来 */
+body[data-glass] .card::before,
+body[data-glass] .post-item::before,
+body[data-glass] .comment-item::before,
+body[data-glass] .topbar::before,
+body[data-glass] .modal::before,
+body[data-glass] .toast-item::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.30) 0%, rgba(255,255,255,.06) 12%, rgba(255,255,255,0) 38%, rgba(255,255,255,0) 72%, rgba(255,255,255,.12) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.14),
+    inset 0 0 30px rgba(255,255,255,.10);
+  mix-blend-mode: screen;
+  opacity: .9;
+}
+
+/* 动态高光：跟着指针走的镜面反射（Apple 玻璃的核心手感） */
+body[data-glass] .card::after,
+body[data-glass] .post-item::after,
+body[data-glass] .comment-item::after,
+body[data-glass] .topbar::after,
+body[data-glass] .modal::after,
+body[data-glass] .toast-item::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background: radial-gradient(140px circle at var(--mx, 50%) var(--my, 0%),
+      rgba(255,255,255,.46) 0%, rgba(255,255,255,.20) 28%, rgba(255,255,255,0) 62%);
+  mix-blend-mode: screen;
+  opacity: var(--hb812-spec, .55);
+  transition: opacity .22s ease;
+}
+/* 悬停/按压时高光更亮，像玻璃被指尖压了一下 */
+body[data-glass] .card:hover::after,
+body[data-glass] .post-item:hover::after,
+body[data-glass] .comment-item:hover::after { --hb812-spec: .95; }
+body[data-glass] .card:active,
+body[data-glass] .post-item:active,
+body[data-glass] .btn:active, body[data-glass] .chip:active {
+  transform: scale(.985);
+  filter: brightness(1.06);
+  transition: transform .16s cubic-bezier(.2,.9,.3,1), filter .16s;
+}
+
+/* 折射条：被 feDisplacementMap 扭曲的一束光，只在桌面端出现 */
+body[data-glass] .card .hb812-refract,
+body[data-glass] .post-item .hb812-refract,
+body[data-glass] .topbar .hb812-refract {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background: linear-gradient(115deg,
+      rgba(255,255,255,0) 30%, rgba(255,255,255,.26) 46%,
+      rgba(255,210,235,.18) 52%, rgba(190,235,255,.20) 58%,
+      rgba(255,255,255,0) 72%);
+  background-size: 220% 220%;
+  background-position: var(--bx, 50%) var(--by, 50%);
+  filter: url(#hb812-lens);
+  opacity: .55;
+  mix-blend-mode: screen;
+  transition: background-position .28s ease-out, opacity .2s;
+}
+body[data-glass] .card:hover .hb812-refract,
+body[data-glass] .post-item:hover .hb812-refract { opacity: .9; }
+@media (pointer: coarse) { body[data-glass] .hb812-refract { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  body[data-glass] .hb812-refract { display: none; }
+  body[data-glass] .card::after, body[data-glass] .post-item::after { transition: none; }
+}
+
 </style>
 </head>
 <body>
@@ -13610,7 +13850,7 @@ var GLASS_COLORS = [
   { id: 'blue-purple', label: '蓝紫', swatch: 'linear-gradient(135deg, #1565c0, #6a1b9a)' },
   { id: 'purple-pink', label: '紫粉', swatch: 'linear-gradient(135deg, #6a1b9a, #ad1457)' }
 ];
-var userGlass = { enabled: false, color: 'red', alpha: 0.72 };
+var userGlass = { enabled: false, color: 'red', alpha: 0.42 };
 
 function setTheme(themeId) {
   document.body.removeAttribute('data-theme');
@@ -13633,7 +13873,7 @@ function setTheme(themeId) {
   /* 液态玻璃：仅纯色/渐变可用 */
   if (themeId && GLASS_THEMES.indexOf(themeId) >= 0 && userGlass.enabled) {
     document.body.setAttribute('data-glass', userGlass.color || 'red');
-    var ga = (typeof userGlass.alpha === 'number' && !isNaN(userGlass.alpha)) ? userGlass.alpha : 0.72;
+    var ga = (typeof userGlass.alpha === 'number' && !isNaN(userGlass.alpha)) ? userGlass.alpha : 0.42;
     document.body.style.setProperty('--glass-a', ga);
   } else {
     document.body.removeAttribute('data-glass');
@@ -14182,7 +14422,7 @@ function renderSettings() {
     userGlass = {
       enabled: !!s.glass_enabled,
       color: s.glass_color || 'red',
-      alpha: parseFloat(s.glass_alpha) || 0.72
+      alpha: parseFloat(s.glass_alpha) || 0.42
     };
     var glassBox = $('#glass-panel');
     if (glassBox) {
@@ -14846,9 +15086,9 @@ document.addEventListener('click', function (e) {
     return;
   }
   /* 快捷翻译：语言选择 */
-  var tlEl = e.target.closest('[data-tl]');
+  var tlEl = e.target && e.target.closest ? e.target.closest('[data-tl]') : null;
   if (tlEl) { e.preventDefault(); translatePost(tlEl.getAttribute('data-tl')); return; }
-  var el = e.target.closest('[data-action]');
+  var el = e.target && e.target.closest ? e.target.closest('[data-action]') : null;
   if (!el || !t) return;
   var act = el.getAttribute('data-action');
 
@@ -21771,6 +22011,655 @@ initDeskPet();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
   window.hb88 = { coinModal: coinModal, reconcileModal: reconcileModal, injectTiles: injectTiles };
+})();
+
+/* v8.9 模块 */
+/* ================= v8.9 手感层：滚动/入场/路由/输入/防误触 ================= */
+(function () {
+  if (window.__hb89) return;
+  window.__hb89 = 1;
+  var BUILD = 'v8.9';
+  var reduced = false;
+  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  /* ---------- 1) 列表错峰入场（只标记前 12 个，滚动不参与） ---------- */
+  function stagger(root) {
+    if (reduced) return;
+    var host = root || document;
+    var items = host.querySelectorAll('.post-item:not(.hb89-in)');
+    for (var i = 0; i < items.length; i++) {
+      if (i > 11) break;
+      items[i].classList.add('hb89-in');
+      items[i].style.setProperty('--hb-i', String(i));
+    }
+  }
+
+  /* ---------- 2) 顶栏滚动状态 ---------- */
+  var navScrolled = false;
+  function onScroll() {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var want = y > 10;
+    if (want !== navScrolled) {
+      navScrolled = want;
+      nav.classList.toggle('hb89-scrolled', want);
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  /* ---------- 3) 路由切换：淡入 + 顶部进度条 ---------- */
+  var bar = null;
+  function progress() {
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'hb89-progress';
+      document.body.appendChild(bar);
+    }
+    bar.classList.remove('on');
+    void bar.offsetWidth;              /* 强制重排，让动画每次重播 */
+    bar.classList.add('on');
+    setTimeout(function () { if (bar) bar.classList.remove('on'); }, 620);
+  }
+  function fadeApp() {
+    var app = document.getElementById('app') || document.querySelector('main.container') || document.body;
+    if (!app || reduced) return;
+    app.classList.remove('hb89-fade');
+    void app.offsetWidth;
+    app.classList.add('hb89-fade');
+  }
+  window.addEventListener('hashchange', function () {
+    progress();
+    fadeApp();
+    setTimeout(function () { stagger(); onScroll(); }, 120);
+  });
+
+  /* ---------- 4) 输入框字数临界提示 ---------- */
+  function limitHint(el) {
+    var max = parseInt(el.getAttribute('maxlength') || el.getAttribute('data-max') || '0', 10);
+    if (!max) return;
+    var len = (el.value || '').length;
+    var ratio = len / max;
+    el.classList.toggle('hb89-near-limit', ratio >= 0.85 && ratio < 1);
+    el.classList.toggle('hb89-over-limit', len >= max);
+  }
+  document.addEventListener('input', function (e) {
+    var el = e.target;
+    if (!el || !el.matches) return;
+    if (el.matches('textarea[maxlength],input[maxlength]')) limitHint(el);
+  }, true);
+
+  /* ---------- 5) 关键动作防误触（350ms 内重复点击直接丢弃） ---------- */
+  var KEY = /submit|send|create|post|publish|buy|redeem|save|join|sign|report|delete|ban|handle|approve|pay|transfer/i;
+  var lastHit = { key: '', at: 0 };
+  document.addEventListener('click', function (e) {
+    var el = e.target && e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!el) return;
+    var act = el.getAttribute('data-action') || '';
+    if (!KEY.test(act)) return;
+    var key = act + '|' + (el.getAttribute('data-post') || el.getAttribute('data-id') || el.getAttribute('data-uid') || '');
+    var now = Date.now();
+    if (lastHit.key === key && now - lastHit.at < 350) {
+      e.preventDefault(); e.stopPropagation();
+      console.log('[hb89] 已忽略重复点击:', act);
+      return;
+    }
+    lastHit.key = key; lastHit.at = now;
+  }, true);
+
+  /* ---------- 6) 触屏轻反馈（仅粗指针设备，且用户没关动效） ---------- */
+  document.addEventListener('click', function (e) {
+    if (reduced) return;
+    var el = e.target && e.target.closest ? e.target.closest('.btn,.chip,.hb86-tile,.post-item') : null;
+    if (!el) return;
+    var coarse = false;
+    try { coarse = window.matchMedia('(pointer: coarse)').matches; } catch (err) {}
+    if (coarse && navigator.vibrate) { try { navigator.vibrate(8); } catch (err2) {} }
+  }, { passive: true });
+
+  /* ---------- 7) 渲染后自动接管（列表/宫格/卡片） ---------- */
+  var t = null;
+  var mo = new MutationObserver(function () {
+    if (t) clearTimeout(t);
+    t = setTimeout(function () {
+      stagger(document.getElementById('post-list'));
+      stagger(document.getElementById('featured-list'));
+      onScroll();
+    }, 120);
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+
+  function boot() {
+    stagger();
+    onScroll();
+    try { localStorage.setItem('forum_ver', BUILD); } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  window.hb89 = { stagger: stagger, progress: progress, onScroll: onScroll, reduced: reduced };
+})();
+
+/* v8.10 模块 */
+/* ================= v8.10 极致细节层 ================= */
+(function () {
+  if (window.__hb810) return;
+  window.__hb810 = 1;
+  var BUILD = 'v8.10';
+  var reduced = false;
+  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  /* ---------- 1) 点赞心跳 + 数字跳动 ---------- */
+  document.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest('.like-btn') : null;
+    if (!btn || reduced) return;
+    btn.classList.remove('hb810-pop');
+    void btn.offsetWidth;
+    btn.classList.add('hb810-pop');
+    setTimeout(function () { btn.classList.remove('hb810-pop'); }, 460);
+  }, true);
+  var numObs = new MutationObserver(function (ms) {
+    ms.forEach(function (m) {
+      var host = m.target && (m.target.nodeType === 3 ? m.target.parentNode : m.target);
+      if (!host || !host.closest) return;
+      var btn = host.closest('.like-btn');
+      if (!btn) return;
+      var sp = btn.querySelector('span');
+      if (!sp) return;
+      sp.classList.remove('hb810-num');
+      void sp.offsetWidth;
+      sp.classList.add('hb810-num');
+    });
+  });
+  numObs.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+  /* ---------- 2) 图片淡入 + 失败占位 + 懒加载 ---------- */
+  function polishImg(img) {
+    if (!img || img.__hb810) return;
+    img.__hb810 = 1;
+    if (!img.getAttribute('loading')) img.setAttribute('loading', 'lazy');
+    img.setAttribute('decoding', 'async');
+    img.classList.add('hb810-img');
+    var done = function () { img.classList.add('hb810-loaded'); };
+    var fail = function () { img.classList.add('hb810-broken'); img.classList.add('hb810-loaded'); };
+    if (img.complete && img.naturalWidth > 0) done();
+    else {
+      img.addEventListener('load', done, { once: true });
+      img.addEventListener('error', fail, { once: true });
+      /* 兜底：懒加载图迟迟不回（弱网/被拦）时 1.5s 后也放出，避免永远透明 */
+      setTimeout(function () {
+        if (!img.classList.contains('hb810-loaded')) img.classList.add('hb810-loaded');
+      }, 1500);
+    }
+  }
+  function polishAllImgs(root) {
+    var imgs = (root || document).querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++) polishImg(imgs[i]);
+  }
+
+  /* ---------- 3) 文本域自动增高 ---------- */
+  function autosize(el) {
+    if (!el || el.tagName !== 'TEXTAREA') return;
+    el.style.height = 'auto';
+    var max = Math.round(window.innerHeight * 0.42);
+    el.style.height = Math.min(el.scrollHeight + 2, max) + 'px';
+  }
+  document.addEventListener('input', function (e) {
+    if (e.target && e.target.tagName === 'TEXTAREA') autosize(e.target);
+  }, true);
+  function autosizeAll() {
+    var tas = document.querySelectorAll('textarea');
+    for (var i = 0; i < tas.length; i++) autosize(tas[i]);
+  }
+
+  /* ---------- 4) 必填校验：抖动 + 聚焦 ---------- */
+  document.addEventListener('invalid', function (e) {
+    var el = e.target;
+    if (!el || !el.classList) return;
+    el.classList.remove('hb810-shake');
+    void el.offsetWidth;
+    el.classList.add('hb810-shake');
+    setTimeout(function () { el.classList.remove('hb810-shake'); }, 460);
+  }, true);
+
+  /* ---------- 5) 回到顶部：进度环 ---------- */
+  function ring() {
+    var btn = document.getElementById('to-top');
+    if (!btn) return;
+    var doc = document.documentElement;
+    var total = (doc.scrollHeight - window.innerHeight) || 1;
+    var pct = Math.min(1, Math.max(0, (window.pageYOffset || doc.scrollTop || 0) / total));
+    btn.style.setProperty('--hb-p', pct.toFixed(3));
+    btn.classList.toggle('hb810-ring', pct > 0.05);
+  }
+  window.addEventListener('scroll', ring, { passive: true });
+
+  /* ---------- 6) 复制按钮：短暂 ✓ ---------- */
+  var COPY = /^copy/;
+  document.addEventListener('click', function (e) {
+    var el = e.target && e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!el) return;
+    if (!COPY.test(el.getAttribute('data-action') || '')) return;
+    var old = el.textContent;
+    el.textContent = '✓';
+    el.classList.add('hb810-copied');
+    setTimeout(function () { el.textContent = old; el.classList.remove('hb810-copied'); }, 900);
+  }, false);
+
+  /* ---------- 7) 输入法组合期不打断（中/日输入法） ---------- */
+  var composing = false;
+  document.addEventListener('compositionstart', function () { composing = true; }, true);
+  document.addEventListener('compositionend', function () { composing = false; }, true);
+  window.__hb810Composing = function () { return composing; };
+
+  /* ---------- 8) 滚动位置记忆：同路由来回切不丢位置 ---------- */
+  var prevHash = location.hash;
+  window.addEventListener('hashchange', function () {
+    try {
+      sessionStorage.setItem('hb810_scroll_' + prevHash, String(window.pageYOffset || 0));
+      var saved = sessionStorage.getItem('hb810_scroll_' + location.hash);
+      prevHash = location.hash;
+      if (saved) {
+        setTimeout(function () { window.scrollTo({ top: parseInt(saved, 10) || 0, behavior: 'auto' }); }, 420);
+      }
+    } catch (e) {}
+  });
+
+  /* ---------- 9) 离线 / 恢复提示 ---------- */
+  var net = null;
+  function netBar(msg, ok) {
+    if (!net) {
+      net = document.createElement('div');
+      net.id = 'hb810-net';
+      document.body.appendChild(net);
+    }
+    net.textContent = msg;
+    net.classList.toggle('ok', !!ok);
+    net.classList.add('show');
+    if (ok) setTimeout(function () { net.classList.remove('show'); }, 1400);
+  }
+  window.addEventListener('offline', function () { netBar('⚠️ 已离线，操作会失败', false); });
+  window.addEventListener('online', function () { netBar('✅ 网络已恢复', true); });
+
+  /* ---------- 10) 切主题时全站颜色渐变 ---------- */
+  if (typeof window.setTheme === 'function') {
+    var _st = window.setTheme;
+    window.setTheme = function () {
+      document.body.classList.add('hb810-theming');
+      setTimeout(function () { document.body.classList.remove('hb810-theming'); }, 360);
+      return _st.apply(this, arguments);
+    };
+  }
+
+  /* ---------- 11) 空状态呼吸浮动 ---------- */
+  function floatEmpty(root) {
+    var list = (root || document).querySelectorAll('.empty:not(.hb810-float)');
+    for (var i = 0; i < list.length; i++) list[i].classList.add('hb810-float');
+  }
+
+  /* ---------- 12) 统一接管（页面变化后重新应用） ---------- */
+  var t = null;
+  var mo = new MutationObserver(function () {
+    if (t) clearTimeout(t);
+    t = setTimeout(function () {
+      polishAllImgs();
+      autosizeAll();
+      floatEmpty();
+      ring();
+    }, 140);
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+
+  function boot() {
+    polishAllImgs();
+    autosizeAll();
+    floatEmpty();
+    ring();
+    try { localStorage.setItem('forum_ver', BUILD); } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  window.hb810 = { polishAllImgs: polishAllImgs, autosize: autosize, ring: ring, netBar: netBar };
+})();
+
+/* v8.11 模块 */
+/* ================= v8.11 滚动 / 骨架 / 长文 / 手势 / 音效 ================= */
+(function () {
+  if (window.__hb811) return;
+  window.__hb811 = 1;
+  var BUILD = 'v8.11';
+  var reduced = false;
+  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  function S() { return (typeof session !== 'undefined' && session) || window.session || null; }
+  function T(m) { try { toast(m); } catch (e) { console.log(m); } }
+
+  /* ---------- 1) 顶栏：下滑收起 / 上滑露出 ---------- */
+  var lastY = 0, hidden = false;
+  function navAuto() {
+    var bar = document.querySelector('.topbar');
+    if (!bar || reduced) return;
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var dy = y - lastY;
+    if (Math.abs(dy) < 6) return;                 /* 抖动过滤 */
+    lastY = y;
+    if (y < 48) {                                 /* 回到顶部一律展开 */
+      if (hidden) { bar.classList.remove('hb811-hide'); hidden = false; }
+      return;
+    }
+    if (dy > 0 && y > 72 && !hidden) { bar.classList.add('hb811-hide'); hidden = true; }
+    else if (dy < 0 && hidden) { bar.classList.remove('hb811-hide'); hidden = false; }
+  }
+  window.addEventListener('scroll', navAuto, { passive: true });
+
+  /* ---------- 2) 首页骨架屏 ---------- */
+  function onHome() { return location.hash === '' || location.hash === '#/' || location.hash.indexOf('#/home') === 0; }
+  function skelHtml(n) {
+    var one = '<div class="hb811-skel-card">'
+      + '<div class="hb811-skel-row"><span class="hb811-skel-ava"></span>'
+      + '<span class="hb811-skel-line w45" style="flex:1"></span></div>'
+      + '<div class="hb811-skel-line w70" style="height:18px;margin-bottom:8px"></div>'
+      + '<div class="hb811-skel-line w90"></div></div>';
+    var out = '<div class="hb811-skel" aria-label="加载中">';
+    for (var i = 0; i < (n || 3); i++) out += one;
+    return out + '</div>';
+  }
+  if (typeof window.loadingHtml === 'function') {
+    var _lh = window.loadingHtml;
+    window.loadingHtml = function () {
+      if (onHome()) return skelHtml(3);
+      return _lh.apply(this, arguments);
+    };
+  }
+
+  /* ---------- 3) 长文折叠 ---------- */
+  function collapseLong() {
+    var bodies = document.querySelectorAll('.post-content:not(.hb811-collapsed):not(.hb811-open)');
+    for (var i = 0; i < bodies.length; i++) {
+      var el = bodies[i];
+      if (el.scrollHeight < 560) continue;
+      el.classList.add('hb811-collapsed');
+      var btn = document.createElement('button');
+      btn.className = 'hb811-expand';
+      btn.textContent = '展开全文 ⌄';
+      btn.addEventListener('click', function () {
+        var target = this.previousElementSibling;
+        if (target) { target.classList.remove('hb811-collapsed'); target.classList.add('hb811-open'); }
+        this.remove();
+      });
+      el.parentNode.insertBefore(btn, el.nextSibling);
+    }
+  }
+
+  /* ---------- 4) 边缘右滑返回 ---------- */
+  var t0 = 0, x0 = 0, y0 = 0, tracking = false;
+  var hint = null;
+  function swipeHint() {
+    try { if (localStorage.getItem('hb811_swipe_hint')) return; localStorage.setItem('hb811_swipe_hint', '1'); } catch (e) { return; }
+    if (!hint) { hint = document.createElement('div'); hint.id = 'hb811-swipe-hint'; hint.textContent = '← 右滑可返回'; document.body.appendChild(hint); }
+    hint.classList.add('show');
+    setTimeout(function () { hint.classList.remove('show'); }, 1600);
+  }
+  document.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 1) return;
+    var t = e.touches[0];
+    x0 = t.clientX; y0 = t.clientY; t0 = Date.now();
+    tracking = x0 < 34;                 /* 只认屏幕左边缘起步，避免误触 */
+  }, { passive: true });
+  document.addEventListener('touchend', function (e) {
+    if (!tracking) return;
+    tracking = false;
+    var t = e.changedTouches && e.changedTouches[0];
+    if (!t) return;
+    var dx = t.clientX - x0, dy = Math.abs(t.clientY - y0), dt = Date.now() - t0;
+    if (dx > 80 && dy < 60 && dt < 500) {
+      try { history.back(); } catch (err) {}
+    }
+  }, { passive: true });
+  document.addEventListener('touchstart', function () { if (onHome() === false) swipeHint(); }, { passive: true, once: true });
+
+  /* ---------- 5) 轻音效（默认关，显式开启才响） ---------- */
+  var AC = null;
+  function soundOn() { try { return localStorage.getItem('hb811_sound') === '1'; } catch (e) { return false; } }
+  function blip(freq, dur) {
+    if (!soundOn()) return;
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!AC) AC = new Ctx();
+      if (AC.state === 'suspended') AC.resume();
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.06, AC.currentTime + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + (dur || 0.09));
+      o.connect(g); g.connect(AC.destination);
+      o.start(); o.stop(AC.currentTime + (dur || 0.09));
+    } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    var el = e.target && e.target.closest ? e.target.closest('.like-btn,[data-action],[data-buy]') : null;
+    if (!el) return;
+    var act = el.getAttribute('data-action') || (el.classList.contains('like-btn') ? 'like' : '');
+    if (/like|send|submit|create|post|buy|redeem|join|sign/i.test(act)) blip(720, 0.07);
+    else if (/copy|report/i.test(act)) blip(520, 0.05);
+  }, true);
+
+  function injectSoundTile() {
+    var grid = document.querySelector('#hb-discover .hb86-grid');
+    if (!grid || grid.querySelector('[data-hb811-sound]')) return;
+    var a = document.createElement('div');
+    a.className = 'hb86-tile';
+    a.setAttribute('data-hb811-sound', '1');
+    a.innerHTML = '<div style="font-size:18px">' + (soundOn() ? '🔊' : '🔈') + '</div><div>音效</div>';
+    a.addEventListener('click', function () {
+      var on = !soundOn();
+      try { localStorage.setItem('hb811_sound', on ? '1' : '0'); } catch (e) {}
+      a.innerHTML = '<div style="font-size:18px">' + (on ? '🔊' : '🔈') + '</div><div>音效</div>';
+      T(on ? '音效已开启（很轻，只在点赞/发布时响）' : '音效已关闭');
+      if (on) blip(760, 0.07);
+    });
+    grid.appendChild(a);
+  }
+
+  /* ---------- 6) 卡片图片极轻视差 ---------- */
+  var coarse = false;
+  try { coarse = window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
+  function parallax() {
+    if (reduced || coarse) return;
+    var imgs = document.querySelectorAll('.post-item img.hb811-px');
+    var vh = window.innerHeight || 800;
+    for (var i = 0; i < imgs.length && i < 6; i++) {
+      var r = imgs[i].getBoundingClientRect();
+      var p = (r.top + r.height / 2 - vh / 2) / vh;     /* -1 ~ 1 */
+      var shift = Math.max(-8, Math.min(8, -p * 10));
+      imgs[i].style.transform = 'translate3d(0,' + shift.toFixed(1) + 'px,0)';
+    }
+  }
+  function markImages(root) {
+    var imgs = (root || document).querySelectorAll('.post-item img:not(.hb811-px)');
+    for (var i = 0; i < imgs.length && i < 6; i++) imgs[i].classList.add('hb811-px');
+  }
+  window.addEventListener('scroll', function () { parallax(); }, { passive: true });
+
+  /* ---------- 7) 统一接管 ---------- */
+  var tmr = null;
+  var mo = new MutationObserver(function () {
+    if (tmr) clearTimeout(tmr);
+    tmr = setTimeout(function () {
+      collapseLong(); markImages(); parallax(); injectSoundTile();
+    }, 140);
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+
+  function boot() {
+    collapseLong(); markImages(); injectSoundTile();
+    try { localStorage.setItem('forum_ver', BUILD); } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  window.hb811 = { collapseLong: collapseLong, blip: blip, soundOn: soundOn, skelHtml: skelHtml, navAuto: navAuto };
+})();
+
+/* v8.12 液态玻璃 2.0 */
+/* ===== v8.12 Liquid Glass 2.0：指针驱动的镜面高光 + 折射条 ===== */
+(function () {
+  if (window.__hb812) return;
+  window.__hb812 = 1;
+  var coarse = false, reduced = false;
+  try { coarse = window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
+  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  function glassOn() { return document.body.hasAttribute('data-glass'); }
+
+  /* 注入折射滤镜（一次性） */
+  function ensureFilter() {
+    if (document.getElementById('hb812-lens')) return;
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '0'); svg.setAttribute('height', '0');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.style.position = 'absolute'; svg.style.overflow = 'hidden';
+    svg.innerHTML =
+      '<filter id="hb812-lens" x="-15%" y="-15%" width="130%" height="130%">' +
+        '<feTurbulence type="fractalNoise" baseFrequency="0.006 0.014" numOctaves="2" seed="7" result="n"/>' +
+        '<feDisplacementMap in="SourceGraphic" in2="n" scale="14" xChannelSelector="R" yChannelSelector="G"/>' +
+      '</filter>';
+    document.body.appendChild(svg);
+  }
+
+  /* 给容器补一层折射条 */
+  function ensureStrip(el) {
+    if (coarse || reduced) return;
+    if (el.querySelector(':scope > .hb812-refract')) return;
+    if (!/^(card|post-item|comment-item|topbar)$/.test((el.className || '').split(' ')[0]) &&
+        !el.classList.contains('card') && !el.classList.contains('post-item') &&
+        !el.classList.contains('topbar') && !el.classList.contains('comment-item')) return;
+    var d = document.createElement('div');
+    d.className = 'hb812-refract';
+    el.appendChild(d);
+  }
+
+  /* 指针移动：写 --mx/--my（高光位置），--bx/--by（折射条扫光位置） */
+  var raf = 0, pending = null;
+  function flush() {
+    raf = 0;
+    var p = pending; pending = null;
+    if (!p || !glassOn()) return;
+    var el = p.el, r = el.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    var x = ((p.x - r.left) / r.width) * 100;
+    var y = ((p.y - r.top) / r.height) * 100;
+    x = Math.max(-10, Math.min(110, x));
+    y = Math.max(-10, Math.min(110, y));
+    el.style.setProperty('--mx', x.toFixed(1) + '%');
+    el.style.setProperty('--my', y.toFixed(1) + '%');
+    el.style.setProperty('--bx', (50 + (x - 50) * .6).toFixed(1) + '%');
+    el.style.setProperty('--by', (50 + (y - 50) * .6).toFixed(1) + '%');
+  }
+  document.addEventListener('pointermove', function (e) {
+    if (!glassOn() || coarse || reduced) return;
+    var el = e.target && e.target.closest
+      ? e.target.closest('.card, .post-item, .comment-item, .topbar, .modal, .toast-item') : null;
+    if (!el) return;
+    ensureStrip(el);
+    pending = { el: el, x: e.clientX, y: e.clientY };
+    if (!raf) raf = requestAnimationFrame(flush);
+  }, { passive: true });
+
+  /* 离开时回中，避免高光卡在角落 */
+  document.addEventListener('pointerout', function (e) {
+    var el = e.target && e.target.closest
+      ? e.target.closest('.card, .post-item, .comment-item, .topbar, .modal, .toast-item') : null;
+    if (!el) return;
+    if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+    el.style.setProperty('--mx', '50%');
+    el.style.setProperty('--my', '0%');
+  }, { passive: true });
+
+  /* 主题切换/重渲染后补条 + 补滤镜 */
+  function sweep() {
+    if (!glassOn()) return;
+    ensureFilter();
+    if (coarse || reduced) return;
+    var list = document.querySelectorAll('.card, .post-item, .comment-item, .topbar');
+    for (var i = 0; i < list.length && i < 40; i++) ensureStrip(list[i]);
+  }
+  var t = null;
+  new MutationObserver(function () {
+    if (t) clearTimeout(t);
+    t = setTimeout(sweep, 260);
+  }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-glass', 'data-theme'] });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sweep); else sweep();
+  window.hb812 = { sweep: sweep, glassOn: glassOn };
+})();
+
+/* v8.13 官方主题兜底 */
+/* ===== v8.13 官方主题兜底：背景图拉不到时用同色系渐变顶上 ===== */
+(function () {
+  if (window.__hb813) return;
+  window.__hb813 = 1;
+
+  var FB = {
+    'official':            'linear-gradient(160deg,#0b1026 0%,#16233f 46%,#2a3a5c 72%,#3b2a20 100%)',
+    'official-forest':     'linear-gradient(160deg,#0a1a12 0%,#123322 46%,#1d4a2e 74%,#0a0e1a 100%)',
+    'official-maple':      'linear-gradient(160deg,#1a0d0a 0%,#3a1712 42%,#7a2c18 68%,#241009 100%)',
+    'official-city':       'linear-gradient(160deg,#0a0e1a 0%,#1a2440 46%,#4a3a28 76%,#241a12 100%)',
+    'official-sakura':     'linear-gradient(160deg,#1a0f16 0%,#3a1f2e 44%,#7a4a5e 70%,#f0b8c8 100%)',
+    'official-bridge':     'linear-gradient(160deg,#0b1020 0%,#1a2a4a 46%,#b8763a 82%,#2a1a10 100%)',
+    'official-sunset':     'linear-gradient(160deg,#170d07 0%,#5a1e12 40%,#c4502a 66%,#f0a060 100%)',
+    'official-grassland':  'linear-gradient(160deg,#0a1a12 0%,#1e4a2a 46%,#4a8a3a 76%,#10241c 100%)',
+    'official-shanghai':   'linear-gradient(160deg,#0a0e1a 0%,#16233f 46%,#6a4a2a 76%,#fbbf24 100%)',
+    'official-mars':       'linear-gradient(160deg,#1a0a08 0%,#4a1a10 46%,#8a3a20 72%,#241008 100%)'
+  };
+  var bad = {};       /* 已确认加载失败的 theme → 1 */
+  var lastApplied = null;
+
+  function currentTheme() {
+    return (document.body.getAttribute('data-theme') || '').trim();
+  }
+
+  function applyFallback(t) {
+    if (!FB[t]) return false;
+    document.body.style.setProperty('--theme-bg', FB[t] + ' center/cover no-repeat');
+    document.body.setAttribute('data-theme-fallback', t);
+    lastApplied = t;
+    try { console.log('[hb813] 主题图不可用，已切渐变兜底：' + t); } catch (e) {}
+    return true;
+  }
+
+  function clearFallback() {
+    if (!lastApplied) return;
+    document.body.style.removeProperty('--theme-bg');
+    document.body.removeAttribute('data-theme-fallback');
+    lastApplied = null;
+  }
+
+  function probe(t) {
+    if (!FB[t]) { clearFallback(); return; }
+    if (bad[t]) { if (lastApplied !== t) applyFallback(t); return; }
+    /* 换主题时先清掉上一套的内联兜底，否则读到的是渐变、不是真实 url */
+    if (lastApplied && lastApplied !== t) clearFallback();
+    /* 读 CSS 里的 --theme-bg，取出 url(...) 实测一次 */
+    var bg = '';
+    try { bg = getComputedStyle(document.body).getPropertyValue('--theme-bg') || ''; } catch (e) {}
+    var m = /url\(['"]?([^'\")]+)['"]?\)/.exec(bg);
+    if (!m) { applyFallback(t); return; }       /* 连 url 都没有，直接兜底 */
+    var url = m[1];
+    var img = new Image();
+    img.onload = function () {
+      bad[t] = 0;
+      if (lastApplied === t) { clearFallback(); }
+    };
+    img.onerror = function () { bad[t] = 1; applyFallback(t); };
+    img.src = url;
+  }
+
+  var tmr = null;
+  new MutationObserver(function () {
+    if (tmr) clearTimeout(tmr);
+    tmr = setTimeout(function () { probe(currentTheme()); }, 60);
+  }).observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
+
+  function boot() { probe(currentTheme()); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+
+  window.hb813 = { probe: probe, applyFallback: applyFallback, clearFallback: clearFallback, map: FB };
 })();
 
 </script>
